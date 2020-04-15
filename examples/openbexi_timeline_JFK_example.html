@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Openbexi_timeline</title>
+    <link href="../css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
+    <link href="../css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
+
+    <!-- Uncomment three.js below iof you want your application to run in local mode
+    <script src="https://threejs.org/build/three.min.js"></script>
+     -->
+
+    <!-- Comment three.js below iof you want your application to run in local mode-->
+    <script src="../three.js/build/three.min.js" type="application/javascript"></script>
+
+    <script src="../THREE.TextTexture/index.js" type="application/javascript"></script>
+    <script src="../THREE.TextSprite/index.js" type="application/javascript"></script>
+    <script src="../src/openbexi_timeline.js" type="application/javascript"></script>
+    <script src="../jsCalendar-master/source/jsCalendar.js" type="application/javascript"></script>
+
+    <script src="../three.js/examples/js/controls/DragControls.js" type="application/javascript"></script>
+
+    <script>
+        ob_timeline2 = new OB_TIMELINE();
+        ob_timeline2.params = [{
+            name: "ob_timeline_2",
+            date: "Fri Nov 22 1963 13:00:00 GMT-0600",
+            top: 50,
+            left: 50,
+            height: 400,
+            fontSize: 12,
+            //width: window.innerWidth,
+            width: 1100,
+            model: [{sortBy: "NONE"}],
+            data: "../json/jfk.json"
+        }];
+        ob_timeline2.bands = [{
+            name: "ob_band_1",
+            height: "90%",
+            color: "#f3f3ed",
+            intervalPixels: "800",
+            intervalUnit: "WEEK",
+            dateColor: "#7d8a86",
+            textColor: "#040404",
+            SessionColor: "#9f0dff",
+            eventColor: "#238448",
+            defaultEventSize: 5,
+            model: [{sortBy: "NONE"}],
+            zones: [
+                {
+                    start: "Fri Nov 22 1963 00:00:00 GMT-0600",
+                    end: "Mon Nov 25 1963 00:00:00 GMT-0600",
+                    magnify: 10,
+                    intervalUnit: "DAY"
+                },
+                {
+                    start: "Fri Nov 22 1963 09:00:00 GMT-0600",
+                    end: "Sun Nov 24 1963 00:00:00 GMT-0600",
+                    magnify: 5,
+                    intervalUnit: "HOUR",
+                },
+                {
+                    start: "Fri Nov 22 1963 11:00:00 GMT-0600",
+                    end: "Sat Nov 23 1963 00:00:00 GMT-0600",
+                    magnify: 5,
+                    intervalUnit: "MINUTE",
+                    multiple: 10
+                },
+                {
+                    start: "Fri Nov 22 1963 12:00:00 GMT-0600",
+                    end: "Fri Nov 22 1963 14:00:00 GMT-0600",
+                    magnify: 3,
+                    intervalUnit: "MINUTE",
+                    multiple: 5
+                }
+            ]
+        },
+            {
+                name: "ob_overview_band_2",
+                height: "10%",
+                color: "lightgrey",
+                intervalPixels: "200",
+                intervalUnit: "MONTH",
+                SessionColor: "#a110ff",
+                eventColor: "#238448",
+                dateColor: "#f31733",
+                zones2: [
+                    {
+                        start: "Fri Nov 22 1963 00:00:00 GMT-0600",
+                        end: "Mon Nov 25 1963 00:00:00 GMT-0600",
+                        magnify: 10,
+                        intervalUnit: "WEEK"
+                    },
+                    {
+                        start: "Fri Nov 22 1963 09:00:00 GMT-0600",
+                        end: "Sun Nov 24 1963 00:00:00 GMT-0600",
+                        magnify: 5,
+                        intervalUnit: "DAY"
+                    },
+                    {
+                        start: "Fri Nov 22 1963 11:00:00 GMT-0600",
+                        end: "Sat Nov 23 1963 00:00:00 GMT-0600",
+                        magnify: 5,
+                        intervalUnit: "MINUTE",
+                        multiple: 60
+                    },
+                    {
+                        start: "Fri Nov 22 1963 12:00:00 GMT-0600",
+                        end: "Fri Nov 22 1963 14:00:00 GMT-0600",
+                        magnify: 3,
+                        intervalUnit: "MINUTE",
+                        multiple: 15
+                    }
+                ]
+            }]
+    </script>
+
+</head>
+
+<body onload="ob_load_timeline(ob_timeline2);">
+<canvas id="ob_timeline_canvas" ondrop="ob_drop_data(event);" ondragover="ob_dragHandler(event);"></canvas>
+<div id="ob_content"></div>
+<script id="template" type="notjs">
+	<div class="ob_description">$</div>
+</script>
+</body>
+</html>
