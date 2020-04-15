@@ -95,8 +95,8 @@ function OB_TIMELINE() {
 
         this.data = this.params[0].data;
         this.center = "center";
-        this.multiples = 4
-        this.fontSize = 124;
+        this.multiples = 4;
+        this.fontSize = 12;
         this.font_align = "right";
 
         // -- set timeline date --
