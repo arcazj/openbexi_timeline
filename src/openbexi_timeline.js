@@ -95,7 +95,6 @@ function OB_TIMELINE() {
 
         this.data = this.params[0].data;
         this.center = "center";
-        this.multiples = 4;
         this.fontSize = 12;
         this.font_align = "right";
 
@@ -544,7 +543,9 @@ function OB_TIMELINE() {
             let div = document.createElement("div");
             div.id = this.name + "_descriptor";
             div.className = "ob_head_panel";
-            div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br> ID = " + data.id + "<br><br>" + data.start + "<br>" + data.end + "<br><br>STATUS = " + data.status + "<br>------------<br>";
+            if (data.end === undefined) data.end="";
+            //div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br> ID = " + data.id + "<br><br>" + data.start + "<br>" + data.end + "<br><br>STATUS = " + data.status + "<br>------------<br>";
+            div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br>"  + data.start + "<br>" + data.end + "<br><br>" + data.text + "<br>------------<br>";
             this.ob_timeline_right_panel.appendChild(div);
         }
     };
@@ -906,108 +907,7 @@ function OB_TIMELINE() {
         //console.log("ob_init(): panel.top:" + this.ob_timeline_panel.style.top + " panel.left:" + this.ob_timeline_panel.style.left + " panel.width:" + this.ob_timeline_panel.style.width + " panel.height:" + this.ob_timeline_panel.style.height);
 
     };
-
-    OB_TIMELINE.prototype.getHour = function (totalGregorianUnitLength) {
-        let hh = new Date(totalGregorianUnitLength).getHours();
-        if (String(hh).length === 1)
-            return "0" + hh;
-        else
-            return hh;
-    }
-    OB_TIMELINE.prototype.getMinute = function (totalGregorianUnitLength) {
-        let mm = new Date(totalGregorianUnitLength).getMinutes();
-        if (String(mm).length === 1)
-            return "0" + mm;
-        else
-            return mm;
-    }
-    OB_TIMELINE.prototype.getDay = function (totalGregorianUnitLength, format) {
-        if (format === "ddd") {
-            if (new Date(totalGregorianUnitLength).getDgetDay() === 0)
-                return "Sun";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 1)
-                return "Mon";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 2)
-                return "Tue";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 3)
-                return "Wed";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 4)
-                return "Thu";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Fri";
-            else
-                return "Sat";
-        } else
-            return String(new Date(totalGregorianUnitLength).getDate());
-    };
-    OB_TIMELINE.prototype.getMonth = function (totalGregorianUnitLengths, format) {
-        if (format === "mmm") {
-            if (new Date(totalGregorianUnitLength).getDgetDay() === 0)
-                return "Jan";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 1)
-                return "Feb";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 2)
-                return "Mar";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 3)
-                return "Apr";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 4)
-                return "May";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Jun";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Jun";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Jul";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Aug";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Sep";
-            else if (new Date(totalGregorianUnitLength).getDgetDay() === 5)
-                return "Nov";
-            else
-                return "Dec";
-        } else
-            return String(new Date(totalGregorianUnitLengths).getMonth() + 1);
-    };
-
-    OB_TIMELINE.prototype.convertDate = function (totalGregorianUnitLengths, dateFormat) {
-        let ob_interval = " ";
-        if (dateFormat.includes("-")) ob_interval = "-";
-        if (dateFormat === "MM/dd/yyyy" + ob_interval + "hh:mm")
-            return String(this.getMonth(totalGregorianUnitLengths, "mm") + "/"
-                + new Date(totalGregorianUnitLengths).getDate() + "/"
-                + new Date(totalGregorianUnitLengths).getFullYear() + ob_interval
-                + this.getHour(totalGregorianUnitLengths) + ":"
-                + this.getMinute(totalGregorianUnitLengths));
-        else if (dateFormat === "dd/MM/yyyy" + ob_interval + "hh:mm")
-            return String(new Date(totalGregorianUnitLengths).getDate() + "/"
-                + this.getMonth(totalGregorianUnitLengths, "mm") + "/"
-                + new Date(totalGregorianUnitLengths).getFullYear() + ob_interval
-                + this.getHour(totalGregorianUnitLengths) + ":"
-                + this.getMinute(totalGregorianUnitLengths));
-        else if (dateFormat === "MM/dd" + ob_interval + "hh:mm")
-            return String(this.getMonth(totalGregorianUnitLengths, "mm") + "/"
-                + new Date(totalGregorianUnitLengths).getDate() + ob_interval
-                + this.getHour(totalGregorianUnitLengths) + ":"
-                + this.getMinute(totalGregorianUnitLengths));
-        else if (dateFormat === "dd/MM" + ob_interval + "hh:mm")
-            return String(new Date(totalGregorianUnitLengths).getDate() + "/"
-                + this.getMonth(totalGregorianUnitLengths, "mm") + ob_interval
-                + this.getHour(totalGregorianUnitLengths) + ":"
-                + this.getMinute(totalGregorianUnitLengths));
-        else if (dateFormat === "UTC")
-            return String(new Date(totalGregorianUnitLengths).toUTCString());
-        else if (dateFormat === "ISO")
-            return String(new Date(totalGregorianUnitLengths).toISOString());
-        else
-            return String(new Date(totalGregorianUnitLengths).getHours());
-    };
-    OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
-        return new Date(0).setUTCFullYear(ob_date);
-    };
-
     OB_TIMELINE.prototype.setGregorianUnitLengths = function () {
-
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].intervalUnit === "MILLISECOND    ")
                 this.bands[i].gregorianUnitLengths = 1;
@@ -1039,7 +939,135 @@ function OB_TIMELINE() {
                 this.bands[i].gregorianUnitLengths = 1000 * 60 * 60;
         }
     };
+    OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
+        return new Date(0).setUTCFullYear(ob_date);
+    };
+    OB_TIMELINE.prototype.getHour = function (totalGregorianUnitLengths) {
+        let hh = new Date(totalGregorianUnitLengths).getHours();
+        if (String(hh).length === 1)
+            return "0" + hh;
+        else
+            return hh;
+    }
+    OB_TIMELINE.prototype.getMinute = function (totalGregorianUnitLengths) {
+        let mm = new Date(totalGregorianUnitLengths).getMinutes();
+        if (String(mm).length === 1)
+            return "0" + mm;
+        else
+            return mm;
+    }
+    OB_TIMELINE.prototype.getDay = function (totalGregorianUnitLengths, format) {
+        if (format === "ddd") {
+            if (new Date(totalGregorianUnitLengths).getDay() === 0)
+                return "Sun";
+            else if (new Date(totalGregorianUnitLengths).getDay() === 1)
+                return "Mon";
+            else if (new Date(totalGregorianUnitLengths).getDay() === 2)
+                return "Tue";
+            else if (new Date(totalGregorianUnitLengths).getDay() === 3)
+                return "Wed";
+            else if (new Date(totalGregorianUnitLengths).getDay() === 4)
+                return "Thu";
+            else if (new Date(totalGregorianUnitLengths).getDay() === 5)
+                return "Fri";
+            else
+                return "Sat";
+        } else
+            return String(new Date(totalGregorianUnitLengths).getDate());
+    };
+    OB_TIMELINE.prototype.getMonth = function (totalGregorianUnitLengths, format) {
+        if (format === "mmm") {
+            if (new Date(totalGregorianUnitLengths).getMonth() === 0)
+                return "Jan";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 1)
+                return "Feb";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 2)
+                return "Mar";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 3)
+                return "Apr";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 4)
+                return "May";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 5)
+                return "Jun";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 6)
+                return "Jul";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 7)
+                return "Aug";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 8)
+                return "Sep";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 9)
+                return "Oct";
+            else if (new Date(totalGregorianUnitLengths).getMonth() === 10)
+                return "Nov";
+            else
+                return "Dec";
+        } else {
+            return String(new Date(totalGregorianUnitLengths).getMonth() + 1);
+        }
+    }
+    OB_TIMELINE.prototype.convertDate = function (totalGregorianUnitLengths, dateFormat) {
+        let ob_date_separator = " ";
+        if (dateFormat.includes("/")) ob_date_separator = "/";
+        if (dateFormat.includes("-")) ob_date_separator = "-";
 
+        if (dateFormat === "MM/dd/yyyy" + ob_date_separator + "hh:mm")
+            return String(this.getMonth(totalGregorianUnitLengths, "mm") + "/"
+                + new Date(totalGregorianUnitLengths).getDate() + "/"
+                + new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "MM-dd-yyyy hh:mm")
+            return String(this.getMonth(totalGregorianUnitLengths, "mm") + "-"
+                + new Date(totalGregorianUnitLengths).getDate() + "-"
+                + new Date(totalGregorianUnitLengths).getFullYear() + " "
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "dd/MM/yyyy" + ob_date_separator + "hh:mm")
+            return String(new Date(totalGregorianUnitLengths).getDate() + "/"
+                + this.getMonth(totalGregorianUnitLengths, "mm") + "/"
+                + new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "dd/MM/yyyy hh:mm")
+            return String(new Date(totalGregorianUnitLengths).getDate() + "/"
+                + this.getMonth(totalGregorianUnitLengths, "mm") + "/"
+                + new Date(totalGregorianUnitLengths).getFullYear() + " "
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "MM/dd" + ob_date_separator + "hh:mm")
+            return String(this.getMonth(totalGregorianUnitLengths, "mm") + "/"
+                + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "mmm/dd" + ob_date_separator + "hh:mm")
+            return String(this.getMonth(totalGregorianUnitLengths, "mmm") + "/"
+                + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "dd/MM" + ob_date_separator + "hh:mm")
+            return String(new Date(totalGregorianUnitLengths).getDate() + "/"
+                + this.getMonth(totalGregorianUnitLengths, "mm") + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "mmm")
+            return this.getMonth(totalGregorianUnitLengths, dateFormat);
+        else if (dateFormat === "MM")
+            return this.getMonth(totalGregorianUnitLengths, dateFormat);
+        else if (dateFormat === "yyyy" + ob_date_separator + "MM")
+            return String(new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
+                + new Date(totalGregorianUnitLengths).getMonth());
+        if (dateFormat === "yyyy" + ob_date_separator + "mmm")
+            return new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
+                + this.getMonth(totalGregorianUnitLengths, "mmm");
+        if (dateFormat === "yyyy")
+            return new Date(totalGregorianUnitLengths).getFullYear();
+        else if (dateFormat === "UTC")
+            return String(new Date(totalGregorianUnitLengths).toUTCString());
+        else if (dateFormat === "ISO")
+            return String(new Date(totalGregorianUnitLengths).toISOString());
+        else
+            return String(new Date(totalGregorianUnitLengths).getHours());
+    };
     OB_TIMELINE.prototype.getPixelOffSetIncrement = function (gregorianUnitLengths, intervalPixels) {
         return this.dateToPixelOffSet(new Date(gregorianUnitLengths), gregorianUnitLengths, intervalPixels) - this.dateToPixelOffSet(new Date(0), gregorianUnitLengths, intervalPixels);
     };
@@ -1048,25 +1076,21 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.pixelOffSetToDateText = function (pixels, gregorianUnitLengths, intervalPixels, intervalUnit, dateFormat) {
         let totalGregorianUnitLengths = this.UTCStartDateTime + (pixels * (gregorianUnitLengths / intervalPixels));
+        if (dateFormat !== "DEFAULT")
+            return this.convertDate(totalGregorianUnitLengths, dateFormat);
         if (intervalUnit === "CENTURY")
-            return String(parseInt((new Date(totalGregorianUnitLengths).getFullYear() - 1) / 100) * 100);
+            return String(new Date(totalGregorianUnitLengths).getFullYear() * 100);
         else if (intervalUnit === "DECADE")
             return String(new Date(totalGregorianUnitLengths).getFullYear() * 10);
         else if (intervalUnit === "YEAR")
             return String(new Date(totalGregorianUnitLengths).getFullYear());
         else if (intervalUnit === "MONTH")
-            return String(new Date(totalGregorianUnitLengths).getMonth());
+            return this.convertDate(totalGregorianUnitLengths, "MM");
         else if (intervalUnit === "DAY")
-            if (dateFormat === "DEFAULT")
-                return this.getDay(totalGregorianUnitLengths, "dd");
-            else
-                return this.getDay(totalGregorianUnitLengths, dateFormat);
-        else if (intervalUnit === "HOUR") {
-            if (dateFormat === "DEFAULT")
-                return String(new Date(totalGregorianUnitLengths).getHours());
-            else
-                return this.convertDate(totalGregorianUnitLengths, dateFormat);
-        } else if (intervalUnit === "MINUTE")
+            return String(new Date(totalGregorianUnitLengths).getDate());
+        else if (intervalUnit === "HOUR")
+            return String(new Date(totalGregorianUnitLengths).getHours());
+        else if (intervalUnit === "MINUTE")
             return String(new Date(totalGregorianUnitLengths).getMinutes());
         else if (intervalUnit === "SECOND")
             return String(new Date(totalGregorianUnitLengths).getSeconds());
@@ -1087,7 +1111,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.center_bands = function () {
         for (let i = 0; i < this.bands.length; i++) {
-            this.bands[i].viewOffset = -this.width * (this.multiples - 1) / 2;
+            this.bands[i].viewOffset = -this.width * (this.bands[i].multiples - 1) / 2;
             if (this.center === undefined)
                 this.bands[i].x = 0;
             else {
@@ -1098,7 +1122,7 @@ function OB_TIMELINE() {
                 else
                     this.bands[i].x = 0;
             }
-            this.bands[i].width = this.width * this.multiples;
+            this.bands[i].width = this.width * this.bands[i].multiples;
             this.move_band(this.bands[i].name, this.bands[i].x, this.bands[i].y, this.bands[i].z);
         }
     };
@@ -1120,7 +1144,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.set_bands_viewOffset = function () {
         for (let i = 0; i < this.bands.length; i++) {
-            this.bands[i].width = this.width * this.multiples;
+            this.bands[i].width = this.width * this.bands[i].multiples;
             this.bands[i].viewOffset = -this.bands[i].width / 2;
             this.bands[i].x = this.bands[i].viewOffset;
         }
@@ -1319,8 +1343,8 @@ function OB_TIMELINE() {
                 if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60) ;
                 this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
             }
-
             this.bands[i].trackIncrement = 20;
+            this.bands[i].multiples =  parseInt( this.bands[0].intervalPixels)/10;
             //this.bands[i].track = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].trackIncrement;
         }
         this.create_new_bands();
@@ -2141,6 +2165,7 @@ function OB_TIMELINE() {
         // loader.load('three.js/examples/fonts/droid/droid_serif_bold.typeface.json', function (font)
         //loader.load('three.js/examples/fonts/droid/droid_serif_regular.typeface.json', function (font)
     }
+
     //let ob_font = ob_load_font();
 
     OB_TIMELINE.prototype.ob_setListeners = function () {
@@ -2328,7 +2353,7 @@ function OB_TIMELINE() {
             name: "ob_band_1",
             height: "85%",
             color: "#f3f3ed",
-            intervalPixels: "60",
+            intervalPixels: "120",
             intervalUnit: "MINUTE",
             dateColor: "#7d8a86",
             textColor: "#040404",
@@ -2517,17 +2542,17 @@ function OB_TIMELINE() {
             ob_end = new Date(Date.now() + 10000);
             ob_type = "type1";
             ob_title = "session_" + i;
-            if (i === 0|| i === 11) {
+            if (i === 0 || i === 11) {
                 ob_start = new Date(Date.now());
                 ob_end = new Date(Date.now() + 2015000);
                 ob_type = "type7";
                 ob_title = "session_T0";
-            } else if (i === 4  || i === 8 || i== 12|| i== 14 ) {
+            } else if (i === 4 || i === 8 || i == 12 || i == 14) {
                 ob_start = new Date(Date.now() + i * 600000);
                 ob_end = new Date(Date.now() + i * 700000);
                 ob_type = "type6";
                 ob_title = "session" + i;
-            } else if (i === 3  || i === 9 || i== 18 ) {
+            } else if (i === 3 || i === 9 || i == 18) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type10";
