@@ -3,7 +3,7 @@ openbexi_timeline is a data-driven interactive timeline for visualizing temporal
 
 # examples
 **raw.githubusercontent.com**:
-<img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.png?sanitize=true&raw=true" />
+<img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG?sanitize=true&raw=true" />
 
 # Copyright and license
 openbexi_timeline is licensed under the GNU General Public License v3.0.
