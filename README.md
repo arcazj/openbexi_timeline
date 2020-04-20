@@ -1,8 +1,7 @@
 # openbexi_timeline
 openbexi_timeline is a data-driven interactive timeline for visualizing temporal data.
 
-#Examples
-## A simple openbexi_timeline 
+# Getting started with a simple openbexi_timeline 
 Two bands are created. A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
