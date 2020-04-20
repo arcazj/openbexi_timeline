@@ -6,13 +6,16 @@ Two bands are created. A monthly upper band and an yearly lower band. The lower 
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
 
-##header:
+###header - tree.js is required:
+
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_header.PNG" />
 
-##Configuration:
+###Configuration:
+
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_configuration.PNG" />
 
-##Body:
+###Body:
+
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_body.PNG" />
 
 
