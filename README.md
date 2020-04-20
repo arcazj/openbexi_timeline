@@ -10,7 +10,7 @@ Two bands are created. A monthly upper band and an yearly lower band. The lower 
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_header.PNG" />
 
-## Configuration:
+## Customization:
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_configuration.PNG" />
 
@@ -18,6 +18,9 @@ Two bands are created. A monthly upper band and an yearly lower band. The lower 
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_body.PNG" />
 
+# Contributing and supporting
+Support this project and become a contributor.
+The purpose of this repository is to continue to evolve the Openbexi Timeline core, making it faster, fixing bugs and adding more features. 
 
 # Copyright and license
 openbexi_timeline is licensed under the GNU General Public License v3.0.
