@@ -2,11 +2,12 @@
 openbexi_timeline is a data-driven interactive timeline for visualizing temporal data.
 
 # Getting started with a simple openbexi_timeline 
-Two bands are created. A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
+This code below creates a openbexi timeline with two bands. A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
 
-## header - tree.js is required:
+## header:
+Openbexi timeline works with tree.js, using WebGL to create all objects and materials to build a timeline. 
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_header.PNG" />
 
