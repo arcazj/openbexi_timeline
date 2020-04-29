@@ -95,7 +95,6 @@ function OB_TIMELINE() {
 
         this.data = this.params[0].data;
         this.center = "center";
-        this.fontSize = 12;
         this.font_align = "right";
 
         // -- set timeline date --
@@ -543,9 +542,9 @@ function OB_TIMELINE() {
             let div = document.createElement("div");
             div.id = this.name + "_descriptor";
             div.className = "ob_head_panel";
-            if (data.end === undefined) data.end="";
+            if (data.end === undefined) data.end = "";
             //div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br> ID = " + data.id + "<br><br>" + data.start + "<br>" + data.end + "<br><br>STATUS = " + data.status + "<br>------------<br>";
-            div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br>"  + data.start + "<br>" + data.end + "<br><br>" + data.text + "<br>------------<br>";
+            div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br>" + data.start + "<br>" + data.end + "<br><br>" + data.text + "<br>------------<br>";
             this.ob_timeline_right_panel.appendChild(div);
         }
     };
@@ -1039,6 +1038,16 @@ function OB_TIMELINE() {
                 + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
                 + this.getHour(totalGregorianUnitLengths) + ":"
                 + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "dd" + ob_date_separator + "hh:mm")
+            return String(
+                +new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
+        else if (dateFormat === "ddd dd" + ob_date_separator + "hh:mm")
+            return String(this.getDay(totalGregorianUnitLengths, "ddd") + ob_date_separator
+                + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
+                + this.getHour(totalGregorianUnitLengths) + ":"
+                + this.getMinute(totalGregorianUnitLengths));
         else if (dateFormat === "mmm/dd" + ob_date_separator + "hh:mm")
             return String(this.getMonth(totalGregorianUnitLengths, "mmm") + "/"
                 + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
@@ -1305,8 +1314,12 @@ function OB_TIMELINE() {
                 this.bands[i].sessionHeight = 10;
             if (this.bands[i].defaultEventSize === undefined)
                 this.bands[i].defaultEventSize = 5;
+
             if (this.bands[i].fontSize === undefined)
-                this.bands[i].fontSize = 12;
+                if (this.params[0].fontSize === undefined)
+                    this.bands[i].fontSize = 12;
+                else
+                    this.bands[i].fontSize = this.params[0].fontSize;
 
             if (this.bands[i].x === undefined)
                 this.bands[i].x = -10000;
@@ -1343,8 +1356,8 @@ function OB_TIMELINE() {
                 if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60) ;
                 this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
             }
+            this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / 10;
             this.bands[i].trackIncrement = 20;
-            this.bands[i].multiples =  parseInt( this.bands[0].intervalPixels)/10;
             //this.bands[i].track = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].trackIncrement;
         }
         this.create_new_bands();
@@ -1353,7 +1366,8 @@ function OB_TIMELINE() {
         this.set_bands_minDate();
         this.set_bands_maxDate();
         //console.log("window width:" + this.width + " --- band width:" + this.bands[0].width + " --- " + this.bands[0].minDate + " --- " + this.bands[0].maxDate + " --- viewOffset:" + this.bands[0].viewOffset)
-    };
+    }
+    ;
 
     OB_TIMELINE.prototype.add_textBox = function (band_name, text, x, y, z, width, height, depth, color, texture) {
         let ob_model_name = this.ob_scene.getObjectByName(band_name + "_" + text);
@@ -1619,15 +1633,15 @@ function OB_TIMELINE() {
 
                 //Create date texts
                 text = this.pixelOffSetToDateText(incrementPixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels, this.bands[i].intervalUnit, this.bands[i].dateFormat);
-                textX = incrementPixelOffSet - (this.fontSize / 2) + 6;
+                textX = incrementPixelOffSet - (this.bands[i].fontSize / 2) + 6;
                 if (this.bands[i].intervalUnitPos === "TOP")
-                    textY = (this.bands[i].heightMax - (this.bands[i].heightMax / 2)) - this.fontSize;
+                    textY = (this.bands[i].heightMax - (this.bands[i].heightMax / 2)) - this.bands[i].fontSize;
                 else if (this.bands[i].intervalUnitPos === "BOTTOM")
-                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.fontSize;
+                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSize;
                 else
-                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.fontSize;
-                //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.fontSize, this.bands[i].dateColor);
-                this.add_text_sprite(ob_band, text, textX, textY, 5, this.fontSize, this.bands[i].dateColor);
+                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSize;
+                //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.bands[i].fontSize, this.bands[i].dateColor);
+                this.add_text_sprite(ob_band, text, textX, textY, 5, this.bands[i].fontSize, this.bands[i].dateColor);
                 //currentDate = this.pixelOffSetToDate(incrementPixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
 
                 //Create sub-segments if required
@@ -1707,6 +1721,15 @@ function OB_TIMELINE() {
         return this.bands[i].track;
     };
 
+    function getTextWidth(text, font) {
+        // re-use canvas object for better performance
+        let canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+        let context = canvas.getContext("2d");
+        context.font = font;
+        let metrics = context.measureText(text);
+        return metrics.width;
+    }
+
     OB_TIMELINE.prototype.set_sessions = function () {
         let layout;
         let x = 0, y = 0, z = 5, h = 0, w = 0;
@@ -1755,11 +1778,14 @@ function OB_TIMELINE() {
                         if (isNaN(parseInt(pixelOffSetEnd))) {
                             h = this.bands[i].defaultEventSize;
                             w = this.bands[i].defaultEventSize;
-                            textX = (session.title.length * this.bands[i].fontSize / 4.5) + this.bands[i].fontSize;
+                            textX = getTextWidth(session.title, this.bands[i].fontSize);
+                            textX = this.bands[i].defaultEventSize + getTextWidth("__") + textX / 1.7;
+
                         } else {
                             h = this.bands[i].sessionHeight;
                             w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                            textX = (w / 2) + (session.title.length * this.bands[i].fontSize / 4.5) + (session.title.length * 0.8);
+                            textX = getTextWidth(session.title, this.bands[i].fontSize);
+                            textX = (w / 2) + this.bands[i].defaultEventSize + getTextWidth("__") + textX / 1.7;
                         }
                     }
 
@@ -1985,7 +2011,7 @@ function OB_TIMELINE() {
         textDiv.style.align = this.font_align;
         textDiv.style.fillStyle = this.color;
         textDiv.style.fontFamily = 'Arial, Helvetica, sans-serif';
-        textDiv.style.fontSize = '12px';
+        textDiv.style.fontSize = this.params[0].fontsize + "px";
         textDiv.style.strokeStyle = '#000';
         textDiv.style.strokeWidth = '0';
         textDiv.style.fontStyle = 'normal';
@@ -2237,7 +2263,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_set_scene = function () {
         if (this.ob_scene === undefined) {
             this.ob_scene = new THREE.Scene();
-            this.ob_scene.background = new THREE.Color(0xF0F0F0);
+            this.ob_scene.background = new THREE.Color(0x000000);
         }
 
         if (this.ob_renderer === undefined) {
