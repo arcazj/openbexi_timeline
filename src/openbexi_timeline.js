@@ -1315,11 +1315,56 @@ function OB_TIMELINE() {
             if (this.bands[i].defaultEventSize === undefined)
                 this.bands[i].defaultEventSize = 5;
 
-            if (this.bands[i].fontSize === undefined)
-                if (this.params[0].fontSize === undefined)
-                    this.bands[i].fontSize = 12;
-                else
-                    this.bands[i].fontSize = this.params[0].fontSize;
+            if (this.params[0].fontSize === undefined) {
+                this.fontSize = "12px";
+                this.fontSizeInt = "12";
+            } else {
+                this.fontSize = this.params[0].fontSize;
+                try {
+                    this.fontSizeInt = this.fontSize.replace("px", "");
+                } catch (e) {
+                    this.fontSizeInt = this.fontSize
+                }
+                this.fontSize = this.fontSizeInt + "px";
+            }
+            if (this.bands[i].fontSize === undefined) {
+                this.bands[i].fontSize = this.fontSize;
+                this.bands[i].fontSizeInt = this.fontSizeInt;
+            } else {
+                try {
+                    this.bands[i].fontSizeInt = this.bands[i].fontSize.replace("px", "");
+                } catch (e) {
+                    this.bands[i].fontSizeInt = this.bands[i].fontSize
+                }
+                this.bands[i].fontSize = this.bands[i].fontSizeInt + "px";
+            }
+
+            if (this.params[0].fontFamily === undefined) {
+                this.fontFamily = 'Arial';
+            } else {
+                this.fontFamily = this.params[0].fontFamily;
+            }
+            if (this.bands[i].fontFamily === undefined) {
+                this.bands[i].fontFamily = this.fontFamily;
+            }
+
+            if (this.params[0].fontStyle === undefined) {
+                this.fontStyle = 'Normal';
+            } else {
+                this.fontStyle = this.params[0].fontStyle;
+            }
+            if (this.bands[i].fontStyle === undefined) {
+                this.bands[i].fontStyle = this.fontStyle;
+            }
+
+            if (this.params[0].fontWeight === undefined) {
+                this.fontWeight = 'Normal';
+            } else {
+                this.fontWeight = this.params[0].fontWeight;
+            }
+            if (this.bands[i].fontWeight === undefined) {
+                this.bands[i].fontWeight = this.fontWeight;
+            }
 
             if (this.bands[i].x === undefined)
                 this.bands[i].x = -10000;
@@ -1339,7 +1384,7 @@ function OB_TIMELINE() {
                 this.bands[i].depth = parseInt(this.bands[i].depth);
 
             if (this.bands[i].color === undefined)
-                this.bands[i].color = "white";
+                this.bands[i].color = 'white';
 
             if (this.bands[i].intervalPixels === undefined)
                 this.bands[i].intervalPixels = "200";
@@ -1419,10 +1464,13 @@ function OB_TIMELINE() {
         this.ob_scene.add(ob_model_name);
         this.objects.push(ob_model_name);
 
-        this.add_text_sprite(ob_model_name, text, 50, 0, 10, 24, color);
+        this.add_text_sprite(ob_model_name, text, 50, 0, 10, 24, "Normal",
+            "Normal", color, 'Arial');
         //this.add_text3D(ob_model_name, text, 50, 0, 10, 24, color);
 
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," + text + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," + color + "," + texture + ")");
+        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
+            text + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
+            color + "," + texture + ")");
     };
 
     OB_TIMELINE.prototype.hex_Luminance = function (hex, lum) {
@@ -1461,7 +1509,7 @@ function OB_TIMELINE() {
                     -(this.width / 2),
                     this.bands[i].y,
                     parseInt(this.bands[i].z) + 40,
-                    parseInt(this.bands[i].layouts.max_name_length) * parseInt(this.bands[i].fontSize) * 4,
+                    parseInt(this.bands[i].layouts.max_name_length) * parseInt(this.bands[i].fontSizeInt) * 4,
                     this.bands[i].heightMax,
                     parseInt(this.bands[i].depth) + 1,
                     this.hex_Luminance(this.bands[i].color, -.15),
@@ -1633,16 +1681,17 @@ function OB_TIMELINE() {
 
                 //Create date texts
                 text = this.pixelOffSetToDateText(incrementPixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels, this.bands[i].intervalUnit, this.bands[i].dateFormat);
-                textX = incrementPixelOffSet - (this.bands[i].fontSize / 2) + 6;
+                textX = incrementPixelOffSet - (this.bands[i].fontSizeInt / 2) + 6;
                 if (this.bands[i].intervalUnitPos === "TOP")
-                    textY = (this.bands[i].heightMax - (this.bands[i].heightMax / 2)) - this.bands[i].fontSize;
+                    textY = (this.bands[i].heightMax - (this.bands[i].heightMax / 2)) - this.bands[i].fontSizeInt;
                 else if (this.bands[i].intervalUnitPos === "BOTTOM")
-                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSize;
+                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSizeInt;
                 else
-                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSize;
-                //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.bands[i].fontSize, this.bands[i].dateColor);
-                this.add_text_sprite(ob_band, text, textX, textY, 5, this.bands[i].fontSize, this.bands[i].dateColor);
-                //currentDate = this.pixelOffSetToDate(incrementPixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                    textY = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].fontSizeInt;
+
+                //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt, this.bands[i].dateColor);
+                this.add_text_sprite(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt,
+                    this.bands[i].fontStyle, this.bands[i].fontWeight, this.bands[i].dateColor, this.bands[i].fontFamily);
 
                 //Create sub-segments if required
                 if (this.bands[i].subIntervalPixels !== "NONE") {
@@ -1663,7 +1712,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.get_room_for_session = function (sessions, session, i) {
         let ob_enough_room = true;
         let y = 0;
-        this.bands[i].track = this.bands[i].maxY - this.bands[i].fontSize;
+        this.bands[i].track = this.bands[i].maxY - this.bands[i].fontSizeInt;
         // if not enough room to plot the session increase bandwith regarding this.bands[i].trackIncrement
         while (ob_enough_room) {
             this.bands[i].track = this.bands[i].track - this.bands[i].trackIncrement;
@@ -1723,11 +1772,15 @@ function OB_TIMELINE() {
 
     function getTextWidth(text, font) {
         // re-use canvas object for better performance
-        let canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-        let context = canvas.getContext("2d");
-        context.font = font;
-        let metrics = context.measureText(text);
-        return metrics.width;
+        try {
+            let canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+            let context = canvas.getContext("2d");
+            context.font = font;
+            let metrics = context.measureText(text);
+            return metrics.width;
+        } catch (e) {
+            return 0;
+        }
     }
 
     OB_TIMELINE.prototype.set_sessions = function () {
@@ -1778,14 +1831,14 @@ function OB_TIMELINE() {
                         if (isNaN(parseInt(pixelOffSetEnd))) {
                             h = this.bands[i].defaultEventSize;
                             w = this.bands[i].defaultEventSize;
-                            textX = getTextWidth(session.title, this.bands[i].fontSize);
-                            textX = this.bands[i].defaultEventSize + getTextWidth("__") + textX / 1.7;
+                            textX = getTextWidth(session.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
+                            textX = this.bands[i].defaultEventSize * 2 + textX / 2;
 
                         } else {
                             h = this.bands[i].sessionHeight;
                             w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                            textX = getTextWidth(session.title, this.bands[i].fontSize);
-                            textX = (w / 2) + this.bands[i].defaultEventSize + getTextWidth("__") + textX / 1.7;
+                            textX = getTextWidth(session.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
+                            textX = (w / 2) + this.bands[i].defaultEventSize + textX / 2;
                         }
                     }
 
@@ -1798,7 +1851,7 @@ function OB_TIMELINE() {
                     this.bands[i].sessions[j].z = z;
                     this.bands[i].sessions[j].textX = textX;
                     this.bands[i].sessions[j].pixelOffSetEnd = pixelOffSetEnd;
-                    this.bands[i].sessions[j].total_width = w + (session.title.length * this.bands[i].fontSize);
+                    this.bands[i].sessions[j].total_width = w + (session.title.length * this.bands[i].fontSizeInt);
 
                     y = this.get_room_for_session(this.bands[i].sessions, this.bands[i].sessions[j], i);
 
@@ -1822,9 +1875,11 @@ function OB_TIMELINE() {
                         this.bands[i].sessions[j]);
                 if (!this.bands[i].name.match(/overview_/)) {
                     //this.add_text_CSS2D(ob_obj, this.bands[i].sessions[j].title,
-                    //this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSize, this.bands[i].textColor);
+                    //this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt, this.bands[i].textColor);
                     this.add_text_sprite(ob_obj, this.bands[i].sessions[j].title,
-                        this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSize, this.bands[i].textColor);
+                        this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt,
+                        this.bands[i].fontStyle, this.bands[i].fontWeight,
+                        this.bands[i].dateColor, this.bands[i].fontFamily);
                 }
             }
             //console.log(this.bands[i].name + " title=" + String(session.title) + " - this.bands[i].heightMax=" + this.bands[i].heightMax + "  i=" + i + " - j=" + j + " x=" + parseInt(x) + " y=" + y + " w=" + parseInt(this.sessions.events[j].total_width) + "  --> " + this.bands[i].track);
@@ -2010,13 +2065,13 @@ function OB_TIMELINE() {
         textDiv.className = 'ob_label';
         textDiv.style.align = this.font_align;
         textDiv.style.fillStyle = this.color;
-        textDiv.style.fontFamily = 'Arial, Helvetica, sans-serif';
-        textDiv.style.fontSize = this.params[0].fontsize + "px";
+        textDiv.style.fontFamily = 'Arial';
+        textDiv.style.fontSize = this.fontSize;
         textDiv.style.strokeStyle = '#000';
         textDiv.style.strokeWidth = '0';
-        textDiv.style.fontStyle = 'normal';
-        textDiv.style.fontVariant = 'normal';
-        textDiv.style.fontWeight = 'normal';
+        textDiv.style.fontStyle = 'Normal';
+        textDiv.style.fontVariant = 'Normal';
+        textDiv.style.fontWeight = 'Normal';
         textDiv.textContent = text;
 
         let textLabel = this.track(new THREE.CSS2DObject(textDiv));
@@ -2031,7 +2086,8 @@ function OB_TIMELINE() {
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.TextSprite(" + ob_object + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
     };
 
-    OB_TIMELINE.prototype.add_text_sprite = function (ob_object, text, x, y, z, fontsize, color) {
+    OB_TIMELINE.prototype.add_text_sprite = function (ob_object, text, x, y, z, fontSize, fontStyle, fontWeight
+        , color, fontFamily) {
         if (color === undefined) {
             color = this.track(new THREE.Color("rgb(114, 171, 173)"));
         }
@@ -2039,13 +2095,13 @@ function OB_TIMELINE() {
         let ob_sprite = this.track(new THREE.TextSprite({
             align: this.font_align,
             fillStyle: color,
-            fontFamily: 'Arial, Helvetica, sans-serif',
-            fontSize: fontsize,
-            strokeStyle: '#000',
+            fontFamily: fontFamily,
+            fontSize: fontSize,
+            strokeStyle: '#e00',
             strokeWidth: 0,
-            fontStyle: 'normal',
+            fontStyle: fontStyle,
             fontVariant: 'normal',
-            fontWeight: 'normal',
+            fontWeight: fontWeight,
             text: text,
         }));
         ob_sprite.position.set(x, y, 30);
@@ -2401,19 +2457,19 @@ function OB_TIMELINE() {
 
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
         let ob_start, ob_end, ob_type, ob_title;
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 100; i++) {
             ob_start = new Date(Date.now());
             ob_end = new Date(Date.now() + 10000);
             ob_type = "type1";
             ob_title = "session_" + i;
             if (i === 0) {
                 ob_start = new Date(Date.now() + 320000);
-                ob_end = new Date(Date.now() + 1015000);
+                ob_end = new Date(Date.now() + 420000);
                 ob_type = "type2";
                 ob_title = "session_plus" + i;
             } else if (i === 2 || i === 78) {
                 ob_start = new Date(Date.now() + 520000);
-                ob_end = new Date(Date.now() + 1015000);
+                ob_end = new Date(Date.now() + 705000);
                 ob_type = "type1";
                 ob_title = "session_plus" + i;
             } else if (i === 1 || i === 3) {
@@ -2563,36 +2619,36 @@ function OB_TIMELINE() {
 
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
         let ob_start, ob_end, ob_type, ob_title;
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 100; i++) {
             ob_start = new Date(Date.now());
             ob_end = new Date(Date.now() + 10000);
             ob_type = "type1";
-            ob_title = "session_" + i;
+            ob_title = "session_SESSION" + i;
             if (i === 0 || i === 11) {
                 ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + 2015000);
+                ob_end = new Date(Date.now() + 1015000);
                 ob_type = "type7";
-                ob_title = "session_T0";
+                ob_title = "session SESSION T0";
             } else if (i === 4 || i === 8 || i == 12 || i == 14) {
                 ob_start = new Date(Date.now() + i * 600000);
                 ob_end = new Date(Date.now() + i * 700000);
                 ob_type = "type6";
-                ob_title = "session" + i;
+                ob_title = "SESSION" + i;
             } else if (i === 3 || i === 9 || i == 18) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type10";
-                ob_title = "session" + i;
+                ob_title = "session_SESSION_long_long_LONG_long_long_long_long long_long_LONG_long_long_long_long" + i;
             } else if (i % 3 === 0) {
                 ob_start = new Date(Date.now() + i * 50000);
                 ob_end = "";
                 ob_type = "type3";
-                ob_title = "session" + i;
-            } else if (i % 7 === 0) {
+                ob_title = "s" + i;
+            } else if (i % 13 === 0) {
                 ob_start = new Date(Date.now() + i * 50000);
                 ob_end = new Date(Date.now() + i * 65000);
                 ob_type = "type4";
-                ob_title = "session_long_long_long_long_long_long_long_long_long_long_long_long" + i;
+                ob_title = "session_long_long_LONG_long_long_long_long_LONG_long_long_long_long" + i;
             } else if (i % 2 === 0) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
