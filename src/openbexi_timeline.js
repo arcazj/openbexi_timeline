@@ -82,6 +82,10 @@ function OB_TIMELINE() {
 
         // Set all timeline parameters:
         this.name = this.params[0].name;
+
+        this.title = "";
+        if (this.params[0].title !== undefined)
+            this.title = this.params[0].title;
         this.camera = this.params[0].camera;
         this.ob_pos_camera_x = -375;
         this.ob_pos_camera_y = 100;
@@ -99,24 +103,32 @@ function OB_TIMELINE() {
 
         // -- set timeline date --
         try {
+            this.timeZoneOffset = new Date().getTimezoneOffset();
+            this.timeZone = "";
+            if (this.params[0].date.includes("UTC"))
+                this.timeZone = "UTC";
+            if (this.params[0].timeZone === "UTC")
+                this.timeZone = this.params[0].timeZone;
+
+            this.startDateTime = Date.now();
             if (this.params[0].date !== undefined) {
-                this.date = this.params[0].date;
                 if (this.params[0].date === "current_time" || this.params[0].date === "Date.now()") {
-                    this.UTCStartDateTime = Date.now();
+                    if (this.timeZone === "UTC")
+                        this.startDateTime = this.getUTCTime(Date.now())
                 } else if (this.params[0].date.length === 4) {
-                    this.UTCStartDateTime = this.getUTCTime(parseInt(this.params[0].date));
+                    this.startDateTime = this.getUTCFullYearTime(parseInt(this.params[0].date));
                 } else {
-                    this.UTCStartDateTime = Date.parse(this.params[0].date);
+                    this.startDateTime = this.getUTCTime(Date.parse(this.params[0].date));
                 }
             } else {
                 console.log("ob_init(): timeline date not defined - set to default :current date");
-                this.date = "current_time";
-                this.UTCStartDateTime = Date.now();
+                if (this.timeZone === "UTC")
+                    this.startDateTime = this.getUTCTime(Date.now())
             }
         } catch (err) {
             console.log("ob_init(): Wrong timeline date - set to default : current date");
-            this.date = "current_time";
-            this.UTCStartDateTime = Date.now();
+            if (this.timeZone === "UTC")
+                this.startDateTime = this.getUTCTime(Date.now())
         }
 
         // -- set timeline top --
@@ -464,7 +476,10 @@ function OB_TIMELINE() {
         try {
             clearInterval(this.ob_refresh_interval_clock);
             this.ob_refresh_interval_clock = setInterval(function () {
-                that2.UTCStartDateTime = Date.now();
+                if (that2.timeZone === "UTC")
+                    that2.startDateTime = that2.getUTCTime(Date.now())
+                else
+                    that2.startDateTime = Date.now();
                 that2.center_bands();
                 that2.ob_sec_incr++;
                 if (that2.ob_sec_incr === 10) {
@@ -938,7 +953,11 @@ function OB_TIMELINE() {
                 this.bands[i].gregorianUnitLengths = 1000 * 60 * 60;
         }
     };
+
     OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
+        return ob_date + (this.timeZoneOffset * 60000);
+    };
+    OB_TIMELINE.prototype.getUTCFullYearTime = function (ob_date) {
         return new Date(0).setUTCFullYear(ob_date);
     };
     OB_TIMELINE.prototype.getHour = function (totalGregorianUnitLengths) {
@@ -1045,7 +1064,7 @@ function OB_TIMELINE() {
                 + this.getMinute(totalGregorianUnitLengths));
         else if (dateFormat === "ddd dd" + ob_date_separator + "hh:mm")
             return String(this.getDay(totalGregorianUnitLengths, "ddd") + ob_date_separator
-                + new Date(totalGregorianUnitLengths).getDate() + ob_date_separator
+                + new Date(totalGregorianUnitLengths).getDate() + " "
                 + this.getHour(totalGregorianUnitLengths) + ":"
                 + this.getMinute(totalGregorianUnitLengths));
         else if (dateFormat === "mmm/dd" + ob_date_separator + "hh:mm")
@@ -1081,10 +1100,14 @@ function OB_TIMELINE() {
         return this.dateToPixelOffSet(new Date(gregorianUnitLengths), gregorianUnitLengths, intervalPixels) - this.dateToPixelOffSet(new Date(0), gregorianUnitLengths, intervalPixels);
     };
     OB_TIMELINE.prototype.dateToPixelOffSet = function (date, gregorianUnitLengths, intervalPixels) {
-        return (Date.parse(date) - this.UTCStartDateTime) / (gregorianUnitLengths / intervalPixels);
+        if (date === "") return NaN;
+        if (this.timeZone === "UTC")
+            if (date.toString().includes("UTC"))
+                return (this.getUTCTime(Date.parse(date)) - this.startDateTime) / (gregorianUnitLengths / intervalPixels);
+        return (Date.parse(date) - this.startDateTime) / (gregorianUnitLengths / intervalPixels);
     };
     OB_TIMELINE.prototype.pixelOffSetToDateText = function (pixels, gregorianUnitLengths, intervalPixels, intervalUnit, dateFormat) {
-        let totalGregorianUnitLengths = this.UTCStartDateTime + (pixels * (gregorianUnitLengths / intervalPixels));
+        let totalGregorianUnitLengths = this.startDateTime + (pixels * (gregorianUnitLengths / intervalPixels));
         if (dateFormat !== "DEFAULT")
             return this.convertDate(totalGregorianUnitLengths, dateFormat);
         if (intervalUnit === "CENTURY")
@@ -1107,7 +1130,7 @@ function OB_TIMELINE() {
             return String(new Date(totalGregorianUnitLengths));
     };
     OB_TIMELINE.prototype.pixelOffSetToDate = function (pixels, gregorianUnitLengths, intervalPixels) {
-        let totalGregorianUnitLengths = this.UTCStartDateTime + (pixels * (gregorianUnitLengths / intervalPixels));
+        let totalGregorianUnitLengths = this.startDateTime + (pixels * (gregorianUnitLengths / intervalPixels));
         return new Date(totalGregorianUnitLengths)
     };
 
@@ -1642,15 +1665,18 @@ function OB_TIMELINE() {
         if (this.ob_marker !== undefined) {
             this.ob_marker.style.visibility = "visible";
             this.ob_marker.style.zIndex = "99999";
-            this.ob_marker.style.top = parseInt(this.ob_timeline_header.style.height) - 16 + "px";
+            this.ob_marker.style.top = parseInt(this.ob_timeline_header.style.height) - 14 + "px";
             this.ob_marker.style.left = (parseInt(this.ob_timeline_header.offsetWidth) / 2) - parseInt(this.ob_marker.style.width) / 2 + "px";
         }
         if (this.ob_time_marker.innerText !== undefined) {
             this.ob_time_marker.style.visibility = "visible";
             this.ob_time_marker.style.zIndex = "99999";
-            this.ob_time_marker.style.top = "2px";
-            this.ob_time_marker.style.left = (parseInt(this.ob_timeline_header.offsetWidth) / 2) - 100 + "px";
-            this.ob_time_marker.innerText = ob_markerDate.toLocaleString().replace("(Eastern Standart Time)", "");
+            this.ob_time_marker.style.top = "0px";
+            this.ob_time_marker.style.left = (parseInt(this.ob_timeline_header.offsetWidth) / 2) - 200 + "px";
+            if (this.timeZone === "UTC")
+                this.ob_time_marker.innerText = this.title+" - "+ob_markerDate.toString().substring(0, 25) + " - UTC";
+            else
+                this.ob_time_marker.innerText =  this.title+" - "+ob_markerDate.toString().substring(0, 25);
         }
     };
 
@@ -2047,8 +2073,9 @@ function OB_TIMELINE() {
             color = this.track(new THREE.Color("rgb(243,23,51)"));
         }
 
+        let ob_x;
         for (let i = 0; i < this.bands.length; i++) {
-            let ob_x = this.dateToPixelOffSet(new Date(Date.now()), this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            ob_x = this.dateToPixelOffSet(new Date(Date.now()), this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
             if (ob_x.isNaN) return;
             this.add_segment(this.bands[i].name, ob_x, this.bands[i].height / 2, 20, this.bands[i].heightMax, color, false);
             this.add_segment(this.bands[i].name, ob_x + 0.45, this.bands[i].height / 2, 20, this.bands[i].heightMax, this.bands[i].color, false);
