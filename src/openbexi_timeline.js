@@ -87,11 +87,6 @@ function OB_TIMELINE() {
             this.title = this.params[0].title;
         this.ob_filter = "*";
         this.regex = "^(?=.*(?:--|--))(?!.*(?:--|--)).*$";
-        /*if (this.ob_filter.match(this.regex))
-             request1 = true;
-        else {
-             request2 = false;
-        }*/
 
         this.camera = this.params[0].camera;
         this.ob_pos_camera_x = -375;
@@ -477,7 +472,10 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_start_clock = function () {
-        if ((this.params[0].date !== "current_time" && this.params[0].date !== "Date.now()")) return;
+        if ((this.params[0].date !== "current_time" && this.params[0].date !== "Date.now()")) {
+            clearInterval(this.ob_refresh_interval_clock);
+            return;
+        }
         let that2 = this;
         this.ob_sec_incr = 0;
         try {
@@ -498,7 +496,8 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.ob_create_calendar = function () {
+    OB_TIMELINE.prototype.ob_create_calendar = function (date) {
+        if (date === undefined || date === "current_time") date = "now";
         this.ob_remove_descriptor();
         this.ob_remove_help();
         this.ob_remove_setting();
@@ -514,14 +513,46 @@ function OB_TIMELINE() {
             this.ob_timeline_right_panel.appendChild(div);
 
             this.ob_timeline_right_panel.style.visibility = "visible";
-            let div_cal = document.createElement("div");
-            div_cal.id = this.name + "_cal";
-            div_cal.className = "uto-jsCalendar";
-            jsCalendar.new(div_cal);
+            this.div_cal = document.createElement("div");
+            this.div_cal.id = this.name + "_cal";
+            this.div_cal.className = "auto-jsCalendar";
+            this.ob_cal = jsCalendar.new(this.div_cal, date, {
+                navigator: true,
+                navigatorPosition: "both",
+                zeroFill: false,
+                monthFormat: "month YYYY",
+                dayFormat: "DDD",
+                firstDayOfTheWeek: "2",
+                language: "en"
+            });
+
+            let that3 = this;
+            this.ob_cal.onDateClick(function (event, date) {
+                if (that3.params[0].timeZone === "UTC") {
+                    that3.params[0].date = date.toString().substring(0, 24) + " UTC";
+                } else {
+                    that3.params[0].date = date.toString();
+                }
+                that3.params[0].date_cal = date.toString();
+                that3.params[0].show_calandar = true;
+                that3.ob_remove_calendar();
+                that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+            })
+            this.ob_cal.onMonthChange(function (event, date) {
+                if (that3.params[0].timeZone === "UTC")
+                    that3.params[0].date = date.toString().substring(0, 24) + " UTC";
+                else
+                    that3.params[0].date = date.toString();
+                that3.params[0].date_cal = date.toString();
+                that3.params[0].show_calandar = true;
+                that3.ob_remove_calendar();
+                that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+            })
+
 
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
-            this.ob_timeline_right_panel.appendChild(div_cal);
+            this.ob_timeline_right_panel.appendChild(this.div_cal);
         } catch (err) {
         }
     };
@@ -653,7 +684,10 @@ function OB_TIMELINE() {
             this.ob_search.style.width = 32 + "px";
             this.ob_search.onclick = function () {
                 that2.moving = false;
-                console.log("ob_search.onclick ...");
+                that2.params[0].show_calandar = true;
+                that2.params[0].date_cal = new Date(that2.params[0].date);
+                that2.ob_remove_calendar();
+                that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
             };
             this.ob_search.onmousemove = function () {
                 that2.moving = false;
@@ -740,6 +774,9 @@ function OB_TIMELINE() {
             this.ob_search_input.onkeydown = function (event) {
                 if (event.keyCode == 13) {
                     that2.moving = false;
+                    that2.params[0].show_calandar = true;
+                    that2.params[0].date_cal = new Date(that2.params[0].date);
+                    that2.ob_remove_calendar();
                     that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
                 }
             };
@@ -1642,6 +1679,8 @@ function OB_TIMELINE() {
                     ob_timeline.camera = current_camera;
                     ob_timeline.ob_set_camera();
                     ob_timeline.ob_start_clock();
+                    if (params[0].show_calandar)
+                        ob_timeline.ob_create_calendar(new Date(params[0].date_cal));
                     return null;
                 }
             }
@@ -1686,10 +1725,15 @@ function OB_TIMELINE() {
             this.ob_time_marker.style.zIndex = "99999";
             this.ob_time_marker.style.top = "0px";
             this.ob_time_marker.style.left = (parseInt(this.ob_timeline_header.offsetWidth) / 2) - 200 + "px";
-            if (this.timeZone === "UTC")
+            if (this.timeZone === "UTC") {
                 this.ob_time_marker.innerText = this.title + " - " + ob_markerDate.toString().substring(0, 25) + " - UTC";
-            else
+            } else {
                 this.ob_time_marker.innerText = this.title + " - " + ob_markerDate.toString().substring(0, 25);
+            }
+            if (this.ob_cal !== undefined) {
+                this.ob_cal.goto(ob_markerDate);
+                this.ob_cal.set(ob_markerDate);
+            }
         }
     };
 

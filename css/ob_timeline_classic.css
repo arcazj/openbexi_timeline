@@ -104,6 +104,9 @@
 
 .ob_time_marker {
     position: absolute;
+    text-align: center;
+    width: 500px;
+    font-family: Times, serif;
 }
 
 .ob_2d {
