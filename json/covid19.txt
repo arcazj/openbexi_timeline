@@ -3539,8 +3539,7 @@
     Michel Aoun called for citizens to work from home and avoid
     socializing to prevent the spread of the virus.
     Ref: (Reuters, 3/15/20)
-    2020-Mar 15, Malaysia confirmed
-    190 new coronavirus cases, pushing its overall total to 428, the
+    2020-Mar 15, Malaysia confirmed 190 new coronavirus cases, pushing its overall total to 428, the
     most in Southeast Asia.
     Ref: (Bloomberg, 3/15/20)
     2020-Mar 15, In the Netherlands
@@ -4832,8 +4831,7 @@
     suspend transit of international passengers through its airports
     from March 24 to April 7.
     Ref: (AP, 3/22/20)
-    2020-Mar 22, Thailand reported
-    188 more coronavirus cases, the highest daily increase so far,
+    2020-Mar 22, Thailand reported 188 more coronavirus cases, the highest daily increase so far,
     bringing the total to 599.
     Ref: (Reuters, 3/22/20)
     2020-Mar 22, Coronavirus cases
