@@ -1,0 +1,324 @@
+Ref: https://my.intelsat.com/ephemeris/public#/
+
+Atlantic Ocean Region
+Spacecraft: Intelsat IS-21 at 302.00 deg E / 58.00 deg W
+Prediction start epoch: 2020/04/21 00:00:00.000
+Prediction end epoch  : 2020/05/05 00:00:00.000
+
+CENTER OF BOX
+=============
+
+Polygon Description:
+Longitude: +/- 0.015 deg
+Latitude:  +/- 0.015 deg
+
+2020/04/21 02:04:51.150  Entering Polygon  [Center of Box]
+2020/04/21 06:54:01.350  Exiting Polygon   [Center of Box]
+2020/04/21 13:52:04.350  Entering Polygon  [Center of Box]
+2020/04/21 18:46:49.350  Exiting Polygon   [Center of Box]
+2020/04/22 00:59:22.650  Entering Polygon  [Center of Box]
+2020/04/22 06:55:35.850  Exiting Polygon   [Center of Box]
+2020/04/22 14:33:04.050  Entering Polygon  [Center of Box]
+2020/04/22 19:21:33.749  Exiting Polygon   [Center of Box]
+2020/04/22 23:30:59.849  Entering Polygon  [Center of Box]
+2020/04/23 06:13:12.449  Exiting Polygon   [Center of Box]
+2020/04/23 13:40:14.249  Entering Polygon  [Center of Box]
+2020/04/23 18:11:40.649  Exiting Polygon   [Center of Box]
+2020/04/24 00:59:11.849  Entering Polygon  [Center of Box]
+2020/04/24 07:37:21.449  Exiting Polygon   [Center of Box]
+2020/04/24 12:24:00.449  Entering Polygon  [Center of Box]
+2020/04/24 17:19:15.149  Exiting Polygon   [Center of Box]
+2020/04/25 02:00:23.849  Entering Polygon  [Center of Box]
+2020/04/25 16:41:54.149  Exiting Polygon   [Center of Box]
+2020/04/26 02:45:21.148  Entering Polygon  [Center of Box]
+2020/04/26 16:13:27.748  Exiting Polygon   [Center of Box]
+2020/04/27 03:18:44.548  Entering Polygon  [Center of Box]
+2020/04/27 08:51:58.048  Exiting Polygon   [Center of Box]
+2020/04/28 05:39:38.248  Entering Polygon  [Center of Box]
+2020/04/28 09:02:02.848  Exiting Polygon   [Center of Box]
+2020/04/28 17:32:31.648  Entering Polygon  [Center of Box]
+2020/04/28 17:53:46.048  Exiting Polygon   [Center of Box]
+2020/04/29 05:21:57.148  Entering Polygon  [Center of Box]
+2020/04/29 06:37:00.748  Exiting Polygon   [Center of Box]
+2020/04/29 17:11:09.147  Entering Polygon  [Center of Box]
+2020/04/29 20:07:00.747  Exiting Polygon   [Center of Box]
+2020/04/30 04:55:21.447  Entering Polygon  [Center of Box]
+2020/04/30 04:59:05.547  Exiting Polygon   [Center of Box]
+2020/04/30 16:41:02.847  Entering Polygon  [Center of Box]
+2020/04/30 18:04:25.947  Exiting Polygon   [Center of Box]
+2020/05/01 04:21:12.147  Entering Polygon  [Center of Box]
+2020/05/01 06:19:14.247  Exiting Polygon   [Center of Box]
+2020/05/01 16:05:10.947  Entering Polygon  [Center of Box]
+2020/05/01 16:56:04.647  Exiting Polygon   [Center of Box]
+2020/05/02 03:45:12.147  Entering Polygon  [Center of Box]
+2020/05/02 07:17:36.147  Exiting Polygon   [Center of Box]
+2020/05/02 15:30:42.747  Entering Polygon  [Center of Box]
+2020/05/02 16:21:55.347  Exiting Polygon   [Center of Box]
+2020/05/03 03:15:24.746  Entering Polygon  [Center of Box]
+2020/05/03 07:40:43.946  Exiting Polygon   [Center of Box]
+2020/05/03 15:05:11.846  Entering Polygon  [Center of Box]
+2020/05/03 16:19:13.346  Exiting Polygon   [Center of Box]
+2020/05/04 02:56:36.146  Entering Polygon  [Center of Box]
+2020/05/04 07:33:48.146  Exiting Polygon   [Center of Box]
+2020/05/04 14:50:53.246  Entering Polygon  [Center of Box]
+2020/05/04 16:42:04.946  Exiting Polygon   [Center of Box]
+
+Asian Pacific Region
+Spacecraft: Intelsat IS-1R at 157.10 deg E / 202.90 deg W
+Prediction start epoch: 2020/04/21 00:00:00.000
+Prediction end epoch  : 2020/05/05 00:00:00.000
+
+CENTER OF BOX
+=============
+
+Polygon Description:
+Longitude: +/- 0.015 deg
+Latitude:  +/- 0.015 deg
+
+2020/04/21 05:18:23.850  Entering Polygon  [Center of Box]
+2020/04/21 05:21:03.150  Exiting Polygon   [Center of Box]
+2020/04/21 17:16:19.650  Entering Polygon  [Center of Box]
+2020/04/21 17:18:58.950  Exiting Polygon   [Center of Box]
+2020/04/22 05:14:18.150  Entering Polygon  [Center of Box]
+2020/04/22 05:16:57.450  Exiting Polygon   [Center of Box]
+2020/04/22 17:12:13.949  Entering Polygon  [Center of Box]
+2020/04/22 17:14:53.249  Exiting Polygon   [Center of Box]
+2020/04/23 05:10:12.449  Entering Polygon  [Center of Box]
+2020/04/23 05:12:51.749  Exiting Polygon   [Center of Box]
+2020/04/23 17:08:08.249  Entering Polygon  [Center of Box]
+2020/04/23 17:10:47.549  Exiting Polygon   [Center of Box]
+2020/04/24 05:06:04.049  Entering Polygon  [Center of Box]
+2020/04/24 05:08:43.349  Exiting Polygon   [Center of Box]
+2020/04/24 17:03:59.849  Entering Polygon  [Center of Box]
+2020/04/24 17:06:39.149  Exiting Polygon   [Center of Box]
+2020/04/25 05:01:55.649  Entering Polygon  [Center of Box]
+2020/04/25 05:04:34.949  Exiting Polygon   [Center of Box]
+2020/04/25 16:59:51.449  Entering Polygon  [Center of Box]
+2020/04/25 17:02:30.749  Exiting Polygon   [Center of Box]
+2020/04/26 04:57:49.948  Entering Polygon  [Center of Box]
+2020/04/26 05:00:26.548  Exiting Polygon   [Center of Box]
+2020/04/26 16:55:48.448  Entering Polygon  [Center of Box]
+2020/04/26 16:58:25.048  Exiting Polygon   [Center of Box]
+2020/04/27 04:53:44.248  Entering Polygon  [Center of Box]
+2020/04/27 04:56:23.548  Exiting Polygon   [Center of Box]
+2020/04/27 16:51:45.448  Entering Polygon  [Center of Box]
+2020/04/27 16:54:24.748  Exiting Polygon   [Center of Box]
+2020/04/28 04:49:43.948  Entering Polygon  [Center of Box]
+2020/04/28 04:52:23.248  Exiting Polygon   [Center of Box]
+2020/04/28 16:47:47.848  Entering Polygon  [Center of Box]
+2020/04/28 16:50:24.448  Exiting Polygon   [Center of Box]
+2020/04/29 04:45:49.048  Entering Polygon  [Center of Box]
+2020/04/29 04:48:25.648  Exiting Polygon   [Center of Box]
+2020/04/29 16:43:52.947  Entering Polygon  [Center of Box]
+2020/04/29 16:46:32.247  Exiting Polygon   [Center of Box]
+2020/04/30 04:41:56.847  Entering Polygon  [Center of Box]
+2020/04/30 04:44:33.447  Exiting Polygon   [Center of Box]
+2020/04/30 16:40:03.447  Entering Polygon  [Center of Box]
+2020/04/30 16:42:40.047  Exiting Polygon   [Center of Box]
+2020/05/01 04:38:04.647  Entering Polygon  [Center of Box]
+2020/05/01 04:40:43.947  Exiting Polygon   [Center of Box]
+2020/05/01 16:36:13.947  Entering Polygon  [Center of Box]
+2020/05/01 16:38:50.547  Exiting Polygon   [Center of Box]
+2020/05/02 04:34:15.147  Entering Polygon  [Center of Box]
+2020/05/02 04:36:54.447  Exiting Polygon   [Center of Box]
+2020/05/02 16:32:24.447  Entering Polygon  [Center of Box]
+2020/05/02 16:35:01.047  Exiting Polygon   [Center of Box]
+2020/05/03 04:30:22.946  Entering Polygon  [Center of Box]
+2020/05/03 04:33:02.246  Exiting Polygon   [Center of Box]
+2020/05/03 16:28:29.546  Entering Polygon  [Center of Box]
+2020/05/03 16:31:06.146  Exiting Polygon   [Center of Box]
+2020/05/04 04:26:28.046  Entering Polygon  [Center of Box]
+2020/05/04 04:29:07.346  Exiting Polygon   [Center of Box]
+2020/05/04 16:24:31.946  Entering Polygon  [Center of Box]
+2020/05/04 16:27:08.546  Exiting Polygon   [Center of Box]
+
+Galaxy Region (°W)
+Spacecraft: Intelsat G-23 at 239.00 deg E / 121.00 deg W
+Prediction start epoch: 2020/04/21 00:00:00.000
+Prediction end epoch  : 2020/05/05 00:00:00.000
+
+CENTER OF BOX
+=============
+
+Polygon Description:
+Longitude: +/- 0.015 deg
+Latitude:  +/- 0.015 deg
+
+2020/04/21 06:18:58.050  Entering Polygon  [Center of Box]
+2020/04/21 09:54:28.350  Exiting Polygon   [Center of Box]
+2020/04/21 19:36:32.850  Entering Polygon  [Center of Box]
+2020/04/21 22:53:14.550  Exiting Polygon   [Center of Box]
+2020/04/22 06:10:35.850  Entering Polygon  [Center of Box]
+2020/04/22 09:32:52.350  Exiting Polygon   [Center of Box]
+2020/04/22 19:47:12.749  Entering Polygon  [Center of Box]
+2020/04/22 23:02:41.549  Exiting Polygon   [Center of Box]
+2020/04/23 05:57:08.549  Entering Polygon  [Center of Box]
+2020/04/23 09:16:18.749  Exiting Polygon   [Center of Box]
+2020/04/23 21:31:09.749  Entering Polygon  [Center of Box]
+2020/04/23 22:49:30.449  Exiting Polygon   [Center of Box]
+2020/04/24 09:30:58.949  Entering Polygon  [Center of Box]
+2020/04/24 10:13:33.149  Exiting Polygon   [Center of Box]
+2020/04/24 21:30:23.849  Entering Polygon  [Center of Box]
+2020/04/24 21:52:02.549  Exiting Polygon   [Center of Box]
+2020/04/25 09:29:19.049  Entering Polygon  [Center of Box]
+2020/04/25 11:29:41.549  Exiting Polygon   [Center of Box]
+2020/04/26 09:24:32.848  Entering Polygon  [Center of Box]
+2020/04/26 10:55:18.748  Exiting Polygon   [Center of Box]
+2020/04/26 21:20:32.548  Entering Polygon  [Center of Box]
+2020/04/26 21:22:07.048  Exiting Polygon   [Center of Box]
+2020/04/27 09:14:30.748  Entering Polygon  [Center of Box]
+2020/04/27 10:37:18.748  Exiting Polygon   [Center of Box]
+2020/04/27 21:07:18.748  Entering Polygon  [Center of Box]
+2020/04/27 21:30:53.548  Exiting Polygon   [Center of Box]
+2020/04/28 08:56:44.248  Entering Polygon  [Center of Box]
+2020/04/28 10:30:06.748  Exiting Polygon   [Center of Box]
+2020/04/28 20:45:31.948  Entering Polygon  [Center of Box]
+2020/04/28 21:33:05.848  Exiting Polygon   [Center of Box]
+2020/04/29 08:29:06.448  Entering Polygon  [Center of Box]
+2020/04/29 10:30:20.247  Exiting Polygon   [Center of Box]
+2020/04/29 20:13:24.147  Entering Polygon  [Center of Box]
+2020/04/29 21:29:24.447  Exiting Polygon   [Center of Box]
+2020/04/30 07:51:18.447  Entering Polygon  [Center of Box]
+2020/04/30 10:34:47.547  Exiting Polygon   [Center of Box]
+2020/04/30 19:32:16.347  Entering Polygon  [Center of Box]
+2020/04/30 21:21:37.347  Exiting Polygon   [Center of Box]
+2020/05/01 07:29:18.147  Entering Polygon  [Center of Box]
+2020/05/01 10:40:43.947  Exiting Polygon   [Center of Box]
+2020/05/01 18:48:45.447  Entering Polygon  [Center of Box]
+2020/05/01 21:12:40.047  Exiting Polygon   [Center of Box]
+2020/05/02 07:40:25.047  Entering Polygon  [Center of Box]
+2020/05/02 10:46:43.047  Exiting Polygon   [Center of Box]
+2020/05/02 18:12:50.847  Entering Polygon  [Center of Box]
+2020/05/02 21:06:08.546  Exiting Polygon   [Center of Box]
+2020/05/03 07:50:59.546  Entering Polygon  [Center of Box]
+2020/05/03 10:52:58.346  Exiting Polygon   [Center of Box]
+2020/05/03 18:03:40.046  Entering Polygon  [Center of Box]
+2020/05/03 21:04:07.046  Exiting Polygon   [Center of Box]
+2020/05/04 08:01:34.046  Entering Polygon  [Center of Box]
+2020/05/04 11:00:58.946  Exiting Polygon   [Center of Box]
+2020/05/04 18:19:25.046  Entering Polygon  [Center of Box]
+2020/05/04 21:36:52.646  Exiting Polygon   [Center of Box]
+
+Indian Ocean Region
+Spacecraft: Intelsat IS-28 at 32.80 deg E / 327.20 deg W
+Prediction start epoch: 2020/04/21 00:00:00.000
+Prediction end epoch  : 2020/05/05 00:00:00.000
+
+CENTER OF BOX
+=============
+
+Polygon Description:
+Longitude: +/- 0.015 deg
+Latitude:  +/- 0.015 deg
+
+2020/04/21 07:31:43.950  Entering Polygon  [Center of Box]
+2020/04/21 07:52:17.850  Exiting Polygon   [Center of Box]
+2020/04/21 19:49:52.050  Entering Polygon  [Center of Box]
+2020/04/21 23:07:16.950  Exiting Polygon   [Center of Box]
+2020/04/22 07:23:21.750  Entering Polygon  [Center of Box]
+2020/04/22 08:33:49.950  Exiting Polygon   [Center of Box]
+2020/04/22 19:17:36.149  Entering Polygon  [Center of Box]
+2020/04/22 23:08:35.249  Exiting Polygon   [Center of Box]
+2020/04/23 07:10:43.049  Entering Polygon  [Center of Box]
+2020/04/23 08:29:06.449  Exiting Polygon   [Center of Box]
+2020/04/23 19:30:55.349  Entering Polygon  [Center of Box]
+2020/04/23 23:10:55.649  Exiting Polygon   [Center of Box]
+2020/04/24 06:51:05.849  Entering Polygon  [Center of Box]
+2020/04/24 07:26:36.149  Exiting Polygon   [Center of Box]
+2020/04/26 18:24:27.448  Entering Polygon  [Center of Box]
+2020/04/26 22:55:32.248  Exiting Polygon   [Center of Box]
+2020/04/27 04:44:14.548  Entering Polygon  [Center of Box]
+2020/04/27 10:44:17.248  Exiting Polygon   [Center of Box]
+2020/04/27 21:52:59.248  Entering Polygon  [Center of Box]
+2020/04/27 21:55:43.948  Exiting Polygon   [Center of Box]
+2020/04/27 23:27:26.548  Entering Polygon  [Center of Box]
+2020/04/28 01:21:31.048  Exiting Polygon   [Center of Box]
+2020/04/28 09:41:36.148  Entering Polygon  [Center of Box]
+2020/04/28 13:20:50.548  Exiting Polygon   [Center of Box]
+2020/04/28 21:25:40.348  Entering Polygon  [Center of Box]
+2020/04/29 01:18:19.348  Exiting Polygon   [Center of Box]
+2020/04/29 09:10:43.948  Entering Polygon  [Center of Box]
+2020/04/29 13:14:21.747  Exiting Polygon   [Center of Box]
+2020/04/29 20:50:50.547  Entering Polygon  [Center of Box]
+2020/04/30 01:07:23.247  Exiting Polygon   [Center of Box]
+2020/04/30 08:33:47.247  Entering Polygon  [Center of Box]
+2020/04/30 09:05:41.547  Exiting Polygon   [Center of Box]
+2020/04/30 12:50:41.547  Entering Polygon  [Center of Box]
+2020/04/30 12:59:38.847  Exiting Polygon   [Center of Box]
+2020/04/30 20:13:07.947  Entering Polygon  [Center of Box]
+2020/05/01 00:47:43.347  Exiting Polygon   [Center of Box]
+2020/05/01 19:39:47.247  Entering Polygon  [Center of Box]
+2020/05/02 00:22:25.947  Exiting Polygon   [Center of Box]
+2020/05/02 19:15:45.446  Entering Polygon  [Center of Box]
+2020/05/02 23:58:29.546  Exiting Polygon   [Center of Box]
+2020/05/03 22:01:40.346  Entering Polygon  [Center of Box]
+2020/05/03 23:42:41.846  Exiting Polygon   [Center of Box]
+
+Pacific Ocean Region
+Spacecraft: Intelsat IS-19 at 166.00 deg E / 194.00 deg W
+Prediction start epoch: 2020/04/21 00:00:00.000
+Prediction end epoch  : 2020/05/05 00:00:00.000
+
+CENTER OF BOX
+=============
+
+Polygon Description:
+Longitude: +/- 0.015 deg
+Latitude:  +/- 0.015 deg
+
+2020/04/21 01:42:21.150  Entering Polygon  [Center of Box]
+2020/04/21 03:16:21.450  Exiting Polygon   [Center of Box]
+2020/04/21 13:41:19.050  Entering Polygon  [Center of Box]
+2020/04/21 16:17:11.850  Exiting Polygon   [Center of Box]
+2020/04/22 01:40:41.250  Entering Polygon  [Center of Box]
+2020/04/22 02:47:52.350  Exiting Polygon   [Center of Box]
+2020/04/22 13:40:22.350  Entering Polygon  [Center of Box]
+2020/04/22 16:46:18.749  Exiting Polygon   [Center of Box]
+2020/04/23 01:40:14.249  Entering Polygon  [Center of Box]
+2020/04/23 02:27:21.149  Exiting Polygon   [Center of Box]
+2020/04/23 13:39:52.649  Entering Polygon  [Center of Box]
+2020/04/23 16:15:29.249  Exiting Polygon   [Center of Box]
+2020/04/24 01:39:12.149  Entering Polygon  [Center of Box]
+2020/04/24 02:42:47.249  Exiting Polygon   [Center of Box]
+2020/04/24 13:37:37.649  Entering Polygon  [Center of Box]
+2020/04/24 15:49:36.749  Exiting Polygon   [Center of Box]
+2020/04/25 01:35:09.149  Entering Polygon  [Center of Box]
+2020/04/25 02:55:01.649  Exiting Polygon   [Center of Box]
+2020/04/25 13:30:33.749  Entering Polygon  [Center of Box]
+2020/04/25 15:29:27.149  Exiting Polygon   [Center of Box]
+2020/04/26 01:24:15.748  Entering Polygon  [Center of Box]
+2020/04/26 03:03:45.448  Exiting Polygon   [Center of Box]
+2020/04/26 13:13:25.048  Entering Polygon  [Center of Box]
+2020/04/26 15:16:10.648  Exiting Polygon   [Center of Box]
+2020/04/27 00:59:44.248  Entering Polygon  [Center of Box]
+2020/04/27 03:09:01.348  Exiting Polygon   [Center of Box]
+2020/04/27 12:35:10.048  Entering Polygon  [Center of Box]
+2020/04/27 15:09:31.048  Exiting Polygon   [Center of Box]
+2020/04/28 00:03:48.148  Entering Polygon  [Center of Box]
+2020/04/28 03:10:52.048  Exiting Polygon   [Center of Box]
+2020/04/28 11:50:37.048  Entering Polygon  [Center of Box]
+2020/04/28 15:07:45.748  Exiting Polygon   [Center of Box]
+2020/04/28 23:53:27.148  Entering Polygon  [Center of Box]
+2020/04/29 03:09:47.248  Exiting Polygon   [Center of Box]
+2020/04/29 12:04:36.747  Entering Polygon  [Center of Box]
+2020/04/29 16:04:43.947  Exiting Polygon   [Center of Box]
+2020/04/29 20:47:17.247  Entering Polygon  [Center of Box]
+2020/04/30 00:58:42.147  Exiting Polygon   [Center of Box]
+2020/04/30 11:24:39.147  Entering Polygon  [Center of Box]
+2020/04/30 14:43:35.847  Exiting Polygon   [Center of Box]
+2020/04/30 22:09:08.547  Entering Polygon  [Center of Box]
+2020/05/01 01:57:47.247  Exiting Polygon   [Center of Box]
+2020/05/01 10:32:21.747  Entering Polygon  [Center of Box]
+2020/05/01 13:48:20.247  Exiting Polygon   [Center of Box]
+2020/05/01 23:17:48.747  Entering Polygon  [Center of Box]
+2020/05/02 03:10:52.047  Exiting Polygon   [Center of Box]
+2020/05/02 09:20:51.447  Entering Polygon  [Center of Box]
+2020/05/02 12:57:37.347  Exiting Polygon   [Center of Box]
+2020/05/03 00:25:29.546  Entering Polygon  [Center of Box]
+2020/05/03 05:39:49.046  Exiting Polygon   [Center of Box]
+2020/05/04 02:06:49.946  Entering Polygon  [Center of Box]
+2020/05/04 03:04:44.846  Exiting Polygon   [Center of Box]
+
+
+
+
