@@ -67,10 +67,10 @@ class ResourceTracker {
     }
 }
 
-function WebSocketClient() {
+/*function WebSocketClient() {
     this.number = 0;	// Message number
     this.autoReconnectInterval = 5 * 1000;	// ms
-}
+}*/
 
 function OB_TIMELINE() {
 
@@ -528,21 +528,14 @@ function OB_TIMELINE() {
 
             let that3 = this;
             this.ob_cal.onDateClick(function (event, date) {
-                if (that3.params[0].timeZone === "UTC") {
-                    that3.params[0].date = date.toString().substring(0, 24) + " UTC";
-                } else {
-                    that3.params[0].date = date.toString();
-                }
+                that3.params[0].date = date.toString().substring(0, 24) + " UTC";
                 that3.params[0].date_cal = date.toString();
                 that3.params[0].show_calandar = true;
                 that3.ob_remove_calendar();
                 that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
             this.ob_cal.onMonthChange(function (event, date) {
-                if (that3.params[0].timeZone === "UTC")
-                    that3.params[0].date = date.toString().substring(0, 24) + " UTC";
-                else
-                    that3.params[0].date = date.toString();
+                that3.params[0].date = date.toString();
                 that3.params[0].date_cal = date.toString();
                 that3.params[0].show_calandar = true;
                 that3.ob_remove_calendar();
@@ -596,7 +589,6 @@ function OB_TIMELINE() {
             div.id = this.name + "_descriptor";
             div.className = "ob_head_panel";
             if (data.end === undefined) data.end = "";
-            //div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br> ID = " + data.id + "<br><br>" + data.start + "<br>" + data.end + "<br><br>STATUS = " + data.status + "<br>------------<br>";
             div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br>" + data.start + "<br>" + data.end + "<br><br>" + data.text + "<br>------------<br>";
             this.ob_timeline_right_panel.appendChild(div);
         }
@@ -656,7 +648,7 @@ function OB_TIMELINE() {
             this.ob_calendar.style.width = 32 + "px";
             this.ob_calendar.onclick = function () {
                 that2.moving = false;
-                that2.ob_create_calendar();
+                that2.ob_create_calendar(that2.ob_markerDate);
             };
             this.ob_calendar.onmousemove = function (event) {
                 that2.moving = false;
@@ -685,7 +677,10 @@ function OB_TIMELINE() {
             this.ob_search.onclick = function () {
                 that2.moving = false;
                 that2.params[0].show_calandar = true;
-                that2.params[0].date_cal = new Date(that2.params[0].date);
+                if (that2.params[0].date === "current_time")
+                    that2.params[0].date_cal = new Date();
+                else
+                    that2.params[0].date_cal = new Date(that2.params[0].date);
                 that2.ob_remove_calendar();
                 that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
             };
@@ -772,10 +767,13 @@ function OB_TIMELINE() {
                 that2.ob_search_input.style.cursor = "default";
             };
             this.ob_search_input.onkeydown = function (event) {
-                if (event.keyCode == 13) {
+                if (event.keyCode === 13) {
                     that2.moving = false;
                     that2.params[0].show_calandar = true;
-                    that2.params[0].date_cal = new Date(that2.params[0].date);
+                    if (that2.params[0].date === "current_time")
+                        that2.params[0].date_cal = new Date();
+                    else
+                        that2.params[0].date_cal = new Date(that2.params[0].date);
                     that2.ob_remove_calendar();
                     that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
                 }
@@ -811,7 +809,8 @@ function OB_TIMELINE() {
                 this.ob_timeline_header.style.width = this.header[0].width;
             if (this.header[0].height !== undefined)
                 this.ob_timeline_header.style.height = this.header[0].height;
-        }
+        } else
+            this.header = {};
         if (this.ob_timeline_header.style.height === undefined || this.ob_timeline_header.style.height === "")
             this.ob_timeline_header.style.height = "40px";
         if (this.ob_timeline_header.style.width === undefined || this.ob_timeline_header.style.width === "")
@@ -1150,7 +1149,9 @@ function OB_TIMELINE() {
         return this.dateToPixelOffSet(new Date(gregorianUnitLengths), gregorianUnitLengths, intervalPixels) - this.dateToPixelOffSet(new Date(0), gregorianUnitLengths, intervalPixels);
     };
     OB_TIMELINE.prototype.dateToPixelOffSet = function (date, gregorianUnitLengths, intervalPixels) {
-        if (date === "") return NaN;
+        if (date === undefined || date === "") {
+            return NaN;
+        }
         if (this.timeZone === "UTC")
             if (date.toString().includes("UTC"))
                 return (this.getUTCTime(Date.parse(date)) - this.startDateTime) / (gregorianUnitLengths / intervalPixels);
@@ -1235,11 +1236,17 @@ function OB_TIMELINE() {
         if (this.sessions === undefined) return;
         let ob_layouts = [];
         let max_name_length = 0;
+        let pixelOffSetStart;
+
         for (let i = 0; i < this.sessions.events.length; i++) {
-            if (ob_layouts.indexOf(eval("this.sessions.events[i]" + "." + eval("ob_attribute"))) === -1) {
-                ob_layouts.push(eval("this.sessions.events[i]" + "." + eval("ob_attribute")));
-                if ((ob_layouts[0]) !== undefined)
-                    if ((ob_layouts[0]).length > max_name_length) max_name_length = (ob_layouts[0]).length;
+            // Remove all events events not visible in the bands
+            pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[i].start, band.gregorianUnitLengths, band.intervalPixels);
+            if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
+                if (ob_layouts.indexOf(eval("this.sessions.events[i]" + "." + eval("ob_attribute"))) === -1) {
+                    ob_layouts.push(eval("this.sessions.events[i]" + "." + eval("ob_attribute")));
+                    if ((ob_layouts[0]) !== undefined)
+                        if ((ob_layouts[0]).length > max_name_length) max_name_length = (ob_layouts[0]).length;
+                }
             }
         }
         band.layouts = ob_layouts;
@@ -1262,7 +1269,7 @@ function OB_TIMELINE() {
         }
         this.bands.original_length = this.bands.length;
     }
-    ;
+
     OB_TIMELINE.prototype.create_new_bands = function () {
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].model === undefined) {
@@ -1334,9 +1341,9 @@ function OB_TIMELINE() {
                 this.bands[i].minY = -this.bands[i].maxY;
                 this.bands[i].heightMin = this.height - pos;
                 if (this.bands[i].name.match(/overview_/)) {
-                    offSetOverview = parseInt(this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels);
+                    offSetOverview = parseInt(this.bands[i].gregorianUnitLengths) / parseInt(this.bands[i].intervalPixels);
                 } else {
-                    offSet = parseInt(this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels);
+                    offSet = parseInt(this.bands[i].gregorianUnitLengths) / parseInt(this.bands[i].intervalPixels);
                 }
             }
         }
@@ -1361,12 +1368,6 @@ function OB_TIMELINE() {
                 " - this.bands[i].pos_x=" + this.bands[i].pos_x +
                 " - this.bands[i].pos_y=" + this.bands[i].pos_y +
                 " - this.bands[i].pos_z=" + this.bands[i].pos_z)*/
-        }
-    };
-    OB_TIMELINE.prototype.reset_bands = function () {
-        for (let i = 0; i < this.bands.length; i++) {
-            this.bands[i].maxY = undefined;
-            this.bands[i].minY = undefined;
         }
     };
     OB_TIMELINE.prototype.set_bands = function () {
@@ -1691,22 +1692,20 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.sync_bands = function (ob_band, x) {
         if (ob_band === undefined) return;
         let ob_band2;
-        let ob_markerDate;
         let scale1;
         let scale2;
-        let ob_markerDate2;
         let ob_incrementPixelOffSet2;
         for (let i = 0; i < this.bands.length; i++) {
             if (ob_band.name === this.bands[i].name) {
-                ob_markerDate = this.pixelOffSetToDate(-x, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                this.ob_markerDate = this.pixelOffSetToDate(-x, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
                 scale1 = this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels;
                 break;
             }
         }
         for (let i = 0; i < this.bands.length; i++) {
             if (ob_band.name !== this.bands[i].name) {
-                ob_markerDate2 = this.pixelOffSetToDate(x, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
-                ob_incrementPixelOffSet2 = this.dateToPixelOffSet(ob_markerDate2, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                this.ob_markerDate2 = this.pixelOffSetToDate(x, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                ob_incrementPixelOffSet2 = this.dateToPixelOffSet(this.ob_markerDate2, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
                 scale2 = this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels;
                 //Start syncing
                 ob_band2 = this.ob_scene.getObjectByName(this.bands[i].name);
@@ -1726,13 +1725,13 @@ function OB_TIMELINE() {
             this.ob_time_marker.style.top = "0px";
             this.ob_time_marker.style.left = (parseInt(this.ob_timeline_header.offsetWidth) / 2) - 200 + "px";
             if (this.timeZone === "UTC") {
-                this.ob_time_marker.innerText = this.title + " - " + ob_markerDate.toString().substring(0, 25) + " - UTC";
+                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25) + " - UTC";
             } else {
-                this.ob_time_marker.innerText = this.title + " - " + ob_markerDate.toString().substring(0, 25);
+                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25);
             }
             if (this.ob_cal !== undefined) {
-                this.ob_cal.goto(ob_markerDate);
-                this.ob_cal.set(ob_markerDate);
+                this.ob_cal.goto(this.ob_markerDate);
+                this.ob_cal.set(this.ob_markerDate);
             }
         }
     };
@@ -1794,8 +1793,8 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.get_room_for_session = function (sessions, session, i) {
         let ob_enough_room = true;
-        let y = 0;
         this.bands[i].track = this.bands[i].maxY - this.bands[i].fontSizeInt;
+
         // if not enough room to plot the session increase bandwith regarding this.bands[i].trackIncrement
         while (ob_enough_room) {
             this.bands[i].track = this.bands[i].track - this.bands[i].trackIncrement;
@@ -1868,7 +1867,7 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.set_sessions = function () {
         let layout;
-        let x = 0, y = 0, z = 5, h = 0, w = 0;
+        let y = 0, z = 5, h = 0, w = 0;
         let textX = 0;
         let pixelOffSetStart = 0;
         let pixelOffSetEnd = 0;
@@ -1878,20 +1877,25 @@ function OB_TIMELINE() {
         for (let p = 0; p < 2; p++) {
             if (p === 1 && this.bands.updated === false)
                 break;
+
             // for each bands
             for (let i = 0; i < this.bands.length; i++) {
-                let ob_obj, ob_txt;
-
                 this.bands[i].sessions = [];
                 if (this.sessions === undefined) break;
+
+                // Assign each event to the right bands
                 for (let k = 0; k < this.sessions.events.length; k++) {
-                    layout = eval("this.sessions.events[k]" + "." + eval("this.bands[i].model[0].sortBy"));
-                    if (layout !== undefined && this.bands[i].layout_name === layout) {
-                        this.sessions.events[k].y = undefined;
-                        this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
-                    }
-                    if (layout === undefined && this.bands[i].layout_name === "NONE") {
-                        this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                    // Remove all events events not visible in the bands
+                    pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[k].start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                    if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
+                        layout = eval("this.sessions.events[k]" + "." + eval("this.bands[i].model[0].sortBy"));
+                        if (layout !== undefined && this.bands[i].layout_name === layout) {
+                            this.sessions.events[k].y = undefined;
+                            this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                        }
+                        if (layout === undefined && this.bands[i].layout_name === "NONE") {
+                            this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                        }
                     }
                 }
 
@@ -1947,9 +1951,9 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.build_sessions_filter = function () {
         this.ob_filter = this.ob_search_input.value.split("|");
         this.regex = "^(?=.*(?:--|--))(?!.*(?:__|__)).*$";
-        if (this.ob_filter.length == 1)
+        if (this.ob_filter.length === 1)
             this.regex = this.regex.replace("--|--", this.ob_filter[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
-        if (this.ob_filter.length == 2) {
+        if (this.ob_filter.length === 2) {
             this.regex = this.regex.replace("--|--", this.ob_filter[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
             this.regex = this.regex.replace("__|__", this.ob_filter[1].replace(" ", "|").replace(",", "|").replace(";", "|"));
         }
@@ -1962,7 +1966,7 @@ function OB_TIMELINE() {
         this.build_sessions_filter();
 
         for (let i = 0; i < this.bands.length; i++) {
-            let ob_obj, ob_txt;
+            let ob_obj;
             for (let j = 0; j < this.bands[i].sessions.length; j++) {
                 try {
                     if (this.bands[i].sessions[j].title.match(this.regex)) {
@@ -2065,8 +2069,8 @@ function OB_TIMELINE() {
         if (ob_band !== undefined) {
             ob_band.add(ob_event);
         }
-        return ob_event;
         if (ob_debug_ADD_EVENT_WEBGL_OBJECT) console.log("OB_TIMELINE.ob_addEvent(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+        return ob_event;
     };
     OB_TIMELINE.prototype.removeEvent = function (band_name, event_id) {
         let ob_band = this.ob_scene.getObjectByName(band_name);
@@ -2377,7 +2381,7 @@ function OB_TIMELINE() {
             that.ob_renderer.render(that.ob_scene, that.ob_camera);
 
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragstart :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
-            console.log("dragControls.addEventListener('dragstart'," + e.object.name + ")");
+            //console.log("dragControls.addEventListener('dragstart'," + e.object.name + ")");
         });
         this.dragControls.addEventListener('dragend', function (e) {
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = true;
@@ -2396,6 +2400,13 @@ function OB_TIMELINE() {
             that.ob_renderer.render(that.ob_scene, that.ob_camera);
             //that.dragControls = new THREE.DragControls(that.objects, that.ob_camera, that.ob_renderer.domElement);
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragend :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
+
+            // Update scene according the new bands position
+            that.params[0].date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
+            that.params[0].date_cal = that.ob_markerDate;
+            //that.params[0].show_calandar = true;
+            //that.ob_remove_calendar();
+            that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
             console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
         });
 
@@ -2524,41 +2535,6 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.runUnitTestsMinutes = function () {
-        this.params_dummy = [{
-            name: "ob_timeline_0",
-            date: "current_time",
-            top: 50,
-            left: 50,
-            height: 400,
-            fontSize: this.fontSize,
-            //width: window.innerWidth,
-            width: 1000,
-            data: "unit_tests"
-        }];
-        this.bands_dummy = [{
-            name: "ob_band_1",
-            height: "85%",
-            color: "#f3f3ed",
-            intervalPixels: "120",
-            intervalUnit: "MINUTE",
-            dateColor: "#7d8a86",
-            textColor: "#040404",
-            SessionColor: "#1aff51",
-            eventColor: "#5fc0f3",
-            defaultEventSize: 5,
-            model: "NONE"
-        },
-            {
-                name: "ob_overview_band_0",
-                height: "15%",
-                color: "lightgrey",
-                intervalPixels: "200",
-                intervalUnit: "HOUR",
-                SessionColor: "#8ee7ff",
-                eventColor: "#5fc0f3",
-                dateColor: "#7d8a86",
-            }];
-
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
         let ob_start, ob_end, ob_type, ob_title;
         for (let i = 0; i < 100; i++) {
@@ -2686,41 +2662,6 @@ function OB_TIMELINE() {
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
     OB_TIMELINE.prototype.runUnitTestsHours = function () {
-        this.params_dummy = [{
-            name: "ob_timeline_0",
-            date: "current_time",
-            top: 50,
-            left: 50,
-            height: 400,
-            fontSize: this.fontSize,
-            //width: window.innerWidth,
-            width: 1000,
-            data: "unit_tests"
-        }];
-        this.bands_dummy = [{
-            name: "ob_band_1",
-            height: "85%",
-            color: "#f3f3ed",
-            intervalPixels: "60",
-            intervalUnit: "MINUTE",
-            dateColor: "#7d8a86",
-            textColor: "#040404",
-            SessionColor: "#1aff51",
-            eventColor: "#5fc0f3",
-            defaultEventSize: 5,
-            model: "NONE"
-        },
-            {
-                name: "ob_overview_band_0",
-                height: "15%",
-                color: "lightgrey",
-                intervalPixels: "200",
-                intervalUnit: "HOUR",
-                SessionColor: "#8ee7ff",
-                eventColor: "#5fc0f3",
-                dateColor: "#7d8a86",
-            }];
-
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
         let ob_start, ob_end, ob_type, ob_title;
         for (let i = 0; i < 100; i++) {
@@ -2733,12 +2674,12 @@ function OB_TIMELINE() {
                 ob_end = new Date(Date.now() + 1015000);
                 ob_type = "type7";
                 ob_title = "session SESSION T0";
-            } else if (i === 4 || i === 8 || i == 12 || i == 14) {
+            } else if (i === 4 || i === 8 || i === 12 || i === 14) {
                 ob_start = new Date(Date.now() + i * 600000);
                 ob_end = new Date(Date.now() + i * 700000);
                 ob_type = "type6";
                 ob_title = "SESSION" + i;
-            } else if (i === 3 || i === 9 || i == 18) {
+            } else if (i === 3 || i === 9 || i === 18) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type10";
@@ -2831,23 +2772,20 @@ function OB_TIMELINE() {
                 //headers: {
                 //'Accept': 'application/json',
                 //},
-            })
-                .then((response) => {
-                    if (response.ok) {
-                        console.log("Response OK!");
-                        that.sessions = eval('(' + (response.json()) + ')');
-                        that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
-                    } else {
-                        console.log("Response not OK!");
-                    }
+            }).then((response) => {
+                if (response.ok) {
+                    console.log("Response OK!");
+                    that.sessions = eval('(' + (response.json()) + ')');
+                    that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+                } else {
+                    console.log("Response not OK!");
+                }
 
-                })
-                .then(data => {
-                    console.log("json:" + data);
-                })
-                .catch(err => {
-                    console.log('Error message:', err.statusText)
-                });
+            }).then(data => {
+                console.log("json:" + data);
+            }).catch(err => {
+                console.log('Error message:', err.statusText)
+            });
             return;
         }
         let ob_url_secure = this.data && this.data.match(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/);
@@ -2909,7 +2847,7 @@ function OB_TIMELINE() {
                 console.log("Your browser does not support the dataTransfer object...");
                 return false;
             }
-            var reader = new FileReader();
+            let reader = new FileReader();
             reader.filename = file_name;
             reader.onloadend = function (event) {
 
