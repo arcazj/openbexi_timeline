@@ -19,6 +19,27 @@ GNU General Public License for more details.
 as long with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+/*
+tests Ajax no_secure
+http://localhost:8080/openbexi_timeline.html
+data: "http://localhost:8080/openbexi_timeline/sessions?startDate=curent_time&endDate="
+data: "http://localhost:8080/openbexi_timeline/sessions?startDate=test&endDate=test"
+
+tests Ajax secure
+https://localhost:8445/openbexi_timeline.html
+data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
+
+tests SSE
+Important server setting: ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+https://localhost:63342/openbexi_GNS_timeline/tests/openbexi_timeline_test_SSE_example.html
+https://localhost:8443/tests/openbexi_timeline_test_SSE_example.html
+data: "https://localhost:8443/openbexi_timeline_sse/sessions?startDate=test&endDate=test"
+
+tests WS
+Important server setting: ctx =tomcat.addWebapp("/", ".");
+http://localhost:63342/openbexi_GNS_timeline/tests/openbexi_timeline_test_WS_example.html
+data: "wss://localhost:8444/openbexi_timeline_ws/sessions?startDate=test&endDate=test"
+*/
 
 ob_debug_room = false;
 ob_debug_ADD_WEBGL_OBJECT = false;
@@ -99,6 +120,7 @@ function OB_TIMELINE() {
         this.ob_lookAt_y = 300;
         this.ob_lookAt_z = 0;
 
+        this.descriptor = this.params[0].descriptor;
         this.data = this.params[0].data;
         this.center = "center";
         this.font_align = "right";
@@ -504,7 +526,7 @@ function OB_TIMELINE() {
         try {
             if (document.getElementById(this.name + "_cal") !== null) {
                 this.ob_remove_calendar();
-                return;
+                //return;
             }
             let div = document.createElement("div");
             div.className = "ob_head_panel";
@@ -530,16 +552,33 @@ function OB_TIMELINE() {
             this.ob_cal.onDateClick(function (event, date) {
                 that3.params[0].date = date.toString().substring(0, 24) + " UTC";
                 that3.params[0].date_cal = date.toString();
-                that3.params[0].show_calandar = true;
+                that3.params[0].show_calendar = true;
                 that3.ob_remove_calendar();
-                that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+                if (that3.data && that3.data.match(/^(http?):\/\//) ||
+                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                    that3.data && that3.data.match(/^(https?):\/\//)) {
+                    that3.data_head = that3.data.split("?");
+                    that3.update_bands_MinDate(that3.params[0].date);
+                    that3.update_bands_MaxDate(that3.params[0].date);
+                    that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
+                    that3.loadData();
+                } else
+                    that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
             this.ob_cal.onMonthChange(function (event, date) {
                 that3.params[0].date = date.toString();
                 that3.params[0].date_cal = date.toString();
-                that3.params[0].show_calandar = true;
-                that3.ob_remove_calendar();
-                that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+                that3.params[0].show_calendar = true;
+                if (that3.data && that3.data.match(/^(http?):\/\//) ||
+                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                    that3.data && that3.data.match(/^(https?):\/\//)) {
+                    that3.data_head = that3.data.split("?");
+                    that3.update_bands_MinDate(that3.params[0].date);
+                    that3.update_bands_MaxDate(that3.params[0].date);
+                    that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
+                    that3.loadData();
+                } else
+                    that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
 
 
@@ -566,8 +605,9 @@ function OB_TIMELINE() {
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_descriptor"));
         } catch (err) {
         }
-        if (data !== undefined)
+        if (data !== undefined) {
             this.ob_createDescriptor(data);
+        }
     };
 
     OB_TIMELINE.prototype.ob_remove_descriptor = function (data) {
@@ -576,21 +616,34 @@ function OB_TIMELINE() {
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_descriptor"));
         } catch (err) {
         }
-        if (data !== undefined)
-            this.ob_createDescriptor(data);
     };
 
-    OB_TIMELINE.prototype.ob_createDescriptor = function (data) {
-        this.ob_remove_calendar();
-        this.ob_remove_help();
+    OB_TIMELINE.prototype.ob_createDescriptor = function (descriptor) {
+        // Use default descriptor if a specific descriptor has not been defined somewhere for event or sessopns
         if (document.getElementById(this.name + "_descriptor") === null) {
             this.ob_timeline_right_panel.style.visibility = "visible";
-            let div = document.createElement("div");
-            div.id = this.name + "_descriptor";
-            div.className = "ob_head_panel";
-            if (data.end === undefined) data.end = "";
-            div.innerHTML = "<div style='padding:8px;text-align: center;'>" + data.title + "<\div><br><br>" + data.start + "<br>" + data.end + "<br><br>" + data.text + "<br>------------<br>";
-            this.ob_timeline_right_panel.appendChild(div);
+            if (this.descriptor === undefined) {
+                let div = document.createElement("div");
+                div.id = this.name + "_descriptor";
+                div.className = "ob_descriptor";
+                if (descriptor.end === undefined) descriptor.end = "";
+                div.innerHTML = "<div class=ob_descriptor_head >" + "data" + "<\div><br><br>" +
+                    "<table class=ob_descriptor_table id=" + this.name + "_table_start_end" + ">" +
+                    "<tr><td class=ob_descriptor_td_left>Start : </td><td>" + descriptor.start + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td_left>End : </td><td>" + descriptor.end + "</td></tr>" +
+                    "<tr><td></td></tr>" +
+                    "<tr><td class=ob_descriptor_td_left>Title:</td><td>" + descriptor.data.title + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td_left>Status:</td><td>" + descriptor.data.status + "</td></tr>" +
+                    "<tr><td></td></tr>" +
+                    "<tr><td class=ob_descriptor_td_left>Description:</td><td>" + descriptor.data.description + "</td></tr>" +
+                    "</table>";
+                this.ob_timeline_right_panel.appendChild(div);
+            } else {
+                // Build, eval and display he descriptor
+                this.descriptor = "this." + this.descriptor.replace(".js", "(descriptor)").replace("this.", "");
+                let div = eval(this.descriptor);
+                this.ob_timeline_right_panel.appendChild(div);
+            }
         }
     };
 
@@ -648,7 +701,12 @@ function OB_TIMELINE() {
             this.ob_calendar.style.width = 32 + "px";
             this.ob_calendar.onclick = function () {
                 that2.moving = false;
-                that2.ob_create_calendar(that2.ob_markerDate);
+                if (that2.params[0].show_calendar === undefined)
+                    that2.params[0].show_calendar = true;
+                if (that2.params[0].show_calendar === true) {
+                    that2.ob_create_calendar(that2.ob_markerDate);
+                    that2.params[0].show_calendar === false;
+                }
             };
             this.ob_calendar.onmousemove = function (event) {
                 that2.moving = false;
@@ -676,7 +734,7 @@ function OB_TIMELINE() {
             this.ob_search.style.width = 32 + "px";
             this.ob_search.onclick = function () {
                 that2.moving = false;
-                that2.params[0].show_calandar = true;
+                that2.params[0].show_calendar = true;
                 if (that2.params[0].date === "current_time")
                     that2.params[0].date_cal = new Date();
                 else
@@ -769,7 +827,7 @@ function OB_TIMELINE() {
             this.ob_search_input.onkeydown = function (event) {
                 if (event.keyCode === 13) {
                     that2.moving = false;
-                    that2.params[0].show_calandar = true;
+                    that2.params[0].show_calendar = true;
                     if (that2.params[0].date === "current_time")
                         that2.params[0].date_cal = new Date();
                     else
@@ -1209,21 +1267,66 @@ function OB_TIMELINE() {
             this.move_band(this.bands[i].name, this.bands[i].x, this.bands[i].y, this.bands[i].z);
         }
     };
+    OB_TIMELINE.prototype.update_bands_MinDate = function (date) {
+        this.minDateL = 0;
+        for (let i = 0; i < this.bands.length; i++) {
+            let pixelOffSet = this.dateToPixelOffSet(date, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            this.bands[i].minDate = this.pixelOffSetToDate(this.bands[i].viewOffset + pixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            // Round hour to 0
+            this.bands[i].minDate = new Date(new Date(this.bands[0].minDate).setMinutes(0));
+            this.bands[i].minDate = new Date(new Date(this.bands[0].minDate).setSeconds(0));
+            let minDateL = new Date(this.bands[i].minDate).getTime();
+            if (minDateL > this.minDateL) {
+                this.minDateL = minDateL;
+                this.minDate = new Date(this.minDateL);
+            }
+        }
+        //console.log(this.minDate);
+    };
+    OB_TIMELINE.prototype.update_bands_MaxDate = function (date) {
+        this.maxDateL = 0;
+        for (let i = 0; i < this.bands.length; i++) {
+            let pixelOffSet = this.dateToPixelOffSet(date, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            this.bands[i].maxDate = this.pixelOffSetToDate(-this.bands[i].viewOffset + pixelOffSet, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            this.bands[i].maxDate = new Date(new Date(this.bands[0].maxDate).setMinutes(0));
+            this.bands[i].maxDate = new Date(new Date(this.bands[0].maxDate).setSeconds(0));
+            let maxDateL = new Date(this.bands[i].maxDate).getTime();
+            if (maxDateL > this.maxDateL) {
+                this.maxDateL = maxDateL;
+                this.maxDate = new Date(this.maxDateL);
+            }
+        }
+        //console.log(this.maxDate);
+    };
+
     OB_TIMELINE.prototype.set_bands_minDate = function () {
+        this.minDateL = 0;
         for (let i = 0; i < this.bands.length; i++) {
             this.bands[i].minDate = this.pixelOffSetToDate(this.bands[i].viewOffset, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
             // Round hour to 0
             this.bands[i].minDate = new Date(new Date(this.bands[0].minDate).setMinutes(0));
             this.bands[i].minDate = new Date(new Date(this.bands[0].minDate).setSeconds(0));
-            //let pixelOffSet = this.dateToPixelOffSet(this.bands[i].minDate ,this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+            let minDateL = new Date(this.bands[i].minDate).getTime();
+            if (minDateL > this.minDateL) {
+                this.minDateL = minDateL;
+                this.minDate = new Date(this.minDateL);
+            }
         }
+        //console.log(this.minDate);
     };
     OB_TIMELINE.prototype.set_bands_maxDate = function () {
+        this.maxDateL = 0;
         for (let i = 0; i < this.bands.length; i++) {
             this.bands[i].maxDate = this.pixelOffSetToDate(-this.bands[i].viewOffset, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
             this.bands[i].maxDate = new Date(new Date(this.bands[0].maxDate).setMinutes(0));
             this.bands[i].maxDate = new Date(new Date(this.bands[0].maxDate).setSeconds(0));
+            let maxDateL = new Date(this.bands[i].maxDate).getTime();
+            if (maxDateL > this.maxDateL) {
+                this.maxDateL = maxDateL;
+                this.maxDate = new Date(this.maxDateL);
+            }
         }
+        //console.log(this.maxDate);
     };
     OB_TIMELINE.prototype.set_bands_viewOffset = function () {
         for (let i = 0; i < this.bands.length; i++) {
@@ -1680,7 +1783,7 @@ function OB_TIMELINE() {
                     ob_timeline.camera = current_camera;
                     ob_timeline.ob_set_camera();
                     ob_timeline.ob_start_clock();
-                    if (params[0].show_calandar)
+                    if (params[0].show_calendar)
                         ob_timeline.ob_create_calendar(new Date(params[0].date_cal));
                     return null;
                 }
@@ -1809,10 +1912,10 @@ function OB_TIMELINE() {
                         //  session i        ___
                         //  session l      _________
                         if (ob_debug_room) console.log("case1: this.bands[i].name=" + this.bands[i].name +
-                            " - session.title=" + session.title +
+                            " - session.data.title=" + session.data.title +
                             " - session.x=" + session.x +
                             " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
-                            " - sessions[l].title=" + sessions[l].title +
+                            " - sessions[l].data.title=" + sessions[l].data.title +
                             " - sessions[l].x=" + sessions[l].x +
                             " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions.x + sessions.total_width) + ")");
 
@@ -1822,20 +1925,20 @@ function OB_TIMELINE() {
                         //  session i      _________
                         //  session l              ________
                         if (ob_debug_room) console.log("case2: this.bands[i].name=" + this.bands[i].name +
-                            " - session.title=" + session.title +
+                            " - session.data.title=" + session.data.title +
                             " - session.x=" + session.x +
                             " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
-                            " - sessions[l].title=" + sessions[l].title +
+                            " - sessions[l].data.title=" + sessions[l].data.title +
                             " - sessions[l].x=" + sessions[l].x +
                             " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].x + sessions[l].total_width) + ")");
 
                         break;
                     } else {
                         if (ob_debug_room) console.log("case normal: this.bands[i].name=" + this.bands[i].name +
-                            " - session.title=" + session.title +
+                            " - session.data.title=" + session.data.title +
                             " - session.x=" + session.x +
                             " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
-                            " - sessions[l].title=" + sessions[l].title +
+                            " - sessions[l].data.title=" + sessions[l].data.title +
                             " - sessions[l].x=" + sessions[l].x +
                             " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].x + sessions[l].total_width) + ")");
                     }
@@ -1848,7 +1951,7 @@ function OB_TIMELINE() {
                 }
             }
         }
-        //console.log("this.bands[i].heightMax=" + this.bands[i].heightMax + " " + this.bands[i].name + " title=" + String(session.title) + " x=" + session.x + " w=" + session.w + " y=" + y);
+        //console.log("this.bands[i].heightMax=" + this.bands[i].heightMax + " " + this.bands[i].name + " title=" + String(session.data.title) + " x=" + session.x + " w=" + session.w + " y=" + y);
         return this.bands[i].track;
     };
 
@@ -1901,7 +2004,7 @@ function OB_TIMELINE() {
 
                 for (let j = 0; j < this.bands[i].sessions.length; j++) {
                     let session = this.bands[i].sessions[j];
-                    if (session.title === undefined) session.title = "";
+                    if (session.data != null && session.data.title === undefined) session.data.title = "";
 
                     pixelOffSetStart = this.dateToPixelOffSet(session.start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
                     pixelOffSetEnd = this.dateToPixelOffSet(session.end, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
@@ -1918,13 +2021,13 @@ function OB_TIMELINE() {
                         if (isNaN(parseInt(pixelOffSetEnd))) {
                             h = this.bands[i].defaultEventSize;
                             w = this.bands[i].defaultEventSize;
-                            textX = getTextWidth(session.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
+                            textX = getTextWidth(session.data.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
                             textX = this.bands[i].defaultEventSize * 2 + textX / 2;
 
                         } else {
                             h = this.bands[i].sessionHeight;
                             w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                            textX = getTextWidth(session.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
+                            textX = getTextWidth(session.data.title, this.bands[i].fontSize + " " + this.bands[i].fontFamily);
                             textX = (w / 2) + this.bands[i].defaultEventSize + textX / 2;
                         }
                     }
@@ -1938,7 +2041,7 @@ function OB_TIMELINE() {
                     this.bands[i].sessions[j].z = z;
                     this.bands[i].sessions[j].textX = textX;
                     this.bands[i].sessions[j].pixelOffSetEnd = pixelOffSetEnd;
-                    this.bands[i].sessions[j].total_width = w + (session.title.length * this.bands[i].fontSizeInt);
+                    this.bands[i].sessions[j].total_width = w + (session.data.title.length * this.bands[i].fontSizeInt);
 
                     y = this.get_room_for_session(this.bands[i].sessions, this.bands[i].sessions[j], i);
 
@@ -1969,7 +2072,7 @@ function OB_TIMELINE() {
             let ob_obj;
             for (let j = 0; j < this.bands[i].sessions.length; j++) {
                 try {
-                    if (this.bands[i].sessions[j].title.match(this.regex)) {
+                    if (this.bands[i].sessions[j].data.title.match(this.regex)) {
                         if (this.bands[i].sessions[j].pixelOffSetEnd === undefined || isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd)))
                             ob_obj = this.add_event(this.bands[i].name, this.bands[i].eventColor, this.bands[i].sessions[j]);
                         else
@@ -1977,9 +2080,9 @@ function OB_TIMELINE() {
                                 this.bands[i].defaultSessionTexture,
                                 this.bands[i].sessions[j]);
                         if (!this.bands[i].name.match(/overview_/)) {
-                            //this.add_text_CSS2D(ob_obj, this.bands[i].sessions[j].title,
+                            //this.add_text_CSS2D(ob_obj, this.bands[i].sessions[j].data.title,
                             //this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt, this.bands[i].textColor);
-                            this.add_text_sprite(ob_obj, this.bands[i].sessions[j].title,
+                            this.add_text_sprite(ob_obj, this.bands[i].sessions[j].data.title,
                                 this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt,
                                 this.bands[i].fontStyle, this.bands[i].fontWeight,
                                 this.bands[i].dateColor, this.bands[i].fontFamily);
@@ -1987,7 +2090,7 @@ function OB_TIMELINE() {
                     }
                 } catch (e) {
                 }
-                //console.log(this.bands[i].name + " title=" + String(session.title) + " - this.bands[i].heightMax=" + this.bands[i].heightMax + "  i=" + i + " - j=" + j + " x=" + parseInt(x) + " y=" + y + " w=" + parseInt(this.sessions.events[j].total_width) + "  --> " + this.bands[i].track);
+                //console.log(this.bands[i].name + " title=" + String(session.data.title) + " - this.bands[i].heightMax=" + this.bands[i].heightMax + "  i=" + i + " - j=" + j + " x=" + parseInt(x) + " y=" + y + " w=" + parseInt(this.sessions.events[j].total_width) + "  --> " + this.bands[i].track);
             }
         }
     }
@@ -2258,45 +2361,6 @@ function OB_TIMELINE() {
         if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("removeText3D(" + band_name + ")");
     };
 
-    OB_TIMELINE.prototype.loadXML = function () {
-        let that = this;
-        that.request = new XMLHttpRequest();
-        that.request.open('GET', that.data);
-        that.request.responseType = 'text'; // now we're getting a string!
-        that.request.send();
-        that.request.onload = function () {
-            let sessions_tmp = that.request.response; // get the string from the response
-            let sessions = "{'dateTimeFormat': 'iso8601','events':[";
-            try {
-                parser = new DOMParser();
-                let xmlDoc = parser.parseFromString(sessions_tmp, "text/xml");
-                let doc = xmlDoc.getElementsByTagName("event");
-                for (let i = 0; i < doc.length; i++) {
-                    sessions += "{'start':'" + doc[i].getAttribute('start') + "',";
-                    sessions += "'end':'" + doc[i].getAttribute('end') + "',";
-                    sessions += "'title':'" + doc[i].getAttribute('title') + "',";
-                    sessions += "'durationEvent':" + doc[i].getAttribute('durationEvent') + ",";
-                    if (doc[i].getAttribute('image') !== null)
-                        sessions += "'image':'" + doc[i].getAttribute('image') + "',";
-                    if (doc[i].getAttribute('link') !== null)
-                        sessions += "'link':'" + doc[i].getAttribute('link') + "',";
-                    if (doc[i].getAttribute('color') !== null)
-                        sessions += "'color':'" + doc[i].getAttribute('color') + "',";
-                    if (doc[i].getAttribute('textColor') !== null)
-                        sessions += "'textColor':'" + doc[i].getAttribute('textColor') + "',";
-                    sessions += "},"
-                }
-                sessions += "]}";
-                that.sessions = eval('(' + (sessions) + ')');
-                that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
-            } catch (err) {
-                if (that.data == null)
-                    console.log("loadXML - no file to load");
-                else
-                    console.log("loadXML file:" + that.data + " - xml format not supported");
-            }
-        };
-    };
     OB_TIMELINE.prototype.loadJSON = function () {
         if (this.data === undefined) return;
         let that = this;
@@ -2356,7 +2420,7 @@ function OB_TIMELINE() {
         //loader.load('three.js/examples/fonts/droid/droid_serif_regular.typeface.json', function (font)
     }
 
-    //let ob_font = ob_load_font();
+//let ob_font = ob_load_font();
 
     OB_TIMELINE.prototype.ob_setListeners = function () {
         let that = this;
@@ -2374,7 +2438,6 @@ function OB_TIMELINE() {
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 that.move_session(ob_obj, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
-                that.ob_open_descriptor(ob_obj.data);
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -2393,7 +2456,9 @@ function OB_TIMELINE() {
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z)
+                that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
+                that.ob_open_descriptor(ob_obj.data);
+                return;
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -2404,9 +2469,17 @@ function OB_TIMELINE() {
             // Update scene according the new bands position
             that.params[0].date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
             that.params[0].date_cal = that.ob_markerDate;
-            //that.params[0].show_calandar = true;
-            //that.ob_remove_calendar();
-            that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+            that.params[0].show_calendar = true;
+            if (that.data && that.data.match(/^(http?):\/\//) ||
+                that.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                that.data && that.data.match(/^(https?):\/\//)) {
+                that.data_head = that.data.split("?");
+                that.update_bands_MinDate(that.params[0].date);
+                that.update_bands_MaxDate(that.params[0].date);
+                that.params[0].data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate;
+                that.loadData();
+            } else
+                that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
             console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
         });
 
@@ -2648,13 +2721,14 @@ function OB_TIMELINE() {
             sessions += "'id': '" + i + "',";
             sessions += "'start': '" + ob_start + "',";
             sessions += "'end': '" + ob_end + "',";
+            sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
             sessions += "'status': 'SCHEDULED',";
             sessions += "'durationEvent': 'true',";
             sessions += "'priority': '10',";
             sessions += "'tolerance': '5',";
-            sessions += "},";
+            sessions += "}},";
         }
         sessions += "]}";
         this.sessions = eval('(' + (sessions) + ')');
@@ -2710,20 +2784,21 @@ function OB_TIMELINE() {
             sessions += "'id': '" + i + "',";
             sessions += "'start': '" + ob_start + "',";
             sessions += "'end': '" + ob_end + "',";
+            sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
             sessions += "'status': 'SCHEDULED',";
             sessions += "'durationEvent': 'true',";
             sessions += "'priority': '10',";
             sessions += "'tolerance': '5',";
-            sessions += "},";
+            sessions += "}},";
         }
         sessions += "]}";
         this.sessions = eval('(' + (sessions) + ')');
 
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
-    OB_TIMELINE.prototype.loadData = function () {
+    OB_TIMELINE.prototype.loadData = function (start_date) {
         this.ob_init();
         if (this.data === undefined) {
             this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
@@ -2762,45 +2837,46 @@ function OB_TIMELINE() {
             return;
         }
 
-        let ob_url = this.data && this.data.match(/^(http?|chrome):\/\/[^\s$.?#].[^\s]*$/);
+        //let ob_url = this.data && this.data.match(/^(http?|chrome):\/\/[^\s$.?#].[^\s]*$/);
+        let ob_url = this.data && this.data.match(/^(http?):\/\//);
         if (ob_url !== null && ob_url.length === 2) {
             let that = this;
-            fetch(ob_url[0], {
+            fetch(this.data, {
                 method: 'GET',
-                //mode: 'cors',
-                //credentials :'Access-Control-Allow-Origin',
-                //headers: {
-                //'Accept': 'application/json',
-                //},
-            }).then((response) => {
-                if (response.ok) {
-                    console.log("Response OK!");
-                    that.sessions = eval('(' + (response.json()) + ')');
-                    that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
-                } else {
-                    console.log("Response not OK!");
+                dataType: 'json',
+                headers: {
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
                 }
-
-            }).then(data => {
-                console.log("json:" + data);
-            }).catch(err => {
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Response OK!");
+                        return response.json();
+                    } else {
+                        console.log("Response not OK!");
+                    }
+                })
+                .then((json) => {
+                    that.sessions = json;
+                    that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+                }).catch(err => {
                 console.log('Error message:', err.statusText)
             });
             return;
         }
-        let ob_url_secure = this.data && this.data.match(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/);
+        //let ob_url_secure = this.data && this.data.match(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/);
+        let ob_url_secure = this.data && this.data.match(/^(https?):\/\//);
         if (ob_url_secure !== null && ob_url_secure.length === 2) {
-            if (!!window.EventSource) {
-                //https://localhost:8443/openbexi_timeline.html
-                //https://localhost:8443/test_push
+            if (!!window.EventSource && this.data.includes("sse")) {
                 let that = this;
-                let sessions = new EventSource(ob_url_secure[0], {
-                    // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
+                let sessions = new EventSource(this.data, {
+                    // If clients have set Access-Control-Allow-Credentials to true, the openbexi.timeline.server will not permit the use of
                     // credentials and access to resource by the client will be blocked by CORS policy.
                     //withCredentials: true
                 });
                 sessions.onmessage = function (e) {
-                    //console.log('onmessage: Receiving sessions:' + e.data);
+                    //console.log('onmessage: Receiving sessions:' + e.openbexi.timeline.data);
                     that.sessions = eval('(' + (e.data) + ')');
                     that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
                     //sessions.close();
@@ -2814,18 +2890,40 @@ function OB_TIMELINE() {
                     console.log('SSE - onerror');
                 }
             } else {
-                console.log('SSE - Error message:EventSource not supported')
+                let that = this;
+                fetch(this.data, {
+                    method: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        "Accept": "application/json",
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log("Response OK!");
+                            return response.json();
+                        } else {
+                            console.log("Response not OK!");
+                        }
+                    })
+                    .then((json) => {
+                        that.sessions = json;
+                        that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+                    }).catch(err => {
+                    console.log('Error message:', err.statusText)
+                });
+                return;
             }
             return;
         }
 
         let fileExtension = this.data && this.data.match(/\.([^.]+)$/);
-        if (fileExtension[1].toLowerCase() === "json") {
-            this.loadJSON();
-            return;
-        }
-        if (fileExtension[1].toLowerCase() === "xml") {
-            this.loadXML();
+        if (fileExtension !== null) {
+            if (fileExtension[1].toLowerCase() === "json") {
+                this.loadJSON();
+                return;
+            }
         }
     };
 
