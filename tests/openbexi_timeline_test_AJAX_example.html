@@ -20,42 +20,34 @@
 
     <script src="../three.js/examples/js/controls/DragControls.js" type="application/javascript"></script>
 
-
     <script>
         ob_timeline3 = new OB_TIMELINE();
         ob_timeline3.params = [{
             name: "ob_timeline_3",
-            title: "Example : Test HOUR",
-            date: "current_time",
-            //timeZone:"UTC",
+            date: "May 06 17:00:00 UTC 2020",
             top: 0,
             left: 50,
             height: 400,
             fontSize: 12,
-            fontFamily: "Arial",
-            //fontWeight: "bold",
-            //fontStyle: "italic",
             //width: window.innerWidth,
-            width: 1200,
+            width: 1100,
             model: [{sortBy: "NONE"}],
-            data: "unit_tests_hours"
+            //data: "http://localhost:8080/openbexi_timeline/sessions?startDate=test&endDate=test"
+            data: "http://localhost:8080/openbexi_timeline/sessions?startDate=May 06 01:00:00 UTC 2020&endDate=May 06 17:00:00 UTC 2020"
         }];
         ob_timeline3.bands = [{
             name: "ob_band_1",
             height: "100%",
-            color: "#a1d9ff",
-            intervalPixels: "300",
-            subIntervalPixels: "AUTO",
-            intervalUnitPos: "TOP",
+            color: "#f3f3ed",
+            intervalPixels: "200",
             intervalUnit: "HOUR",
-            dateFormat: "ddd dd hh:mm",
-            dateColor: "#000001",
+            dateColor: "#7d8a86",
             textColor: "#040404",
-            //fontStyle: "italic",
-            SessionColor: "#f8feff",
-            eventColor: "#0f91f9",
+            SessionColor: "#9f0dff",
+            eventColor: "#238448",
             defaultEventSize: 5,
-            model: [{sortBy: "NONE"}]
+            model: [{sortBy: "NONE"}
+            ]
         }]
     </script>
 
@@ -65,4 +57,3 @@
       ondragover="ob_dragHandler(event);">
 <canvas id="ob_timeline_canvas"></canvas>
 </body>
-</html>
