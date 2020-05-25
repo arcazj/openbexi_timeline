@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class text2json {
 
@@ -44,7 +45,7 @@ public class text2json {
                     if (!line.equals("")) {
                         if ((line.contains("    18") || line.contains("    19") || line.contains("    20")) && line.contains(", ")) {
                             if (first_start == true)
-                                writer.write("\"},");
+                                writer.write("\"}},");
 
                             line = line.replace("    ", "").replace("\"", "'");
                             log(count_line++ + " - " + line);
@@ -65,7 +66,7 @@ public class text2json {
                             Date date = new Date(date_s);
                             writer.newLine();
                             writer.write("  {\"start\":\"" + date.toString() + "\",");
-                            writer.newLine();
+                            writer.write("\"data\":{");
                             writer.write("\"title\":\"" + line.substring(12, line.length()) + "\",");
                             writer.write("\"text\":\"" + line.substring(12, line.length()) + " ");
                         } else {
@@ -75,7 +76,7 @@ public class text2json {
                         }
                     }
                 }
-                writer.write("\"}]}");
+                writer.write("\"}}]}");
                 writer.flush();
             }
         }
@@ -151,12 +152,14 @@ public class text2json {
                             date_exiting = new Date(exiting);
                             log(count_line++ + ":" + spacecraft + " - " + line);
                             writer.newLine();
-                            writer.write("  {\"start\":\"" + date_entering.toString() + "\",");
+                            writer.write("  {\"ID\":\"" + UUID.randomUUID().toString() + "\",");
+                            writer.write("  \"start\":\"" + date_entering.toString() + "\",");
                             writer.write("  \"end\":\"" + date_exiting.toString() + "\",");
+                            writer.write("\"data\":{");
                             writer.write("\"title\":\"" + "Ephemeris-" + count_eph++ + "\",");
                             writer.write("\"satellite\":\"" + spacecraft.substring(21, 26) + "\",");
                             writer.write("\"text\":\"" + spacecraft + " " + region + " " + start_epoch + " " + end_epoch + " " + longitude + " " + latitude + " " + previous_line + " " + line + " - " + ref + "\"");
-                            writer.write("},");
+                            writer.write("}},");
                             log(count_line + ":" + spacecraft + "- eph=" + count_eph + " date_entering:" + date_entering + "|date_exiting:" + date_exiting + " - " + line);
                         }
                     }
