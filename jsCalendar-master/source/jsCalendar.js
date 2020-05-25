@@ -433,7 +433,7 @@ var jsCalendar = (function(){
         if (!this._isDateInRange(date)) {
             return;
         }
-        // Set data
+        // Set openbexi.timeline.data
         this._now = date;
         this._date = new Date(this._now.getFullYear(), this._now.getMonth(), 1);
     };
@@ -716,7 +716,7 @@ var jsCalendar = (function(){
     JsCalendar.prototype._update = function() {
         // Get month info
         var month = this._getVisibleMonth(this._date);
-        // Save data
+        // Save openbexi.timeline.data
         this._active = month.days.slice();
         // Update month name
         this._elements.month.textContent = month.name;
