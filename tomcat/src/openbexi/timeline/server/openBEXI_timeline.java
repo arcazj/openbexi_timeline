@@ -24,7 +24,7 @@ import java.util.logging.*;
  */
 
 enum ob_mode {
-    no_secure, secure_sse, no_secure_ws, secure_ws
+    no_secure, secure, secure_sse, no_secure_ws, secure_ws
 }
 
 public class openBEXI_timeline implements Runnable {
@@ -95,6 +95,36 @@ public class openBEXI_timeline implements Runnable {
             ctx.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
 
         }
+        if (mode == openbexi.timeline.server.ob_mode.secure) {
+            Connector httpsConnector = new Connector();
+            //  Connector httpsConnector = new Connector(Http11Nio2Protocol.class.getName());
+            httpsConnector.setPort(8445);
+            httpsConnector.setSecure(true);
+            httpsConnector.setScheme("https");
+            httpsConnector.setAttribute("keyAlias", "test_rsa_private_key_entry");
+            httpsConnector.setAttribute("keystorePass", "keystores");
+            httpsConnector.setAttribute("keystoreFile", FileSystems.getDefault().
+                    getPath("tomcat", "resources", "keystore2.jks").toFile().getAbsolutePath());
+            httpsConnector.setAttribute("clientAuth", "false");
+            httpsConnector.setAttribute("sslProtocol", "TLS");
+            httpsConnector.setAttribute("SSLEnabled", true);
+            tomcat.setBaseDir("tomcat");
+            tomcat.setPort(8445);
+
+            Service service = tomcat.getService();
+            service.addConnector(httpsConnector);
+            tomcat.setConnector(httpsConnector);
+
+            //Context ctx = tomcat.addContext("", null);
+            ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+
+            Tomcat.addServlet(ctx, "default", new DefaultServlet());
+            ctx.addServletMappingDecoded("/", "default");
+
+            Tomcat.addServlet(ctx, "ob", new ob_ajax_timeline());
+            ctx.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
+
+        }
         if (mode == openbexi.timeline.server.ob_mode.secure_ws) {
             Connector httpsConnector = new Connector();
             httpsConnector.setPort(8444);
@@ -112,9 +142,7 @@ public class openBEXI_timeline implements Runnable {
             Service service = tomcat.getService();
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
-            //tomcat.addWebapp("/", "C:/projects/openbexi_timeline-git/tomcat/webapps");
-            tomcat.addWebapp("/", ".");
-            ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ctx =tomcat.addWebapp("/", ".");
         }
         if (mode == openbexi.timeline.server.ob_mode.secure_sse) {
             Connector httpsConnector = new Connector();
@@ -143,7 +171,6 @@ public class openBEXI_timeline implements Runnable {
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
 
-            //Context ctx = tomcat.addContext("", null);
             ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
 
             Tomcat.addServlet(ctx, "default", new DefaultServlet());
@@ -153,8 +180,7 @@ public class openBEXI_timeline implements Runnable {
             ctx.addServletMappingDecoded("/openbexi_timeline_sse/sessions", "ob_sse");
 
         }
-
-        if (_data_path != null)
+        if (_data_path != null && ctx != null)
             ctx.addParameter("data_path", _data_path);
 
         tomcat.start();
@@ -186,6 +212,8 @@ public class openBEXI_timeline implements Runnable {
 
         openBEXI_timeline webServer_timeline_no_secure = new openBEXI_timeline(openbexi.timeline.server.ob_mode.no_secure, data_path);
         webServer_timeline_no_secure.run();
+        openBEXI_timeline webServer_timeline_secure = new openBEXI_timeline(openbexi.timeline.server.ob_mode.secure, data_path);
+        webServer_timeline_secure.run();
         openBEXI_timeline webServer_timeline_wss = new openBEXI_timeline(openbexi.timeline.server.ob_mode.secure_ws, data_path);
         webServer_timeline_wss.run();
         openBEXI_timeline webServer_timeline_sse = new openBEXI_timeline(openbexi.timeline.server.ob_mode.secure_sse, data_path);
