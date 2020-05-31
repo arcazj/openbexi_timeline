@@ -112,24 +112,33 @@ public class data {
     private void getFiles(String startDate, String endDate) throws Exception {
 
         // Build file list according date range
+        String yyyy;
+        String MM;
+        String dd;
+
+        long startDateS = new Date(startDate).getTime();
+        long startDateE = new Date(endDate).getTime();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
         // Loop on years
-        for (int yyyy = Integer.parseInt(this.yearS); yyyy <= Integer.parseInt(this.yearE); yyyy++) {
-            // Loop on months
-            for (int MM = Integer.parseInt(this.monthS); MM <= Integer.parseInt(this.monthE); MM++) {
-                // Loop on days
-                for (int dd = Integer.parseInt(this.dayS); dd <= Integer.parseInt(this.dayE); dd++) {
-                    String buildFile = pathModel.replace(".json", "");
-                    buildFile = buildFile.replace("/yyyy", "/" + yyyy);
-                    buildFile = buildFile.replace("/mm", "/" + String.format("%02d", MM));
-                    buildFile = buildFile.replace("/dd", "/" + String.format("%02d", dd));
-                    fileParentPathS = new File(buildFile + "_" + dateS + ".json").getParent();
-                    File[] file_list = new File(fileParentPathS).listFiles();
-                    if (file_list != null) {
-                        for (int f = 0; f < file_list.length; f++) {
-                            if (file_list[f].exists())
-                                files.put(file_list[f], yyyy + "-" + MM + "-" + dd);
-                        }
-                    }
+        for (long d = startDateS; d <= startDateE; d = d + 3600 * 24) {
+            String formatedDateS = dateFormat.format(d);
+            yyyy = formatedDateS.substring(6, 10);
+            MM = formatedDateS.substring(3, 5);
+            dd = formatedDateS.substring(0, 2);
+
+            String buildFile = pathModel.replace(".json", "");
+            buildFile = buildFile.replace("/yyyy", "/" + yyyy);
+            buildFile = buildFile.replace("/mm", "/" + MM);
+            buildFile = buildFile.replace("/dd", "/" + dd);
+
+            fileParentPathS = new File(buildFile + "_" + dateS + ".json").getParent();
+            File[] file_list = new File(fileParentPathS).listFiles();
+
+            if (file_list != null) {
+                for (int f = 0; f < file_list.length; f++) {
+                    if (file_list[f].exists())
+                        files.put(file_list[f], yyyy + "-" + MM + "-" + dd);
                 }
             }
         }

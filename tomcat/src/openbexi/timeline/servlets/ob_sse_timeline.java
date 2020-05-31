@@ -1,5 +1,6 @@
 package openbexi.timeline.servlets;
 
+import openbexi.timeline.browser.data;
 import openbexi.timeline.tests.test_timeline;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -9,6 +10,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 @WebServlet("/openbexi_timeline_sse/sessions")
@@ -38,11 +43,15 @@ public class ob_sse_timeline extends HttpServlet {
         logger.info("GET - startDate=" + startDate);
         logger.info("GET - endDate=" + endDate);
 
-        try {
-            tests = new test_timeline("GET", resp, null, id++);
-            tests.run();
-        } catch (Exception e) {
-            logger.severe(e.getMessage());
+        if (startDate.equals("test")) {
+            try {
+                tests = new test_timeline("GET", resp, null, id++);
+                tests.run();
+            } catch (Exception e) {
+                logger.severe(e.getMessage());
+            }
+        }else{
+            logger.info("TBD" );
         }
     }
 
