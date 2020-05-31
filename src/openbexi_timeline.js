@@ -2073,12 +2073,24 @@ function OB_TIMELINE() {
             for (let j = 0; j < this.bands[i].sessions.length; j++) {
                 try {
                     if (this.bands[i].sessions[j].data.title.match(this.regex)) {
-                        if (this.bands[i].sessions[j].pixelOffSetEnd === undefined || isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd)))
-                            ob_obj = this.add_event(this.bands[i].name, this.bands[i].eventColor, this.bands[i].sessions[j]);
-                        else
-                            ob_obj = this.add_session(this.bands[i].name, this.bands[i].SessionColor,
-                                this.bands[i].defaultSessionTexture,
-                                this.bands[i].sessions[j]);
+                        if (this.bands[i].sessions[j].pixelOffSetEnd === undefined ||
+                            isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd))) {
+                            if (this.bands[i].sessions[j].render !== undefined)
+                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].sessions[j].render.color,
+                                    this.bands[i].sessions[j]);
+                            else
+                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].eventColor,
+                                    this.bands[i].sessions[j]);
+                        } else {
+                            if (this.bands[i].sessions[j].render !== undefined)
+                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].sessions[j].render.color,
+                                    this.bands[i].defaultSessionTexture,
+                                    this.bands[i].sessions[j]);
+                            else
+                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].SessionColor,
+                                    this.bands[i].defaultSessionTexture,
+                                    this.bands[i].sessions[j]);
+                        }
                         if (!this.bands[i].name.match(/overview_/)) {
                             //this.add_text_CSS2D(ob_obj, this.bands[i].sessions[j].data.title,
                             //this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt, this.bands[i].textColor);
