@@ -47,6 +47,7 @@ ob_debug_ADD_SESSION_WEBGL_OBJECT = false;
 ob_debug_ADD_EVENT_WEBGL_OBJECT = false;
 ob_debug_MOVE_WEBGL_OBJECT = false;
 ob_debug_REMOVE_WEBGL_OBJECT = false;
+
 const ob_timelines = [];
 
 function get_ob_timeline(ob_timeline_name) {
@@ -1281,7 +1282,7 @@ function OB_TIMELINE() {
                 this.minDate = new Date(this.minDateL);
             }
         }
-        //console.log(this.minDate);
+        console.log(this.minDate);
     };
     OB_TIMELINE.prototype.update_bands_MaxDate = function (date) {
         this.maxDateL = 0;
@@ -1296,7 +1297,7 @@ function OB_TIMELINE() {
                 this.maxDate = new Date(this.maxDateL);
             }
         }
-        //console.log(this.maxDate);
+        console.log(this.maxDate);
     };
 
     OB_TIMELINE.prototype.set_bands_minDate = function () {
@@ -2077,7 +2078,7 @@ function OB_TIMELINE() {
                             isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd))) {
                             if (this.bands[i].sessions[j].render !== undefined)
                                 ob_obj = this.add_event(this.bands[i].name, this.bands[i].sessions[j].render.color,
-                                    this.bands[i].sessions[j]);
+                                    this.bands[i].sessions[j], this.bands[i].sessions[j].render.image);
                             else
                                 ob_obj = this.add_event(this.bands[i].name, this.bands[i].eventColor,
                                     this.bands[i].sessions[j]);
@@ -2169,10 +2170,27 @@ function OB_TIMELINE() {
         if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("removeEvent(" + band_name + "+event_id=" + session_id + ")");
     };
 
-    OB_TIMELINE.prototype.add_event = function (band_name, color, session) {
-        let geometry = this.track(new THREE.SphereGeometry(session.size));
-        let material = this.track(new THREE.MeshBasicMaterial({color: color}));
-        let ob_event = this.track(new THREE.Mesh(geometry, material));
+    OB_TIMELINE.prototype.load_texture = function (image) {
+        return ob_texture.get(image);
+    }
+
+    OB_TIMELINE.prototype.add_event = function (band_name, color, session, image) {
+        let geometry, material, ob_event;
+        let texture = this.load_texture(image);
+        if (texture === undefined) {
+            geometry = this.track(new THREE.SphereGeometry(session.size));
+            material = this.track(new THREE.MeshBasicMaterial({color: color}));
+        } else {
+            geometry = this.track(new THREE.PlaneGeometry(16, 16));
+            texture.minFilter = THREE.LinearFilter;
+            material = this.track(new THREE.MeshBasicMaterial({
+                map: texture,
+                color: '#a1d9ff',
+                transparent: true,
+                opacity: 1
+            }));
+        }
+        ob_event = this.track(new THREE.Mesh(geometry, material));
         ob_event.position.set(session.x_relative, session.y, session.z);
         ob_event.pos_x = session.x_relative;
         ob_event.pos_y = session.y;
@@ -2180,6 +2198,7 @@ function OB_TIMELINE() {
         ob_event.data = session;
 
         this.ob_scene.add(ob_event);
+
         let ob_band = this.ob_scene.getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_event);
@@ -2236,7 +2255,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.add_segment = function (band_name, x, y, z, size, color, dashed) {
         if (color === undefined) {
-            color = new THREE.Color("rgb(114, 171, 173)");
+            color = this.track(new THREE.Color("rgb(114, 171, 173)"));
         }
         let geometry = this.track(new THREE.Geometry());
         geometry.vertices.push(this.track(new THREE.Vector3(x, y, z)));
@@ -2437,7 +2456,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_setListeners = function () {
         let that = this;
 
-        this.dragControls = new THREE.DragControls(this.objects, this.ob_camera, this.ob_renderer.domElement);
+        this.dragControls = this.track(new THREE.DragControls(this.objects, this.ob_camera, this.ob_renderer.domElement));
         this.dragControls.addEventListener('dragstart', function (e) {
             clearInterval(that.ob_refresh_interval_clock);
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = false;
@@ -2454,6 +2473,7 @@ function OB_TIMELINE() {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
             that.ob_renderer.render(that.ob_scene, that.ob_camera);
+            //console.log("that.ob_renderer.render(that.ob_scene, that.ob_camera)");
 
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragstart :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
             //console.log("dragControls.addEventListener('dragstart'," + e.object.name + ")");
@@ -2475,7 +2495,7 @@ function OB_TIMELINE() {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
             that.ob_renderer.render(that.ob_scene, that.ob_camera);
-            //that.dragControls = new THREE.DragControls(that.objects, that.ob_camera, that.ob_renderer.domElement);
+            //that.dragControls = that.track(new THREE.DragControls(that.objects, that.ob_camera, that.ob_renderer.domElement));
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragend :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
 
             // Update scene according the new bands position
@@ -2492,7 +2512,7 @@ function OB_TIMELINE() {
                 that.loadData();
             } else
                 that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
-            console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
+            //console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
         });
 
         this.dragControls.addEventListener('drag', function (e) {
@@ -2518,17 +2538,16 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.ob_set_scene = function () {
         if (this.ob_scene === undefined) {
-            this.ob_scene = new THREE.Scene();
+            this.ob_scene = this.track(new THREE.Scene());
             this.ob_scene.background = new THREE.Color(0x000000);
         }
 
         if (this.ob_renderer === undefined) {
-            this.ob_renderer = new THREE.WebGLRenderer({antialias: true});
+            this.ob_renderer = this.track(new THREE.WebGLRenderer({antialias: true}));
+            this.ob_renderer.setClearColor(0xffffff, 1);
+            this.ob_renderer.setPixelRatio(window.devicePixelRatio);
+            this.ob_renderer.shadowMap.enabled = true;
         }
-
-        this.ob_renderer.setClearColor(0xffffff, 1);
-        this.ob_renderer.setPixelRatio(window.devicePixelRatio);
-        this.ob_renderer.shadowMap.enabled = true;
         this.ob_timeline_body.appendChild(this.ob_renderer.domElement);
 
         //this.ob_labelRenderer = new THREE.CSS2DRenderer();
@@ -2548,20 +2567,20 @@ function OB_TIMELINE() {
             this.ob_pos_orthographic_camera_x = 0;
             this.ob_pos_orthographic_camera_y = 0;
             this.ob_pos_orthographic_camera_z = this.height;
-            this.ob_camera = new THREE.OrthographicCamera(-this.width / 2, this.width / 2, this.height, 0, -this.width, this.ob_far);
+            this.ob_camera = this.track(new THREE.OrthographicCamera(-this.width / 2, this.width / 2, this.height, 0, -this.width, this.ob_far));
             this.ob_camera.position.set(this.ob_pos_orthographic_camera_x, this.ob_pos_orthographic_camera_y, this.ob_pos_orthographic_camera_z);
             this.ob_scene.add(this.ob_camera);
             //this.ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
         } else {
-            this.ob_camera = new THREE.PerspectiveCamera(this.ob_fov, this.width / this.height, this.ob_near, this.ob_far);
+            this.ob_camera = this.track(new THREE.PerspectiveCamera(this.ob_fov, this.width / this.height, this.ob_near, this.ob_far));
             this.ob_camera.position.set(this.ob_pos_camera_x, this.ob_pos_camera_y, this.ob_pos_camera_z);
             this.ob_scene.add(this.ob_camera);
             this.ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
-            this.ob_scene.add(new THREE.AmbientLight(0xf0f0f0));
-            let light = new THREE.SpotLight(0xffffff, 1.5);
+            this.ob_scene.add(this.track(new THREE.AmbientLight(0xf0f0f0)));
+            let light = this.track(new THREE.SpotLight(0xffffff, 1.5));
             light.position.set(0, 1500, 200);
             light.castShadow = true;
-            light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(this.ob_fov, 1, 200, 2000));
+            light.shadow = this.track(new THREE.LightShadow(new THREE.PerspectiveCamera(this.ob_fov, 1, 200, 2000)));
             light.shadow.bias = -0.000222;
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
@@ -2599,14 +2618,14 @@ function OB_TIMELINE() {
         // Set all listeners
         this.ob_setListeners();
 
-        //this.animate();
+        //requestAnimationFrame(this.animate);
         this.ob_renderer.render(this.ob_scene, this.ob_camera);
-        //this.ob_labelRenderer.render(this.ob_scene, this.ob_camera);
         //console.log("ob_set_camera() - camera:" + this.camera);
     };
 
     OB_TIMELINE.prototype.animate = function () {
         ob_timelines.forEach(function (ob_timeline) {
+            ob_timeline.ob_renderer.render(ob_timeline.ob_scene, ob_timeline.ob_camera);
             //ob_timeline.updateSize();
             //ob_timeline.ob_canvas.style.transform = `translateY(${window.scrollY}px)`;
             //if (ob_timeline.ob_camera !== undefined) {
