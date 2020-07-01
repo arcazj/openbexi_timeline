@@ -29,9 +29,9 @@ enum ob_mode {
 
 public class openBEXI_timeline implements Runnable {
 
-    private openbexi.timeline.server.ob_mode _ob_mode;
-    private Logger _logger = Logger.getLogger("");
-    private String _data_path;
+    private final openbexi.timeline.server.ob_mode _ob_mode;
+    private final Logger _logger = Logger.getLogger("");
+    private final String _data_path;
 
     openBEXI_timeline(openbexi.timeline.server.ob_mode mode, String data_path) {
         _ob_mode = mode;
@@ -39,14 +39,7 @@ public class openBEXI_timeline implements Runnable {
     }
 
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
+     * Run tomcat server.
      * @see Thread#run()
      */
     @Override
@@ -55,32 +48,40 @@ public class openBEXI_timeline implements Runnable {
             start(this._ob_mode);
         } catch (LifecycleException e) {
             _logger.severe(e.getMessage());
-        } catch (InterruptedException e) {
-            _logger.severe(e.getMessage());
-        } catch (ServletException e) {
-            _logger.severe(e.getMessage());
         }
+
     }
 
-    private void start(openbexi.timeline.server.ob_mode mode) throws LifecycleException, InterruptedException, ServletException {
+    private void start(openbexi.timeline.server.ob_mode mode) throws LifecycleException {
         // Set log
         Handler fileHandler = null;
         try {
             fileHandler = new FileHandler("tomcat/catalina.out", true);
-        } catch (IOException e) {
-            _logger.severe(e.getMessage());
-        }
-        fileHandler.setFormatter(new SimpleFormatter());
-        fileHandler.setLevel(Level.FINEST);
-        try {
+            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setLevel(Level.FINEST);
             fileHandler.setEncoding("UTF-8");
-        } catch (UnsupportedEncodingException e) {
+        } catch (IOException e) {
             _logger.severe(e.getMessage());
         }
         _logger.addHandler(fileHandler);
 
         Tomcat tomcat = new Tomcat();
+        Service service = tomcat.getService();
+
+        Connector httpsConnector = new Connector();
+        //  Connector httpsConnector = new Connector(Http11Nio2Protocol.class.getName());
+        httpsConnector.setSecure(true);
+        httpsConnector.setScheme("https");
+        httpsConnector.setAttribute("keyAlias", "test_rsa_private_key_entry");
+        httpsConnector.setAttribute("keystorePass", "keystores");
+        httpsConnector.setAttribute("keystoreFile", FileSystems.getDefault().
+                getPath("tomcat", "resources", "keystore2.jks").toFile().getAbsolutePath());
+        httpsConnector.setAttribute("clientAuth", "false");
+        httpsConnector.setAttribute("sslProtocol", "TLS");
+        httpsConnector.setAttribute("SSLEnabled", true);
+
         Context ctx = null;
+
         if (mode == openbexi.timeline.server.ob_mode.no_secure) {
             tomcat.setPort(8080);
             tomcat.getConnector();
@@ -96,22 +97,10 @@ public class openBEXI_timeline implements Runnable {
 
         }
         if (mode == openbexi.timeline.server.ob_mode.secure) {
-            Connector httpsConnector = new Connector();
-            //  Connector httpsConnector = new Connector(Http11Nio2Protocol.class.getName());
             httpsConnector.setPort(8445);
-            httpsConnector.setSecure(true);
-            httpsConnector.setScheme("https");
-            httpsConnector.setAttribute("keyAlias", "test_rsa_private_key_entry");
-            httpsConnector.setAttribute("keystorePass", "keystores");
-            httpsConnector.setAttribute("keystoreFile", FileSystems.getDefault().
-                    getPath("tomcat", "resources", "keystore2.jks").toFile().getAbsolutePath());
-            httpsConnector.setAttribute("clientAuth", "false");
-            httpsConnector.setAttribute("sslProtocol", "TLS");
-            httpsConnector.setAttribute("SSLEnabled", true);
             tomcat.setBaseDir("tomcat");
             tomcat.setPort(8445);
 
-            Service service = tomcat.getService();
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
 
@@ -126,40 +115,16 @@ public class openBEXI_timeline implements Runnable {
 
         }
         if (mode == openbexi.timeline.server.ob_mode.secure_ws) {
-            Connector httpsConnector = new Connector();
             httpsConnector.setPort(8444);
-            httpsConnector.setSecure(true);
-            httpsConnector.setScheme("https");
-            httpsConnector.setAttribute("keyAlias", "test_rsa_private_key_entry");
-            httpsConnector.setAttribute("keystorePass", "keystores");
-            httpsConnector.setAttribute("keystoreFile", FileSystems.getDefault().
-                    getPath("tomcat", "resources", "keystore2.jks").toFile().getAbsolutePath());
-            httpsConnector.setAttribute("clientAuth", "false");
-            httpsConnector.setAttribute("sslProtocol", "TLS");
-            httpsConnector.setAttribute("SSLEnabled", true);
-            tomcat.setBaseDir("tomcat");
             tomcat.setPort(8444);
-            Service service = tomcat.getService();
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
-            ctx =tomcat.addWebapp("/", ".");
+            ctx = tomcat.addWebapp("/", ".");
         }
         if (mode == openbexi.timeline.server.ob_mode.secure_sse) {
-            Connector httpsConnector = new Connector();
             // Set Http2 connector
             httpsConnector.addUpgradeProtocol(new Http2Protocol());
-            //  Connector httpsConnector = new Connector(Http11Nio2Protocol.class.getName());
             httpsConnector.setPort(8443);
-            httpsConnector.setSecure(true);
-            httpsConnector.setScheme("https");
-            httpsConnector.setAttribute("keyAlias", "test_rsa_private_key_entry");
-            httpsConnector.setAttribute("keystorePass", "keystores");
-            httpsConnector.setAttribute("keystoreFile", FileSystems.getDefault().
-                    getPath("tomcat", "resources", "keystore2.jks").toFile().getAbsolutePath());
-            httpsConnector.setAttribute("clientAuth", "false");
-            httpsConnector.setAttribute("sslProtocol", "TLS");
-            httpsConnector.setAttribute("SSLEnabled", true);
-            tomcat.setBaseDir("tomcat");
             tomcat.setPort(8443);
 
             // Enable response compression
@@ -167,7 +132,6 @@ public class openBEXI_timeline implements Runnable {
             // Defaults are text/html,text/xml,text/plain,text/css
             httpsConnector.setAttribute("compressableMimeType", "text/html,text/xml,text/plain,text/css,text/csv,application/json");
 
-            Service service = tomcat.getService();
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
 
@@ -192,11 +156,6 @@ public class openBEXI_timeline implements Runnable {
      *
      * @param args command line arguments passed to the application. Currently
      *             unused.
-     * @throws LifecycleException   If a life cycle exception occurs.
-     * @throws InterruptedException If the application is interrupted while
-     *                              waiting for requests.
-     * @throws ServletException     If the servlet handling the response has an
-     *                              exception.
      */
     public static void main(String[] args) {
         String data_path = null;
