@@ -38,6 +38,8 @@ ob_ajax_timeline extends HttpServlet {
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
         String data_path = getServletContext().getInitParameter("data_path");
+        String filter_include = getServletContext().getInitParameter("filter_include");
+        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
 
         Logger logger = Logger.getLogger("");
 
@@ -47,7 +49,7 @@ ob_ajax_timeline extends HttpServlet {
         resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
         resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
         resp.setCharacterEncoding("UTF-8");
-        logger.info("GET " + req);
+        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         // If simple test requested
         if (startDate == null || startDate.equals("test")) {
@@ -61,7 +63,7 @@ ob_ajax_timeline extends HttpServlet {
                 logger.info(result);
 
                 test_timeline tests = new test_timeline();
-                String simpleJson = tests.getSimpleJsonData();
+                String simpleJson = tests.getJsonData();
                 out.write(simpleJson);
                 out.flush();
 
@@ -70,19 +72,19 @@ ob_ajax_timeline extends HttpServlet {
             }
         } else {
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            SimpleDateFormat simpleDateFormat=new SimpleDateFormat();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
             try {
                 simpleDateFormat.format(new Date(startDate));
-            }catch (Exception e) {
+            } catch (Exception e) {
                 startDate = simpleDateFormat.format(new Date());
             }
             try {
                 simpleDateFormat.format(new Date(endDate));
-            }catch (Exception e) {
+            } catch (Exception e) {
                 endDate = startDate;
             }
 
-            data data = new data(startDate, endDate, data_path);
+            data data = new data(startDate, endDate, data_path, filter_include, filter_exclude, null, null, null, 0);
             Object json = data.getJson();
             out.write(json.toString());
             out.flush();

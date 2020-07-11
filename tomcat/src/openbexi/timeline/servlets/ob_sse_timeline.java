@@ -2,6 +2,7 @@ package openbexi.timeline.servlets;
 
 import openbexi.timeline.browser.data;
 import openbexi.timeline.tests.test_timeline;
+
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -34,14 +35,14 @@ public class ob_sse_timeline extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Logger logger = Logger.getLogger("");
-        logger.info("GET " + req);
 
         // Read parameters
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
-        String data_path = getServletContext().getInitParameter("data_path") ;
-        logger.info("GET - startDate=" + startDate);
-        logger.info("GET - endDate=" + endDate);
+        String data_path = getServletContext().getInitParameter("data_path");
+        String filter_include = getServletContext().getInitParameter("filter_include");
+        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
+        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         if (startDate.equals("test")) {
             try {
@@ -50,8 +51,39 @@ public class ob_sse_timeline extends HttpServlet {
             } catch (Exception e) {
                 logger.severe(e.getMessage());
             }
-        }else{
-            logger.info("TBD" );
+        } else {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+            try {
+                simpleDateFormat.format(new Date(startDate));
+            } catch (Exception e) {
+                startDate = simpleDateFormat.format(new Date());
+            }
+            try {
+                simpleDateFormat.format(new Date(endDate));
+            } catch (Exception e) {
+                endDate = startDate;
+            }
+
+            data data = new data(startDate, endDate, data_path, filter_include, filter_exclude, "GET", resp, null, id++);
+            PrintWriter respWriter = resp.getWriter();
+            //Important to put a "," not ";" between stream and charset
+            resp.setContentType("text/event-stream, charset=UTF-8");
+            //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
+            resp.addHeader("Access-Control-Allow-Origin", "*");
+            // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
+            // credentials and access to resource by the client will be blocked by CORS policy.
+            resp.addHeader("Access-Control-Allow-Credentials", "true");
+            resp.addHeader("Cache-Control", "no-cache");
+            resp.addHeader("Connection", "keep-alive");
+            respWriter.write("event: ob_timeline\n\n");
+            respWriter.write("data:" + data.getJson() + "\n\n");
+            respWriter.write("retry: 1000000000\n\n");
+            respWriter.flush();
+            boolean error = respWriter.checkError();
+            if (error == true) {
+                logger.info("Client disconnected");
+            }
         }
     }
 

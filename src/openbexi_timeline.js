@@ -1279,7 +1279,7 @@ function OB_TIMELINE() {
             let minDateL = new Date(this.bands[i].minDate).getTime();
             if (minDateL > this.minDateL) {
                 this.minDateL = minDateL;
-                this.minDate = new Date(this.minDateL);
+                this.minDate = new Date(this.minDateL).toString().substring(0, 24) + " UTC";
             }
         }
         console.log(this.minDate);
@@ -1294,7 +1294,7 @@ function OB_TIMELINE() {
             let maxDateL = new Date(this.bands[i].maxDate).getTime();
             if (maxDateL > this.maxDateL) {
                 this.maxDateL = maxDateL;
-                this.maxDate = new Date(this.maxDateL);
+                this.maxDate = new Date(this.maxDateL).toString().substring(0, 24) + " UTC";
             }
         }
         console.log(this.maxDate);
@@ -1310,7 +1310,8 @@ function OB_TIMELINE() {
             let minDateL = new Date(this.bands[i].minDate).getTime();
             if (minDateL > this.minDateL) {
                 this.minDateL = minDateL;
-                this.minDate = new Date(this.minDateL);
+                this.minDate = new Date(this.minDateL).toString().substring(0, 24) + " UTC";
+                ;
             }
         }
         //console.log(this.minDate);
@@ -1324,7 +1325,8 @@ function OB_TIMELINE() {
             let maxDateL = new Date(this.bands[i].maxDate).getTime();
             if (maxDateL > this.maxDateL) {
                 this.maxDateL = maxDateL;
-                this.maxDate = new Date(this.maxDateL);
+                this.maxDate = new Date(this.maxDateL).toString().substring(0, 24) + " UTC";
+                ;
             }
         }
         //console.log(this.maxDate);
@@ -2171,6 +2173,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.load_texture = function (image) {
+        if (image === undefined || ob_texture === undefined) return undefined;
         return ob_texture.get(image);
     }
 
@@ -2844,6 +2847,12 @@ function OB_TIMELINE() {
             return;
         }
 
+        if (!this.data.includes(".json") && !this.data.includes("=test") && !this.data.includes("UTC")) {
+            this.data_head = this.data.split("?");
+            this.update_bands_MinDate(this.params[0].date);
+            this.update_bands_MaxDate(this.params[0].date);
+            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate;
+        }
         let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
             let that = this;
@@ -2913,7 +2922,7 @@ function OB_TIMELINE() {
                     //sessions.close();
                 };
                 sessions.onopen = function (e) {
-                    console.log('SSE - onopen');
+                    //that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
                 };
                 sessions.onerror = function (e) {
                     // Very important: Do not close the session otherwise this client would not reconnect
