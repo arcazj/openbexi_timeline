@@ -63,7 +63,7 @@ ob_ajax_timeline extends HttpServlet {
                 logger.info(result);
 
                 test_timeline tests = new test_timeline();
-                String simpleJson = tests.getJsonData();
+                String simpleJson = tests.getSimpleJsonData();
                 out.write(simpleJson);
                 out.flush();
 
