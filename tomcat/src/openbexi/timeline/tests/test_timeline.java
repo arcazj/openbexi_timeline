@@ -57,17 +57,14 @@ public class test_timeline implements Runnable {
         TimeZone tzone = TimeZone.getTimeZone("UTC");
         // set time zone to default
         tzone.setDefault(tzone);
+        int z = 0;
         String ob_data = "", ob_data_start, ob_data_end = "";
-        ob_data_start = "{'dateTimeFormat': 'iso8601','events' : [";
+        ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"events\" : [";
         long ob_time = new Date().getTime();
+        Date ob_end_time2 = new Date(ob_time + 3000000);
         Date ob_start_time = new Date(ob_time);
-        Date ob_end_time1 = new Date(ob_time + 200000);
-        ob_data += "{'id': '" + UUID.randomUUID().toString() +
-                "','start': '" + ob_start_time +
-                "','end': '" + "'," +
-                "'data': " + "{" +
-                "'title': 'event_test_1" +
-                "','description': 'test'}}";
+        ob_data += "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"\",\"render\": {\"image\": \"/icon/ob_check_warning.png\", \"color\": \"#238448\"},\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"" + ob_end_time2 + "\",\"render\": {\"image\": \"/icon/ob_check_warning.png\", \"color\": \"#0f91f9\"},\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}";
         ob_data_end = "]}\n\n";
         return ob_data_start + ob_data + ob_data_end;
     }
@@ -80,7 +77,7 @@ public class test_timeline implements Runnable {
         Random rand = new Random();
         long z = 0;
         String ob_data = "", ob_data_start, ob_data_end;
-        ob_data_start = "{'dateTimeFormat': 'iso8601','events' : [";
+        ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"events\" : [";
         long ob_time = new Date().getTime();
         for (int i = 0; i < rand.nextInt(50) + rand.nextInt(50); i++) {
             Date ob_start_time = new Date(ob_time);
@@ -90,20 +87,20 @@ public class test_timeline implements Runnable {
             Date ob_end_time4 = new Date(ob_time + 5000000);
             Date ob_end_time5 = new Date(ob_time + 6000000);
             ob_time += 2500000 + rand.nextInt(100000);
-            ob_data += "{'start': '" + ob_start_time + "','end': '','render': {'image': 'icon/ob_check_warning.png', 'color': '#238448'},'data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_start_time + "','end': '" + ob_end_time2 + "','render': {'image': 'icon/ob_check_warning.png', 'color': '#0f91f9'},'data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time2 + "','end': '" + ob_end_time3 + "','data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_start_time + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time2 + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_start_time + "','end': '" + ob_end_time5 + "','data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time3 + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time1 + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time3 + "','end': '" + ob_end_time4 + "','data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time4 + "','end': '" + ob_end_time5 + "','data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time4 + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_start_time + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}}," +
-                    "{'start': '" + ob_start_time + "','end': '" + ob_end_time3 + "','data':{'title': 'session_test_" + z++ + "','description': 'test'}}," +
-                    "{'start': '" + ob_end_time3 + "','end': '','data':{'title': 'event_" + rand.nextInt(100000) + "','description': 'test'}},";
+            ob_data += "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"\",\"render\": {\"image\": \"icon/ob_check_warning.png\", \"color\": \"#238448\"},\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"" + ob_end_time2 + "\",\"render\": {\"image\": \"icon/ob_check_warning.png\", \"color\": \"#0f91f9\"},\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time2 + "\",\"end\": \"" + ob_end_time3 + "\",\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time2 + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"" + ob_end_time5 + "\",\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time3 + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time1 + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time3 + "\",\"end\": \"" + ob_end_time4 + "\",\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time4 + "\",\"end\": \"" + ob_end_time5 + "\",\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time4 + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_start_time + "\",\"end\": \"" + ob_end_time3 + "\",\"data\":{\"title\": \"session_test_" + z++ + "\",\"description\": \"test\"}}," +
+                    "{\"id\": \"" + UUID.randomUUID().toString() + "\",\"start\": \"" + ob_end_time3 + "\",\"end\": \"\",\"data\":{\"title\": \"event_" + rand.nextInt(100000) + "\",\"description\": \"test\"}},";
         }
         ob_data_end = "]}\n\n";
         logger.info("SEND ( client " + ob_id + ") - " + z * 2 + " sessions/events");
