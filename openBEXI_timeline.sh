@@ -18,10 +18,10 @@ fi
 if [ -z "$OPENBEXI_TIMELINE_DATA_PATH" ]
 then
     # OPENBEXI_TIMELINE_DATA_PATH is undefined so set JAVA_HOME here
-    export OPENBEXI_TIMELINE_HOME=""
+    export OPENBEXI_TIMELINE_DATA_PATH=""
 else
     echo "OPENBEXI_TIMELINE_DATA_PATH"$OPENBEXI_TIMELINE_DATA_PATH
 fi
 
 
-nohup $JAVA_HOME/bin/java -classpath $OPENBEXI_TIMELINE_HOME/lib/com.openbexi.timeline.server.openBEXI_timeline -data_path $OPENBEXI_TIMELINE_DATA_PATH &
+$JAVA_HOME/bin/java -classpath $OPENBEXI_TIMELINE_HOME/lib/openBEXI_timeline.jar com.openbexi.timeline.server.openBEXI_timeline -data_path $OPENBEXI_TIMELINE_DATA_PATH
