@@ -46,6 +46,6 @@ echo %CLASS_PATH%
 :: Run openBEXI_timeline.
 :: ---------------------------------------------------------------------
 
-"%JAVA_EXE%" -cp "%CLASS_PATH%" com.openbexi.timeline.server.openBEXI_timeline -data_path ""
+"%JAVA_EXE%" -cp "%CLASS_PATH%" com.openbexi.timeline.server.openbexi_timeline -data_path ""
 
 ::pause
