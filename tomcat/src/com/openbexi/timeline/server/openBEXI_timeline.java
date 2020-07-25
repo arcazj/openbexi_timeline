@@ -25,7 +25,7 @@ enum ob_mode {
     no_secure, secure, secure_sse, no_secure_ws, secure_ws
 }
 
-public class openBEXI_timeline implements Runnable {
+public class openbexi_timeline implements Runnable {
 
     private final ob_mode _ob_mode;
     private final Logger _logger = Logger.getLogger("");
@@ -33,7 +33,7 @@ public class openBEXI_timeline implements Runnable {
     private final String _filter_include;
     private final String _filter_exclude;
 
-    openBEXI_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude) {
+    openbexi_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude) {
         _ob_mode = mode;
         _data_path = data_path;
         _filter_include = filter_include;
@@ -218,13 +218,13 @@ public class openBEXI_timeline implements Runnable {
         }
 
 
-        //openBEXI_timeline webServer_timeline_wss = new openBEXI_timeline(openbexi.timeline.server.ob_mode.secure_ws, data_path, filter_include, filter_exclude);
+        //openbexi_timeline webServer_timeline_wss = new openbexi_timeline(openbexi.timeline.server.ob_mode.secure_ws, data_path, filter_include, filter_exclude);
         //webServer_timeline_wss.run();
-        openBEXI_timeline webServer_timeline_no_secure = new openBEXI_timeline(ob_mode.no_secure, data_path, filter_include, filter_exclude);
+        openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_path, filter_include, filter_exclude);
         webServer_timeline_no_secure.run();
-        openBEXI_timeline webServer_timeline_secure = new openBEXI_timeline(ob_mode.secure, data_path, filter_include, filter_exclude);
+        openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_path, filter_include, filter_exclude);
         webServer_timeline_secure.run();
-        openBEXI_timeline webServer_timeline_sse = new openBEXI_timeline(ob_mode.secure_sse, data_path, filter_include, filter_exclude);
+        openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_path, filter_include, filter_exclude);
         webServer_timeline_sse.run();
     }
 }
