@@ -24,4 +24,4 @@ else
 fi
 
 
-$JAVA_HOME/bin/java -classpath $OPENBEXI_TIMELINE_HOME/lib/openbexi_timeline.jar com.openbexi.timeline.server.openBEXI_timeline -data_path $OPENBEXI_TIMELINE_DATA_PATH
+$JAVA_HOME/bin/java -classpath $OPENBEXI_TIMELINE_HOME/lib/openbexi_timeline.jar com.openbexi.timeline.server.openbexi_timeline -data_path $OPENBEXI_TIMELINE_DATA_PATH
