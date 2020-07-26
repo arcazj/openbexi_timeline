@@ -1,5 +1,5 @@
 # openbexi_timeline
-openbexi_timeline is a data-driven interactive timeline for visualizing temporal data.
+openbexi_timeline is a fully customizable user interfcae and a data-driven interactive gantt timeline for visualizing temporal data.
 
 # Getting started with a simple openbexi_timeline 
 Here are a few easy steps to create a openbexi simple timeline. 
