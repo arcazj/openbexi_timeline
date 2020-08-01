@@ -25,8 +25,8 @@
         ob_timeline1 = new OB_TIMELINE();
         ob_timeline1.params = [{
             name: "ob_timeline_2",
-            title: "report",
-            //date: "May 18 16:26:00 UTC 2020",
+            title: "GNS report",
+            //date: "Jul 02 00:00:00 UTC 2020",
             date: "current_time",
             timeZone: "UTC",
             top: 0,
@@ -36,10 +36,9 @@
             fontSize: "12",
             //width: window.innerWidth,
             width: 1350,
-            //data: "http://localhost:8080/openbexi_timeline/sessions?startDate=test&endDate=test"
-            //data: "http://localhost:8080/openbexi_timeline/sessions?startDate=curent_time&endDate="
-            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=curent_time&endDate="
-            data: "https://localhost:8445/openbexi_timeline_git/sessions?startDate=test&endDate=test"
+            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=Jul 02 00:00:00 UTC 2020&endDate=Jul 04 00:00:00 UTC 2020"
+            data: "https://localhost:8445/openbexi_timeline/sessions?startDate=curent_time&endDate="
+            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
         }];
         ob_timeline1.bands = [{
             name: "ob_band_1",
@@ -65,7 +64,7 @@
                  height: "20%",
                  color: "lightgrey",
                  intervalPixels: 400,
-                 intervalUnit: "MONTH",
+                 intervalUnit: "DAY",
                  dateFormat: "yyyy mmm",
                  SessionColor: "#a110ff",
                  eventColor: "#238448",
