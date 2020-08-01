@@ -50,6 +50,16 @@ ob_debug_REMOVE_WEBGL_OBJECT = false;
 
 const ob_timelines = [];
 
+function SmoothMovement(position, target) {
+
+    // initialise the position, target, velocity, and animation interval
+    this.position = (position == undefined ? 0 : position);
+    this.target = (target == undefined ? this.position : target);
+    this.velocity = 0;
+    this.animationInterval = null;
+
+}
+
 function get_ob_timeline(ob_timeline_name) {
     for (let i = 0; ob_timelines.length; i++) {
         if (ob_timelines[i].name === ob_timeline_name)
@@ -551,6 +561,8 @@ function OB_TIMELINE() {
 
             let that3 = this;
             this.ob_cal.onDateClick(function (event, date) {
+                if (that3.idInterval !== undefined)
+                    clearInterval(that3.idInterval);
                 that3.params[0].date = date.toString().substring(0, 24) + " UTC";
                 that3.params[0].date_cal = date.toString();
                 that3.params[0].show_calendar = true;
@@ -561,12 +573,23 @@ function OB_TIMELINE() {
                     that3.data_head = that3.data.split("?");
                     that3.update_bands_MinDate(that3.params[0].date);
                     that3.update_bands_MaxDate(that3.params[0].date);
-                    that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
-                    that3.loadData();
+
+                    if (that3.originDate === undefined) that3.originDate = that3.startDateTime;
+                    if (that3.originDate < that3.minDateL || that3.originDate > that3.maxDateL) {
+                        console.log("loadData()");
+                        that3.originDate = that3.startDateTime;
+                        that3.loadData();
+                    } else {
+                        console.log("update_scene() only");
+                        that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
+                        that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+                    }
                 } else
                     that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
             this.ob_cal.onMonthChange(function (event, date) {
+                if (that3.idInterval !== undefined)
+                    clearInterval(that3.idInterval);
                 that3.params[0].date = date.toString();
                 that3.params[0].date_cal = date.toString();
                 that3.params[0].show_calendar = true;
@@ -576,8 +599,17 @@ function OB_TIMELINE() {
                     that3.data_head = that3.data.split("?");
                     that3.update_bands_MinDate(that3.params[0].date);
                     that3.update_bands_MaxDate(that3.params[0].date);
-                    that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
-                    that3.loadData();
+
+                    if (that3.originDate === undefined) that3.originDate = that3.startDateTime;
+                    if (that3.originDate < that3.minDateL || that3.originDate > that3.maxDateL) {
+                        console.log("loadData()");
+                        that3.originDate = that3.startDateTime;
+                        that3.loadData();
+                    } else {
+                        console.log("update_scene() only");
+                        that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
+                        that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
+                    }
                 } else
                     that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
@@ -1311,7 +1343,6 @@ function OB_TIMELINE() {
             if (minDateL > this.minDateL) {
                 this.minDateL = minDateL;
                 this.minDate = new Date(this.minDateL).toString().substring(0, 24) + " UTC";
-                ;
             }
         }
         //console.log(this.minDate);
@@ -1326,7 +1357,6 @@ function OB_TIMELINE() {
             if (maxDateL > this.maxDateL) {
                 this.maxDateL = maxDateL;
                 this.maxDate = new Date(this.maxDateL).toString().substring(0, 24) + " UTC";
-                ;
             }
         }
         //console.log(this.maxDate);
@@ -1581,7 +1611,7 @@ function OB_TIMELINE() {
                 if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60) ;
                 this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
             }
-            this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / 10;
+            this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / 30;
             this.bands[i].trackIncrement = 20;
             //this.bands[i].track = (-parseInt(this.bands[i].heightMax) / 2) + this.bands[i].trackIncrement;
         }
@@ -1591,8 +1621,7 @@ function OB_TIMELINE() {
         this.set_bands_minDate();
         this.set_bands_maxDate();
         //console.log("window width:" + this.width + " --- band width:" + this.bands[0].width + " --- " + this.bands[0].minDate + " --- " + this.bands[0].maxDate + " --- viewOffset:" + this.bands[0].viewOffset)
-    }
-    ;
+    };
 
     OB_TIMELINE.prototype.add_textBox = function (band_name, text, x, y, z, width, height, depth, color, texture) {
         let ob_model_name = this.ob_scene.getObjectByName(band_name + "_" + text);
@@ -1992,17 +2021,17 @@ function OB_TIMELINE() {
                 // Assign each event to the right bands
                 for (let k = 0; k < this.sessions.events.length; k++) {
                     // Remove all events events not visible in the bands
-                    pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[k].start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
-                    if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
-                        layout = eval("this.sessions.events[k]" + "." + eval("this.bands[i].model[0].sortBy"));
-                        if (layout !== undefined && this.bands[i].layout_name === layout) {
-                            this.sessions.events[k].y = undefined;
-                            this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
-                        }
-                        if (layout === undefined && this.bands[i].layout_name === "NONE") {
-                            this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
-                        }
+                    //pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[k].start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
+                    //if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
+                    layout = eval("this.sessions.events[k]" + "." + eval("this.bands[i].model[0].sortBy"));
+                    if (layout !== undefined && this.bands[i].layout_name === layout) {
+                        this.sessions.events[k].y = undefined;
+                        this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
                     }
+                    if (layout === undefined && this.bands[i].layout_name === "NONE") {
+                        this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                    }
+                    //}
                 }
 
                 for (let j = 0; j < this.bands[i].sessions.length; j++) {
@@ -2462,10 +2491,15 @@ function OB_TIMELINE() {
         this.dragControls = this.track(new THREE.DragControls(this.objects, this.ob_camera, this.ob_renderer.domElement));
         this.dragControls.addEventListener('dragstart', function (e) {
             clearInterval(that.ob_refresh_interval_clock);
+            if (that.idInterval !== undefined)
+                clearInterval(that.idInterval);
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = false;
             let ob_obj = that.ob_scene.getObjectById(e.object.id);
+            if (ob_obj.position !== undefined)
+                ob_obj.dragstart_source = ob_obj.position.x;
+            else
+                ob_obj.dragstart_source = 0;
             if (ob_obj === undefined) return;
-
             if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_y);
                 that.ob_marker.style.visibility = "visible";
@@ -2511,8 +2545,50 @@ function OB_TIMELINE() {
                 that.data_head = that.data.split("?");
                 that.update_bands_MinDate(that.params[0].date);
                 that.update_bands_MaxDate(that.params[0].date);
-                that.params[0].data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate;
-                that.loadData();
+
+                if (that.originDate === undefined) that.originDate = that.startDateTime;
+                if (that.originDate < that.minDateL || that.originDate > that.maxDateL) {
+                    console.log("loadData()");
+                    that.originDate = that.startDateTime;
+                    that.loadData();
+                } else {
+                    that.idInterval = setInterval(ob_move, 1);
+                    let ob_source = ob_obj.position.x;
+                    let ob_drag_end_source = ob_obj.position.x;
+                    let ob_drag_end_target = ob_obj.position.x + 2500;
+                    let speed = (ob_obj.dragstart_source - ob_source) / 60;
+
+                    function ob_move() {
+                        if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 5) {
+                            if (that.idInterval !== undefined)
+                                clearInterval(that.idInterval);
+                        } else {
+                            if (speed > 0)
+                                speed = speed - 0.0025;
+                            else
+                                speed = speed + 0.0025;
+                            if (Math.round(speed) === 0)
+                                clearInterval(that.idInterval);
+
+                            if (ob_obj.dragstart_source <= ob_source) {
+                                //if (ob_drag_end_source > ob_drag_end_target)
+                                //clearInterval(ob_obj.idInterval);
+                                //else {
+                                //if (ob_obj.dragstart_source < ob_obj.position.x)
+                                ob_drag_end_source = ob_drag_end_source - speed;
+                                //}
+                            } else {
+                                //if (-ob_drag_end_source > ob_drag_end_target)
+                                //clearInterval(ob_obj.idInterval);
+                                //else
+                                ob_drag_end_source = ob_drag_end_source - speed;
+                            }
+                            that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_y);
+                            that.ob_renderer.render(that.ob_scene, that.ob_camera);
+                            console.log("update_scene() ob_obj.position.x=" + ob_obj.position.x + " ob_drag_end_target=" + ob_drag_end_target + " speed=" + speed);
+                        }
+                    }
+                }
             } else
                 that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
             //console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
@@ -2833,6 +2909,8 @@ function OB_TIMELINE() {
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
     OB_TIMELINE.prototype.loadData = function (start_date) {
+        if (this.idInterval !== undefined)
+            clearInterval(this.idInterval);
         this.ob_init();
         if (this.data === undefined) {
             this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
