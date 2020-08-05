@@ -17,7 +17,9 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
-@WebServlet("/openbexi_timeline_sse/sessions")
+
+//@WebServlet("/openbexi_timeline_sse/sessions")
+@WebServlet(asyncSupported = true)
 public class ob_sse_timeline extends HttpServlet {
 
     public ob_sse_timeline() {
