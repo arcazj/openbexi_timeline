@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2020 arcazj All rights reserved.
-    OPENBEXI Timeline 0.9
+    OPENBEXI Timeline 0.9.0a beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -49,16 +49,6 @@ ob_debug_MOVE_WEBGL_OBJECT = false;
 ob_debug_REMOVE_WEBGL_OBJECT = false;
 
 const ob_timelines = [];
-
-function SmoothMovement(position, target) {
-
-    // initialise the position, target, velocity, and animation interval
-    this.position = (position == undefined ? 0 : position);
-    this.target = (target == undefined ? this.position : target);
-    this.velocity = 0;
-    this.animationInterval = null;
-
-}
 
 function get_ob_timeline(ob_timeline_name) {
     for (let i = 0; ob_timelines.length; i++) {
@@ -484,7 +474,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9 beta</legend>\n" +
+                "<legend> version 0.9.0a beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -573,17 +563,7 @@ function OB_TIMELINE() {
                     that3.data_head = that3.data.split("?");
                     that3.update_bands_MinDate(that3.params[0].date);
                     that3.update_bands_MaxDate(that3.params[0].date);
-
-                    if (that3.originDate === undefined) that3.originDate = that3.startDateTime;
-                    if (that3.originDate < that3.minDateL || that3.originDate > that3.maxDateL) {
-                        console.log("loadData()");
-                        that3.originDate = that3.startDateTime;
-                        that3.loadData();
-                    } else {
-                        console.log("update_scene() only");
-                        that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
-                        that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
-                    }
+                    that3.loadData();
                 } else
                     that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
@@ -599,17 +579,7 @@ function OB_TIMELINE() {
                     that3.data_head = that3.data.split("?");
                     that3.update_bands_MinDate(that3.params[0].date);
                     that3.update_bands_MaxDate(that3.params[0].date);
-
-                    if (that3.originDate === undefined) that3.originDate = that3.startDateTime;
-                    if (that3.originDate < that3.minDateL || that3.originDate > that3.maxDateL) {
-                        console.log("loadData()");
-                        that3.originDate = that3.startDateTime;
-                        that3.loadData();
-                    } else {
-                        console.log("update_scene() only");
-                        that3.params[0].data = that3.data_head[0] + "?startDate=" + that3.minDate + "&endDate=" + that3.maxDate;
-                        that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
-                    }
+                    that3.loadData();
                 } else
                     that3.update_scene(that3.header, that3.params, that3.bands, that3.model, that3.sessions, that3.camera);
             })
@@ -752,6 +722,8 @@ function OB_TIMELINE() {
             this.ob_sync.style.height = 32 + "px";
             this.ob_sync.style.width = 32 + "px";
             this.ob_sync.onclick = function () {
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
                 that2.moving = false;
                 that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
             };
@@ -803,6 +775,8 @@ function OB_TIMELINE() {
             this.ob_3d.onclick = function (e) {
                 that2.moving = false;
                 that2.ob_3d.style.zIndex = "9999";
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
                 if (that2.camera === "Perspective") {
                     get_ob_timeline(that2.name).ob_apply_orthographic_camera();
                     that2.camera = "Orthographic";
@@ -830,6 +804,8 @@ function OB_TIMELINE() {
             this.ob_settings.onclick = function (e) {
                 that2.moving = false;
                 that2.ob_settings.style.zIndex = "9999";
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
                 that2.ob_create_setting();
             };
             this.ob_settings.onmousemove = function () {
@@ -842,6 +818,8 @@ function OB_TIMELINE() {
             this.ob_help.style.height = 32 + "px";
             this.ob_help.style.width = 32 + "px";
             this.ob_help.onclick = function () {
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
                 that2.moving = false;
                 that2.ob_create_help()
             };
@@ -1314,7 +1292,7 @@ function OB_TIMELINE() {
                 this.minDate = new Date(this.minDateL).toString().substring(0, 24) + " UTC";
             }
         }
-        console.log(this.minDate);
+        //console.log(this.minDate);
     };
     OB_TIMELINE.prototype.update_bands_MaxDate = function (date) {
         this.maxDateL = 0;
@@ -1329,7 +1307,7 @@ function OB_TIMELINE() {
                 this.maxDate = new Date(this.maxDateL).toString().substring(0, 24) + " UTC";
             }
         }
-        console.log(this.maxDate);
+        //console.log(this.maxDate);
     };
 
     OB_TIMELINE.prototype.set_bands_minDate = function () {
@@ -1608,8 +1586,8 @@ function OB_TIMELINE() {
             if (this.bands[i].subIntervalPixels === undefined || this.bands[i].subIntervalPixels === "NONE")
                 this.bands[i].subIntervalPixels = "NONE";
             else {
-                if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60) ;
-                this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
+                if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60)
+                    this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
             }
             this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / 30;
             this.bands[i].trackIncrement = 20;
@@ -2189,9 +2167,9 @@ function OB_TIMELINE() {
         if (ob_band !== undefined) {
             ob_band.add(ob_session);
         }
-        return ob_session;
         if (ob_debug_ADD_SESSION_WEBGL_OBJECT) console.log("OB_TIMELINE.Session(" + band_name + "," + session.x + "," +
             session.y + "," + session.z + "," + session.width + "," + session.height + "," + session.color + ")");
+        return ob_session;
     };
     OB_TIMELINE.prototype.removeSession = function (band_name, session_id) {
         let ob_band = this.ob_scene.getObjectByName(band_name);
@@ -2493,13 +2471,14 @@ function OB_TIMELINE() {
             clearInterval(that.ob_refresh_interval_clock);
             if (that.idInterval !== undefined)
                 clearInterval(that.idInterval);
+
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = false;
             let ob_obj = that.ob_scene.getObjectById(e.object.id);
+            if (ob_obj === undefined) return;
             if (ob_obj.position !== undefined)
                 ob_obj.dragstart_source = ob_obj.position.x;
             else
                 ob_obj.dragstart_source = 0;
-            if (ob_obj === undefined) return;
             if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_y);
                 that.ob_marker.style.visibility = "visible";
@@ -2546,47 +2525,44 @@ function OB_TIMELINE() {
                 that.update_bands_MinDate(that.params[0].date);
                 that.update_bands_MaxDate(that.params[0].date);
 
-                if (that.originDate === undefined) that.originDate = that.startDateTime;
-                if (that.originDate < that.minDateL || that.originDate > that.maxDateL) {
-                    console.log("loadData()");
-                    that.originDate = that.startDateTime;
-                    that.loadData();
-                } else {
-                    that.idInterval = setInterval(ob_move, 1);
-                    let ob_source = ob_obj.position.x;
-                    let ob_drag_end_source = ob_obj.position.x;
-                    let ob_drag_end_target = ob_obj.position.x + 2500;
-                    let speed = (ob_obj.dragstart_source - ob_source) / 60;
 
-                    function ob_move() {
-                        if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 5) {
+                that.idInterval = setInterval(ob_move, 5);
+                let ob_source = ob_obj.position.x;
+                let ob_drag_end_source = ob_obj.position.x;
+                let speed = (ob_obj.dragstart_source - ob_source) / 60;
+
+                function ob_move() {
+                    if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 1) {
+                        if (that.idInterval !== undefined)
+                            clearInterval(that.idInterval);
+                    } else {
+                        if (speed > 0)
+                            speed = speed - 0.0025;
+                        else
+                            speed = speed + 0.0025;
+                        if (Math.round(speed) === 0)
+                            clearInterval(that.idInterval);
+
+                        if (ob_obj.dragstart_source <= ob_source)
+                            ob_drag_end_source = ob_drag_end_source - speed;
+                        else
+                            ob_drag_end_source = ob_drag_end_source - speed;
+
+                        //that.update_bands_MinDate(that.params[0].date);
+                        //that.update_bands_MaxDate(that.params[0].date);
+                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_y);
+                        that.ob_renderer.render(that.ob_scene, that.ob_camera);
+                        if (ob_obj.pos_x > -ob_obj.position.x - that.width || ob_obj.position.x < ob_obj.pos_x + that.width) {
                             if (that.idInterval !== undefined)
                                 clearInterval(that.idInterval);
-                        } else {
-                            if (speed > 0)
-                                speed = speed - 0.0025;
-                            else
-                                speed = speed + 0.0025;
-                            if (Math.round(speed) === 0)
-                                clearInterval(that.idInterval);
-
-                            if (ob_obj.dragstart_source <= ob_source) {
-                                //if (ob_drag_end_source > ob_drag_end_target)
-                                //clearInterval(ob_obj.idInterval);
-                                //else {
-                                //if (ob_obj.dragstart_source < ob_obj.position.x)
-                                ob_drag_end_source = ob_drag_end_source - speed;
-                                //}
-                            } else {
-                                //if (-ob_drag_end_source > ob_drag_end_target)
-                                //clearInterval(ob_obj.idInterval);
-                                //else
-                                ob_drag_end_source = ob_drag_end_source - speed;
-                            }
-                            that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_y);
-                            that.ob_renderer.render(that.ob_scene, that.ob_camera);
-                            console.log("update_scene() ob_obj.position.x=" + ob_obj.position.x + " ob_drag_end_target=" + ob_drag_end_target + " speed=" + speed);
+                            that.loadData();
                         }
+                        /*console.log("|...........................................V.......................................|");
+                        console.log(
+                            new Date(that.minDateL).toISOString() + "............................................................." +
+                            new Date(that.maxDateL).toISOString() + "\n" +
+                            "............................................." + new Date(that.startDateTime).toISOString() + "\n" +
+                            "ob_obj.pos_x=" + ob_obj.pos_x + " ob_obj.position.x=" + ob_obj.position.x */
                     }
                 }
             } else
@@ -2909,9 +2885,13 @@ function OB_TIMELINE() {
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
     OB_TIMELINE.prototype.loadData = function (start_date) {
+        if (this.minDate != undefined)
+            console.log("loadData()" + " - " + this.minDate + " < -- > " + this.maxDate);
+
         if (this.idInterval !== undefined)
             clearInterval(this.idInterval);
         this.ob_init();
+
         if (this.data === undefined) {
             this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
             return;
@@ -3040,7 +3020,6 @@ function OB_TIMELINE() {
         if (fileExtension !== null) {
             if (fileExtension[1].toLowerCase() === "json") {
                 this.loadJSON();
-                return;
             }
         }
     };
