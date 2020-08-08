@@ -111,14 +111,22 @@ function OB_TIMELINE() {
         this.regex = "^(?=.*(?:--|--))(?!.*(?:--|--)).*$";
 
         this.camera = this.params[0].camera;
-        this.ob_pos_camera_x = -375;
-        this.ob_pos_camera_y = 100;
-        this.ob_pos_camera_z = this.height;
+        this.ob_pos_camera_y = this.height / 2;
+        if (this.height > 2000) {
+            this.ob_pos_camera_x = -1500;
+            this.ob_pos_camera_z = this.height/2;
+        } else if (this.height > 1000) {
+            this.ob_pos_camera_x = -1000;
+            this.ob_pos_camera_z = this.height/2;
+        } else {
+            this.ob_pos_camera_x = -100;
+            this.ob_pos_camera_z = this.height / 2;
+        }
         this.ob_far = 10000;
         this.ob_near = 1;
         this.ob_fov = 70;
-        this.ob_lookAt_x = 250;
-        this.ob_lookAt_y = 300;
+        this.ob_lookAt_x = 0;
+        this.ob_lookAt_y = this.height / 2;
         this.ob_lookAt_z = 0;
 
         this.descriptor = this.params[0].descriptor;
@@ -2480,7 +2488,7 @@ function OB_TIMELINE() {
             else
                 ob_obj.dragstart_source = 0;
             if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
-                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_y);
+                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
@@ -2500,7 +2508,7 @@ function OB_TIMELINE() {
             if (ob_obj === undefined) return;
 
             if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
-                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_y);
+                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
@@ -2518,55 +2526,93 @@ function OB_TIMELINE() {
             that.params[0].date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
             that.params[0].date_cal = that.ob_markerDate;
             that.params[0].show_calendar = true;
+            that.update_bands_MinDate(that.params[0].date);
+            that.update_bands_MaxDate(that.params[0].date);
+
             if (that.data && that.data.match(/^(http?):\/\//) ||
                 that.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
                 that.data && that.data.match(/^(https?):\/\//)) {
                 that.data_head = that.data.split("?");
-                that.update_bands_MinDate(that.params[0].date);
-                that.update_bands_MaxDate(that.params[0].date);
 
-
-                that.idInterval = setInterval(ob_move, 5);
                 let ob_source = ob_obj.position.x;
                 let ob_drag_end_source = ob_obj.position.x;
-                let speed = (ob_obj.dragstart_source - ob_source) / 60;
+                let ob_speed = (ob_obj.dragstart_source - ob_source) / 60;
+                that.idInterval = setInterval(ob_move, 5);
 
                 function ob_move() {
                     if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 1) {
                         if (that.idInterval !== undefined)
                             clearInterval(that.idInterval);
                     } else {
-                        if (speed > 0)
-                            speed = speed - 0.0025;
+                        if (ob_speed > 0)
+                            ob_speed = ob_speed - 0.0025;
                         else
-                            speed = speed + 0.0025;
-                        if (Math.round(speed) === 0)
+                            ob_speed = ob_speed + 0.0025;
+                        if (Math.round(ob_speed) === 0)
                             clearInterval(that.idInterval);
 
                         if (ob_obj.dragstart_source <= ob_source)
-                            ob_drag_end_source = ob_drag_end_source - speed;
+                            ob_drag_end_source = ob_drag_end_source - ob_speed;
                         else
-                            ob_drag_end_source = ob_drag_end_source - speed;
+                            ob_drag_end_source = ob_drag_end_source - ob_speed;
 
-                        //that.update_bands_MinDate(that.params[0].date);
-                        //that.update_bands_MaxDate(that.params[0].date);
-                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_y);
+                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z);
                         that.ob_renderer.render(that.ob_scene, that.ob_camera);
                         if (ob_obj.pos_x > -ob_obj.position.x - that.width || ob_obj.position.x < ob_obj.pos_x + that.width) {
                             if (that.idInterval !== undefined)
                                 clearInterval(that.idInterval);
                             that.loadData();
                         }
-                        /*console.log("|...........................................V.......................................|");
+                        console.log("|...........................................V.......................................|");
                         console.log(
                             new Date(that.minDateL).toISOString() + "............................................................." +
                             new Date(that.maxDateL).toISOString() + "\n" +
                             "............................................." + new Date(that.startDateTime).toISOString() + "\n" +
-                            "ob_obj.pos_x=" + ob_obj.pos_x + " ob_obj.position.x=" + ob_obj.position.x */
+                            "ob_obj.pos_x=" + ob_obj.pos_x + " ob_obj.position.x=" + ob_obj.position.x)
                     }
                 }
-            } else
-                that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+            } else {
+
+                let ob_source = ob_obj.position.x;
+                let ob_drag_end_source = ob_obj.position.x;
+                let ob_speed = (ob_obj.dragstart_source - ob_source) / 60;
+                that.idInterval = setInterval(ob_move, 5);
+
+                function ob_move() {
+                    if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 1) {
+                        if (that.idInterval !== undefined)
+                            clearInterval(that.idInterval);
+                    } else {
+                        if (ob_speed > 0)
+                            ob_speed = ob_speed - 0.0025;
+                        else
+                            ob_speed = ob_speed + 0.0025;
+                        if (Math.round(ob_speed) === 0)
+                            clearInterval(that.idInterval);
+
+                        if (ob_obj.dragstart_source <= ob_source)
+                            ob_drag_end_source = ob_drag_end_source - ob_speed;
+                        else
+                            ob_drag_end_source = ob_drag_end_source - ob_speed;
+
+                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z);
+                        that.ob_renderer.render(that.ob_scene, that.ob_camera);
+                        if (ob_obj.pos_x > -ob_obj.position.x - that.width || ob_obj.position.x < ob_obj.pos_x + that.width) {
+                            if (that.idInterval !== undefined)
+                                clearInterval(that.idInterval);
+                            that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+                        }
+
+                        console.log("|...........................................V.......................................|");
+                        console.log(
+                            new Date(that.minDateL).toISOString() + "............................................................." +
+                            new Date(that.maxDateL).toISOString() + "\n" +
+                            "............................................." + new Date(that.startDateTime).toISOString() + "\n" +
+                            "ob_obj.pos_x=" + ob_obj.pos_x + " ob_obj.position.x=" + ob_obj.position.x);
+                    }
+                }
+            }
+
             //console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
         });
 
@@ -2577,7 +2623,7 @@ function OB_TIMELINE() {
             if (ob_obj === undefined) return;
 
             if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
-                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_y);
+                that.move_band(ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
@@ -2886,7 +2932,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.loadData = function (start_date) {
         if (this.minDate != undefined)
-            console.log("loadData()" + " - " + this.minDate + " < -- > " + this.maxDate);
+            console.log("loadData()" + "From " + this.minDate + " to " + this.maxDate);
 
         if (this.idInterval !== undefined)
             clearInterval(this.idInterval);
