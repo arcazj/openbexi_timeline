@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2020 arcazj All rights reserved.
-    OPENBEXI Timeline 0.9.0a beta
+    OPENBEXI Timeline 0.9.0c beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
