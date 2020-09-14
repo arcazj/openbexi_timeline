@@ -84,8 +84,7 @@ class ResourceTracker {
             if (resource.dispose) {
                 try {
                     resource.dispose();
-                } catch (err) {
-                }
+                } catch (err) {}
             }
         }
         this.resources.clear();
