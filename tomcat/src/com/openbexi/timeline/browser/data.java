@@ -103,7 +103,7 @@ public class data {
     private TimerTask task;
 
 
-    protected void start_watching() {
+    public void start_watching() {
 
         // monitor fileParentPathE change
         task = new FileWatcher(this.files) {
@@ -146,6 +146,9 @@ public class data {
         new Timer().schedule(task, new Date(), 10000);
     }
 
+    public data(){
+
+    }
     public data(String currentStartDate, String currentEndDate, String currentPathModel, String include, String exclude, String action_type,
                 HttpServletResponse response, Session session, int id) {
         String[] items = null;
