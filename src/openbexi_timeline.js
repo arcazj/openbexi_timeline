@@ -82,7 +82,10 @@ class ResourceTracker {
                 }
             }
             if (resource.dispose) {
-                resource.dispose();
+                try {
+                    resource.dispose();
+                } catch (err) {
+                }
             }
         }
         this.resources.clear();
@@ -482,7 +485,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.0b beta</legend>\n" +
+                "<legend> version 0.9.0c beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -1361,23 +1364,8 @@ function OB_TIMELINE() {
             this.bands[i].x = this.bands[i].viewOffset;
         }
     };
-    OB_TIMELINE.prototype.update_timeline_model = function (band, ob_attribute, ob_color, ob_alternate_color) {
-        if (this.sessions === undefined) return;
-        let ob_layouts = [];
-        let max_name_length = 0;
-        let pixelOffSetStart;
+    OB_TIMELINE.prototype.update_timeline_model = function (band, ob_attribute, ob_color, ob_alternate_color, ob_layouts, max_name_length) {
 
-        for (let i = 0; i < this.sessions.events.length; i++) {
-            // Remove all events events not visible in the bands
-            //pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[i].start, band.gregorianUnitLengths, band.intervalPixels);
-            //if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
-            if (ob_layouts.indexOf(eval("this.sessions.events[i]" + ".data." + eval("ob_attribute"))) === -1) {
-                ob_layouts.push(eval("this.sessions.events[i]" + ".data." + eval("ob_attribute")));
-                if ((ob_layouts[0]) !== undefined)
-                    if ((ob_layouts[0]).length > max_name_length) max_name_length = (ob_layouts[0]).length;
-            }
-            //}
-        }
         band.layouts = ob_layouts;
         band.layouts.max_name_length = max_name_length;
         if (this.bands.original_length === this.bands.length) return;
@@ -1400,18 +1388,43 @@ function OB_TIMELINE() {
     }
 
     OB_TIMELINE.prototype.create_new_bands = function () {
+
+        let ob_layouts = [];
+        let max_name_length = 0;
+        let pixelOffSetStart;
+        let sortByValue;
+
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].model === undefined) {
                 this.bands[i].layouts = ["NONE"];
                 this.bands[i].layout_name = "NONE";
                 this.bands[i].model = [{sortBy: "NONE"}];
             } else {
-                for (let j = 0; j < this.bands[i].model.length; j++) {
-                    if (this.bands[i].model[j].sortBy === undefined) break;
+                for (let j = 0; j < 1; j++) {
+                    if (this.bands[i].model[j].sortBy === undefined) this.bands[i].model[j].sortBy = "NONE";
+                    if (i === 0) {
+                        if (this.sessions === undefined) return;
+                        for (let k = 0; k < this.sessions.events.length; k++) {
+                            // Remove all events events not visible in the bands
+                            //pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[i].start, band.gregorianUnitLengths, band.intervalPixels);
+                            //if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
+                            sortByValue = eval("this.sessions.events[k]" + ".data." + this.bands[i].model[j].sortBy.toString());
+                            this.sessions.events[k].data.sortByValue = sortByValue;
+                            if (ob_layouts.indexOf(sortByValue) === -1) {
+                                ob_layouts.push(sortByValue);
+                                if ((ob_layouts[0]) !== undefined) {
+                                    if ((ob_layouts[0]).length > max_name_length)
+                                        max_name_length = (ob_layouts[0]).length;
+                                }
+                            }
+                            //}
+                        }
+                    }
+
                     if (this.bands[i].model[j].alternateColor !== undefined)
-                        this.update_timeline_model(this.bands[i], this.bands[i].model[j].sortBy.toString(), this.bands[i].color, this.bands[i].model[j].alternateColor.toString());
+                        this.update_timeline_model(this.bands[i], this.bands[i].model[j].sortBy.toString(), this.bands[i].color, this.bands[i].model[j].alternateColor.toString(), ob_layouts, max_name_length);
                     else
-                        this.update_timeline_model(this.bands[i], this.bands[i].model[j].sortBy.toString(), this.bands[i].color);
+                        this.update_timeline_model(this.bands[i], this.bands[i].model[j].sortBy.toString(), this.bands[i].color, undefined, ob_layouts, max_name_length);
                 }
             }
         }
@@ -2004,6 +2017,7 @@ function OB_TIMELINE() {
         this.bands.updated = false;
 
         // two passes are necessary if bands height change because we need to calculate again all sessions coordinates
+        let sortByValue;
         for (let p = 0; p < 2; p++) {
             if (p === 1 && this.bands.updated === false)
                 break;
@@ -2014,17 +2028,21 @@ function OB_TIMELINE() {
                 if (this.sessions === undefined) break;
 
                 // Assign each event to the right bands
+                sortByValue = eval("this.bands[i].model[0].sortBy");
                 for (let k = 0; k < this.sessions.events.length; k++) {
                     // Remove all events events not visible in the bands
                     //pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[k].start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
                     //if (pixelOffSetStart > -this.width && this.width > pixelOffSetStart) {
-                    layout = eval("this.sessions.events[k]" + ".data." + eval("this.bands[i].model[0].sortBy"));
-                    if (layout !== undefined && this.bands[i].layout_name === layout) {
-                        this.sessions.events[k].y = undefined;
+                    if (sortByValue === "NONE") {
                         this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
-                    }
-                    if (layout === undefined && this.bands[i].layout_name === "NONE") {
-                        this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                    } else {
+                        layout = this.sessions.events[k].data.sortByValue;
+                        if (layout === undefined)
+                            layout = eval("this.sessions.events[k].data." + sortByValue);
+                        if (layout !== undefined && this.bands[i].layout_name === layout) {
+                            this.sessions.events[k].y = undefined;
+                            this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
+                        }
                     }
                     //}
                 }
@@ -2121,10 +2139,28 @@ function OB_TIMELINE() {
                         if (!this.bands[i].name.match(/overview_/)) {
                             //this.add_text_CSS2D(ob_obj, this.bands[i].sessions[j].data.title,
                             //this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt, this.bands[i].textColor);
+                            let textColor = this.bands[i].dateColor;
+                            let fontSizeInt = this.bands[i].fontSizeInt;
+                            let fontWeight = this.bands[i].fontWeight;
+                            let fontFamily = this.bands[i].fontFamily;
+                            let fontStyle = this.bands[i].fontStyle;
+                            if (this.bands[i].sessions[j].render !== undefined) {
+                                if (this.bands[i].sessions[j].render.textColor !== undefined)
+                                    textColor = this.bands[i].sessions[j].render.textColor;
+                                if (this.bands[i].sessions[j].render.fontSize !== undefined)
+                                    fontSizeInt = this.bands[i].sessions[j].render.fontSize;
+                                if (this.bands[i].sessions[j].render.fontWeight !== undefined)
+                                    fontWeight = this.bands[i].sessions[j].render.fontWeight;
+                                if (this.bands[i].sessions[j].render.fontFamily !== undefined)
+                                    fontFamily = this.bands[i].sessions[j].render.fontFamily;
+                                if (this.bands[i].sessions[j].render.fontStyle !== undefined)
+                                    fontStyle = this.bands[i].sessions[j].render.fontStyle;
+                            }
+
                             this.add_text_sprite(ob_obj, this.bands[i].sessions[j].data.title,
-                                this.bands[i].sessions[j].textX, 0, 5, this.bands[i].fontSizeInt,
-                                this.bands[i].fontStyle, this.bands[i].fontWeight,
-                                this.bands[i].dateColor, this.bands[i].fontFamily);
+                                this.bands[i].sessions[j].textX, 0, 5, fontSizeInt,
+                                fontStyle, fontWeight,
+                                textColor, fontFamily);
                         }
                     }
                 } catch (e) {
@@ -2570,7 +2606,7 @@ function OB_TIMELINE() {
                         else
                             ob_drag_end_source = ob_drag_end_source - ob_speed;
 
-                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z, false);
+                        that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z, true);
                         that.ob_renderer.render(that.ob_scene, that.ob_camera);
                         if (ob_obj.pos_x > -ob_obj.position.x - that.width || ob_obj.position.x < ob_obj.pos_x + that.width) {
                             if (that.idInterval !== undefined)
@@ -2902,16 +2938,27 @@ function OB_TIMELINE() {
                 ob_end = new Date(Date.now() + 1015000);
                 ob_type = "type11";
                 ob_title = "session SESSION T0";
-            } else if (i === 4 || i === 8 || i === 12 || i === 14) {
+            } else if (i === 4 || i === 8 || i === 12 || i === 14 || i === 41 || i === 71 || i === 79) {
                 ob_start = new Date(Date.now() + i * 600000);
                 ob_end = new Date(Date.now() + i * 700000);
                 ob_type = "type4";
-                ob_title = "SESSION" + i;
-            } else if (i === 3 || i === 9 || i === 18) {
+                ob_title = "session_SESSION_long_long_LONG_long_long_long_long long_long_LONG_long_long_long_long" + i;
+            } else if (i === 3 || i === 9 || i === 18 || i === 59 || i === 53 || i === 43 || i === 29 || i === 33 ||
+                i === 89 || i === 83 || i === 61 || i === 47) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type10";
-                ob_title = "session_SESSION_long_long_LONG_long_long_long_long long_long_LONG_long_long_long_long" + i;
+                ob_title = "session" + i;
+            } else if (i % 17 === 0) {
+                ob_start = new Date(Date.now() + i * 50000);
+                ob_end = "";
+                ob_type = "type17";
+                ob_title = "s" + i;
+            } else if (i % 16 === 0) {
+                ob_start = new Date(Date.now() + i * 50000);
+                ob_end = "";
+                ob_type = "type16";
+                ob_title = "s" + i;
             } else if (i % 11 === 0) {
                 ob_start = new Date(Date.now() + i * 50000);
                 ob_end = "";
@@ -2947,10 +2994,20 @@ function OB_TIMELINE() {
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type6";
                 ob_title = "session" + i;
-            } else if (i % 3 === 0) {
+            } else if (i % 11 === 0) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type3";
+                ob_title = "session" + i;
+            } else if (i % 4 === 0) {
+                ob_start = new Date(Date.now() + i * 300000);
+                ob_end = new Date(Date.now() + i * 650000);
+                ob_type = "type4";
+                ob_title = "session" + i;
+            } else if (i % 3 === 0) {
+                ob_start = new Date(Date.now() + i * 300000);
+                ob_end = new Date(Date.now() + i * 650000);
+                ob_type = "type2";
                 ob_title = "session" + i;
             } else if (i % 2 === 0) {
                 ob_start = new Date(Date.now() + i * 300000);
@@ -2961,7 +3018,7 @@ function OB_TIMELINE() {
                 ob_start = new Date(Date.now() + i * 650000);
                 ob_end = "";
                 ob_title = "event_" + i;
-                ob_type = "type99";
+                ob_type = "type" + i;
             }
 
             sessions += "{";

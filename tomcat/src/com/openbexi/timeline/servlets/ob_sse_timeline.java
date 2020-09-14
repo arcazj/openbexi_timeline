@@ -2,7 +2,12 @@ package com.openbexi.timeline.servlets;
 
 import com.openbexi.timeline.browser.data;
 import com.openbexi.timeline.tests.test_timeline;
+import org.apache.catalina.connector.Connector;
+import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -10,6 +15,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSessionEvent;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -130,6 +136,16 @@ public class ob_sse_timeline extends HttpServlet {
     }
 
     @Override
+    public void destroy() {
+        super.destroy();
+    }
+
+    @Override
+    public ServletContext getServletContext() {
+        return super.getServletContext();
+    }
+
+    @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         super.service(req, resp);
     }
@@ -138,5 +154,6 @@ public class ob_sse_timeline extends HttpServlet {
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
         super.service(req, res);
     }
+
 
 }

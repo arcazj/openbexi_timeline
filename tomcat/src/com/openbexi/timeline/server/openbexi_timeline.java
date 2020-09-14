@@ -1,18 +1,29 @@
 package com.openbexi.timeline.server;
 
+import com.openbexi.timeline.browser.data;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
-import org.apache.catalina.Context;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.Service;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.servlets.DefaultServlet;
+import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.coyote.http2.Http2Protocol;
+import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.FileSystems;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
 /**
@@ -32,12 +43,17 @@ public class openbexi_timeline implements Runnable {
     private final String _data_path;
     private final String _filter_include;
     private final String _filter_exclude;
+    public Hashtable _session_stack = new Hashtable();
 
     openbexi_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude) {
         _ob_mode = mode;
         _data_path = data_path;
         _filter_include = filter_include;
         _filter_exclude = filter_exclude;
+    }
+
+    public Hashtable get_session_stack() {
+        return _session_stack;
     }
 
     /**
@@ -153,9 +169,33 @@ public class openbexi_timeline implements Runnable {
             ctx.addParameter("filter_exclude", _filter_exclude);
         if (_filter_include != null && ctx != null)
             ctx.addParameter("filter_include", _filter_include);
+        _session_stack.put("test1", "test1");
+        _session_stack.put("test2", "test2");
+        ctx.addParameter("stack", String.valueOf(_session_stack));
 
         tomcat.start();
-        tomcat.getServer().start();
+        //tomcat.getServer().start();
+
+        Runnable runnableTask = () -> {
+            for (; ; ) {
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Executor executor = httpsConnector.getProtocolHandler().getExecutor();
+        if (executor instanceof ThreadPoolExecutor) {
+            try {
+                ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
+                threadPoolExecutor.execute(runnableTask);
+            } catch (Exception ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
     }
 
     /**
@@ -210,7 +250,7 @@ public class openbexi_timeline implements Runnable {
                 System.exit(1);
             }
         } else {
-            System.err.println("opeenBEXI Timeline not started because of bad usage:");
+            System.err.println("openBEXI Timeline not started because of bad usage:");
             System.err.println("Argument " + args[0] + " " + "data_path");
             System.err.println("Argument " + args[0] + " " + "data_path -filter_exclude <regex> -filter_include <regex>");
             System.err.println("Argument " + args[0] + " " + "data_path -filter_include <regex> -filter_exclude <regex>");
@@ -218,7 +258,7 @@ public class openbexi_timeline implements Runnable {
         }
 
 
-        //openbexi_timeline webServer_timeline_wss = new openbexi_timeline(openbexi.timeline.server.ob_mode.secure_ws, data_path, filter_include, filter_exclude);
+        //openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_path, filter_include, filter_exclude);
         //webServer_timeline_wss.run();
         openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_path, filter_include, filter_exclude);
         webServer_timeline_no_secure.run();

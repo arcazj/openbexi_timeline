@@ -11,6 +11,7 @@ import java.util.Enumeration;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -39,6 +40,7 @@ ob_ajax_timeline extends HttpServlet {
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
+        String stack = getServletContext().getInitParameter("stack");
 
         Logger logger = Logger.getLogger("");
 
