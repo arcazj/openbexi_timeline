@@ -2,6 +2,7 @@ let ob_texture = new Map();
 // global texture
 ob_texture.set("icon/ob_error.png", new THREE.TextureLoader().load("icon/ob_error.png"));
 ob_texture.set("icon/ob_warning.png", new THREE.TextureLoader().load("icon/ob_warning.png"));
+ob_texture.set("icon/ob_info.png", new THREE.TextureLoader().load("icon/ob_info.png"));
 ob_texture.set("icon/ob_start.png", new THREE.TextureLoader().load("icon/ob_start.png"));
 ob_texture.set("icon/ob_stop.png", new THREE.TextureLoader().load("icon/ob_stop.png"));
 ob_texture.set("icon/ob_check_failed.png", new THREE.TextureLoader().load("icon/ob_check_failed.png"));
