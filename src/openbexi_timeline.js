@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2020 arcazj All rights reserved.
-    OPENBEXI Timeline 0.9.0c beta
+    OPENBEXI Timeline 0.9.1 beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -84,7 +84,8 @@ class ResourceTracker {
             if (resource.dispose) {
                 try {
                     resource.dispose();
-                } catch (err) {}
+                } catch (err) {
+                }
             }
         }
         this.resources.clear();
@@ -109,7 +110,8 @@ function OB_TIMELINE() {
         this.title = "";
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
-        this.ob_filter = "*";
+        if (this.ob_filter === undefined)
+            this.ob_filter = "*";
         this.regex = "^(?=.*(?:--|--))(?!.*(?:--|--)).*$";
 
         this.camera = this.params[0].camera;
@@ -235,6 +237,15 @@ function OB_TIMELINE() {
 
         this.objects = [];
 
+        // Save original bands setting
+        if (this.original_bands === undefined)
+            this.original_bands = Object.assign({}, this.bands);
+        else {
+            let ob_sortBy = this.bands[0].model[0].sortBy;
+            this.bands = Object.assign([], this.original_bands);
+            this.bands[0].model[0].sortBy = ob_sortBy;
+            this.model = undefined;
+        }
         this.set_bands();
 
         //console.log("ob_init(): top:" + this.top + " left:" + this.left + " width:" + this.width + " height:" + this.height);
@@ -263,8 +274,36 @@ function OB_TIMELINE() {
         this.params[0].width = parseInt(document.getElementById(this.name + "_width").value);
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
+    OB_TIMELINE.prototype.ob_apply_timeline_sorting = function () {
+        try {
+            let ob_sort_by = document.getElementById("ob_sort_by").value;
+            this.bands[0].model[0].sortBy = document.getElementById("ob_sort_by").value;
+            this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
+        } catch (err) {
+        }
+    };
     OB_TIMELINE.prototype.ob_apply_timeline_filter = function () {
-        this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
+        let ob_checked;
+        try {
+            for (let [key, value] of this.model.entries()) {
+                let value_items = value.split(",");
+                if (value_items.length > 1) {
+                    for (let i = 0; i < value_items.length; i++) {
+                        try {
+                            ob_checked = document.getElementById(this.name + "_" + key + "_" + value_items[i]).checked;
+                        } catch (err) {
+                        }
+                        if (ob_checked !== undefined && ob_checked === true) {
+                            this.ob_filter += key + ":" + value_items[i] + " ";
+                            this.ob_search_input.value = this.ob_filter;
+                        }
+                    }
+                }
+            }
+            this.loadData();
+            //this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
+        } catch (err) {
+        }
     };
     OB_TIMELINE.prototype.ob_apply_orthographic_camera = function () {
         this.camera = "Orthographic";
@@ -361,10 +400,131 @@ function OB_TIMELINE() {
             return this.ob_gui_div;
         }
     };
+    OB_TIMELINE.prototype.ob_create_sorting = function () {
+        let ob_sorting_by = "NONE";
+        let ob_filtering = "";
+        this.ob_remove_descriptor();
+        this.ob_remove_calendar();
+        this.ob_remove_help();
+        this.ob_remove_setting();
+        try {
+            ob_sorting_by = this.bands[0].model[0].sortBy;
+        } catch (err) {
+            ob_filtering = "NONE";
+        }
+        try {
+            if (document.getElementById(this.name + "_setting") !== null) {
+                this.ob_remove_sorting();
+                return;
+            }
+            this.ob_timeline_right_panel.style.visibility = "visible";
+            let div = document.createElement("div");
+            div.className = "ob_head_panel";
+            div.id = this.name + '_setting';
+
+            /*let ob_band_line_count = 20;
+            try {
+                ob_band_line_count = JSON.stringify(this.bands, null, 2).split('\n').length;
+            } catch (err) {
+            }
+
+            let ob_model_line_count = 20;
+            try {
+                ob_model_line_count = JSON.stringify(this.model, null, 2).split('\n').length;
+            } catch (err) {
+            }*/
+
+            let ob_build_all_sorting_options = "<option value='" + "NONE" + "'>" + "NONE" + "</option>\n";
+            let ob_build_all_filtering_options = "<div>";
+            try {
+                for (let [key, value] of this.model.entries()) {
+
+                    ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
+
+                    let value_items = value.split(",");
+                    if (value_items.length > 1) {
+                        ob_build_all_filtering_options += "<table><tr align=left ><td style='background:#CDCCCC;font-weight:bold;'>" + key + "</td><td></td><td></td><td></td></tr> \n";
+                        let ob_tr;
+                        for (let i = 0; i < value_items.length; i++) {
+                            if (i === 0 || (i % 4) === 0) {
+                                ob_build_all_filtering_options += "<tr>";
+                                ob_tr = false;
+                            }
+                            ob_build_all_filtering_options += "<td><label>" + value_items[i] +
+                                "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
+                                //" onchange=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter();\"" +
+                                "></label></td>";
+                            if (ob_tr === true && i !== 0 && (i % 4) !== 0) {
+                                ob_build_all_filtering_options += "</tr>";
+                                ob_tr = true;
+                            }
+                        }
+                        if (ob_tr === true)
+                            ob_build_all_filtering_options += "</table>";
+                        else
+                            ob_build_all_filtering_options += "</tr></table>";
+                    }
+                }
+            } catch (err) {
+            }
+            ob_build_all_filtering_options += "</div>";
+
+            div.innerHTML = "" +
+                "<div style='padding:8px;text-align:center;'>Sorting & Filtering<\div>\n" +
+                "<div class='ob_form1'>\n" +
+                "<form>\n" +
+                "<fieldset>\n" +
+                "<legend><span class='number'>1 - </span>Timeline Sorting By " + ob_sorting_by + "</legend>\n" +
+                "<input class='ob_sort_by' type='label' disabled value='Sort by :'>\n" +
+                "<select id='ob_sort_by' name='ob_sorting_by'>\n" +
+                ob_build_all_sorting_options +
+                "</select>      \n" +
+                "</fieldset>\n" +
+                "<fieldset>" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_sorting();\" value='Apply' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
+                "</fieldset>\n" +
+                "<legend><span class='number'>2 - </span>Timeline Filtering " + ob_filtering + "</legend>\n" +
+                "<fieldset>\n" +
+                ob_build_all_filtering_options +
+                "</fieldset>\n" +
+                "<fieldset>" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter();\" value='Apply Filtering' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
+                "</fieldset>\n" +
+                "</form>\n" +
+                "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container' style='position:absolute;'> </div>\n" +
+                "</div>";
+
+            this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
+            this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
+            this.ob_timeline_right_panel.appendChild(div);
+            try {
+                document.getElementById("ob_sort_by").value = this.bands[0].model[0].sortBy;
+            } catch (err) {
+            }
+
+            if (this.camera === "Perspective") {
+                let ob_gui = this.ob_create_gui(false);
+                document.getElementById(this.name + "_gui_iframe_container").appendChild(ob_gui);
+            }
+        } catch
+            (err) {
+        }
+    };
+
+    OB_TIMELINE.prototype.ob_remove_sorting = function () {
+        try {
+            this.ob_timeline_right_panel.style.visibility = "hidden";
+            this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_sorting"));
+        } catch (err) {
+        }
+    };
     OB_TIMELINE.prototype.ob_create_setting = function () {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
         this.ob_remove_help();
+        this.ob_remove_sorting();
         try {
             if (document.getElementById(this.name + "_setting") !== null) {
                 this.ob_remove_setting();
@@ -392,28 +552,7 @@ function OB_TIMELINE() {
                 "<div class='ob_form1'>\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend><span class='number'>1 - </span>Timeline Filter</legend>\n" +
-                "<input type='label' disabled value='Sort by :'>\n" +
-                "<select id='ob_sort' name='ob_sorting'>\n" +
-                "<optgroup label='Select1'>\n" +
-                "  <option value='type1'>None</option>\n" +
-                "  <option value='type2'>type2</option>\n" +
-                "  <option value='type3'>type3</option>\n" +
-                "</optgroup>\n" +
-                "</select>      \n" +
-                "<input type='label' disabled style='visibility:hidden'>\n" +
-                "<select id='ob_sort2' name='ob_sorting2'>\n" +
-                "<optgroup label='Select1'>\n" +
-                "  <option value='type1'>None</option>\n" +
-                "  <option value='type2'>type2</option>\n" +
-                "  <option value='type3'>type3</option>\n" +
-                "</optgroup>\n" +
-                "</select>      \n" +
-                "</fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter();\" value='Apply Timeline Filter' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>2 - </span>Timeline Info</legend>\n" +
+                "<legend><span class='number'>1 - </span>Timeline Info</legend>\n" +
                 "<input type='label' disabled value='Top :'>\n" +
                 "<input type='number' id=" + this.name + "_top value='" + this.top + "'>\n" +
                 "<input type='label' disabled value='Left :'>\n" +
@@ -426,20 +565,20 @@ function OB_TIMELINE() {
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info();\" value='Apply Timeline Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
                 "<fieldset>\n" +
-                "<legend><span class='number'>3 - </span>Timeline Bands Info</legend>\n" +
-                "<textarea id=" + this.name + "_bands rows='" + ob_band_line_count + "' >" + JSON.stringify(this.bands, null, 2) + "</textarea>\n" +
-                "</fieldset>\n" +
+                //"<legend><span class='number'>3 - </span>Timeline Bands Info</legend>\n" +
+                //"<textarea id=" + this.name + "_bands rows='" + ob_band_line_count + "' >" + JSON.stringify(this.bands, null, 2) + "</textarea>\n" +
+                //"</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_bands_info();\" value='Apply Bands Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
                 "<fieldset>\n" +
-                "<legend><span class='number'>4 - </span> Data Model</legend>\n" +
+                "<legend><span class='number'>2 - </span> Data Model</legend>\n" +
                 //"<label for='test'>test:</label>\n" +
                 "<textarea id=" + this.name + "_data rows='" + ob_model_line_count + "' >" + JSON.stringify(this.model, null, 2) + "</textarea>\n" +
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_data_model();\" value='Apply Model Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting();\" value='Cancel' />\n" +
                 "<fieldset>\n" +
-                "<legend><span class='number'>5 - </span>Timeline Camera Info</legend>\n" +
+                "<legend><span class='number'>3 - </span>Timeline Camera Info</legend>\n" +
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_orthographic_camera();\" value='Orthographic' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_perspective_camera();\" value='Perspective' />\n" +
@@ -471,6 +610,7 @@ function OB_TIMELINE() {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
         this.ob_remove_setting();
+        this.ob_remove_sorting();
         try {
             if (document.getElementById(this.name + "_help") !== null) {
                 this.ob_remove_help();
@@ -484,7 +624,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.0c beta</legend>\n" +
+                "<legend> version 0.9.1 beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -521,7 +661,8 @@ function OB_TIMELINE() {
                 that2.center_bands();
                 that2.ob_sec_incr++;
                 if (that2.ob_sec_incr === 10) {
-                    that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
+                    //that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
+                    that2.center_bands();
                     that2.ob_sec_incr = 0;
                 }
             }, 1000);
@@ -534,6 +675,7 @@ function OB_TIMELINE() {
         this.ob_remove_descriptor();
         this.ob_remove_help();
         this.ob_remove_setting();
+        this.ob_remove_sorting();
         try {
             if (document.getElementById(this.name + "_cal") !== null) {
                 this.ob_remove_calendar();
@@ -614,6 +756,7 @@ function OB_TIMELINE() {
         this.ob_remove_help();
         this.ob_remove_calendar();
         this.ob_remove_setting();
+        this.ob_remove_sorting();
         try {
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_descriptor"));
         } catch (err) {
@@ -639,20 +782,24 @@ function OB_TIMELINE() {
                 let div = document.createElement("div");
                 div.id = this.name + "_descriptor";
                 div.className = "ob_descriptor";
+                if (descriptor.id === undefined) descriptor.id = "";
                 if (descriptor.end === undefined) descriptor.end = "";
+                let ob_descriptor_body = "";
+                for (let [key, value] of Object.entries(descriptor.data)) {
+                    if (key !== "sortByValue" && key !== "description" && key !== "title" && value !== "NA" && value !== "?" && value !== undefined)
+                        ob_descriptor_body += "<tr><td class=ob_descriptor_td>" + key + ":</td><td>" + value + "</td></tr>";
+                }
                 div.innerHTML = "<div class=ob_descriptor_head >" + "data" + "<\div><br><br>" +
                     "<table class=ob_descriptor_table id=" + this.name + "_table_start_end" + ">" +
-                    "<tr><td class=ob_descriptor_td_left>Start : </td><td>" + descriptor.start + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>End : </td><td>" + descriptor.end + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td>id : </td><td>" + descriptor.id + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td>start : </td><td>" + descriptor.start + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td>end : </td><td>" + descriptor.end + "</td></tr>" +
                     "<tr><td></td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Title:</td><td>" + descriptor.data.title + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Status:</td><td>" + descriptor.data.status + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Type:</td><td>" + descriptor.data.type + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Duration:</td><td>" + descriptor.data.duration + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Tolerance:</td><td>" + descriptor.data.tolerance + "</td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Priority:</td><td>" + descriptor.data.priority + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td>title:</td><td>" + descriptor.data.title + "</td></tr>" +
+                    ob_descriptor_body +
                     "<tr><td></td></tr>" +
-                    "<tr><td class=ob_descriptor_td_left>Description:</td><td>" + descriptor.data.description + "</td></tr>" +
+                    "<tr><td class=ob_descriptor_td>description:</td><td><textarea class= 'ob_descriptor_area' disabled>" +
+                    descriptor.data.description + "</textarea></td></tr>" +
                     "</table>";
                 this.ob_timeline_right_panel.appendChild(div);
             } else {
@@ -753,13 +900,10 @@ function OB_TIMELINE() {
             this.ob_search.style.width = 32 + "px";
             this.ob_search.onclick = function () {
                 that2.moving = false;
-                that2.params[0].show_calendar = true;
-                if (that2.params[0].date === "current_time")
-                    that2.params[0].date_cal = new Date();
-                else
-                    that2.params[0].date_cal = new Date(that2.params[0].date);
-                that2.ob_remove_calendar();
-                that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
+                that2.ob_settings.style.zIndex = "9999";
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
+                that2.ob_create_sorting();
             };
             this.ob_search.onmousemove = function () {
                 that2.moving = false;
@@ -1721,10 +1865,10 @@ function OB_TIMELINE() {
                 this.bands[i].texture);
             if (this.bands[i].layout_name !== "NONE") {
                 this.add_textBox(this.bands[i].name, this.bands[i].layout_name,
-                    -(this.width / 2),
+                    -(this.width / 2) + (parseInt(this.bands[i].layouts.max_name_length) * 4),
                     this.bands[i].y,
                     parseInt(this.bands[i].z) + 40,
-                    parseInt(this.bands[i].layouts.max_name_length) * parseInt(this.bands[i].fontSizeInt) * 4,
+                    parseInt(this.bands[i].layouts.max_name_length) * parseInt(this.bands[i].fontSizeInt) * 3,
                     this.bands[i].heightMax,
                     parseInt(this.bands[i].depth) + 1,
                     this.hex_Luminance(this.bands[i].color, -.15),
@@ -1814,15 +1958,23 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_body_menu();
                     ob_timeline.ob_set_scene();
                     ob_timeline.create_bands(false);
-                    ob_timeline.create_segments_and_dates();
-                    ob_timeline.create_sessions(false);
+                    clearTimeout(ob_timeline.timeout_create_segments);
+                    clearTimeout(ob_timeline.timeout_create_sessions);
+                    ob_timeline.timeout_create_sessions = setTimeout(function () {
+                        ob_timeline.create_sessions();
+                        ob_timeline.ob_renderer.render(ob_timeline.ob_scene, ob_timeline.ob_camera);
+                    }, 0);
+                    ob_timeline.timeout_create_segments = setTimeout(function () {
+                        ob_timeline.create_segments_and_dates();
+                        ob_timeline.ob_renderer.render(ob_timeline.ob_scene, ob_timeline.ob_camera);
+                    }, 0);
                     ob_timeline.add_line_current_time();
                     ob_timeline.center_bands();
                     ob_timeline.camera = current_camera;
-                    ob_timeline.ob_set_camera();
                     ob_timeline.ob_start_clock();
                     if (params[0].show_calendar)
                         ob_timeline.ob_create_calendar(new Date(params[0].date_cal));
+                    ob_timeline.ob_set_camera();
                     return null;
                 }
             }
@@ -1889,6 +2041,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.create_segments_and_dates = function () {
+        //console.log("create_segments_and_dates start at:" + Date() + " - " + new Date().getMilliseconds());
         let text, textX, textY, maxPixelOffSet, incrementPixelOffSet, incrementSubPixelOffSet;
         for (let i = 0; i < this.bands.length; i++) {
             let ob_band = this.ob_scene.getObjectByName(this.bands[i].name);
@@ -1927,10 +2080,10 @@ function OB_TIMELINE() {
                         incrementSubPixelOffSet += parseInt(this.bands[i].subIntervalPixels);
                     }
                 }
-
                 incrementPixelOffSet = parseInt(incrementPixelOffSet) + parseInt(this.bands[i].intervalPixels);
             }
         }
+        //console.log("create_segments_and_dates done at:" + Date() + " - " + new Date().getMilliseconds());
     };
 
     OB_TIMELINE.prototype.get_room_for_session = function (sessions, session, i) {
@@ -2027,7 +2180,8 @@ function OB_TIMELINE() {
                 if (this.sessions === undefined) break;
 
                 // Assign each event to the right bands
-                sortByValue = eval("this.bands[i].model[0].sortBy");
+                if (sortByValue === undefined)
+                    sortByValue = eval("this.bands[i].model[0].sortBy");
                 for (let k = 0; k < this.sessions.events.length; k++) {
                     // Remove all events events not visible in the bands
                     //pixelOffSetStart = this.dateToPixelOffSet(this.sessions.events[k].start, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
@@ -2043,6 +2197,7 @@ function OB_TIMELINE() {
                             this.bands[i].sessions.push(Object.assign({}, this.sessions.events[k]));
                         }
                     }
+                    this.build_model(this.sessions.events[k].data);
                     //}
                 }
 
@@ -2454,6 +2609,29 @@ function OB_TIMELINE() {
         if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("removeText3D(" + band_name + ")");
     };
 
+    OB_TIMELINE.prototype.build_model = function (sessions) {
+        try {
+            let obj = Object.entries(sessions);
+            if (this.model === undefined) {
+                this.model = new Map(obj);
+                this.model.delete("title");
+                this.model.delete("description");
+                this.model.delete("sortByValue");
+            } else {
+                for (let i = 0; i < obj.length; i++) {
+                    if (obj[i][0] !== "title" && obj[i][0] !== "description" && obj[i][0] !== "sortByValue") {
+                        let v = this.model.get(obj[i][0]);
+                        if (!v.toString().includes(obj[i][1]))
+                            this.model.set(obj[i][0], v + "," + obj[i][1]);
+                    }
+                }
+            }
+
+        } catch (err) {
+            this.model = undefined;
+        }
+
+    }
     OB_TIMELINE.prototype.loadJSON = function () {
         if (this.data === undefined) return;
         let that = this;
@@ -2732,7 +2910,7 @@ function OB_TIMELINE() {
             let light = this.track(new THREE.SpotLight(0xffffff, 1.5));
             light.position.set(0, 1500, 200);
             light.castShadow = true;
-            light.shadow = this.track(new THREE.LightShadow(new THREE.PerspectiveCamera(this.ob_fov, 1, 200, 2000)));
+            //light.shadow = this.track(new THREE.LightShadow(new THREE.PerspectiveCamera(this.ob_fov, 1, 200, 2000)));
             light.shadow.bias = -0.000222;
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
@@ -2792,12 +2970,13 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.runUnitTestsMinutes = function () {
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
-        let ob_start, ob_end, ob_type, ob_title;
+        let ob_start, ob_end, ob_type, ob_title, ob_status;
         for (let i = 0; i < 200; i++) {
             ob_start = new Date(Date.now());
             ob_end = new Date(Date.now() + 10000);
             ob_type = "type1";
             ob_title = "session_" + i;
+            ob_status = "SCHEDULED";
             if (i === 0) {
                 ob_start = new Date(Date.now() + 320000);
                 ob_end = new Date(Date.now() + 420000);
@@ -2865,6 +3044,7 @@ function OB_TIMELINE() {
                 ob_start = new Date(Date.now());
                 ob_end = new Date(Date.now() + (10 * 310000));
                 ob_type = "type3";
+                ob_status = "ABORTED";
             } else if (i === 33 || i === 71 || i === 100 || i === 102 || i === 355) {
                 ob_start = new Date(Date.now() + 310000);
                 ob_end = new Date(Date.now() + (2 * 310000));
@@ -2889,6 +3069,7 @@ function OB_TIMELINE() {
                 ob_start = new Date(Date.now() + i * 5000);
                 ob_end = new Date(Date.now() + i * 5100);
                 ob_title = "session__" + i;
+                ob_status = "FINISHED";
             } else if (i > 400) {
                 if (i % 2 === 0) {
                     ob_start = new Date(Date.now() - i * 3000);
@@ -2903,6 +3084,7 @@ function OB_TIMELINE() {
                 ob_start = new Date(Date.now() + i * 5000);
                 ob_end = "";
                 ob_title = "event_" + i;
+                ob_status = "RUNNING";
             }
 
             sessions += "{";
@@ -2912,7 +3094,7 @@ function OB_TIMELINE() {
             sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
-            sessions += "'status': 'SCHEDULED',";
+            sessions += "'status': '" + ob_status + "',";
             sessions += "'duration': 'true',";
             sessions += "'priority': '10',";
             sessions += "'tolerance': '5',";
@@ -2925,13 +3107,15 @@ function OB_TIMELINE() {
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
     };
     OB_TIMELINE.prototype.runUnitTestsHours = function () {
+        console.log("start runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
         let sessions = "{'dateTimeFormat': 'iso8601','events' : [";
-        let ob_start, ob_end, ob_type, ob_title;
-        for (let i = 0; i < 100; i++) {
+        let ob_start, ob_end, ob_type, ob_title, ob_status;
+        for (let i = 0; i < 50; i++) {
             ob_start = new Date(Date.now());
             ob_end = new Date(Date.now() + 10000);
             ob_type = "type1";
             ob_title = "session_SESSION" + i;
+            ob_status = "SCHEDULED";
             if (i === 0 || i === 11) {
                 ob_start = new Date(Date.now());
                 ob_end = new Date(Date.now() + 1015000);
@@ -2942,6 +3126,7 @@ function OB_TIMELINE() {
                 ob_end = new Date(Date.now() + i * 700000);
                 ob_type = "type4";
                 ob_title = "session_SESSION_long_long_LONG_long_long_long_long long_long_LONG_long_long_long_long" + i;
+                ob_status = "FINISHED";
             } else if (i === 3 || i === 9 || i === 18 || i === 59 || i === 53 || i === 43 || i === 29 || i === 33 ||
                 i === 89 || i === 83 || i === 61 || i === 47) {
                 ob_start = new Date(Date.now() + i * 300000);
@@ -2968,6 +3153,7 @@ function OB_TIMELINE() {
                 ob_end = "";
                 ob_type = "type10";
                 ob_title = "s" + i;
+                ob_status = "RUNNING";
             } else if (i % 7 === 0) {
                 ob_start = new Date(Date.now() + i * 50000);
                 ob_end = "";
@@ -2978,6 +3164,7 @@ function OB_TIMELINE() {
                 ob_end = "";
                 ob_type = "type3";
                 ob_title = "s" + i;
+                ob_status = "ABORTED";
             } else if (i % 13 === 0) {
                 ob_start = new Date(Date.now() + i * 50000);
                 ob_end = new Date(Date.now() + i * 65000);
@@ -3008,6 +3195,7 @@ function OB_TIMELINE() {
                 ob_end = new Date(Date.now() + i * 650000);
                 ob_type = "type2";
                 ob_title = "session" + i;
+                ob_status = "FAILED";
             } else if (i % 2 === 0) {
                 ob_start = new Date(Date.now() + i * 300000);
                 ob_end = new Date(Date.now() + i * 650000);
@@ -3027,7 +3215,7 @@ function OB_TIMELINE() {
             sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
-            sessions += "'status': 'SCHEDULED',";
+            sessions += "'status': '" + ob_status + "',";
             sessions += "'duration': 'true',";
             sessions += "'priority': '10',";
             sessions += "'tolerance': '5',";
@@ -3038,6 +3226,7 @@ function OB_TIMELINE() {
         this.sessions = eval('(' + (sessions) + ')');
 
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
+        console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
     };
     OB_TIMELINE.prototype.loadData = function (start_date) {
         if (this.minDate != undefined)
@@ -3064,7 +3253,8 @@ function OB_TIMELINE() {
             this.data_head = this.data.split("?");
             this.update_bands_MinDate(this.params[0].date);
             this.update_bands_MaxDate(this.params[0].date);
-            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate;
+            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
+                "&ob_filter=" + this.ob_filter;
         }
         let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
