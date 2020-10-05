@@ -43,13 +43,15 @@ public class openbexi_timeline implements Runnable {
     private final String _data_path;
     private final String _filter_include;
     private final String _filter_exclude;
+    private final String _port;
     public Hashtable _session_stack = new Hashtable();
 
-    openbexi_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude) {
+    openbexi_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude, String port) {
         _ob_mode = mode;
         _data_path = data_path;
         _filter_include = filter_include;
         _filter_exclude = filter_exclude;
+        _port = port;
     }
 
     public Hashtable get_session_stack() {
@@ -102,7 +104,7 @@ public class openbexi_timeline implements Runnable {
         Context ctx = null;
 
         if (mode == ob_mode.no_secure) {
-            tomcat.setPort(8080);
+            tomcat.setPort(Integer.parseInt(_port));
             tomcat.getConnector();
 
             //Context ctx = tomcat.addContext("", null);
@@ -116,9 +118,9 @@ public class openbexi_timeline implements Runnable {
 
         }
         if (mode == ob_mode.secure) {
-            httpsConnector.setPort(8445);
+            httpsConnector.setPort(Integer.parseInt(_port));
             tomcat.setBaseDir("tomcat");
-            tomcat.setPort(8445);
+            tomcat.setPort(Integer.parseInt(_port));
 
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
@@ -134,8 +136,8 @@ public class openbexi_timeline implements Runnable {
 
         }
         if (mode == ob_mode.secure_ws) {
-            httpsConnector.setPort(8444);
-            tomcat.setPort(8444);
+            httpsConnector.setPort(Integer.parseInt(_port));
+            tomcat.setPort(Integer.parseInt(_port));
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
             ctx = tomcat.addWebapp("/", ".");
@@ -143,8 +145,8 @@ public class openbexi_timeline implements Runnable {
         if (mode == ob_mode.secure_sse) {
             // Set Http2 connector
             httpsConnector.addUpgradeProtocol(new Http2Protocol());
-            httpsConnector.setPort(8443);
-            tomcat.setPort(8443);
+            httpsConnector.setPort(Integer.parseInt(_port));
+            tomcat.setPort(Integer.parseInt(_port));
 
             // Enable response compression
             httpsConnector.setAttribute("compression", "on");
@@ -174,7 +176,6 @@ public class openbexi_timeline implements Runnable {
         ctx.addParameter("stack", String.valueOf(_session_stack));
 
         tomcat.start();
-        //tomcat.getServer().start();
 
         Runnable runnableTask = () -> {
             for (; ; ) {
@@ -205,66 +206,56 @@ public class openbexi_timeline implements Runnable {
      *             unused.
      */
     public static void main(String[] args) {
+        String connector = "";
+        String[] connectors = new String[0];
         String data_path = "";
         String filter_include = "";
         String filter_exclude = "";
+        String current_args = "";
 
-        if (args.length == 2) {
-            try {
-                data_path = args[1];
-                System.out.println("Argument " + args[0] + " " + data_path);
-            } catch (NumberFormatException e) {
-                System.err.println(e.getMessage());
-                System.exit(1);
-            }
-        } else if (args.length == 4) {
-            try {
-                data_path = args[1];
-                if (args[2].equals("-filter_exclude")) {
-                    filter_exclude = args[3];
-                    System.out.println("Argument " + args[0] + " " + data_path + args[2] + " " + filter_exclude);
-                }
-                if (args[2].equals("-filter_include")) {
-                    filter_include = args[3];
-                    System.out.println("Argument " + args[0] + " " + data_path + args[2] + " " + filter_include);
-                }
-            } catch (NumberFormatException e) {
-                System.err.println(e.getMessage());
-                System.exit(1);
-            }
-        } else if (args.length == 6) {
-            try {
-                data_path = args[1];
-                if (args[2].equals("-filter_exclude") && (args[4].equals("-filter_include"))) {
-                    filter_exclude = args[3];
-                    filter_include = args[5];
-                    System.out.println("Argument " + args[0] + " " + data_path + args[2] + " " + filter_exclude + " " + data_path + args[4] + " " + filter_include);
-                }
-                if (args[2].equals("-filter_include") && (args[4].equals("-filter_exclude"))) {
-                    filter_exclude = args[5];
-                    filter_include = args[3];
-                    System.out.println("Argument " + args[0] + " " + data_path + args[2] + " " + filter_include + " " + data_path + args[4] + " " + filter_exclude);
-                }
-            } catch (NumberFormatException e) {
-                System.err.println(e.getMessage());
-                System.exit(1);
-            }
-        } else {
+        if (args.length == 1 || args.length == 3 || args.length == 5 || args.length > 8) {
             System.err.println("openBEXI Timeline not started because of bad usage:");
-            System.err.println("Argument " + args[0] + " " + "data_path");
-            System.err.println("Argument " + args[0] + " " + "data_path -filter_exclude <regex> -filter_include <regex>");
-            System.err.println("Argument " + args[0] + " " + "data_path -filter_include <regex> -filter_exclude <regex>");
+            System.err.println("Argument " + args[0] + " " + "-data_path <path> -connector <secure_ws:port|no_secure:8080|secure:port|secure_sse:port>");
+            System.err.println("Argument " + args[0] + " " + "-data_path <path> -connector <secure_ws:port|no_secure:8080|secure:port|secure_sse:port> -filter_exclude <regex> -filter_include <regex>");
+            System.err.println("Argument " + args[0] + " " + "-data_path <path> -connector <secure_ws:port|no_secure:8080|secure:port|secure_sse:port> -filter_include <regex> -filter_exclude <regex>");
             System.exit(1);
         }
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-data_path")) {
+                data_path = args[i + 1];
+                current_args += " " + args[i];
+            } else if (args[i].equals("-filter_exclude")) {
+                filter_exclude = args[i + 1];
+                current_args += " " + args[i];
+            } else if (args[i].equals("-filter_include")) {
+                filter_include = args[i + 1];
+            } else if (args[i].equals("-connector")) {
+                current_args += " " + args[i];
+                connectors = args[i + 1].split("\\|");
+            } else
+                current_args += " " + args[i];
+        }
+        System.out.println("Argument : " + current_args);
 
 
-        //openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_path, filter_include, filter_exclude);
-        //webServer_timeline_wss.run();
-        openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_path, filter_include, filter_exclude);
-        webServer_timeline_no_secure.run();
-        openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_path, filter_include, filter_exclude);
-        webServer_timeline_secure.run();
-        openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_path, filter_include, filter_exclude);
-        webServer_timeline_sse.run();
+        for (int i = 0; i < connectors.length; i++) {
+            String port = connectors[i].split(":")[1];
+            if (connectors[i].split(":")[0].equals("secure_ws")) {
+                openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_path, filter_include, filter_exclude, port);
+                webServer_timeline_wss.run();
+            }
+            if (connectors[i].split(":")[0].equals("no_secure")) {
+                openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_path, filter_include, filter_exclude, port);
+                webServer_timeline_no_secure.run();
+            }
+            if (connectors[i].split(":")[0].equals("secure")) {
+                openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_path, filter_include, filter_exclude, port);
+                webServer_timeline_secure.run();
+            }
+            if (connectors[i].split(":")[0].equals("secure_sse")) {
+                openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_path, filter_include, filter_exclude, port);
+                webServer_timeline_sse.run();
+            }
+        }
     }
 }

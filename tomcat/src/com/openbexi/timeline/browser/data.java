@@ -146,9 +146,10 @@ public class data {
         new Timer().schedule(task, new Date(), 10000);
     }
 
-    public data(){
+    public data() {
 
     }
+
     public data(String currentStartDate, String currentEndDate, String currentPathModel, String include, String exclude, String action_type,
                 HttpServletResponse response, Session session, int id) {
         String[] items = null;
@@ -304,7 +305,7 @@ public class data {
         JSONArray new_events = new JSONArray();
         if (filter_exclude != null && !filter_exclude.equals("")) {
             for (int i = 0; i < events.size(); i++) {
-                pattern = Pattern.compile(filter_exclude);
+                pattern = Pattern.compile(filter_exclude.replaceAll(" ","|"));
                 matcher = pattern.matcher(events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
                 if (!matcher.find())
                     new_events.add(events.get(i));
@@ -312,11 +313,14 @@ public class data {
         }
         if (filter_include != null && !filter_include.equals("")) {
             for (int i = 0; i < events.size(); i++) {
-                pattern = Pattern.compile(filter_include);
+                pattern = Pattern.compile(filter_include.replaceAll(" ","|"));
                 matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
                 if (matcher.find())
                     new_events.add(events.get(i));
             }
+        }
+        if (filter_include != null && filter_include.equals("")) {
+            new_events = events;
         }
         return new_events;
     }
@@ -358,7 +362,7 @@ public class data {
                     events = parser.parse(reader);
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
-                    if (filter_exclude != null && !filter_exclude.equals("")) obj = filterJson(obj);
+                    obj = filterJson(obj);
                     jsonObjectMerged += obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                     reader.close();
                 }

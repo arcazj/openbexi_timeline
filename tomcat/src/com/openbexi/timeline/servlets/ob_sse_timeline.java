@@ -47,9 +47,13 @@ public class ob_sse_timeline extends HttpServlet {
         // Read parameters
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
+        String ob_filter = req.getParameter("ob_filter");
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
+        if (!ob_filter.equals("*"))
+            filter_include = ob_filter;
+
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         if (startDate.equals("test")) {
