@@ -606,6 +606,18 @@ function OB_TIMELINE() {
         }
     };
 
+    OB_TIMELINE.prototype.ob_connected = function () {
+        if (this.ob_start === undefined) return;
+        this.ob_start.style.visibility = "visible";
+        this.ob_stop.style.visibility = "hidden";
+    };
+
+    OB_TIMELINE.prototype.ob_not_connected = function () {
+        if (this.ob_start === undefined) return;
+        this.ob_start.style.visibility = "hidden";
+        this.ob_stop.style.visibility = "visible";
+    };
+
     OB_TIMELINE.prototype.ob_create_help = function () {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
@@ -858,9 +870,39 @@ function OB_TIMELINE() {
             };
 
             // Build header menu
+            this.ob_start = document.createElement("IMG");
+            this.ob_start.className = "ob_start";
+            this.ob_start.style.left = "5px";
+            this.ob_start.style.height = 32 + "px";
+            this.ob_start.style.width = 32 + "px";
+            this.ob_start.onclick = function () {
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
+                that2.moving = false;
+            };
+            this.ob_start.onmousemove = function () {
+                that2.moving = false;
+                that2.ob_start.style.cursor = "pointer";
+            };
+
+            this.ob_stop = document.createElement("IMG");
+            this.ob_stop.className = "ob_stop";
+            this.ob_stop.style.left = "5px";
+            this.ob_stop.style.height = 32 + "px";
+            this.ob_stop.style.width = 32 + "px";
+            this.ob_stop.onclick = function () {
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
+                that2.moving = false;
+            };
+            this.ob_stop.onmousemove = function () {
+                that2.moving = false;
+                that2.ob_stop.style.cursor = "pointer";
+            };
+
             this.ob_calendar = document.createElement("IMG");
             this.ob_calendar.className = "ob_calendar";
-            this.ob_calendar.style.left = "5px";
+            this.ob_calendar.style.left = "47px";
             this.ob_calendar.style.height = 32 + "px";
             this.ob_calendar.style.width = 32 + "px";
             this.ob_calendar.onclick = function () {
@@ -879,7 +921,7 @@ function OB_TIMELINE() {
 
             this.ob_sync = document.createElement("IMG");
             this.ob_sync.className = "ob_sync";
-            this.ob_sync.style.left = "49px";
+            this.ob_sync.style.left = "89px";
             this.ob_sync.style.height = 32 + "px";
             this.ob_sync.style.width = 32 + "px";
             this.ob_sync.onclick = function () {
@@ -895,7 +937,7 @@ function OB_TIMELINE() {
 
             this.ob_search = document.createElement("IMG");
             this.ob_search.className = "ob_search";
-            this.ob_search.style.left = "91px";
+            this.ob_search.style.left = "131px";
             this.ob_search.style.height = 32 + "px";
             this.ob_search.style.width = 32 + "px";
             this.ob_search.onclick = function () {
@@ -988,7 +1030,7 @@ function OB_TIMELINE() {
 
             this.ob_search_input = document.createElement("INPUT");
             this.ob_search_input.className = "ob_search_input";
-            this.ob_search_input.style.left = "130px";
+            this.ob_search_input.style.left = "172px";
             this.ob_search_input.onmousemove = function (event) {
                 that2.moving = false;
                 that2.ob_search_input.style.cursor = "default";
@@ -1005,7 +1047,8 @@ function OB_TIMELINE() {
                     that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
                 }
             };
-
+            this.ob_timeline_header.appendChild(this.ob_start);
+            this.ob_timeline_header.appendChild(this.ob_stop);
             this.ob_timeline_header.appendChild(this.ob_calendar);
             this.ob_timeline_header.appendChild(this.ob_sync);
             this.ob_timeline_header.appendChild(this.ob_search);
@@ -1015,6 +1058,7 @@ function OB_TIMELINE() {
             this.ob_timeline_header.appendChild(this.ob_settings);
             this.ob_timeline_header.appendChild(this.ob_help);
             this.ob_timeline_header.appendChild(this.ob_search_input);
+            this.ob_connected();
         }
 
         if (this.header !== undefined) {
@@ -3228,7 +3272,7 @@ function OB_TIMELINE() {
         this.update_scene(this.header, this.params, this.bands, this.model, this.sessions, this.camera);
         console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
     };
-    OB_TIMELINE.prototype.loadData = function (start_date) {
+    OB_TIMELINE.prototype.loadData = function () {
         if (this.minDate != undefined)
             console.log("loadData()" + "From " + this.minDate + " to " + this.maxDate);
 
@@ -3241,15 +3285,18 @@ function OB_TIMELINE() {
             return;
         }
         if (this.data === "unit_tests_minutes") {
+            this.ob_not_connected();
             this.runUnitTestsMinutes();
             return;
         }
         if (this.data === "unit_tests_hours") {
+            this.ob_not_connected();
             this.runUnitTestsHours();
             return;
         }
 
         if (!this.data.includes(".json") && !this.data.includes("=test") && !this.data.includes("UTC")) {
+            this.ob_not_connected();
             this.data_head = this.data.split("?");
             this.update_bands_MinDate(this.params[0].date);
             this.update_bands_MaxDate(this.params[0].date);
@@ -3266,14 +3313,17 @@ function OB_TIMELINE() {
                 ws.send("Open WebSocket");
             };
             ws.onmessage = function (e) {
+                that.ob_connected();
                 that.sessions = eval('(' + (e.data) + ')');
                 that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
             };
             ws.onerror = function () {
+                this.ob_not_connected();
             }
             ws.onclose = function () {
                 // connection closed, discard old websocket and create a new one in 5s
                 console.log("WS - onclose!");
+                this.ob_not_connected();
                 that.ws = null;
                 setTimeout(that.loadData(), 10000)
             }
@@ -3294,6 +3344,7 @@ function OB_TIMELINE() {
             })
                 .then(response => {
                     if (response.ok) {
+                        that.ob_connected();
                         console.log("Response OK!");
                         return response.json();
                     } else {
@@ -3305,6 +3356,7 @@ function OB_TIMELINE() {
                     that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
                 }).catch(err => {
                 console.log('Error message:', err.statusText)
+                this.ob_not_connected();
             });
             return;
         }
@@ -3313,25 +3365,36 @@ function OB_TIMELINE() {
         if (ob_url_secure !== null && ob_url_secure.length === 2) {
             if (!!window.EventSource && this.data.includes("sse")) {
                 let that = this;
-                let sessions = new EventSource(this.data, {
+
+                //Close the previous eventSource request to notify the server to do  all cleanup on the server side;
+                if (this.eventSource !== undefined)
+                    this.eventSource.close();
+                let eventSource = new EventSource(this.data, {
                     // If clients have set Access-Control-Allow-Credentials to true, the openbexi.timeline.server will not permit the use of
                     // credentials and access to resource by the client will be blocked by CORS policy.
                     //withCredentials: true
                 });
-                sessions.onmessage = function (e) {
+                this.eventSource = eventSource;
+                eventSource.onmessage = function (e) {
                     //console.log('onmessage: Receiving sessions:' + e.openbexi.timeline.data);
+                    that.ob_connected();
                     that.sessions = eval('(' + (e.data) + ')');
                     that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
-                    //sessions.close();
+                    //eventSource.close();
                 };
-                sessions.onopen = function (e) {
+                eventSource.onopen = function (e) {
                     //that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
+                    that.ob_connected();
                 };
-                sessions.onerror = function (e) {
+                eventSource.onerror = function (e) {
                     // Very important: Do not close the session otherwise this client would not reconnect
-                    //sessions.close();
+                    //eventSource.close();
+                    that.ob_not_connected();
                     console.log('SSE - onerror');
+                    that.loadData();
+                    console.log('SSE - reconnecting ...');
                 }
+
             } else {
                 let that = this;
                 fetch(this.data, {
@@ -3345,6 +3408,7 @@ function OB_TIMELINE() {
                     .then(response => {
                         if (response.ok) {
                             console.log("Response OK!");
+                            this.ob_connected();
                             return response.json();
                         } else {
                             console.log("Response not OK!");
@@ -3355,6 +3419,7 @@ function OB_TIMELINE() {
                         that.update_scene(that.header, that.params, that.bands, that.model, that.sessions, that.camera);
                     }).catch(err => {
                     console.log('Error message:', err.statusText)
+                    this.ob_not_connected();
                 });
                 return;
             }
