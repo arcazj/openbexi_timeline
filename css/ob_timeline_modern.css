@@ -38,6 +38,40 @@
 .ob_timeline_body {
 }
 
+.ob_start {
+    position: absolute;
+    content: url("../icon/ob_start.png");
+}
+
+.ob_start:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_start.png");
+}
+
+.ob_start:hover {
+    border-radius: 5px;
+    border: 1px solid #000009;
+}
+
+.ob_stop {
+    position: absolute;
+    content: url("../icon/ob_stop.png");
+}
+
+.ob_stop:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_stop.png");
+}
+
+.ob_stop:hover {
+    border-radius: 5px;
+    border: 1px solid #000009;
+}
+
 .ob_calendar {
     position: absolute;
     content: url("../icon/ob_calendar.png");

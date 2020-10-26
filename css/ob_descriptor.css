@@ -2,7 +2,7 @@
 /* CSS Document */
 
 div.ob_descriptor {
-    width: 300px;
+    width: 600px;
     height:100%;
     overflow-x: scroll;
     overflow-y: visible;
@@ -38,9 +38,16 @@ table.ob_descriptor_table td {
     border-color: #666666;
 }
 
-td.ob_descriptor_td_left {
+td.ob_descriptor_td {
     font-weight: bold;
     font-size: 14px;
+}
+textarea.ob_descriptor_area {
+    width: 400px;
+    height:150px;
+    border:0px solid #e54141;
+    font-weight: bold;
+    display: block;
 }
 
 
