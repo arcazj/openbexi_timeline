@@ -1,23 +1,17 @@
 package com.openbexi.timeline.servlets;
 
-import com.openbexi.timeline.browser.data;
+import com.openbexi.timeline.data_browser.json_files_manager;
+import com.openbexi.timeline.data_browser.json_files_watcher;
 import com.openbexi.timeline.tests.test_timeline;
-import org.apache.catalina.connector.Connector;
-import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebListener;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.*;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -26,7 +20,8 @@ import java.util.logging.Logger;
 
 //@WebServlet("/openbexi_timeline_sse/sessions")
 @WebServlet(asyncSupported = true)
-public class ob_sse_timeline extends HttpServlet {
+@WebListener
+public class ob_sse_timeline extends HttpServlet implements HttpSessionListener {
 
     public ob_sse_timeline() {
         super();
@@ -43,6 +38,7 @@ public class ob_sse_timeline extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Logger logger = Logger.getLogger("");
+        HttpSession session = req.getSession();
 
         // Read parameters
         String startDate = req.getParameter("startDate");
@@ -51,7 +47,8 @@ public class ob_sse_timeline extends HttpServlet {
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
-        if (!ob_filter.equals("*"))
+
+        if (ob_filter != null && !ob_filter.equals("*"))
             filter_include = ob_filter;
 
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
@@ -77,25 +74,13 @@ public class ob_sse_timeline extends HttpServlet {
                 endDate = startDate;
             }
 
-            data data = new data(startDate, endDate, data_path, filter_include, filter_exclude, "GET", resp, null, id++);
-            PrintWriter respWriter = resp.getWriter();
-            //Important to put a "," not ";" between stream and charset
-            resp.setContentType("text/event-stream, charset=UTF-8");
-            //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
-            resp.addHeader("Access-Control-Allow-Origin", "*");
-            // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
-            // credentials and access to resource by the client will be blocked by CORS policy.
-            resp.addHeader("Access-Control-Allow-Credentials", "true");
-            resp.addHeader("Cache-Control", "no-cache");
-            resp.addHeader("Connection", "keep-alive");
-            respWriter.write("event: ob_timeline\n\n");
-            respWriter.write("data:" + data.getJson() + "\n\n");
-            respWriter.write("retry: 1000000000\n\n");
-            respWriter.flush();
-            boolean error = respWriter.checkError();
-            if (error == true) {
-                logger.info("Client disconnected");
-            }
+            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, filter_include, filter_exclude, "GET", resp,
+                    session, getServletContext());
+
+            // Start a json_files_watcher loop to check if any new events are coming.
+            // If any the json_files_watcher will update the openBexi Timeline client again.
+            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager);
+            json_files_watcher.run();
         }
     }
 
@@ -159,5 +144,15 @@ public class ob_sse_timeline extends HttpServlet {
         super.service(req, res);
     }
 
+
+    @Override
+    public void sessionCreated(HttpSessionEvent se) {
+        System.out.println("Session created : " + se.getSession());
+    }
+
+    @Override
+    public void sessionDestroyed(HttpSessionEvent se) {
+        System.out.println("Session destroy : " + se.getSession());
+    }
 
 }
