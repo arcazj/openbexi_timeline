@@ -49,7 +49,7 @@ public class test_timeline implements Runnable {
     }
 
     /**
-     * @return a simple json data with one event and one session. The start time is set to the GMT current time
+     * @return a simple json_files_manager data with one event and one session. The start time is set to the GMT current time
      */
     public String getSimpleJsonData() {
 
@@ -70,7 +70,7 @@ public class test_timeline implements Runnable {
     }
 
     /**
-     * @return json data with multiple sessions and events. All start and end times are random.
+     * @return json_files_manager data with multiple sessions and events. All start and end times are random.
      */
     public String getJsonData() {
         Logger logger = Logger.getLogger("");

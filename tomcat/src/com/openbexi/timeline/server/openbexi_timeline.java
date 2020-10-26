@@ -1,29 +1,18 @@
 package com.openbexi.timeline.server;
 
-import com.openbexi.timeline.browser.data;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
-import org.apache.catalina.*;
+import org.apache.catalina.Context;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.servlets.DefaultServlet;
-import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.coyote.http2.Http2Protocol;
-import org.apache.tomcat.util.threads.ThreadPoolExecutor;
 
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.file.FileSystems;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
 /**
@@ -44,7 +33,6 @@ public class openbexi_timeline implements Runnable {
     private final String _filter_include;
     private final String _filter_exclude;
     private final String _port;
-    public Hashtable _session_stack = new Hashtable();
 
     openbexi_timeline(ob_mode mode, String data_path, String filter_include, String filter_exclude, String port) {
         _ob_mode = mode;
@@ -52,10 +40,6 @@ public class openbexi_timeline implements Runnable {
         _filter_include = filter_include;
         _filter_exclude = filter_exclude;
         _port = port;
-    }
-
-    public Hashtable get_session_stack() {
-        return _session_stack;
     }
 
     /**
@@ -101,20 +85,20 @@ public class openbexi_timeline implements Runnable {
         httpsConnector.setAttribute("sslProtocol", "TLS");
         httpsConnector.setAttribute("SSLEnabled", true);
 
-        Context ctx = null;
+        Context ob_timeline_context = null;
 
         if (mode == ob_mode.no_secure) {
             tomcat.setPort(Integer.parseInt(_port));
             tomcat.getConnector();
 
             //Context ctx = tomcat.addContext("", null);
-            ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ctx, "default", new DefaultServlet());
-            ctx.addServletMappingDecoded("/", "default");
+            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            ob_timeline_context.addServletMappingDecoded("/", "default");
 
-            Tomcat.addServlet(ctx, "ob", new ob_ajax_timeline());
-            ctx.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
+            Tomcat.addServlet(ob_timeline_context, "ob", new ob_ajax_timeline());
+            ob_timeline_context.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
 
         }
         if (mode == ob_mode.secure) {
@@ -126,13 +110,13 @@ public class openbexi_timeline implements Runnable {
             tomcat.setConnector(httpsConnector);
 
             //Context ctx = tomcat.addContext("", null);
-            ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ctx, "default", new DefaultServlet());
-            ctx.addServletMappingDecoded("/", "default");
+            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            ob_timeline_context.addServletMappingDecoded("/", "default");
 
-            Tomcat.addServlet(ctx, "ob", new ob_ajax_timeline());
-            ctx.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
+            Tomcat.addServlet(ob_timeline_context, "ob", new ob_ajax_timeline());
+            ob_timeline_context.addServletMappingDecoded("/openbexi_timeline/sessions", "ob");
 
         }
         if (mode == ob_mode.secure_ws) {
@@ -140,7 +124,7 @@ public class openbexi_timeline implements Runnable {
             tomcat.setPort(Integer.parseInt(_port));
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
-            ctx = tomcat.addWebapp("/", ".");
+            ob_timeline_context = tomcat.addWebapp("/", ".");
         }
         if (mode == ob_mode.secure_sse) {
             // Set Http2 connector
@@ -151,51 +135,28 @@ public class openbexi_timeline implements Runnable {
             // Enable response compression
             httpsConnector.setAttribute("compression", "on");
             // Defaults are text/html,text/xml,text/plain,text/css
-            httpsConnector.setAttribute("compressableMimeType", "text/html,text/xml,text/plain,text/css,text/csv,application/json");
+            httpsConnector.setAttribute("compressableMimeType", "text/html,text/xml,text/plain,text/css,text/csv,application/json_files_manager");
 
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
 
-            ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ctx, "default", new DefaultServlet());
-            ctx.addServletMappingDecoded("/", "default");
+            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            ob_timeline_context.addServletMappingDecoded("/", "default");
 
-            Tomcat.addServlet(ctx, "ob_sse", new ob_sse_timeline());
-            ctx.addServletMappingDecoded("/openbexi_timeline_sse/sessions", "ob_sse");
+            Tomcat.addServlet(ob_timeline_context, "ob_sse", new ob_sse_timeline());
+            ob_timeline_context.addServletMappingDecoded("/openbexi_timeline_sse/sessions", "ob_sse");
 
         }
-        if (_data_path != null && ctx != null)
-            ctx.addParameter("data_path", _data_path);
-        if (_filter_exclude != null && ctx != null)
-            ctx.addParameter("filter_exclude", _filter_exclude);
-        if (_filter_include != null && ctx != null)
-            ctx.addParameter("filter_include", _filter_include);
-        _session_stack.put("test1", "test1");
-        _session_stack.put("test2", "test2");
-        ctx.addParameter("stack", String.valueOf(_session_stack));
+        if (_data_path != null && ob_timeline_context != null)
+            ob_timeline_context.addParameter("data_path", _data_path);
+        if (_filter_exclude != null && ob_timeline_context != null)
+            ob_timeline_context.addParameter("filter_exclude", _filter_exclude);
+        if (_filter_include != null && ob_timeline_context != null)
+            ob_timeline_context.addParameter("filter_include", _filter_include);
 
         tomcat.start();
-
-        Runnable runnableTask = () -> {
-            for (; ; ) {
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        Executor executor = httpsConnector.getProtocolHandler().getExecutor();
-        if (executor instanceof ThreadPoolExecutor) {
-            try {
-                ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
-                threadPoolExecutor.execute(runnableTask);
-            } catch (Exception ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
 
     }
 

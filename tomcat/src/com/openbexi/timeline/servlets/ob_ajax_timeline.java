@@ -1,6 +1,6 @@
 package com.openbexi.timeline.servlets;
 
-import com.openbexi.timeline.browser.data;
+import com.openbexi.timeline.data_browser.json_files_manager;
 import com.openbexi.timeline.tests.test_timeline;
 
 import java.io.IOException;
@@ -11,7 +11,6 @@ import java.util.Enumeration;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -43,7 +42,6 @@ ob_ajax_timeline extends HttpServlet {
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
         if (!ob_filter.equals("*"))
             filter_include = ob_filter;
-        String stack = getServletContext().getInitParameter("stack");
 
         Logger logger = Logger.getLogger("");
 
@@ -88,8 +86,9 @@ ob_ajax_timeline extends HttpServlet {
                 endDate = startDate;
             }
 
-            data data = new data(startDate, endDate, data_path, filter_include, filter_exclude, null, null, null, 0);
-            Object json = data.getJson();
+            json_files_manager data = new json_files_manager(startDate, endDate, data_path, filter_include, filter_exclude, null,
+                    null, null, getServletContext());
+            Object json = data.getData(null);
             out.write(json.toString());
             out.flush();
         }
