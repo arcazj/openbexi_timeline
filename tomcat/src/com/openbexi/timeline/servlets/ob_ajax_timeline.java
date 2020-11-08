@@ -3,14 +3,6 @@ package com.openbexi.timeline.servlets;
 import com.openbexi.timeline.data_browser.json_files_manager;
 import com.openbexi.timeline.tests.test_timeline;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.TimeZone;
-import java.util.logging.Logger;
-
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -18,6 +10,13 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.TimeZone;
+import java.util.logging.Logger;
 
 @WebServlet("/openbexi_timeline/sessions")
 public class
@@ -36,11 +35,12 @@ ob_ajax_timeline extends HttpServlet {
         // Read parameters
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
-        String ob_filter = req.getParameter("ob_filter");
+        String ob_filter = req.getParameter("filter");
+        String ob_search = req.getParameter("search");
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
-        if (!ob_filter.equals("*"))
+        if (ob_filter != null && !ob_filter.equals("*"))
             filter_include = ob_filter;
 
         Logger logger = Logger.getLogger("");
@@ -86,7 +86,7 @@ ob_ajax_timeline extends HttpServlet {
                 endDate = startDate;
             }
 
-            json_files_manager data = new json_files_manager(startDate, endDate, data_path, filter_include, filter_exclude, null,
+            json_files_manager data = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, null,
                     null, null, getServletContext());
             Object json = data.getData(null);
             out.write(json.toString());

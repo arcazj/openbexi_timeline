@@ -20,6 +20,11 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
+    JSONArray search(JSONArray events, String search) {
+        return null;
+    }
+
+    @Override
     boolean onDataChange() {
         return false;
     }

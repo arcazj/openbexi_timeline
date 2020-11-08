@@ -36,6 +36,8 @@ public class json_files_manager extends data_manager {
     private String monthE;
     private String dayE;
     private String hourE;
+    private String previous_date = "NONE";
+    private String next_date = "NONE";
 
     public String get_currentStartDate() {
         return _currentStartDate;
@@ -59,6 +61,7 @@ public class json_files_manager extends data_manager {
     private String _currentPathModel;
     private String _include;
     private String _exclude;
+    private String _search;
     private String _action_type;
     private HttpServletResponse _response;
     private HttpSession _session;
@@ -66,7 +69,7 @@ public class json_files_manager extends data_manager {
     private int _context_timer = 0;
     private String _checksum = "";
 
-    public json_files_manager(String currentStartDate, String currentEndDate, String currentPathModel, String include, String exclude, String action_type,
+    public json_files_manager(String currentStartDate, String currentEndDate, String currentPathModel, String search, String include, String exclude, String action_type,
                               HttpServletResponse response, HttpSession session, ServletContext servletContext) {
         super();
 
@@ -77,6 +80,7 @@ public class json_files_manager extends data_manager {
             _currentPathModel = currentPathModel.replaceAll("\\\\", "/");
         _include = include;
         _exclude = exclude;
+        _search = search;
         _action_type = action_type;
         _response = response;
         _session = session;
@@ -159,6 +163,7 @@ public class json_files_manager extends data_manager {
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
                     obj = filter(obj, _include, _exclude);
+                    obj = search(obj, _search);
                     jsonObjectMerged += obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                     reader.close();
                 }
@@ -216,7 +221,7 @@ public class json_files_manager extends data_manager {
             _session.invalidate();
             return false;
         }
-        System.out.println("session id=" + _session.getId() + " - data_manager changed");
+        //System.out.println("session id=" + _session.getId() + " - data_manager changed");
         return true;
     }
 
@@ -283,7 +288,8 @@ public class json_files_manager extends data_manager {
                         this.getFiles(_currentStartDate, _currentEndDate, file_list[f]);
                     }
                 }
-            }
+            } else
+                return true;
         }
         if (!checksum.equals(_checksum)) {
             _checksum = checksum;
@@ -340,29 +346,74 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
+    JSONArray search(JSONArray events, String search) {
+        Pattern pattern;
+        Matcher matcher;
+        JSONArray new_events = new JSONArray();
+        JSONArray new_events2 = new JSONArray();
+        if (search != null && !search.equals("*") && !search.equals("")) {
+            pattern = Pattern.compile(search.replaceAll(" ", "|"));
+            for (Object event : events) {
+                matcher = pattern.matcher(event.toString().replaceAll(" ", "").replaceAll("\"", ""));
+                if (matcher.find()) {
+                    JSONObject obj1 = (JSONObject) event;
+                    JSONObject obj2 = (JSONObject) obj1.get("render");
+                    obj2.put("backgroundColor", "#F8DF09");
+                    obj2.put("next_date", next_date);
+                    next_date = obj1.get("start").toString();
+                    new_events.add(event);
+                } else
+                    new_events.add(event);
+            }
+            for (int i = new_events.size() - 1; i >= 0; i--) {
+                matcher = pattern.matcher(new_events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
+                if (matcher.find()) {
+                    JSONObject obj1 = (JSONObject) new_events.get(i);
+                    JSONObject obj2 = (JSONObject) obj1.get("render");
+                    obj2.put("previous_date", previous_date);
+                    previous_date = obj1.get("start").toString();
+                    new_events2.add(new_events.get(i));
+                    //System.out.println(search+":"+((JSONObject) new_events.get(i)).get("start")+"  ---previous_date = "+
+                    //(obj2.get("previous_date")+"  ---next_date = "+next_date));
+                } else
+                    new_events2.add(new_events.get(i));
+            }
+        }
+
+        if (new_events2.size() == 0)
+            new_events2 = events;
+
+        return new_events2;
+    }
+
+    @Override
     JSONArray filter(JSONArray events, String filter_include, String filter_exclude) {
+
+        if (filter_include.equals("") && filter_exclude.equals(""))
+            return events;
+
         Pattern pattern;
         Matcher matcher;
         JSONArray new_events = new JSONArray();
         if (filter_exclude != null && !filter_exclude.equals("")) {
+            pattern = Pattern.compile(filter_exclude.strip().replaceAll(" ", "|"));
             for (int i = 0; i < events.size(); i++) {
-                pattern = Pattern.compile(filter_exclude.replaceAll(" ", "|"));
                 matcher = pattern.matcher(events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
                 if (!matcher.find())
                     new_events.add(events.get(i));
             }
         }
         if (filter_include != null && !filter_include.equals("")) {
+            pattern = Pattern.compile(filter_include.strip().replaceAll(" ", "|"));
             for (int i = 0; i < events.size(); i++) {
-                pattern = Pattern.compile(filter_include.replaceAll(" ", "|"));
                 matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
-                if (matcher.find())
+                if (matcher.find()) {
                     new_events.add(events.get(i));
+                    //System.out.println(i + ":" + (events.get(i)).toString());
+                }
             }
         }
-        if (filter_include != null && filter_include.equals("")) {
-            new_events = events;
-        }
+
         return new_events;
     }
 
