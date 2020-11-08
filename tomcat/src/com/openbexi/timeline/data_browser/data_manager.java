@@ -19,6 +19,7 @@ abstract class data_manager {
     abstract Object getData(String filter);
     abstract boolean sendData(Object data);
     abstract JSONArray filter(JSONArray events, String filter_include, String filter_exclude);
+    abstract JSONArray search(JSONArray events, String search);
 
     abstract boolean onDataChange() throws InterruptedException;
 

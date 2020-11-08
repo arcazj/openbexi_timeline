@@ -36,14 +36,15 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
     }
 
     @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp)  {
         Logger logger = Logger.getLogger("");
         HttpSession session = req.getSession();
 
         // Read parameters
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
-        String ob_filter = req.getParameter("ob_filter");
+        String ob_filter = req.getParameter("filter");
+        String ob_search = req.getParameter("search");
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
@@ -74,7 +75,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 endDate = startDate;
             }
 
-            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, filter_include, filter_exclude, "GET", resp,
+            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, "GET", resp,
                     session, getServletContext());
 
             // Start a json_files_watcher loop to check if any new events are coming.
