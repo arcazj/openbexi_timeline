@@ -67,7 +67,7 @@ public class json_files_manager extends data_manager {
     private HttpSession _session;
     private ServletContext _servletContext;
     private int _context_timer = 0;
-    private String _checksum = "";
+    private String _checksum = "*";
 
     public json_files_manager(String currentStartDate, String currentEndDate, String currentPathModel, String search, String include, String exclude, String action_type,
                               HttpServletResponse response, HttpSession session, ServletContext servletContext) {
@@ -288,8 +288,7 @@ public class json_files_manager extends data_manager {
                         this.getFiles(_currentStartDate, _currentEndDate, file_list[f]);
                     }
                 }
-            } else
-                return true;
+            }
         }
         if (!checksum.equals(_checksum)) {
             _checksum = checksum;

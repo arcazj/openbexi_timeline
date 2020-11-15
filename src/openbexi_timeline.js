@@ -110,8 +110,10 @@ function OB_TIMELINE() {
         this.title = "";
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
-        if (this.ob_filter === undefined)
-            this.ob_filter = "*";
+        if (this.ob_filter_value === undefined)
+            this.ob_filter_value = "";
+        if (this.ob_search_value === undefined)
+            this.ob_search_value = "";
         this.regex = "^(?=.*(?:--|--))(?!.*(?:--|--)).*$";
 
         this.camera = this.params[0].camera;
@@ -284,6 +286,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.ob_apply_timeline_filter = function () {
         let ob_checked;
+        this.ob_filter_value = "";
         try {
             for (let [key, value] of this.model.entries()) {
                 let value_items = value.split(",");
@@ -294,8 +297,7 @@ function OB_TIMELINE() {
                         } catch (err) {
                         }
                         if (ob_checked !== undefined && ob_checked === true) {
-                            this.ob_filter += key + ":" + value_items[i] + " ";
-                            this.ob_search_input.value = this.ob_filter;
+                            this.ob_filter_value += key + ":" + value_items[i] + " ";
                         }
                     }
                 }
@@ -935,9 +937,26 @@ function OB_TIMELINE() {
                 that2.ob_sync.style.cursor = "pointer";
             };
 
+            this.ob_filter = document.createElement("IMG");
+            this.ob_filter.className = "ob_filter";
+            this.ob_filter.style.left = "131px";
+            this.ob_filter.style.height = 32 + "px";
+            this.ob_filter.style.width = 32 + "px";
+            this.ob_filter.onclick = function () {
+                that2.moving = false;
+                that2.ob_settings.style.zIndex = "9999";
+                if (that2.idInterval !== undefined)
+                    clearInterval(that2.idInterval);
+                that2.ob_create_sorting();
+            };
+            this.ob_filter.onmousemove = function () {
+                that2.moving = false;
+                that2.ob_filter.style.cursor = "pointer";
+            };
+
             this.ob_search = document.createElement("IMG");
             this.ob_search.className = "ob_search";
-            this.ob_search.style.left = "131px";
+            this.ob_search.style.left = "173px";
             this.ob_search.style.height = 32 + "px";
             this.ob_search.style.width = 32 + "px";
             this.ob_search.onclick = function () {
@@ -945,7 +964,8 @@ function OB_TIMELINE() {
                 that2.ob_settings.style.zIndex = "9999";
                 if (that2.idInterval !== undefined)
                     clearInterval(that2.idInterval);
-                that2.ob_create_sorting();
+                that2.ob_search_value = that2.ob_search_input.value;
+                that2.loadData();
             };
             this.ob_search.onmousemove = function () {
                 that2.moving = false;
@@ -1030,7 +1050,7 @@ function OB_TIMELINE() {
 
             this.ob_search_input = document.createElement("INPUT");
             this.ob_search_input.className = "ob_search_input";
-            this.ob_search_input.style.left = "172px";
+            this.ob_search_input.style.left = "214px";
             this.ob_search_input.onmousemove = function (event) {
                 that2.moving = false;
                 that2.ob_search_input.style.cursor = "default";
@@ -1044,13 +1064,15 @@ function OB_TIMELINE() {
                     else
                         that2.params[0].date_cal = new Date(that2.params[0].date);
                     that2.ob_remove_calendar();
-                    that2.update_scene(that2.header, that2.params, that2.bands, that2.model, that2.sessions, that2.camera);
+                    that2.ob_search_value = that2.ob_search_input.value;
+                    that2.loadData();
                 }
             };
             this.ob_timeline_header.appendChild(this.ob_start);
             this.ob_timeline_header.appendChild(this.ob_stop);
             this.ob_timeline_header.appendChild(this.ob_calendar);
             this.ob_timeline_header.appendChild(this.ob_sync);
+            this.ob_timeline_header.appendChild(this.ob_filter);
             this.ob_timeline_header.appendChild(this.ob_search);
             this.ob_timeline_header.appendChild(this.ob_marker);
             this.ob_timeline_header.appendChild(this.ob_time_marker);
@@ -1565,6 +1587,7 @@ function OB_TIMELINE() {
             this.bands[i].layout_name = band.layouts[i];
             if (set_alternate_color === true) {
                 this.bands[i].color = ob_alternate_color;
+                this.bands[i].backgroundColor = ob_alternate_color;
                 set_alternate_color = false;
             } else {
                 this.bands[i].color = ob_color;
@@ -1789,6 +1812,15 @@ function OB_TIMELINE() {
             if (this.bands[i].color === undefined)
                 this.bands[i].color = 'white';
 
+            if (this.params[0].backgroundColor === undefined) {
+                this.backgroundColor = this.bands[i].color;
+            } else {
+                this.backgroundColor = this.params[0].backgroundColor;
+            }
+            if (this.bands[i].backgroundColor === undefined) {
+                this.bands[i].backgroundColor = this.backgroundColor;
+            }
+
             if (this.bands[i].intervalPixels === undefined)
                 this.bands[i].intervalPixels = "200";
 
@@ -1816,7 +1848,7 @@ function OB_TIMELINE() {
         //console.log("window width:" + this.width + " --- band width:" + this.bands[0].width + " --- " + this.bands[0].minDate + " --- " + this.bands[0].maxDate + " --- viewOffset:" + this.bands[0].viewOffset)
     };
 
-    OB_TIMELINE.prototype.add_textBox = function (band_name, text, x, y, z, width, height, depth, color, texture) {
+    OB_TIMELINE.prototype.add_textBox = function (band_name, text, textColor, x, y, z, width, height, depth, color, texture, backgroundColor) {
         let ob_model_name = this.ob_scene.getObjectByName(band_name + "_" + text);
         if (ob_model_name !== undefined) return;
         if (isNaN(x)) x = 0;
@@ -1826,9 +1858,7 @@ function OB_TIMELINE() {
         if (isNaN(height)) height = 0;
         if (depth === undefined) depth = 1;
         if (color === undefined) {
-            color = this.track(new THREE.Color("rgb(114, 171, 173)"));
-        } else {
-            color = this.track(new THREE.Color(color));
+            color = this.hex_Luminance(color, -.15);
         }
 
         let ob_box = this.track(new THREE.BoxGeometry(width, height, depth));
@@ -1868,11 +1898,11 @@ function OB_TIMELINE() {
         this.objects.push(ob_model_name);
 
         this.add_text_sprite(ob_model_name, text, 50, 0, 10, 24, "Normal",
-            "Normal", color, 'Arial');
+            "Normal", textColor, 'Arial', backgroundColor);
         //this.add_text3D(ob_model_name, text, 50, 0, 10, 24, color);
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
-            text + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
+            text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
             color + "," + texture + ")");
     };
 
@@ -1909,6 +1939,7 @@ function OB_TIMELINE() {
                 this.bands[i].texture);
             if (this.bands[i].layout_name !== "NONE") {
                 this.add_textBox(this.bands[i].name, this.bands[i].layout_name,
+                    this.bands[i].textColor,
                     -(this.width / 2) + (parseInt(this.bands[i].layouts.max_name_length) * 4),
                     this.bands[i].y,
                     parseInt(this.bands[i].z) + 40,
@@ -1916,7 +1947,8 @@ function OB_TIMELINE() {
                     this.bands[i].heightMax,
                     parseInt(this.bands[i].depth) + 1,
                     this.hex_Luminance(this.bands[i].color, -.15),
-                    undefined);
+                    undefined,
+                    this.hex_Luminance(this.bands[i].color, -.15));
             }
         }
     };
@@ -2005,7 +2037,9 @@ function OB_TIMELINE() {
                     clearTimeout(ob_timeline.timeout_create_segments);
                     clearTimeout(ob_timeline.timeout_create_sessions);
                     ob_timeline.timeout_create_sessions = setTimeout(function () {
-                        ob_timeline.create_sessions();
+                        // Apply filter if any here:
+                        let regex = ob_timeline.build_sessions_filter("");
+                        ob_timeline.create_sessions(false, regex);
                         ob_timeline.ob_renderer.render(ob_timeline.ob_scene, ob_timeline.ob_camera);
                     }, 0);
                     ob_timeline.timeout_create_segments = setTimeout(function () {
@@ -2112,7 +2146,7 @@ function OB_TIMELINE() {
 
                 //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt, this.bands[i].dateColor);
                 this.add_text_sprite(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt,
-                    this.bands[i].fontStyle, this.bands[i].fontWeight, this.bands[i].dateColor, this.bands[i].fontFamily);
+                    this.bands[i].fontStyle, this.bands[i].fontWeight, this.bands[i].dateColor, this.bands[i].fontFamily, this.bands[i].backgroundColor);
 
                 //Create sub-segments if required
                 if (this.bands[i].subIntervalPixels !== "NONE") {
@@ -2294,28 +2328,28 @@ function OB_TIMELINE() {
             this.set_bands_height();
         }
     };
-    OB_TIMELINE.prototype.build_sessions_filter = function () {
-        this.ob_filter = this.ob_search_input.value.split("|");
+    OB_TIMELINE.prototype.build_sessions_filter = function (filter) {
+        if (filter === null || filter === "") return null;
+
+        this.ob_filter_value = filter;
         this.regex = "^(?=.*(?:--|--))(?!.*(?:__|__)).*$";
-        if (this.ob_filter.length === 1)
-            this.regex = this.regex.replace("--|--", this.ob_filter[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
-        if (this.ob_filter.length === 2) {
-            this.regex = this.regex.replace("--|--", this.ob_filter[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
-            this.regex = this.regex.replace("__|__", this.ob_filter[1].replace(" ", "|").replace(",", "|").replace(";", "|"));
+        if (this.ob_filter_value.length === 1)
+            this.regex = this.regex.replace("--|--", this.ob_filter_value[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
+        if (this.ob_filter_value.length === 2) {
+            this.regex = this.regex.replace("--|--", this.ob_filter_value[0].replace(" ", "|").replace(",", "|").replace(";", "|"));
+            this.regex = this.regex.replace("__|__", this.ob_filter_value[1].replace(" ", "|").replace(",", "|").replace(";", "|"));
         }
+        return this.regex;
     }
 
-    OB_TIMELINE.prototype.create_sessions = function (ob_set_sessions) {
+    OB_TIMELINE.prototype.create_sessions = function (ob_set_sessions, regex) {
         if (ob_set_sessions === true) this.set_sessions();
-
-        // Apply filter if any here:
-        this.build_sessions_filter();
 
         for (let i = 0; i < this.bands.length; i++) {
             let ob_obj;
             for (let j = 0; j < this.bands[i].sessions.length; j++) {
                 try {
-                    if (this.bands[i].sessions[j].data.title.match(this.regex)) {
+                    if (regex === null || this.bands[i].sessions[j].data.title.match(regex)) {
                         if (this.bands[i].sessions[j].pixelOffSetEnd === undefined ||
                             isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd))) {
                             if (this.bands[i].sessions[j].render !== undefined)
@@ -2342,6 +2376,7 @@ function OB_TIMELINE() {
                             let fontWeight = this.bands[i].fontWeight;
                             let fontFamily = this.bands[i].fontFamily;
                             let fontStyle = this.bands[i].fontStyle;
+                            let backgroundColor = this.bands[i].backgroundColor;
                             if (this.bands[i].sessions[j].render !== undefined) {
                                 if (this.bands[i].sessions[j].render.textColor !== undefined)
                                     textColor = this.bands[i].sessions[j].render.textColor;
@@ -2353,12 +2388,14 @@ function OB_TIMELINE() {
                                     fontFamily = this.bands[i].sessions[j].render.fontFamily;
                                 if (this.bands[i].sessions[j].render.fontStyle !== undefined)
                                     fontStyle = this.bands[i].sessions[j].render.fontStyle;
+                                if (this.bands[i].sessions[j].render.backgroundColor !== undefined)
+                                    backgroundColor = this.bands[i].sessions[j].render.backgroundColor;
                             }
 
                             this.add_text_sprite(ob_obj, this.bands[i].sessions[j].data.title,
                                 this.bands[i].sessions[j].textX, 0, 5, fontSizeInt,
                                 fontStyle, fontWeight,
-                                textColor, fontFamily);
+                                textColor, fontFamily, backgroundColor);
                         }
                     }
                 } catch (e) {
@@ -2590,22 +2627,24 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_text_sprite = function (ob_object, text, x, y, z, fontSize, fontStyle, fontWeight
-        , color, fontFamily) {
+        , color, fontFamily, backgroundColor) {
         if (color === undefined) {
             color = this.track(new THREE.Color("rgb(114, 171, 173)"));
         }
 
         let ob_sprite = this.track(new THREE.TextSprite({
-            align: this.font_align,
-            fillStyle: color,
+            alignment: this.font_align,
+            backgroundColor: backgroundColor,
+            color: color,
             fontFamily: fontFamily,
-            fontSize: fontSize,
-            strokeStyle: '#e00',
-            strokeWidth: 0,
+            fontSize: parseInt(fontSize),
             fontStyle: fontStyle,
             fontVariant: 'normal',
+            padding: 0.15,
             fontWeight: fontWeight,
-            text: text,
+            text: [
+                text,
+            ].join('\n'),
         }));
         ob_sprite.position.set(x, y, 30);
         ob_sprite.pos_x = x;
@@ -3301,7 +3340,7 @@ function OB_TIMELINE() {
             this.update_bands_MinDate(this.params[0].date);
             this.update_bands_MaxDate(this.params[0].date);
             this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
-                "&ob_filter=" + this.ob_filter;
+                "&filter=" + this.ob_filter_value + "&search=" + this.ob_search_value;
         }
         let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
