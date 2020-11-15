@@ -2,7 +2,7 @@
 
 `class THREE.TextSprite extends THREE.Sprite`
 
-An instance of `TextSprite` automatically computes the optimal font size depending on the distance to the camera and the size of the renderer DOM element.
+Optimally displays the text as a sprite.
 
 ## demo
 
@@ -20,7 +20,7 @@ An instance of `TextSprite` automatically computes the optimal font size dependi
 npm i @seregpie/three.text-sprite
 ```
 
-### ES module
+---
 
 ```javascript
 import TextSprite from '@seregpie/three.text-sprite';
@@ -39,10 +39,11 @@ The class is globally available as `THREE.TextSprite`.
 ## usage
 
 ```javascript
-let sprite = new THREE.TextSprite({
-  fillStyle: '#24ff00',
+let instance = new THREE.TextSprite({
+  alignment: 'left',
+  color: '#24ff00',
   fontFamily: '"Times New Roman", Times, serif',
-  fontSize: 10,
+  fontSize: 8,
   fontStyle: 'italic',
   text: [
     'Twinkle, twinkle, little star,',
@@ -51,16 +52,17 @@ let sprite = new THREE.TextSprite({
     'Like a diamond in the sky.',
   ].join('\n'),
 });
-scene.add(sprite);
+scene.add(instance);
 ```
 
 ---
 
-Update the sprite.
+Update the instance.
 
 ```javascript
-sprite.fontFamily = 'Arial, Helvetica, sans-serif';
-sprite.text = [
+instance.fontFamily = 'Arial, Helvetica, sans-serif';
+instance.fontStyle = 'normal';
+instance.text = [
   'When this blazing sun is gone,',
   'When he nothing shines upon,',
   'Then you show your little light,',
@@ -74,25 +76,27 @@ sprite.text = [
 
 ```
 new THREE.TextSprite({
-  align: 'center',
-  fillStyle: '#fff',
+  alignment: 'center',
+  backgroundColor: 'rgba(0,0,0,0)',
+  color: '#fff',
   fontFamily: 'sans-serif',
   fontSize: 1,
   fontStyle: 'normal',
   fontVariant: 'normal',
   fontWeight: 'normal',
-  lineGap: 0.15,
-  padding: 0.25,
-  strokeStyle: '#000',
+  lineGap: 0.25,
+  padding: 0.5,
+  strokeColor: '#fff',
   strokeWidth: 0,
   text: '',
-})
+}, material)
 ```
 
 | argument | description |
 | ---: | :--- |
-| `align` | The horizontal text alignment. Possible values are `'center'`, `'left'` and `'right'`. |
-| `fillStyle` | The fill color or style. |
+| `alignment` | The horizontal text alignment. Possible values are `'center'`, `'left'` and `'right'`. |
+| `backgroundColor` | The background color. |
+| `color` | The color. |
 | `fontFamily` | The font family. |
 | `fontSize` | The font size. |
 | `fontStyle` | The font style. |
@@ -100,9 +104,10 @@ new THREE.TextSprite({
 | `fontWeight` | The font weight. |
 | `lineGap` | The vertical distance between the text lines. The value is relative to the font size. |
 | `padding` | The space around the text. The value is relative to the font size. |
-| `strokeStyle` | The stroke color or style. |
+| `strokeColor` | The stroke color. |
 | `strokeWidth` | The stroke width. The value is relative to the font size. |
 | `text` | The text. |
+| `material` | An instance of `THREE.Material`. If not provided, a default instance will be created. |
 
 ### properties
 
@@ -124,17 +129,19 @@ Used to check whether this is an instance of `TextSprite`.
 
 `.fontStyle`
 
-`.fillStyle`
+`.color`
 
 `.strokeWidth`
 
-`.strokeStyle`
+`.strokeColor`
 
-`.align`
+`.alignment`
 
 `.lineGap`
 
 `.padding`
+
+`.backgroundColor`
 
 ### methods
 
