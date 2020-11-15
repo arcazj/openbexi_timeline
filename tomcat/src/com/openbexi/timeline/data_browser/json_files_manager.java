@@ -125,6 +125,11 @@ public class json_files_manager extends data_manager {
         }
     }
 
+    @Override
+    Object userAccess(String permissions) {
+        return null;
+    }
+
     /**
      * @return data according a range of time.
      */
@@ -162,8 +167,8 @@ public class json_files_manager extends data_manager {
                     events = parser.parse(reader);
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
-                    obj = filter(obj, _include, _exclude);
-                    obj = search(obj, _search);
+                    obj = filterEvents(obj, _include, _exclude);
+                    obj = searchEvents(obj, _search);
                     jsonObjectMerged += obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                     reader.close();
                 }
@@ -345,7 +350,7 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    JSONArray search(JSONArray events, String search) {
+    JSONArray searchEvents(JSONArray events, String search) {
         Pattern pattern;
         Matcher matcher;
         JSONArray new_events = new JSONArray();
@@ -386,7 +391,22 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    JSONArray filter(JSONArray events, String filter_include, String filter_exclude) {
+    boolean addEvents(JSONArray events) {
+        return false;
+    }
+
+    @Override
+    boolean updateEvents(JSONArray events) {
+        return false;
+    }
+
+    @Override
+    boolean removeEvents(JSONArray events) {
+        return false;
+    }
+
+    @Override
+    JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
 
         if (filter_include.equals("") && filter_exclude.equals(""))
             return events;

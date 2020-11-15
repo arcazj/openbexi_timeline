@@ -16,10 +16,14 @@ abstract class data_manager {
 
     }
 
+    abstract Object userAccess(String permissions);
     abstract Object getData(String filter);
     abstract boolean sendData(Object data);
-    abstract JSONArray filter(JSONArray events, String filter_include, String filter_exclude);
-    abstract JSONArray search(JSONArray events, String search);
+    abstract JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude);
+    abstract JSONArray searchEvents(JSONArray events, String search);
+    abstract boolean addEvents(JSONArray events);
+    abstract boolean updateEvents(JSONArray events);
+    abstract boolean removeEvents(JSONArray events);
 
     abstract boolean onDataChange() throws InterruptedException;
 
