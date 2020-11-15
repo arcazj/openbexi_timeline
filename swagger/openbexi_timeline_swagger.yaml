@@ -10,21 +10,104 @@ info:
     name: "GNU General Public License v3.0"
     url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
 host: "openbexi_timeline.swagger.io"
-basePath: "/openbexi_timeline"
+basePath: ""
 tags:
   - name: "sessions"
     description: "Everything about your sessions"
 schemes:
-  - "http"
   - "https"
 paths:
-  /sessions/{startDate}/{endDate}:
+  /sessions/{startDate}/{endDate}/{filter}/{search}/{userAccess}:
     get:
       tags:
         - Sessions
       summary: Get sessions by Zone
       description: Return sessions between the startDate and endDate
       operationId: getSessionByZone
+      produces:
+        - application/json
+      parameters:
+        - name: startDate
+          in: path
+          description: Start date
+          required: true
+          type: string
+          format: date-time
+        - name: endDate
+          in: path
+          description: End date
+          required: true
+          type: string
+          format: date-time
+        - name: filter
+          in: path
+          description: filter events
+          required: true
+          type: string
+          format: string
+        - name: search
+          in: path
+          description: search events
+          required: true
+          type: string
+          format: string
+        - name: userAccess
+          in: path
+          description: user permission to add,update,delete events
+          required: true
+          type: string
+          format: string
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Object'
+        "400":
+          description: Invalid input
+
+  /sessions/{events}/{userAccess}:
+    post:
+      tags:
+        - Sessions
+        summary: Add or update events
+        description: Add new events or update existing events regarding user access
+        operationId: updateEvents
+        produces:
+          - application/json
+      parameters:
+        - name: startDate
+          in: path
+          description: Start date
+          required: true
+          type: string
+          format: date-time
+        - name: endDate
+          in: path
+          description: End date
+          required: true
+          type: string
+          format: date-time
+        - name: userAccess
+          in: path
+          description: user permission to add,update,delete events
+          required: true
+          type: string
+          format: string
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Object'
+        "400":
+          description: Invalid input
+
+  /sessions/{events}/{userAccess}:
+    delete:
+      tags:
+        - Sessions
+      summary: Delete events
+      description: Delete existing events regarding user access
+      operationId: deleteEvents
       produces:
         - application/json
       parameters:
@@ -51,7 +134,7 @@ paths:
 securityDefinitions:
   sessionstore_auth:
     type: "oauth2"
-    authorizationUrl: "https://localhost:8445/"
+    authorizationUrl: "https://localhost:8443/"
     flow: "implicit"
     scopes:
       write:sessions: "modify sessions in your account"
