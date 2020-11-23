@@ -14,6 +14,7 @@ ob_texture.set("icon/ob_lost_connection.png", new THREE.TextureLoader().load("ic
 ob_texture.set("icon/ob_swap.png", new THREE.TextureLoader().load("icon/ob_swap.png"));
 ob_texture.set("icon/ob_gate_open.png", new THREE.TextureLoader().load("icon/ob_gate_open.png"));
 ob_texture.set("icon/ob_gate_close.png", new THREE.TextureLoader().load("icon/ob_gate_close.png"));
+ob_texture.set("icon/ob_conflict.png", new THREE.TextureLoader().load("icon/ob_conflict.png"));
 
 // Satellite/Communication texture
 ob_texture.set("icon/ob_connect.png", new THREE.TextureLoader().load("icon/ob_connect.png"));
