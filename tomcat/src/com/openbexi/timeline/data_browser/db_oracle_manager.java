@@ -5,7 +5,7 @@ import org.json.simple.JSONArray;
 public class db_oracle_manager extends data_manager {
 
     @Override
-    Object userAccess(String permissions) {
+    Object userAccess(String permissions, JSONArray cookies) {
         return null;
     }
 

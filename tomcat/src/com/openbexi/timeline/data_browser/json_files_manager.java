@@ -126,7 +126,7 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    Object userAccess(String permissions) {
+    Object userAccess(String permissions, JSONArray cookies) {
         return null;
     }
 
@@ -244,7 +244,7 @@ public class json_files_manager extends data_manager {
         ob_data += "{\"ID\": \"" + UUID.randomUUID().toString() +
                 "\",\"start\": \"" + ob_start_time + "\"," +
                 "\"end\": \"" + "\"," +
-                "\"data_manager\":{ \"title\":\"" + title + "\",\"description\":\"NONE\"}}";
+                "\"data\":{ \"title\":\"" + title + "\",\"description\":\"NONE\"}}";
         ob_data_end = "]}\n\n";
         return ob_data_start + ob_data + ob_data_end;
     }
