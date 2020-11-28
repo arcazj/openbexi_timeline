@@ -16,7 +16,7 @@ abstract class data_manager {
 
     }
 
-    abstract Object userAccess(String permissions);
+    abstract Object userAccess(String permissions, JSONArray cookies);
     abstract Object getData(String filter);
     abstract boolean sendData(Object data);
     abstract JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude);

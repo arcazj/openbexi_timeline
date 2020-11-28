@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2020 arcazj All rights reserved.
-    OPENBEXI Timeline 0.9.1 beta
+    OPENBEXI Timeline 0.9.2 beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -812,8 +812,8 @@ function OB_TIMELINE() {
                     "<tr><td class=ob_descriptor_td>title:</td><td>" + descriptor.data.title + "</td></tr>" +
                     ob_descriptor_body +
                     "<tr><td></td></tr>" +
-                    "<tr><td class=ob_descriptor_td>description:</td><td><textarea class= 'ob_descriptor_area' disabled>" +
-                    descriptor.data.description + "</textarea></td></tr>" +
+                    "<tr><td class=ob_descriptor_td>description:</td><td><div class= 'ob_descriptor_area'>" +
+                    descriptor.data.description + "</div></td></tr>" +
                     "</table>";
                 this.ob_timeline_right_panel.appendChild(div);
             } else {
