@@ -29,7 +29,7 @@
 }
 
 .ob_timeline_right_panel {
-    position: absolute;
+    position: fixed;
     overflow-y: auto;
     border-radius: 15px 15px 0 0;
     border: 1px solid #cccccc;
