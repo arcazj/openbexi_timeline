@@ -27,7 +27,7 @@
 }
 
 .ob_timeline_right_panel {
-    position: absolute;
+    position: fixed;
     overflow-y: auto;
     border: 1px solid #cccccc;
 }
