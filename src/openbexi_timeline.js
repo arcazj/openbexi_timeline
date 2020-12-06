@@ -452,10 +452,13 @@ function OB_TIMELINE() {
                                 ob_build_all_filtering_options += "<tr>";
                                 ob_tr = false;
                             }
-                            ob_build_all_filtering_options += "<td><label>" + value_items[i] +
-                                "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
-                                //" onchange=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter();\"" +
-                                "></label></td>";
+                            // Add filtering lists for items not longer than 12 characters
+                            if (value_items[i].length <= 12) {
+                                ob_build_all_filtering_options += "<td><label>" + value_items[i] +
+                                    "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
+                                    //" onchange=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter();\"" +
+                                    "></label></td>";
+                            }
                             if (ob_tr === true && i !== 0 && (i % 4) !== 0) {
                                 ob_build_all_filtering_options += "</tr>";
                                 ob_tr = true;
