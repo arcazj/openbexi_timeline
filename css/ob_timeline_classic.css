@@ -27,6 +27,7 @@
 }
 
 .ob_timeline_right_panel {
+    width:1500px;
     position: fixed;
     overflow-y: auto;
     border: 1px solid #cccccc;

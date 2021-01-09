@@ -42,6 +42,8 @@ ob_ajax_timeline extends HttpServlet {
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
         if (ob_filter != null && !ob_filter.equals("*"))
             filter_include = ob_filter;
+        if (filter_include.equals(""))
+            filter_include = getServletContext().getInitParameter("filter_include");
 
         Logger logger = Logger.getLogger("");
 

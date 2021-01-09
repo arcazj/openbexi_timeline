@@ -16,6 +16,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,6 +135,7 @@ public class json_files_manager extends data_manager {
      * @return data according a range of time.
      */
     public Object getData(String filter) {
+        Date t1 = new Date();
         if (_currentPathModel == null || _currentStartDate == null)
             return getDummyJson("no data_manager found");
 
@@ -158,7 +160,7 @@ public class json_files_manager extends data_manager {
         String jsonObjectMerged = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
                 "  \"events\": [\n";
-
+        int count = 0;
         for (Map.Entry<File, String> entry : files.entrySet()) {
             try {
                 File file = new File(entry.getKey().toString());
@@ -169,6 +171,7 @@ public class json_files_manager extends data_manager {
                     JSONArray obj = (JSONArray) jsonObject.get("events");
                     obj = filterEvents(obj, _include, _exclude);
                     obj = searchEvents(obj, _search);
+                    count += obj.size();
                     jsonObjectMerged += obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                     reader.close();
                 }
@@ -179,11 +182,52 @@ public class json_files_manager extends data_manager {
         jsonObjectMerged += "]}";
 
         try {
+            log("Return " + String.format("% 5d", count) + " events/sessions -  " +
+                    String.format("% 4d", (new Date().getTime() - t1.getTime()) ) + " millis", "info");
             return parser.parse(jsonObjectMerged);
         } catch (ParseException e) {
             return getDummyJson("no data_manager found");
         }
 
+    }
+
+    private void print_events(JSONObject events) {
+        try {
+            AtomicInteger count = new AtomicInteger();
+            events.keySet().forEach(keyStr -> {
+                Object keyvalue = events.get(keyStr);
+                try {
+                    JSONArray a = (JSONArray) keyvalue;
+                    for (int i = 0; i < a.size(); i++) {
+                        try {
+                            JSONObject data = (JSONObject) a.get(i);
+                            data.keySet().forEach(keyStr2 -> {
+                                JSONObject keydata = (JSONObject) data.get(keyStr2);
+                                System.out.println("");
+                                System.out.print("Event: " + count.getAndIncrement() + ":" + " start: " + data.get("start") +
+                                        " end: " + data.get("end"));
+                                keydata.keySet().forEach(keyStr3 -> {
+                                    try {
+                                        if (keyStr3.equals("description"))
+                                            System.out.print(" (" + keyStr3 + " " + keydata.get(keyStr3).toString().length() + ")");
+                                        else if (keyStr3.equals("analyze"))
+                                            System.out.print(" " + keyStr3 + ":" + keydata.get(keyStr3).toString().length() + ")");
+                                        else
+                                            System.out.print(" " + keyStr3 + ":" + keydata.get(keyStr3).toString());
+
+                                    } catch (Exception e) {
+                                    }
+                                });
+                            });
+                        } catch (Exception e) {
+                        }
+                    }
+                } catch (Exception e) {
+                }
+            });
+        } catch (Exception e) {
+
+        }
     }
 
     @Override
@@ -212,6 +256,7 @@ public class json_files_manager extends data_manager {
         } catch (Exception e) {
             log(e.getMessage(), "err");
         }
+        //print_events((JSONObject) data);
         return true;
     }
 
@@ -413,22 +458,63 @@ public class json_files_manager extends data_manager {
 
         Pattern pattern;
         Matcher matcher;
+        boolean found;
         JSONArray new_events = new JSONArray();
         if (filter_exclude != null && !filter_exclude.equals("")) {
-            pattern = Pattern.compile(filter_exclude.strip().replaceAll(" ", "|"));
-            for (int i = 0; i < events.size(); i++) {
-                matcher = pattern.matcher(events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
-                if (!matcher.find())
-                    new_events.add(events.get(i));
+            String[] items = filter_exclude.split("\\+");
+            if (items.length > 1) {
+                for (int i = 0; i < events.size(); i++) {
+                    found = false;
+                    for (int j = 0; j < items.length; j++) {
+                        if (events.get(i).toString().toString().replaceAll("\"", "").contains(items[j]))
+                            found = true;
+                        else {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found == false) {
+                        new_events.add(events.get(i));
+                        //System.out.println(i + "exclude:" + (events.get(i)).toString());
+                    }
+                }
+            } else {
+                pattern = Pattern.compile(filter_exclude.strip().replaceAll(" ", "|"));
+                for (int i = 0; i < events.size(); i++) {
+                    matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
+                    if (!matcher.find()) {
+                        new_events.add(events.get(i));
+                        //System.out.println(i + "exclude:" + (events.get(i)).toString());
+                    }
+                }
             }
         }
         if (filter_include != null && !filter_include.equals("")) {
-            pattern = Pattern.compile(filter_include.strip().replaceAll(" ", "|"));
-            for (int i = 0; i < events.size(); i++) {
-                matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
-                if (matcher.find()) {
-                    new_events.add(events.get(i));
-                    //System.out.println(i + ":" + (events.get(i)).toString());
+            String[] items = filter_include.split("\\+");
+            if (items.length > 1) {
+                for (int i = 0; i < events.size(); i++) {
+                    found = false;
+                    for (int j = 0; j < items.length; j++) {
+                        if (events.get(i).toString().toString().replaceAll("\"", "").contains(items[j]))
+                            found = true;
+                        else {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found == true) {
+                        new_events.add(events.get(i));
+                        //System.out.println(i + "include:" + (events.get(i)).toString());
+                    }
+                }
+            } else {
+                pattern = Pattern.compile(filter_include.strip().replaceAll(" ", "|"));
+                for (int i = 0; i < events.size(); i++) {
+                    matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
+                    if (matcher.find()) {
+                        new_events.add(events.get(i));
+                        System.out.println(i + "include:" + (events.get(i)).toString());
+                    }
                 }
             }
         }
