@@ -48,9 +48,10 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
         String data_path = getServletContext().getInitParameter("data_path");
         String filter_include = getServletContext().getInitParameter("filter_include");
         String filter_exclude = getServletContext().getInitParameter("filter_exclude");
-
         if (ob_filter != null && !ob_filter.equals("*"))
             filter_include = ob_filter;
+        if (filter_include.equals(""))
+            filter_include = getServletContext().getInitParameter("filter_include");
 
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 

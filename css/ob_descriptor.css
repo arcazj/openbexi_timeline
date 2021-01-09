@@ -2,13 +2,12 @@
 /* CSS Document */
 
 div.ob_descriptor {
-    width: 850px;
-    height:100%;
-    overflow-x: scroll;
-    overflow-y: visible;
-    padding: 0;
+    height: 100%;
+    width: 30%;
+    overflow: auto;
 }
-div.ob_descriptor_head{
+
+div.ob_descriptor_head {
     height: 40px;
     border-radius: 15px 15px 0 0;
     /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
@@ -19,10 +18,12 @@ div.ob_descriptor_head{
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
     color: #040404;
     text-align: center;
-    font-family: "Times New Roman", Times, serif;
+    font-family: Arial, Times, Serif;
     font-size: large;
 }
+
 table.ob_descriptor_table {
+    width:2500px;
     font-size: 12px;
     color: #333333;
     border-width: 1px;
@@ -34,20 +35,24 @@ table.ob_descriptor_table td {
     white-space: nowrap;
     text-align: left;
     border-width: 1px;
-    padding: 8px;
+    padding: 4px;
     border-color: #666666;
+    font-family: Arial, Times, Serif;
+}
+
+tr.ob_descriptor_tr {
 }
 
 td.ob_descriptor_td {
+    width:5%;
     font-weight: bold;
     font-size: 14px;
 }
-textarea.ob_descriptor_area {
-    width: 400px;
-    height:150px;
-    border:0px solid #e54141;
-    font-weight: bold;
-    display: block;
+
+td.ob_descriptor_td2 {
+    width:95%;
+    overflow: visible;
+    font-size: 12px;
 }
 
 
