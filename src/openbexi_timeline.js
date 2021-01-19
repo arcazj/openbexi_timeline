@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.4 beta
+    OpenBEXI Timeline 0.9.4a beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -627,7 +627,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.4 beta</legend>\n" +
+                "<legend> version 0.9.4a beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -2337,18 +2337,18 @@ function OB_TIMELINE() {
                         if (this.bands[i].sessions[j].pixelOffSetEnd === undefined ||
                             isNaN(parseInt(this.bands[i].sessions[j].pixelOffSetEnd))) {
                             if (this.bands[i].sessions[j].render !== undefined)
-                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].sessions[j].render.color,
+                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].backgroundColor, this.bands[i].sessions[j].render.color,
                                     this.bands[i].sessions[j], this.bands[i].sessions[j].render.image);
                             else
-                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].eventColor,
+                                ob_obj = this.add_event(this.bands[i].name, this.bands[i].backgroundColor, this.bands[i].eventColor,
                                     this.bands[i].sessions[j]);
                         } else {
                             if (this.bands[i].sessions[j].render !== undefined) {
-                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].sessions[j].render.color,
+                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].backgroundColor, this.bands[i].sessions[j].render.color,
                                     this.bands[i].defaultSessionTexture,
                                     this.bands[i].sessions[j], this.bands[i].sessions[j].render.image);
                             } else
-                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].SessionColor,
+                                ob_obj = this.add_session(this.bands[i].name, this.bands[i].backgroundColor, this.bands[i].SessionColor,
                                     this.bands[i].defaultSessionTexture,
                                     this.bands[i].sessions[j]);
                         }
@@ -2406,13 +2406,13 @@ function OB_TIMELINE() {
         }
     };
 
-    // WebGl OpenBEXI library
-    OB_TIMELINE.prototype.add_session = function (band_name, color, texture, session, image) {
+// WebGl OpenBexi library
+    OB_TIMELINE.prototype.add_session = function (band_name, background, color, texture, session, image) {
         if (image !== undefined) {
             let copy = Object.assign({}, session);
             copy.x_relative = copy.pixelOffSetStart - 8;
             copy.z = parseInt(session.z + 41);
-            this.add_event(band_name, color, copy, image);
+            this.add_event(band_name, background, color, copy, image);
         }
         let ob_material;
         if (texture !== undefined) {
@@ -2461,7 +2461,7 @@ function OB_TIMELINE() {
         return ob_texture.get(image);
     }
 
-    OB_TIMELINE.prototype.add_event = function (band_name, color, session, image) {
+    OB_TIMELINE.prototype.add_event = function (band_name, background, color, session, image) {
         let geometry, material, ob_event;
         let texture = this.load_texture(image);
         if (texture === undefined) {
@@ -2472,7 +2472,7 @@ function OB_TIMELINE() {
             texture.minFilter = THREE.LinearFilter;
             material = this.track(new THREE.MeshBasicMaterial({
                 map: texture,
-                color: '#a1d9ff',
+                color: background,
                 transparent: true,
                 opacity: 1
             }));
