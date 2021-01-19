@@ -2743,7 +2743,7 @@ function OB_TIMELINE() {
 //let ob_font = ob_load_font();
 
     OB_TIMELINE.prototype.ob_render = function (call_by, ob_scene_index) {
-        console.log("OB_TIMELINE.prototype.ob_render(" + call_by + " - " + ob_scene_index + ")");
+        //console.log("OB_TIMELINE.prototype.ob_render(" + call_by + " - " + ob_scene_index + ")");
         this.ob_renderer.render(this.ob_scene[ob_scene_index], this.ob_camera);
 
         /*console.log("|...........................................V.......................................|");
