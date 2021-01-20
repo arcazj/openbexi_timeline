@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.4a beta
+    OpenBEXI Timeline 0.9.5 beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -95,11 +95,6 @@ class ResourceTracker {
 function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.ob_init = function () {
-
-        // Tacking all objects which will be create in order to do full cleanup when needed.
-        this.resTracker = new ResourceTracker();
-        this.track = this.resTracker.track.bind(this.resTracker);
-
         // Set all timeline parameters:
         this.name = this.params[0].name;
         this.title = "";
@@ -627,7 +622,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.4a beta</legend>\n" +
+                "<legend> version 0.9.5 beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -1883,7 +1878,7 @@ function OB_TIMELINE() {
         this.objects.push(ob_model_name);
 
         this.add_text_sprite(ob_model_name, text, 50, 0, 10, 24, "Normal",
-            "Normal", textColor, 'Arial');
+            "Normal", textColor, 'Arial', undefined);
         //this.add_text3D(ob_model_name, text, 50, 0, 10, 24, color);
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
@@ -1993,7 +1988,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.destroy_scene = function () {
         if (this.ob_scene === undefined) return;
         for (let i = 0; i < this.ob_scene[0].children.length; i++) {
-            this.ob_scene[0].remove(this.ob_scene[0].children[i]);
+            this.ob_scene[i].remove(this.ob_scene[i].children[i]);
         }
         this.resTracker.dispose();
         this.ob_scene[this.ob_current_scene_index] = undefined;
@@ -2012,6 +2007,10 @@ function OB_TIMELINE() {
                     ob_timeline.bands = bands;
                     ob_timeline.model = model;
                     ob_timeline.sessions = sessions;
+
+                    // Tracking all objects which will be create in order to do full cleanup when needed.
+                    ob_timeline.resTracker = new ResourceTracker();
+                    ob_timeline.track = ob_timeline.resTracker.track.bind(ob_timeline.resTracker);
 
                     ob_timeline.ob_init();
                     ob_timeline.set_sessions();
@@ -2129,7 +2128,7 @@ function OB_TIMELINE() {
 
                 //this.add_text_CSS2D(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt, this.bands[i].dateColor);
                 this.add_text_sprite(ob_band, text, textX, textY, 5, this.bands[i].fontSizeInt,
-                    this.bands[i].fontStyle, this.bands[i].fontWeight, this.bands[i].dateColor, this.bands[i].fontFamily);
+                    this.bands[i].fontStyle, this.bands[i].fontWeight, this.bands[i].dateColor, this.bands[i].fontFamily, undefined);
 
                 //Create sub-segments if required
                 if (this.bands[i].subIntervalPixels !== "NONE") {
@@ -2379,7 +2378,7 @@ function OB_TIMELINE() {
                             this.add_text_sprite(ob_obj, this.bands[i].sessions[j].data.title,
                                 this.bands[i].sessions[j].textX, 0, 5, fontSizeInt,
                                 fontStyle, fontWeight,
-                                textColor, fontFamily);
+                                textColor, fontFamily, backgroundColor);
                         }
                     }
                 } catch (e) {
@@ -2544,12 +2543,13 @@ function OB_TIMELINE() {
         if (color === undefined) {
             color = this.track(new THREE.Color("rgb(114, 171, 173)"));
         }
-        let geometry = this.track(new THREE.Geometry());
-        geometry.vertices.push(this.track(new THREE.Vector3(x, y, z)));
-        geometry.vertices.push(this.track(new THREE.Vector3(x, y - size, z)));
+        let points = [];
+        points.push(new THREE.Vector3(x, y, z));
+        points.push(new THREE.Vector3(x, y - size, z));
+        let geometry = this.track(new THREE.BufferGeometry().setFromPoints(points));
         let material = this.track(new THREE.LineDashedMaterial({
             color: color,
-            lineWidth: 1,
+            linewidth: 1,
             dashSize: 2,
             gapSize: 4,
         }));
@@ -2587,12 +2587,13 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_text_sprite = function (ob_object, text, x, y, z, fontSize, fontStyle, fontWeight
-        , color, fontFamily) {
+        , color, fontFamily, backgroundColor) {
         if (color === undefined) {
             color = this.track(new THREE.Color("rgb(114, 171, 173)"));
         }
         let ob_sprite = this.track(new THREE.TextSprite({
             alignment: this.font_align,
+            backgroundColor: backgroundColor,
             color: color,
             fontFamily: fontFamily,
             fontSize: parseInt(fontSize),
@@ -2915,8 +2916,8 @@ function OB_TIMELINE() {
             this.ob_scene_index = 0;
             this.ob_current_scene_index = 0;
         } else {
-            this.ob_scene_index++;
-            this.ob_current_scene_index++;
+            this.ob_scene_index = 0;
+            this.ob_current_scene_index = 0;
         }
         if (this.ob_scene_index > 2) {
             this.ob_scene_index = 0;
