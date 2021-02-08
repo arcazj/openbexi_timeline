@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.5 beta
+    OpenBEXI Timeline 0.9.6 beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -81,12 +81,12 @@ class ResourceTracker {
                     resource.parent.remove(resource);
                 }
             }
-            if (resource.dispose) {
+            /*if (resource.dispose) {
                 try {
-                    resource.dispose();
+                        resource.dispose();
                 } catch (err) {
                 }
-            }
+            }*/
         }
         this.resources.clear();
     }
@@ -186,7 +186,7 @@ function OB_TIMELINE() {
         }
         // Height may have changed depending on how many sessions or events populated in the bands
         // So here we need to check the Timeline height changed
-        let new_timeline_height = 0;
+        /*let new_timeline_height = 0;
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].height !== undefined) {
                 if (this.bands[i].height === "auto") this.bands[i].height = "0";
@@ -194,9 +194,9 @@ function OB_TIMELINE() {
                     new_timeline_height += Math.abs(this.bands[i].maxY) + Math.abs(this.bands[i].minY);
                 }
             }
-        }
-        if (new_timeline_height !== 0)
-            this.height = new_timeline_height;
+        }*/
+        //if (new_timeline_height !== 0)
+        //this.height = new_timeline_height;
 
         // -- set timeline width --
         try {
@@ -622,7 +622,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.5 beta</legend>\n" +
+                "<legend> version 0.9.6 beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -1565,8 +1565,13 @@ function OB_TIMELINE() {
         band.layout_name = band.layouts[0];
         if (band.layout_name === undefined) band.layout_name = "NONE";
         let set_alternate_color = true;
+
+        this.bands[0].maxY = 0;
+        this.bands[0].minY = 0;
+        this.bands[0].lastGreaterY = -this.height;
         for (let i = 1; i < band.layouts.length; i++) {
-            this.bands.unshift(Object.assign({}, band));
+            //this.bands.unshift(Object.assign({}, band));
+            this.bands[i] = Object.assign({}, band);
             this.bands[i].name = band.name + "_" + i;
             this.bands[i].layout_name = band.layouts[i];
             if (set_alternate_color === true) {
@@ -1577,12 +1582,14 @@ function OB_TIMELINE() {
                 this.bands[i].color = ob_color;
                 set_alternate_color = true;
             }
+            this.bands[i].maxY = 0;
+            this.bands[i].minY = 0;
+            this.bands[i].lastGreaterY = -this.height;
         }
         this.bands.original_length = this.bands.length;
     }
 
     OB_TIMELINE.prototype.create_new_bands = function () {
-
         let ob_layouts = [];
         let max_name_length = 0;
         let sortByValue;
@@ -1622,55 +1629,46 @@ function OB_TIMELINE() {
         }
     };
     OB_TIMELINE.prototype.set_bands_height = function () {
-        let offSet, offSetOverview;
-        let pos = 0;
-
         // Height may have changed depending on how many sessions or events populated in the bands
         // So here we need to check the Timeline height changed
         let new_timeline_height = 0;
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].height !== undefined) {
                 if (this.bands[i].minY !== undefined) {
+                    //if (this.bands[i].lastGreaterY !== undefined)
+                    //this.bands[i].maxY = this.bands[i].lastGreaterY;
                     this.bands[i].height = Math.abs(this.bands[i].maxY) + Math.abs(this.bands[i].minY);
                     new_timeline_height += this.bands[i].height;
+                } else {
+                    try {
+                        if (this.bands[i].height.match(/%/) !== null)
+                            this.bands[i].height = (this.height * parseInt(this.bands[i].height)) / 100;
+                        if (this.bands[i].height.match(/px/) !== null)
+                            this.bands[i].height = parseInt(this.bands[i].height);
+                    } catch (err) {
+                    }
                 }
+            } else {
+                this.bands[i].y = this.height - ((this.height / this.bands.length) / 2);
+                this.bands[i].pos_x = this.bands[i].x;
+                this.bands[i].pos_y = this.bands[i].y;
+                this.bands[i].pos_z = this.bands[i].z;
             }
-        }
-        if (new_timeline_height !== 0) {
-            this.height = new_timeline_height;
-            if (this.params[0].height !== new_timeline_height) {
-                new_timeline_height = this.params[0].height;
-            }
-            this.params[0].height = new_timeline_height;
         }
 
-        let ob_band_height_default = this.height / this.bands.length;
-        let ob_band_height = 0;
+        if (new_timeline_height !== 0)
+            this.height = new_timeline_height;
+
+        let pos = 0;
+        let offSet, offSetOverview;
         for (let i = 0; i < this.bands.length; i++) {
-            if (this.bands[i].height === undefined) {
-                this.bands[i].y = this.height - pos - (ob_band_height_default / 2);
+            if (this.bands[i].height !== undefined) {
+                this.bands[i].y = this.height - pos - (this.bands[i].height / 2);
                 this.bands[i].pos_x = this.bands[i].x;
                 this.bands[i].pos_y = this.bands[i].y;
                 this.bands[i].pos_z = this.bands[i].z;
-                pos = pos + ob_band_height_default;
-                ob_band_height = ob_band_height_default;
-            } else {
-                try {
-                    if (this.bands[i].height.match(/%/) !== null)
-                        ob_band_height = (this.height * parseInt(this.bands[i].height)) / 100;
-                    else if (this.bands[i].height.match(/px/) !== null)
-                        ob_band_height = parseInt(this.bands[i].height);
-                    else
-                        ob_band_height = parseInt(this.bands[i].height);
-                } catch (err) {
-                    ob_band_height = parseInt(this.bands[i].height);
-                }
-                this.bands[i].y = this.height - pos - (ob_band_height / 2);
-                this.bands[i].pos_x = this.bands[i].x;
-                this.bands[i].pos_y = this.bands[i].y;
-                this.bands[i].pos_z = this.bands[i].z;
-                pos = pos + ob_band_height;
-                this.bands[i].heightMax = ob_band_height;
+                pos = pos + this.bands[i].height;
+                this.bands[i].heightMax = this.bands[i].height;
                 this.bands[i].maxY = this.bands[i].heightMax / 2;
                 this.bands[i].minY = -this.bands[i].maxY;
                 this.bands[i].heightMin = this.height - pos;
@@ -1681,7 +1679,9 @@ function OB_TIMELINE() {
                 }
             }
         }
-
+        /*console.log("this.params[" + 0 + "].height =" + this.params[0].height +
+            " | this.bands[" + 0 + "].trackIncrement=" + this.bands[0].trackIncrement +
+            " | this.height=" + this.height);*/
         for (let i = 0; i < this.bands.length; i++) {
             if (this.bands[i].name.match(/overview_/)) {
                 try {
@@ -1692,16 +1692,17 @@ function OB_TIMELINE() {
                     this.bands[i].trackIncrement = 1;
                 }
             }
-            /*console.log("this.bands[i].name=" + this.bands[i].name +
-                " - this.bands[i].trackIncrement=" + this.bands[i].trackIncrement +
-                " - this.bands[i].height=" + this.bands[i].height +
-                " - this.bands[i].heightMax=" + this.bands[i].heightMax +
-                " - this.bands[i].heightMin=" + this.bands[i].heightMin +
-                " - this.bands[i].maxY=" + this.bands[i].maxY +
-                " - this.bands[i].minY=" + this.bands[i].minY +
-                " - this.bands[i].pos_x=" + this.bands[i].pos_x +
-                " - this.bands[i].pos_y=" + this.bands[i].pos_y +
-                " - this.bands[i].pos_z=" + this.bands[i].pos_z)*/
+            /*console.log("this.bands[" + i + "].name=" + this.bands[i].name +
+                " | this.bands[" + i + "].height=" + this.bands[i].height +
+                " | this.bands[" + i + "].heightMin=" + this.bands[i].heightMin +
+                " | this.bands[" + i + "].heightMax=" + this.bands[i].heightMax +
+                " | this.bands[" + i + "].maxY=" + this.bands[i].maxY +
+                " | this.bands[" + i + "].pos_x=" + this.bands[i].pos_x +
+                " | this.bands[" + i + "].x=" + this.bands[i].x +
+                " | this.bands[" + i + "].minY=" + this.bands[i].minY +
+                " | this.bands[" + i + "].pos_y=" + this.bands[i].pos_y +
+                " | this.bands[" + i + "].y=" + this.bands[i].y +
+                " | this.bands[" + i + "].lastGreaterY=" + this.bands[i].lastGreaterY);*/
         }
     };
     OB_TIMELINE.prototype.set_bands = function () {
@@ -2237,6 +2238,7 @@ function OB_TIMELINE() {
             // for each bands
             for (let i = 0; i < this.bands.length; i++) {
                 this.bands[i].sessions = [];
+                this.bands[i].lastGreaterY = -this.height / 2;
                 if (this.sessions === undefined) break;
 
                 // Assign each event to the right bands
@@ -2306,6 +2308,15 @@ function OB_TIMELINE() {
                     y = this.get_room_for_session(this.bands[i].sessions, this.bands[i].sessions[j], i);
 
                     this.bands[i].sessions[j].y = y;
+                    if (y > this.bands[i].lastGreaterY)
+                        this.bands[i].lastGreaterY = y;
+                }
+                if (this.bands[i].lastGreaterY !== -this.height / 2)
+                    this.bands[i].lastGreaterY = this.bands[i].lastGreaterY + this.bands[i].trackIncrement;
+                else {
+                    this.bands[i].maxY = this.params[0].height / 2;
+                    this.bands[i].minY = -this.bands[i].maxY;
+                    this.bands[i].lastGreaterY = this.params[0].height / 2;
                 }
             }
             this.set_bands_height();

@@ -513,7 +513,7 @@ public class json_files_manager extends data_manager {
                     matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
                     if (matcher.find()) {
                         new_events.add(events.get(i));
-                        System.out.println(i + "include:" + (events.get(i)).toString());
+                        //System.out.println(i + "include:" + (events.get(i)).toString());
                     }
                 }
             }
