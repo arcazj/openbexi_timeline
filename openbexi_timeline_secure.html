@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
     <title>Openbexi_timeline</title>
-    <link href="/css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
-    <link href="/css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
-    <link href="/css/ob_descriptor.css" rel="stylesheet" type="text/css">
+    <meta name="Description" content="Timeline data-analysis webgl javascript three.js">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
+    <link href="css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
+    <link href="css/ob_descriptor.css" rel="stylesheet" type="text/css">
 
     <!-- Uncomment three.js below iof you want your application to run in local mode
     <script src="https://threejs.org/build/three.min.js"></script>
@@ -38,6 +41,7 @@
             width: 1350,
             //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=Jul 02 00:00:00 UTC 2020&endDate=Jul 04 00:00:00 UTC 2020"
             data: "https://localhost:8445/openbexi_timeline/sessions?startDate=current_time&endDate="
+            //data: "https://localhost:8446/openbexi_timeline_sse/sessions?startDate=current_time&endDate="
             //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
         }];
         ob_timeline1.bands = [{
@@ -79,10 +83,6 @@
 <div id="ob_content"></div>
 <script id="template" type="notjs">
 	<div class="ob_description">$</div>
-
-
-
-
 </script>
 </body>
 </html>

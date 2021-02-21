@@ -49,10 +49,11 @@ ob_ajax_timeline extends HttpServlet {
 
         PrintWriter out = resp.getWriter();
         resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
         resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
         resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-        resp.setCharacterEncoding("UTF-8");
+        resp.addHeader("Accept-Encoding", "gzip, compress, br");
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         // If simple test requested

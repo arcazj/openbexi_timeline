@@ -288,10 +288,10 @@
     outline: 0;
     padding: 5px;
     width: 100%;
-    box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    background-color: #e8eeef;
+    box-sizing: border-box;
+    background: #e8eeef;
     color: #1c6d78;
     text-align: left;
     -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
@@ -302,17 +302,16 @@
 .ob_form1 select,
 .ob_form1 input[type="label"] {
     font-family: "Times New Roman", Times, serif;
-    background: rgba(255, 255, 255, .1);
     border: none;
     border-radius: 4px;
     font-size: 15px;
     outline: 0;
     padding: 5px;
     width: 23%;
-    box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    background-color: #d8dedf;
+    box-sizing: border-box;
+    background: #d8dedf;
     color: #060606;
     text-align: left;
     -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
@@ -336,10 +335,10 @@
     outline: 0;
     padding: 5px;
     width: 23%;
-    box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
-    background-color: #e8eeef;
+    box-sizing: border-box;
+    background: #e8eeef;
     color: #1c6d78;
     text-align: left;
     -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;

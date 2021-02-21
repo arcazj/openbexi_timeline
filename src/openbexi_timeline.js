@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.6 beta
+    OpenBEXI Timeline 0.9.6a beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -622,7 +622,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.6 beta</legend>\n" +
+                "<legend> version 0.9.6a beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -864,6 +864,7 @@ function OB_TIMELINE() {
             // Build header menu
             this.ob_start = document.createElement("IMG");
             this.ob_start.className = "ob_start";
+            this.ob_start.alt = "Connected to server";
             this.ob_start.style.left = "5px";
             this.ob_start.style.height = 32 + "px";
             this.ob_start.style.width = 32 + "px";
@@ -879,6 +880,7 @@ function OB_TIMELINE() {
 
             this.ob_stop = document.createElement("IMG");
             this.ob_stop.className = "ob_stop";
+            this.ob_stop.alt = "Not connected to server";
             this.ob_stop.style.left = "5px";
             this.ob_stop.style.height = 32 + "px";
             this.ob_stop.style.width = 32 + "px";
@@ -894,6 +896,7 @@ function OB_TIMELINE() {
 
             this.ob_calendar = document.createElement("IMG");
             this.ob_calendar.className = "ob_calendar";
+            this.ob_calendar.alt = "Calendar browser";
             this.ob_calendar.style.left = "47px";
             this.ob_calendar.style.height = 32 + "px";
             this.ob_calendar.style.width = 32 + "px";
@@ -913,6 +916,7 @@ function OB_TIMELINE() {
 
             this.ob_sync = document.createElement("IMG");
             this.ob_sync.className = "ob_sync";
+            this.ob_sync.alt = "Go to current time";
             this.ob_sync.style.left = "89px";
             this.ob_sync.style.height = 32 + "px";
             this.ob_sync.style.width = 32 + "px";
@@ -929,6 +933,7 @@ function OB_TIMELINE() {
 
             this.ob_filter = document.createElement("IMG");
             this.ob_filter.className = "ob_filter";
+            this.ob_filter.alt = "Filtering&Sorting menu";
             this.ob_filter.style.left = "131px";
             this.ob_filter.style.height = 32 + "px";
             this.ob_filter.style.width = 32 + "px";
@@ -946,6 +951,7 @@ function OB_TIMELINE() {
 
             this.ob_search = document.createElement("IMG");
             this.ob_search.className = "ob_search";
+            this.ob_search.alt = "Sessions&Events search";
             this.ob_search.style.left = "173px";
             this.ob_search.style.height = 32 + "px";
             this.ob_search.style.width = 32 + "px";
@@ -964,6 +970,7 @@ function OB_TIMELINE() {
 
             this.ob_marker = document.createElement("IMG");
             this.ob_marker.className = "ob_marker";
+            this.ob_marker.alt = "";
             this.ob_marker.style.zIndex = "10";
             this.ob_marker.style.height = 20 + "px";
             this.ob_marker.style.width = 16 + "px";
@@ -977,6 +984,7 @@ function OB_TIMELINE() {
 
             this.ob_3d = document.createElement("IMG");
             this.ob_3d.className = "ob_3d";
+            this.ob_3d.alt = "2D or 3D view";
             this.ob_3d.style.zIndex = "10";
             this.ob_3d.style.height = 32 + "px";
             this.ob_3d.style.width = 32 + "px";
@@ -1004,6 +1012,7 @@ function OB_TIMELINE() {
 
             this.ob_settings = document.createElement("IMG");
             this.ob_settings.className = "ob_settings";
+            this.ob_settings.alt = "Settings";
             this.ob_settings.style.zIndex = "10";
             this.ob_settings.style.height = 32 + "px";
             this.ob_settings.style.width = 32 + "px";
@@ -1023,6 +1032,7 @@ function OB_TIMELINE() {
 
             this.ob_help = document.createElement("IMG");
             this.ob_help.className = "ob_help";
+            this.ob_help.alt = "Help";
             this.ob_help.style.height = 32 + "px";
             this.ob_help.style.width = 32 + "px";
             this.ob_help.onclick = function () {
@@ -1037,6 +1047,10 @@ function OB_TIMELINE() {
             };
 
             this.ob_search_input = document.createElement("INPUT");
+            this.ob_search_input.id = this.name + "_label";
+            this.ob_search_input.type = "search";
+            this.ob_search_label = document.createElement("label");
+            this.ob_search_label.setAttribute("for", this.ob_search_input.id);
             this.ob_search_input.className = "ob_search_input";
             this.ob_search_input.style.left = "214px";
             this.ob_search_input.onmousemove = function (event) {
@@ -1068,6 +1082,7 @@ function OB_TIMELINE() {
             this.ob_timeline_header.appendChild(this.ob_settings);
             this.ob_timeline_header.appendChild(this.ob_help);
             this.ob_timeline_header.appendChild(this.ob_search_input);
+            this.ob_timeline_header.appendChild(this.ob_search_label);
             this.ob_connected();
         }
 
@@ -1989,7 +2004,10 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.destroy_scene = function () {
         if (this.ob_scene === undefined) return;
         for (let i = 0; i < this.ob_scene[0].children.length; i++) {
-            this.ob_scene[i].remove(this.ob_scene[i].children[i]);
+            try {
+                this.ob_scene[i].remove(this.ob_scene[i].children[i]);
+            } catch (e) {
+            }
         }
         this.resTracker.dispose();
         this.ob_scene[this.ob_current_scene_index] = undefined;
@@ -2064,7 +2082,8 @@ function OB_TIMELINE() {
                 scale2 = this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels;
                 //Start syncing
                 ob_band2 = this.ob_scene[this.ob_current_scene_index].getObjectByName(this.bands[i].name);
-                ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
+                if (ob_band2 !== undefined)
+                    ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
             }
         }
         if (this.ob_marker !== undefined) {
@@ -3349,7 +3368,7 @@ function OB_TIMELINE() {
                 dataType: 'json',
                 headers: {
                     "Accept": "application/json",
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             })
                 .then(response => {
@@ -3411,7 +3430,7 @@ function OB_TIMELINE() {
                     dataType: 'json',
                     headers: {
                         "Accept": "application/json",
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     }
                 })
                     .then(response => {
