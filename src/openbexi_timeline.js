@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.6a beta
+    OpenBEXI Timeline 0.9.6b beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -98,6 +98,9 @@ function OB_TIMELINE() {
         // Set all timeline parameters:
         this.name = this.params[0].name;
         this.title = "";
+
+        this.multiples = 30;
+
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
         if (this.ob_filter_value === undefined)
@@ -184,19 +187,6 @@ function OB_TIMELINE() {
             console.log("ob_init(): Wrong timeline height - set to default : 800");
             this.height = 800;
         }
-        // Height may have changed depending on how many sessions or events populated in the bands
-        // So here we need to check the Timeline height changed
-        /*let new_timeline_height = 0;
-        for (let i = 0; i < this.bands.length; i++) {
-            if (this.bands[i].height !== undefined) {
-                if (this.bands[i].height === "auto") this.bands[i].height = "0";
-                if (this.bands[i].minY !== undefined) {
-                    new_timeline_height += Math.abs(this.bands[i].maxY) + Math.abs(this.bands[i].minY);
-                }
-            }
-        }*/
-        //if (new_timeline_height !== 0)
-        //this.height = new_timeline_height;
 
         // -- set timeline width --
         try {
@@ -236,11 +226,6 @@ function OB_TIMELINE() {
             this.bands[0].model[0].sortBy = ob_sortBy;
             this.model = undefined;
         }
-        this.set_bands();
-
-        //console.log("ob_init(): top:" + this.top + " left:" + this.left + " width:" + this.width + " height:" + this.height);
-        //if (this.ob_timeline_panel !== undefined)
-        //console.log("ob_init(): panel.top:" + this.ob_timeline_panel.style.top + " panel.left:" + this.ob_timeline_panel.style.left + " panel.width:" + this.ob_timeline_panel.style.width + " panel.height:" + this.ob_timeline_panel.style.height);
     };
 
     OB_TIMELINE.prototype.ob_apply_data_model = function () {
@@ -622,7 +607,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.6a beta</legend>\n" +
+                "<legend> version 0.9.6b beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -1221,11 +1206,7 @@ function OB_TIMELINE() {
         }
         this.ob_timeline_body_frame.style.width = "100%";
         this.ob_timeline_body_frame.style.top = this.ob_timeline_header.style.height;
-        //this.ob_timeline_body_frame.style.height = this.height + "px";
-
         this.ob_timeline_body_frame.style.overflowY = "auto";
-        //this.ob_timeline_body.style.height = this.height-300 + "px";
-
         this.ob_timeline_panel.style.top = parseInt(this.top) + "px";
         this.ob_timeline_panel.style.left = parseInt(this.left) + "px";
         this.ob_timeline_panel.style.width = parseInt(this.width) + "px";
@@ -1257,10 +1238,6 @@ function OB_TIMELINE() {
             this.ob_settings.style.left = (this.ob_timeline_header.offsetWidth - 72) + "px";
         if (this.ob_3d !== undefined)
             this.ob_3d.style.left = (this.ob_timeline_header.offsetWidth - 110) + "px";
-
-        //if (this.ob_timeline_panel !== undefined)
-        //console.log("ob_init(): panel.top:" + this.ob_timeline_panel.style.top + " panel.left:" + this.ob_timeline_panel.style.left + " panel.width:" + this.ob_timeline_panel.style.width + " panel.height:" + this.ob_timeline_panel.style.height);
-
     };
     OB_TIMELINE.prototype.setGregorianUnitLengths = function () {
         for (let i = 0; i < this.bands.length; i++) {
@@ -1834,7 +1811,7 @@ function OB_TIMELINE() {
                 if (this.bands[i].intervalUnit === "HOUR" && parseInt(this.bands[i].intervalPixels) >= 60)
                     this.bands[i].subIntervalPixels = parseInt(this.bands[i].intervalPixels) / 4;
             }
-            this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / 30;
+            this.bands[i].multiples = parseInt(this.bands[i].intervalPixels) / this.multiples;
             this.bands[i].trackIncrement = 20;
         }
         this.create_new_bands();
@@ -1845,7 +1822,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_textBox = function (band_name, text, textColor, x, y, z, width, height, depth, color, texture, backgroundColor) {
-        let ob_model_name = this.ob_scene[this.ob_scene_index].getObjectByName(band_name + "_" + text);
+        let ob_model_name = this.ob_scene[this.ob_index].getObjectByName(band_name + "_" + text);
         if (ob_model_name !== undefined) return;
         if (isNaN(x)) x = 0;
         if (isNaN(y)) y = 0;
@@ -1870,8 +1847,8 @@ function OB_TIMELINE() {
             ]);
             let ob_dirLight = this.track(new THREE.DirectionalLight(0xffffff));
             ob_dirLight.position.set(10, 10, 10);
-            this.ob_scene[this.ob_scene_index].add(ob_dirLight);
-            this.ob_scene[this.ob_scene_index].add(this.track(new THREE.AmbientLight(0x404040)));
+            this.ob_scene[this.ob_index].add(ob_dirLight);
+            this.ob_scene[this.ob_index].add(this.track(new THREE.AmbientLight(0x404040)));
             ob_material = this.track(new THREE.MeshStandardMaterial({
                 envMap: textureCube,
                 roughness: 0.5,
@@ -1879,7 +1856,7 @@ function OB_TIMELINE() {
             }));
             ob_box.computeVertexNormals();
         } else {
-            //this.ob_scene[this.ob_scene_index].add(this.track(new THREE.AmbientLight(0x404040)));
+            //this.ob_scene[this.ob_index].add(this.track(new THREE.AmbientLight(0x404040)));
             ob_material = this.track(new THREE.MeshBasicMaterial({color: color}));
         }
         ob_model_name = this.track(new THREE.Mesh(ob_box, ob_material));
@@ -1890,12 +1867,11 @@ function OB_TIMELINE() {
         ob_model_name.pos_z = z;
         ob_model_name.position.set(x, y, z);
 
-        this.ob_scene[this.ob_scene_index].add(ob_model_name);
+        this.ob_scene[this.ob_index].add(ob_model_name);
         this.objects.push(ob_model_name);
 
         this.add_text_sprite(ob_model_name, text, 50, 0, 10, 24, "Normal",
             "Normal", textColor, 'Arial', undefined);
-        //this.add_text3D(ob_model_name, text, 50, 0, 10, 24, color);
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
             text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
@@ -1950,7 +1926,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_band = function (band_name, x, y, z, width, height, depth, color, texture) {
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_index].getObjectByName(band_name);
         if (ob_band !== undefined) return;
         if (isNaN(x)) x = 0;
         if (isNaN(y)) y = 0;
@@ -1977,8 +1953,8 @@ function OB_TIMELINE() {
             ]);
             let ob_dirLight = this.track(new THREE.DirectionalLight(0xffffff));
             ob_dirLight.position.set(10, 10, 10);
-            this.ob_scene[this.ob_scene_index].add(ob_dirLight);
-            this.ob_scene[this.ob_scene_index].add(this.track(new THREE.AmbientLight(0x404040)));
+            this.ob_scene[this.ob_index].add(ob_dirLight);
+            this.ob_scene[this.ob_index].add(this.track(new THREE.AmbientLight(0x404040)));
             ob_material = this.track(new THREE.MeshStandardMaterial({
                 envMap: textureCube,
                 roughness: 0.5,
@@ -1986,7 +1962,7 @@ function OB_TIMELINE() {
             }));
             ob_box.computeVertexNormals();
         } else {
-            this.ob_scene[this.ob_scene_index].add(this.track(new THREE.AmbientLight(0x404040)));
+            this.ob_scene[this.ob_index].add(this.track(new THREE.AmbientLight(0x404040)));
             ob_material = this.track(new THREE.MeshBasicMaterial({color: color}));
         }
         ob_band = this.track(new THREE.Mesh(ob_box, ob_material));
@@ -1996,7 +1972,7 @@ function OB_TIMELINE() {
         ob_band.pos_z = z;
         ob_band.position.set(x, y, z);
 
-        this.ob_scene[this.ob_scene_index].add(ob_band);
+        this.ob_scene[this.ob_index].add(ob_band);
         this.objects.push(ob_band);
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_band(" + band_name + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," + color + "," + texture + ")");
     };
@@ -2010,7 +1986,7 @@ function OB_TIMELINE() {
             }
         }
         this.resTracker.dispose();
-        this.ob_scene[this.ob_current_scene_index] = undefined;
+        this.ob_scene[this.ob_current_index] = undefined;
         this.ob_timeline_body.innerHTML = "";
     };
 
@@ -2032,6 +2008,7 @@ function OB_TIMELINE() {
                     ob_timeline.track = ob_timeline.resTracker.track.bind(ob_timeline.resTracker);
 
                     ob_timeline.ob_init();
+                    ob_timeline.set_bands();
                     ob_timeline.set_sessions();
                     ob_timeline.ob_set_body_menu();
                     ob_timeline.ob_set_scene();
@@ -2042,11 +2019,11 @@ function OB_TIMELINE() {
                         // Apply filter if any here:
                         let regex = ob_timeline.build_sessions_filter("");
                         ob_timeline.create_sessions(false, regex);
-                        ob_timeline.ob_render("update_scene", ob_timeline.ob_scene_index);
+                        ob_timeline.ob_render("update_scene", ob_timeline.ob_index);
                     }, 0);
                     ob_timeline.timeout_create_segments = setTimeout(function () {
                         ob_timeline.create_segments_and_dates();
-                        ob_timeline.ob_render("update_scene", ob_timeline.ob_scene_index);
+                        ob_timeline.ob_render("update_scene", ob_timeline.ob_index);
                     }, 0);
                     ob_timeline.add_line_current_time();
                     ob_timeline.center_bands();
@@ -2055,7 +2032,6 @@ function OB_TIMELINE() {
                     if (params[0].show_calendar)
                         ob_timeline.ob_create_calendar(new Date(params[0].date_cal));
                     ob_timeline.ob_set_camera();
-                    return null;
                 }
             }
         );
@@ -2081,7 +2057,7 @@ function OB_TIMELINE() {
                 ob_incrementPixelOffSet2 = this.dateToPixelOffSet(this.ob_markerDate2, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
                 scale2 = this.bands[i].gregorianUnitLengths / this.bands[i].intervalPixels;
                 //Start syncing
-                ob_band2 = this.ob_scene[this.ob_current_scene_index].getObjectByName(this.bands[i].name);
+                ob_band2 = this.ob_scene[this.ob_current_index].getObjectByName(this.bands[i].name);
                 if (ob_band2 !== undefined)
                     ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
             }
@@ -2111,7 +2087,7 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.move_band = function (band_name, x, y, z, ob_sync) {
         if (isNaN(x)) return;
-        let ob_band = this.ob_scene[this.ob_current_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_current_index].getObjectByName(band_name);
         if (ob_band === undefined) return;
         ob_band.position.set(x, y, z);
         if (ob_sync)
@@ -2124,7 +2100,7 @@ function OB_TIMELINE() {
         //console.log("create_segments_and_dates start at:" + Date() + " - " + new Date().getMilliseconds());
         let text, textX, textY, maxPixelOffSet, incrementPixelOffSet, incrementSubPixelOffSet;
         for (let i = 0; i < this.bands.length; i++) {
-            let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(this.bands[i].name);
+            let ob_band = this.ob_scene[this.ob_index].getObjectByName(this.bands[i].name);
 
             incrementPixelOffSet = this.dateToPixelOffSet(this.bands[i].minDate, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
             maxPixelOffSet = this.dateToPixelOffSet(this.bands[i].maxDate, this.bands[i].gregorianUnitLengths, this.bands[i].intervalPixels);
@@ -2414,7 +2390,6 @@ function OB_TIMELINE() {
                 } catch (e) {
                     console.log(this.bands[i].name + " title=" + String(this.bands[i].sessions[j].data.title) + " - this.bands[i].heightMax=" + this.bands[i].heightMax + "  i=" + i + " - j=" + j);
                 }
-                //console.log(this.bands[i].name + " title=" + String(session.data.title) + " - this.bands[i].heightMax=" + this.bands[i].heightMax + "  i=" + i + " - j=" + j + " x=" + parseInt(x) + " y=" + y + " w=" + parseInt(this.sessions.events[j].total_width) + "  --> " + this.bands[i].track);
             }
         }
     }
@@ -2468,8 +2443,8 @@ function OB_TIMELINE() {
         ob_session.pos_y = session.y;
         ob_session.pos_z = session.z;
         ob_session.data = session;
-        this.ob_scene[this.ob_scene_index].add(ob_session);
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
+        this.ob_scene[this.ob_index].add(ob_session);
+        let ob_band = this.ob_scene[this.ob_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_session);
         }
@@ -2478,7 +2453,7 @@ function OB_TIMELINE() {
         return ob_session;
     };
     OB_TIMELINE.prototype.removeSession = function (band_name, session_id) {
-        let ob_band = this.ob_scene[this.ob_current_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_current_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.remove(session_id);
         }
@@ -2513,9 +2488,9 @@ function OB_TIMELINE() {
         ob_event.pos_z = session.z;
         ob_event.data = session;
 
-        this.ob_scene[this.ob_scene_index].add(ob_event);
+        this.ob_scene[this.ob_index].add(ob_event);
 
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_event);
         }
@@ -2523,7 +2498,7 @@ function OB_TIMELINE() {
         return ob_event;
     };
     OB_TIMELINE.prototype.removeEvent = function (band_name, event_id) {
-        let ob_band = this.ob_scene[this.ob_current_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_current_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.remove(event_id);
         }
@@ -2531,7 +2506,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_hot_zone = function (band_name, hotZone_name, x, y, z, width, height, depth, color) {
-        let hotZone = this.ob_scene[this.ob_scene_index].getObjectByName(hotZone_name);
+        let hotZone = this.ob_scene[this.ob_index].getObjectByName(hotZone_name);
         if (hotZone !== undefined) return;
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("add_hot_zone(" + hotZone_name + "," + band_name + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," + color + ")");
         if (isNaN(x)) x = 0;
@@ -2551,9 +2526,9 @@ function OB_TIMELINE() {
         hotZone = this.track(new THREE.Mesh(this.track(new THREE.CubeGeometry(width, height, depth)), material));
         hotZone.name = hotZone_name;
         hotZone.position.set(x, y, z);
-        this.ob_scene[this.ob_scene_index].add(hotZone);
+        this.ob_scene[this.ob_index].add(hotZone);
 
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(hotZone);
         }
@@ -2561,7 +2536,7 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.move_hot_zone = function (band_name, hotZone_name, x, y, z, width, height, depth, color) {
         if (isNaN(x)) return;
-        let hotZone = this.ob_scene[this.ob_current_scene_index].getObjectByName(hotZone_name);
+        let hotZone = this.ob_scene[this.ob_current_index].getObjectByName(hotZone_name);
         if (hotZone === undefined) {
             this.add_hot_zone(band_name, hotZone_name, x, y, z, width, height, depth, color);
             return;
@@ -2585,7 +2560,7 @@ function OB_TIMELINE() {
         }));
         let segment = this.track(new THREE.LineSegments(geometry, material));
         if (dashed) segment.computeLineDistances();
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(segment);
         }
@@ -2593,7 +2568,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.remove_segments = function (band_name) {
-        let ob_band = this.ob_scene[this.ob_current_scene_index].getObjectByName(band_name);
+        let ob_band = this.ob_scene[this.ob_current_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.children = [];
         }
@@ -2652,40 +2627,6 @@ function OB_TIMELINE() {
         }
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.TextSprite(" + ob_object + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
     };
-    OB_TIMELINE.prototype.add_text3D = function (band_name, text, x, y, z, size, color) {
-        if (color === undefined) {
-            color = this.track(new THREE.Color("rgb(114, 171, 173)"));
-        }
-        let textMaterial = this.track(new THREE.MeshBasicMaterial({color: color}));
-        let textGeometry = this.track(new THREE.TextGeometry(text, {
-            size: size,
-            height: 5,
-            curveSegments: 0,
-            bevelEnabled: false,
-            bevelThickness: 0,
-            bevelSize: 0,
-            bevelSegments: 0
-        }));
-
-        let textMesh = this.track(new THREE.Mesh(textGeometry, textMaterial));
-        textMesh.position.set(x, y, z);
-        textMesh.name = band_name + "_" + textMesh.id;
-        //textMesh.name = band_name + "_" + text + "_" + textMesh.id;
-
-        this.ob_scene[this.ob_scene_index].add(textMesh);
-        let ob_band = this.ob_scene[this.ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.add(textMesh);
-        }
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.addText3D(" + band_name + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
-    };
-    OB_TIMELINE.prototype.remove_text3D = function (band_name) {
-        let ob_band = this.ob_scene[this.ob_current_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.children = [];
-        }
-        if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("removeText3D(" + band_name + ")");
-    };
 
     OB_TIMELINE.prototype.build_model = function (sessions) {
         try {
@@ -2705,12 +2646,10 @@ function OB_TIMELINE() {
                             this.model.set(obj[i][0], v + "," + obj[i][1]);
                     }
                 }
-
             }
         } catch (err) {
             this.model = undefined;
         }
-
     }
     OB_TIMELINE.prototype.loadJSON = function () {
         if (this.data === undefined) return;
@@ -2739,43 +2678,9 @@ function OB_TIMELINE() {
         return '';
     }
 
-// THREE.JS FONTS
-    function ob_load_font(font_type) {
-        let font = null;
-        let loader = new THREE.FontLoader();
-        if (font_type === "helvetiker_bold")
-            loader.load('three.js/examples/fonts/helvetiker_bold.typeface.json', function (font) {
-            });
-        else if (font_type === "helvetiker_regular")
-            loader.load('three.js/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-            });
-        else if (font_type === "droid_sans_bold")
-            loader.load('three.js/examples/fonts/droid_sans_bold.typeface.json', function (font) {
-            });
-        else if (font_type === "droid_sans_bold")
-            loader.load('three.js/examples/fonts/droid_sans_bold.typeface.json', function (font) {
-            });
-        else {
-            // Default font
-            loader.load('three.js/examples/fonts/helvetiker_bold.typeface.json', function (font) {
-            });
-        }
-        return font;
-        //loader.load('three.js/examples/fonts/droid/droid_sans_bold.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/droid/droid_sans_mono_regular.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/gentilis_bold.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/optimer_regular.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/optimer_bold.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/droid/droid_sans_regular.typeface.json', function (font)
-        // loader.load('three.js/examples/fonts/droid/droid_serif_bold.typeface.json', function (font)
-        //loader.load('three.js/examples/fonts/droid/droid_serif_regular.typeface.json', function (font)
-    }
-
-//let ob_font = ob_load_font();
-
-    OB_TIMELINE.prototype.ob_render = function (call_by, ob_scene_index) {
-        //console.log("OB_TIMELINE.prototype.ob_render(" + call_by + " - " + ob_scene_index + ")");
-        this.ob_renderer.render(this.ob_scene[ob_scene_index], this.ob_camera);
+    OB_TIMELINE.prototype.ob_render = function (call_by, ob_index) {
+        //console.log("OB_TIMELINE.prototype.ob_render(" + call_by + " - " + ob_index + ")");
+        this.ob_renderer.render(this.ob_scene[ob_index], this.ob_camera);
 
         /*console.log("|...........................................V.......................................|");
         console.log(
@@ -2794,7 +2699,7 @@ function OB_TIMELINE() {
                 clearInterval(that.idInterval);
 
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = false;
-            let ob_obj = that.ob_scene[that.ob_current_scene_index].getObjectById(e.object.id);
+            let ob_obj = that.ob_scene[that.ob_current_index].getObjectById(e.object.id);
             if (ob_obj === undefined) return;
             if (ob_obj.position !== undefined)
                 ob_obj.dragstart_source = ob_obj.position.x;
@@ -2812,14 +2717,14 @@ function OB_TIMELINE() {
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
-            that.ob_render("dragstart", that.ob_current_scene_index);
+            that.ob_render("dragstart", that.ob_current_index);
 
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragstart :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
             //console.log("dragControls.addEventListener('dragstart'," + e.object.name + ")");
         });
         this.dragControls.addEventListener('dragend', function (e) {
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = true;
-            let ob_obj = that.ob_scene[that.ob_current_scene_index].getObjectById(e.object.id);
+            let ob_obj = that.ob_scene[that.ob_current_index].getObjectById(e.object.id);
             if (ob_obj === undefined) return;
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
@@ -2835,7 +2740,7 @@ function OB_TIMELINE() {
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
-            that.ob_render("dragend", that.ob_current_scene_index);
+            that.ob_render("dragend", that.ob_current_index);
             //that.dragControls = that.track(new THREE.DragControls(that.objects, that.ob_camera, that.ob_renderer.domElement));
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragend :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
 
@@ -2874,7 +2779,7 @@ function OB_TIMELINE() {
                             ob_drag_end_source = ob_drag_end_source - ob_speed;
 
                         that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z, true);
-                        that.ob_render("move", that.ob_current_scene_index);
+                        that.ob_render("move", that.ob_current_index);
                         if (ob_obj.pos_x > -ob_obj.position.x - that.width || ob_obj.position.x < ob_obj.pos_x + that.width) {
                             if (that.idInterval !== undefined)
                                 clearInterval(that.idInterval);
@@ -2904,7 +2809,7 @@ function OB_TIMELINE() {
                             ob_drag_end_source = ob_drag_end_source - ob_speed;
 
                         that.move_band(ob_obj.name, ob_drag_end_source, ob_obj.pos_y, ob_obj.pos_z, true);
-                        that.ob_render("move", that.ob_current_scene_index);
+                        that.ob_render("move", that.ob_current_index);
                         if (ob_obj.pos_x > -ob_obj.position.x - that.width ||
                             ob_obj.position.x < ob_obj.pos_x + that.width) {
                             if (that.idInterval !== undefined)
@@ -2920,7 +2825,7 @@ function OB_TIMELINE() {
         });
 
         this.dragControls.addEventListener('drag', function (e) {
-            let ob_obj = that.ob_scene[that.ob_current_scene_index].getObjectById(e.object.id);
+            let ob_obj = that.ob_scene[that.ob_current_index].getObjectById(e.object.id);
             if (ob_obj === undefined) return;
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
@@ -2934,7 +2839,7 @@ function OB_TIMELINE() {
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
-            that.ob_render("drag", that.ob_current_scene_index);
+            that.ob_render("drag", that.ob_current_index);
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("drag :" + that.name + " - " + ob_obj.type +
                 " - " + ob_obj.name);
         });
@@ -2943,15 +2848,15 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_set_scene = function () {
         if (this.ob_scene === undefined) {
             this.ob_scene = new Array(ob_MAX_SCENES);
-            this.ob_scene_index = 0;
-            this.ob_current_scene_index = 0;
+            this.ob_index = 0;
+            this.ob_current_index = 0;
         } else {
-            this.ob_scene_index = 0;
-            this.ob_current_scene_index = 0;
+            this.ob_index = 0;
+            this.ob_current_index = 0;
         }
-        if (this.ob_scene_index > 2) {
-            this.ob_scene_index = 0;
-            this.ob_current_scene_index = 0;
+        if (this.ob_index > 2) {
+            this.ob_index = 0;
+            this.ob_current_index = 0;
         }
 
         for (let s = 0; s < this.ob_scene.length; s++) {
@@ -2963,7 +2868,7 @@ function OB_TIMELINE() {
         if (this.ob_renderer === undefined) {
             this.ob_renderer = this.track(new THREE.WebGLRenderer({antialias: true}));
             this.ob_renderer.setClearColor(0xffffff, 1);
-            this.ob_renderer.setPixelRatio(window.devicePixelRatio);
+            this.ob_renderer.setPixelRatio(window.devicePixelRatio * 2);
             this.ob_renderer.shadowMap.enabled = true;
         }
         this.ob_timeline_body.appendChild(this.ob_renderer.domElement);
@@ -2981,14 +2886,14 @@ function OB_TIMELINE() {
             this.ob_pos_orthographic_camera_z = this.height;
             this.ob_camera = this.track(new THREE.OrthographicCamera(-this.width / 2, this.width / 2, this.height, 0, -this.width, this.ob_far));
             this.ob_camera.position.set(this.ob_pos_orthographic_camera_x, this.ob_pos_orthographic_camera_y, this.ob_pos_orthographic_camera_z);
-            this.ob_scene[this.ob_scene_index].add(this.ob_camera);
+            this.ob_scene[this.ob_index].add(this.ob_camera);
             //this.ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
         } else {
             this.ob_camera = this.track(new THREE.PerspectiveCamera(this.ob_fov, this.width / this.height, this.ob_near, this.ob_far));
             this.ob_camera.position.set(this.ob_pos_camera_x, this.ob_pos_camera_y, this.ob_pos_camera_z);
-            this.ob_scene[this.ob_scene_index].add(this.ob_camera);
+            this.ob_scene[this.ob_index].add(this.ob_camera);
             this.ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
-            this.ob_scene[this.ob_scene_index].add(this.track(new THREE.AmbientLight(0xf0f0f0)));
+            this.ob_scene[this.ob_index].add(this.track(new THREE.AmbientLight(0xf0f0f0)));
             let light = this.track(new THREE.SpotLight(0xffffff, 1.5));
             light.position.set(0, 1500, 200);
             light.castShadow = true;
@@ -2996,48 +2901,18 @@ function OB_TIMELINE() {
             light.shadow.bias = -0.000222;
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
-            this.ob_scene[this.ob_scene_index].add(light);
-
-            //let planeGeometry = new THREE.PlaneBufferGeometry(2000, 2000);
-            // planeGeometry.rotateX(-Math.PI / 2);
-            // let planeMaterial = new THREE.ShadowMaterial({opacity: 0.2});
-
-            //let plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            //plane.position.y = 0;
-            //plane.receiveShadow = true;
-            //this.ob_scene[this.ob_scene_index].add(plane);
-
-            //let helper = new THREE.GridHelper(2000, 100);
-            //helper.position.y = 0;
-            //helper.material.opacity = 0.25;
-            //helper.material.transparent = true;
-            //this.ob_scene[this.ob_scene_index].add(helper);
-
-            //let axes = new THREE.AxesHelper(1);
-            //axes.position.set(0, 0, 0);
-            //this.ob_scene[this.ob_scene_index].add(axes);
-
-            //stats = new Stats();
-            //this.ob_controls = new THREE.OrbitControls(this.ob_camera, this.ob_renderer.domElement);
-            //this.ob_controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-            //this.ob_controls.dampingFactor = 0.25;
-            //this.ob_controls.screenSpacePanning = false;
-            //this.ob_controls.minDistance = 100;
-            //this.ob_controls.maxDistance = 2000;
-            //this.ob_controls.maxPolarAngle = Math.PI;
+            this.ob_scene[this.ob_index].add(light);
         }
-
         // Set all listeners
         this.ob_setListeners();
-
         //requestAnimationFrame(this.animate);
-        this.ob_render("ob_set_camera", this.ob_current_scene_index);
+        this.ob_render("ob_set_camera", this.ob_current_index);
         //console.log("ob_set_camera() - camera:" + this.camera);
     };
 
     OB_TIMELINE.prototype.animate = function () {
         ob_timelines.forEach(function (ob_timeline) {
-            ob_timeline.ob_render("animate", ob_timeline.ob_scene_index);
+            ob_timeline.ob_render("animate", ob_timeline.ob_index);
         });
     };
 

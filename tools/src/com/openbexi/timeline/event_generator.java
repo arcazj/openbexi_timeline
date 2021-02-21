@@ -63,12 +63,12 @@ public class event_generator {
 
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
-            for (int j = 0; j < 300; j++) {
+            for (int j = 0; j < 600; j++) {
                 if (j != 0)
                     dateL += 3600 * getRandomNumberUsingNextInt(10, 500);
                 start = new Date(dateL).toString();
 
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 6; i++) {
                     color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                             + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
                             getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
