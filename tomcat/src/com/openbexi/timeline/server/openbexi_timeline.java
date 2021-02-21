@@ -65,6 +65,7 @@ public class openbexi_timeline implements Runnable {
             fileHandler.setFormatter(new SimpleFormatter());
             fileHandler.setLevel(Level.FINEST);
             fileHandler.setEncoding("UTF-8");
+
         } catch (IOException e) {
             _logger.severe(e.getMessage());
         }

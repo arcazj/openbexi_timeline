@@ -39,7 +39,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
     public void doGet(HttpServletRequest req, HttpServletResponse resp)  {
         Logger logger = Logger.getLogger("");
         HttpSession session = req.getSession();
-
+        resp.setCharacterEncoding("UTF-8");
         // Read parameters
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
