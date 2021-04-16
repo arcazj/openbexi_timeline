@@ -106,23 +106,31 @@ public class event_generator {
     }
 
     public static void main(String... args) throws IOException {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
-        long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
-        Date date = new Date(todayMidnight);
-        long dateL = date.getTime() - (3600 * 48 * 1000);
-        long enddateL = date.getTime() + 3600 * 48 * 1000;
 
-        while (dateL < enddateL) {
-            date = new Date(dateL);
-            String year = new SimpleDateFormat("yyyy").format(date);
-            String month = new SimpleDateFormat("MM").format(date);
-            String day = new SimpleDateFormat("dd").format(date);
-            File file = new File("E:\\fdc_logs\\ESOC\\GNS_data\\" +
-                    year + "\\" + month + "\\" + day + "\\" + "events.json");
-            event_generator events = new event_generator(date);
-            events.generate(file);
-            dateL = dateL + 3600 * 24 * 1000;
+        for (int i = 0; i < 1; i++) {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
+            long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
+            Date date = new Date(todayMidnight);
+            long dateL = date.getTime() - (3600 * 48 * 1000);
+            long enddateL = date.getTime() + 3600 * 48 * 1000;
+
+            while (dateL < enddateL) {
+                date = new Date(dateL);
+                String year = new SimpleDateFormat("yyyy").format(date);
+                String month = new SimpleDateFormat("MM").format(date);
+                String day = new SimpleDateFormat("dd").format(date);
+                File file = new File("E:\\fdc_logs\\ESOC\\GNS_data\\" +
+                        year + "\\" + month + "\\" + day + "\\" + "events.json");
+                event_generator events = new event_generator(date);
+                events.generate(file);
+                dateL = dateL + 3600 * 24 * 1000;
+            }
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

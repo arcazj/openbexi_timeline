@@ -21,6 +21,11 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
+    JSONArray filterDates(JSONArray events, long currentEndDate, long currentStartDate) {
+        return null;
+    }
+
+    @Override
     JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
         return null;
     }
