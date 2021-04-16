@@ -59,6 +59,8 @@ public class json_files_manager extends data_manager {
     private TimerTask task;
     private String _currentStartDate;
     private String _currentEndDate;
+    private long _currentStartDateL;
+    private long _currentEndDateL;
     private String _currentPathModel;
     private String _include;
     private String _exclude;
@@ -96,13 +98,13 @@ public class json_files_manager extends data_manager {
         SimpleDateFormat hour = new SimpleDateFormat("hh");
 
         try {
-            startDateL = new Date(_currentStartDate).getTime();
+            _currentStartDateL = new Date(_currentStartDate).getTime();
             yearS = year.format(new Date(_currentStartDate));
             monthS = month.format(new Date(_currentStartDate));
             dayS = day.format(new Date(_currentStartDate));
             hourS = hour.format(new Date(_currentStartDate));
 
-            endDateL = new Date(_currentEndDate).getTime();
+            _currentEndDateL = new Date(_currentEndDate).getTime();
             yearE = year.format(new Date(_currentEndDate));
             monthE = month.format(new Date(_currentEndDate));
             dayE = day.format(new Date(_currentEndDate));
@@ -169,6 +171,7 @@ public class json_files_manager extends data_manager {
                     events = parser.parse(reader);
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
+                    obj = filterDates(obj, _currentStartDateL, _currentEndDateL);
                     obj = filterEvents(obj, _include, _exclude);
                     obj = searchEvents(obj, _search);
                     count += obj.size();
@@ -183,7 +186,7 @@ public class json_files_manager extends data_manager {
 
         try {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
-                    String.format("% 4d", (new Date().getTime() - t1.getTime()) ) + " millis", "info");
+                    String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis", "info");
             return parser.parse(jsonObjectMerged);
         } catch (ParseException e) {
             return getDummyJson("no data_manager found");
@@ -237,7 +240,8 @@ public class json_files_manager extends data_manager {
         try {
             PrintWriter respWriter = _response.getWriter();
             //Important to put a "," not ";" between stream and charset
-            _response.setContentType("text/event-stream, charset=UTF-8");
+            _response.setContentType("text/event-stream");
+            _response.setCharacterEncoding("UTF-8");
             //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
             _response.addHeader("Access-Control-Allow-Origin", "*");
             // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
@@ -392,6 +396,35 @@ public class json_files_manager extends data_manager {
                 }
             }
         }
+    }
+
+    @Override
+    JSONArray filterDates(JSONArray events, long currentStartDateL, long currentEndDateL) {
+        if (currentEndDateL == currentStartDateL)
+            return events;
+
+        long startDateL;
+        long endDateL;
+        JSONArray new_events = new JSONArray();
+        for (Object event : events) {
+            JSONObject obj1 = (JSONObject) event;
+            try {
+                startDateL = new Date(obj1.get("start").toString()).getTime();
+            } catch (Exception e) {
+                startDateL = 0;
+            }
+            try {
+                endDateL = new Date(obj1.get("end").toString()).getTime();
+            } catch (Exception e) {
+                endDateL = startDateL;
+            }
+            if (currentStartDateL < startDateL && startDateL < currentEndDateL) {
+                new_events.add(event);
+            } else if (currentStartDateL < endDateL && endDateL < currentEndDateL) {
+                new_events.add(event);
+            }
+        }
+        return new_events;
     }
 
     @Override

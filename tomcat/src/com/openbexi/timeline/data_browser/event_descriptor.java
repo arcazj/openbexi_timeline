@@ -100,7 +100,8 @@ public class event_descriptor {
         try {
             PrintWriter respWriter = _response.getWriter();
             //Important to put a "," not ";" between stream and charset
-            _response.setContentType("text/event-stream, charset=UTF-8");
+            _response.setContentType("text/event-stream");
+            _response.setCharacterEncoding("UTF-8");
             //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
             _response.addHeader("Access-Control-Allow-Origin", "*");
             // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of

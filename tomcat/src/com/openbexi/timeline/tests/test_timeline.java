@@ -135,7 +135,8 @@ public class test_timeline implements Runnable {
                 try {
                     PrintWriter respWriter = resp.getWriter();
                     //Important to put a "," not ";" between stream and charset
-                    resp.setContentType("text/event-stream, charset=UTF-8");
+                    resp.setContentType("text/event-stream");
+                    resp.setCharacterEncoding("UTF-8");
                     //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
                     resp.addHeader("Access-Control-Allow-Origin", "*");
                     // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
