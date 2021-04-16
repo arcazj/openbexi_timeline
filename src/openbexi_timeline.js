@@ -93,7 +93,6 @@ class ResourceTracker {
 }
 
 function OB_TIMELINE() {
-
     OB_TIMELINE.prototype.getTimeZone = function () {
         this.timeZoneOffset = new Date().getTimezoneOffset();
         this.timeZone = "";
