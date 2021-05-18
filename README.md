@@ -6,6 +6,7 @@ Here are a few easy steps to create a openbexi simple timeline.
 Two bands are created, A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
+<img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_example.PNG" />
 
 ## header:
 Openbexi timeline works with tree.js, using WebGL to create all objects and materials to build a timeline. 
