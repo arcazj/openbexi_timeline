@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.8 beta
+    OpenBEXI Timeline 0.9.8a beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -595,7 +595,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.8 beta</legend>\n" +
+                "<legend> version 0.9.8a beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -904,7 +904,9 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
-                that2.reset_synced_time("re_sync", that2.ob_render_index);
+                that2.first_sync = true;
+                that2.ob_scene_index = 0;
+                that2.reset_synced_time("new_sync", that2.ob_render_index);
                 if (that2.data && that2.data.match(/^(http?):\/\//) ||
                     that2.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
                     that2.data && that2.data.match(/^(https?):\/\//)) {
@@ -1978,7 +1980,6 @@ function OB_TIMELINE() {
         ob_zone.zone_number = zone_number;
         ob_zone.position.set(x, y, z);
 
-        //this.ob_scene[ob_scene_index].add(ob_zone);
         this.ob_scene[ob_scene_index].objects.push(ob_zone);
 
         if (!band_name.includes("overview"))
@@ -1987,7 +1988,9 @@ function OB_TIMELINE() {
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
+            //this.ob_scene[ob_scene_index].group.add(ob_zone);
             ob_band.add(ob_zone);
+            //ob_band.attach(ob_zone);
         }
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_zone(" + band_name + "," +
@@ -2169,6 +2172,7 @@ function OB_TIMELINE() {
             }));
             ob_box.computeVertexNormals();
         } else {
+            //this.ob_scene[ob_scene_index].group.add(this.track[ob_scene_index](new THREE.AmbientLight(0x404040)));
             this.ob_scene[ob_scene_index].add(this.track[ob_scene_index](new THREE.AmbientLight(0x404040)));
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
         }
@@ -2179,6 +2183,7 @@ function OB_TIMELINE() {
         ob_band.pos_z = z;
         ob_band.position.set(x, y, z);
 
+        //this.ob_scene[ob_scene_index].group.add(ob_band);
         this.ob_scene[ob_scene_index].add(ob_band);
         this.ob_scene[ob_scene_index].objects.push(ob_band);
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_band(" + band_name + "," + x + "," + y + "," + z +
@@ -2368,34 +2373,6 @@ function OB_TIMELINE() {
             }
         }
     };
-    OB_TIMELINE.prototype.move_zone = function (ob_scene_index, ob_parent_name, ob_zone_name, x, pos_x, y, z, ob_sync) {
-        if (isNaN(x)) return;
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(ob_parent_name);
-        let ob_zone = this.ob_scene[ob_scene_index].getObjectByName(ob_zone_name);
-        if (ob_band === undefined) return;
-        if (ob_zone === undefined) return;
-        //x = x - ob_band.position.x;
-        let ob_zone_start_x = this.dateToPixelOffSet(ob_scene_index,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].zones[ob_zone.zone_number].start,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].gregorianUnitLengths,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].intervalPixels);
-        let ob_current_time_x = this.dateToPixelOffSet(ob_scene_index,
-            new Date(this.get_current_time()),
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].gregorianUnitLengths,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].intervalPixels);
-        let ob_marker_x = this.dateToPixelOffSet(ob_scene_index,
-            this.ob_markerDate,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].gregorianUnitLengths,
-            this.ob_scene[ob_scene_index].bands[ob_zone.band_number].intervalPixels);
-        let ob_band_x = x - ob_zone_start_x;
-        this.move_band(ob_scene_index, ob_parent_name, ob_band_x, ob_band.pos_y, ob_band.pos_z, ob_sync);
-        ob_zone.position.set(pos_x, 0, z);
-
-        if (ob_debug_MOVE_WEBGL_OBJECT) console.log("OB_TIMELINE.move_zone(" + ob_parent_name + "," + ob_zone_name +
-            "," + x + "," + y + "," + z + ")");
-        //console.log("OB_TIMELINE.move_zone(" + ob_parent_name + "," + ob_zone_name + "," + x + "," + y + "," + z +
-            //" band_x=" + ob_band_x + " ob_zone_start_x=" + ob_zone_start_x + ")");
-    };
     OB_TIMELINE.prototype.move_band = function (ob_scene_index, ob_band_name, x, y, z, ob_sync) {
         if (isNaN(x)) return;
         if (ob_band_name.includes("zone"))
@@ -2447,7 +2424,7 @@ function OB_TIMELINE() {
                 textX = incrementPixelOffSet - (this.ob_scene[ob_scene_index].bands[i].fontSizeInt / 2) + 6;
                 if (this.ob_scene[ob_scene_index].bands[i].intervalUnitPos === "TOP")
                     textY = (this.ob_scene[ob_scene_index].bands[i].heightMax -
-                        (this.ob_scene[ob_scene_index].bands[i].heightMax / 2)) -
+                            (this.ob_scene[ob_scene_index].bands[i].heightMax / 2)) -
                         this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
                 else if (this.ob_scene[ob_scene_index].bands[i].intervalUnitPos === "BOTTOM")
                     textY = (-parseInt(this.ob_scene[ob_scene_index].bands[i].heightMax) / 2) +
@@ -2713,7 +2690,7 @@ function OB_TIMELINE() {
                     if (regex === null || this.ob_scene[ob_scene_index].bands[i].sessions[j].id !== undefined ||
                         this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title.match(regex)) {
                         if ((this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd === undefined ||
-                            isNaN(parseInt(this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd))) &&
+                                isNaN(parseInt(this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd))) &&
                             !this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
                             if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render !== undefined)
                                 ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
@@ -3058,20 +3035,27 @@ function OB_TIMELINE() {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
-                that.move_zone(that.ob_render_index, ob_obj.parent.name, ob_obj.name, ob_obj.position.x, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z, true);
+                if (ob_obj.parent.position !== undefined)
+                    ob_obj.parent.dragstart_source = ob_obj.parent.position.x;
+                else
+                    ob_obj.parent.dragstart_source = 0;
+                that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(that.ob_render_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, false);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                that.move_session(ob_obj, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
+                //that.move_session(ob_obj, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
+                if (ob_obj.parent.position !== undefined)
+                    ob_obj.parent.dragstart_source = ob_obj.parent.position.x;
+                else
+                    ob_obj.parent.dragstart_source = 0;
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
             that.ob_render(that.ob_render_index);
 
             if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragstart :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
-            //console.log("dragControls.addEventListener('dragstart'," + e.object.name + " ob_obj.dragstart_source=" + ob_obj.dragstart_source + ")");
         });
         this.ob_scene[ob_scene_index].dragControls.addEventListener('dragend', function (e) {
             //if (that.ob_controls !== undefined) that.ob_controls.enabled = true;
@@ -3082,18 +3066,15 @@ function OB_TIMELINE() {
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
                 that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
-                //
-                //
-                // that.move_zone(that.ob_render_index, ob_obj.parent.name, ob_obj.name, ob_obj.parent.position.x, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z, false);
-                //console.log("-------zone-------dragControls.addEventListener('dragend'," + ob_obj.name + " ---" + ob_obj.position.x + " ::: " + ob_obj.parent.name + " ---" + ob_obj.parent.position.x + ")");
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(that.ob_render_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
+                //that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
+                that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
                 that.ob_open_descriptor(that.ob_render_index, ob_obj.data);
-                return;
+                //return;
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -3104,9 +3085,16 @@ function OB_TIMELINE() {
             that.ob_scene[that.ob_render_index].date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
             that.ob_scene[that.ob_render_index].date_cal = that.ob_markerDate;
             that.ob_scene[that.ob_render_index].show_calendar = true;
-            let ob_source = ob_obj.position.x;
-            let ob_drag_end_source = ob_obj.position.x;
-            let ob_speed = (ob_obj.dragstart_source - ob_source) / 60;
+
+            if (ob_obj.name.match(/zone_/) || ((ob_obj.type.match(/Mesh/) && ob_obj.name === ""))) {
+                ob_obj.parent.ob_source = ob_obj.parent.position.x;
+                ob_obj.parent.ob_drag_end_source = ob_obj.parent.position.x;
+                ob_obj.parent.ob_speed = (ob_obj.parent.dragstart_source - ob_obj.parent.ob_source) / 60
+            } else {
+                ob_obj.ob_source = ob_obj.position.x;
+                ob_obj.ob_drag_end_source = ob_obj.position.x;
+                ob_obj.ob_speed = (ob_obj.dragstart_source - ob_obj.ob_source) / 60;
+            }
 
             if (that.data && that.data.match(/^(http?):\/\//) ||
                 that.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
@@ -3119,25 +3107,46 @@ function OB_TIMELINE() {
                 function ob_move() {
                     //console.log("ob_move - ob_render_index=" + that.ob_render_index + " - ob_interval_move=" + that.ob_scene[that.ob_render_index].ob_interval_move);
                     if (that.ob_scene[that.ob_render_index].ob_interval_move === undefined) return;
-                    if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 1) {
-                        clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
-                    } else {
-                        if (ob_speed > 0)
-                            ob_speed = ob_speed - 0.0025;
-                        else
-                            ob_speed = ob_speed + 0.0025;
-                        if (Math.round(ob_speed) === 0)
+                    if (ob_obj.name.match(/zone_/) || ((ob_obj.type.match(/Mesh/) && ob_obj.name === ""))) {
+                        if (ob_obj.dragstart_source >= ob_obj.parent.ob_source - 5 &&
+                            ob_obj.dragstart_source <= ob_obj.parent.ob_source + 1) {
                             clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
-
-                        if (ob_obj.dragstart_source <= ob_source)
-                            ob_drag_end_source = ob_drag_end_source - ob_speed;
-                        else
-                            ob_drag_end_source = ob_drag_end_source - ob_speed;
-
-                        if (ob_obj.name.match(/zone_/)) {
-                            that.move_zone(that.ob_render_index, ob_obj.parent.name, ob_obj.name, ob_drag_end_source, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z, true);
                         } else {
-                            that.move_band(that.ob_render_index, ob_obj.name, ob_drag_end_source, ob_obj.pos_y,
+                            if (ob_obj.parent.ob_speed > 0)
+                                ob_obj.parent.ob_speed = ob_obj.parent.ob_speed - 0.0025;
+                            else
+                                ob_obj.parent.ob_speed = ob_obj.parent.ob_speed + 0.0025;
+                            if (Math.round(ob_obj.ob_speed) === 0)
+                                clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
+
+                            if (ob_obj.dragstart_source <= ob_obj.parent.ob_source)
+                                ob_obj.parent.ob_drag_end_source = ob_obj.parent.ob_drag_end_source - ob_obj.parent.ob_speed;
+                            else
+                                ob_obj.parent.ob_drag_end_source = ob_obj.parent.ob_drag_end_source - ob_obj.parent.ob_speed;
+
+                            that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.ob_drag_end_source,
+                                ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
+                            that.update_scenes(that.ob_render_index, that.header, that.params,
+                                that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
+                                that.ob_scene[that.ob_render_index].sessions, that.ob_camera_type, ob_obj.parent, true);
+                        }
+                    } else {
+                        if (ob_obj.dragstart_source >= ob_obj.ob_source - 5 && ob_obj.dragstart_source <= ob_obj.ob_source + 1) {
+                            clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
+                        } else {
+                            if (ob_obj.ob_speed > 0)
+                                ob_obj.ob_speed = ob_obj.ob_speed - 0.0025;
+                            else
+                                ob_obj.ob_speed = ob_obj.ob_speed + 0.0025;
+                            if (Math.round(ob_obj.ob_speed) === 0)
+                                clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
+
+                            if (ob_obj.dragstart_source <= ob_obj.ob_source)
+                                ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
+                            else
+                                ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
+
+                            that.move_band(that.ob_render_index, ob_obj.name, ob_obj.ob_drag_end_source, ob_obj.pos_y,
                                 ob_obj.pos_z, true);
                             that.update_scenes(that.ob_render_index, that.header, that.params,
                                 that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
@@ -3151,25 +3160,25 @@ function OB_TIMELINE() {
 
                 function ob_move2() {
                     if (that.ob_scene[that.ob_render_index].ob_interval_move === undefined) return;
-                    if (ob_obj.dragstart_source >= ob_source - 5 && ob_obj.dragstart_source <= ob_source + 1) {
+                    if (ob_obj.dragstart_source >= ob_obj.ob_source - 5 && ob_obj.dragstart_source <= ob_obj.ob_source + 1) {
                         clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
                     } else {
-                        if (ob_speed > 0)
-                            ob_speed = ob_speed - 0.0025;
+                        if (ob_obj.ob_speed > 0)
+                            ob_obj.ob_speed = ob_obj.ob_speed - 0.0025;
                         else
-                            ob_speed = ob_speed + 0.0025;
-                        if (Math.round(ob_speed) === 0)
+                            ob_obj.ob_speed = ob_obj.ob_speed + 0.0025;
+                        if (Math.round(ob_obj.ob_speed) === 0)
                             clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
 
-                        if (ob_obj.dragstart_source <= ob_source)
-                            ob_drag_end_source = ob_drag_end_source - ob_speed;
+                        if (ob_obj.dragstart_source <= ob_obj.ob_source)
+                            ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
                         else
-                            ob_drag_end_source = ob_drag_end_source - ob_speed;
+                            ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
 
                         if (ob_obj.name.match(/zone_/)) {
-                            that.move_zone(that.ob_render_index, ob_obj.parent.name, ob_obj.name, ob_drag_end_source, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z, true);
+                            that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
                         } else {
-                            that.move_band(that.ob_render_index, ob_obj.name, ob_drag_end_source, ob_obj.pos_y,
+                            that.move_band(that.ob_render_index, ob_obj.name, ob_obj.ob_drag_end_source, ob_obj.pos_y,
                                 ob_obj.pos_z, true);
                             that.update_scenes(that.ob_render_index, that.header, that.params,
                                 that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
@@ -3178,6 +3187,7 @@ function OB_TIMELINE() {
                     }
                 }
             }
+            //ob_obj.parent.pos_x = ob_obj.position.x;
             //console.log("dragControls.addEventListener('dragend'," + e.object.name + ")");
         });
 
@@ -3188,17 +3198,26 @@ function OB_TIMELINE() {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
-                that.move_zone(that.ob_render_index, ob_obj.parent.name, ob_obj.name, ob_obj.position.x, ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z, true);
+                let ob_step = ob_obj.dragstart_source - ob_obj.position.x;
+                ob_obj.dragstart_source = ob_obj.position.x;
+                ob_obj.position.set(ob_obj.pos_x, 0, ob_obj.pos_z);
+                ob_obj.parent.position.x = ob_obj.parent.position.x - ob_step;
+                that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y,
+                    ob_obj.parent.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
-                //console.log("-------zone-------dragControls.addEventListener('drag'," + ob_obj.name + " : " + e.object.position.x + " : " + ob_obj.parent.name + ": " + ob_obj.parent.position.x + ")");
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(that.ob_render_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
-                //console.log("-----band-------dragControls.addEventListener('drag'," + e.object.name + " :  " + ob_obj.position.x + ")");
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z)
+                //that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
+                let ob_step = ob_obj.dragstart_source - ob_obj.position.x;
+                ob_obj.dragstart_source = ob_obj.position.x;
+                ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
+                ob_obj.parent.position.x = ob_obj.parent.position.x - ob_step;
+                that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y,
+                    ob_obj.parent.pos_z, true);
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -3225,6 +3244,7 @@ function OB_TIMELINE() {
                 this.ob_scene[s] = this.track[s](new THREE.Scene());
                 this.ob_scene[s].background = new THREE.Color(0x000000);
                 this.ob_scene[s].objects = [];
+                //this.ob_scene[s].group = new THREE.Group();
             }
 
             // Save original bands setting
@@ -3268,6 +3288,7 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].ob_camera.position.set(this.ob_pos_orthographic_camera_x, this.ob_pos_orthographic_camera_y,
                 this.ob_pos_orthographic_camera_z);
             this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].ob_camera);
+            //this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].group);
             //this.ob_scene[ob_scene_index].ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
         } else {
             this.ob_scene[ob_scene_index].ob_camera =
@@ -3286,6 +3307,7 @@ function OB_TIMELINE() {
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
             this.ob_scene[ob_scene_index].add(light);
+            //this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].group);
         }
         // Set all listeners
         this.ob_setListeners(ob_scene_index);
