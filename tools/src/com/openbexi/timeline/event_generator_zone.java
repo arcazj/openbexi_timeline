@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -115,7 +117,7 @@ public class event_generator_zone {
 
 
             // EVENTS
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < 23; j++) {
                 if (j != 0)
                     dateL += 3600 * 1000;
                 start = new Date(dateL).toString();
@@ -165,6 +167,12 @@ public class event_generator_zone {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
         Date date = new Date();
+        //Instant now = Instant.now(); //current date
+        //Instant before = now.minus(Duration.ofDays(1));
+        //date = Date.from(before);
+        //Instant now = Instant.now(); //current date
+        //Instant after = now.plus(Duration.ofDays(1));
+        //date = Date.from(after);
 
         String year = new SimpleDateFormat("yyyy").format(date);
         String month = new SimpleDateFormat("MM").format(date);
