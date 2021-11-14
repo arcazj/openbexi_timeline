@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -41,7 +39,7 @@ public class event_generator_zone {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date date = this.get_date();
         String status = "SCHEDULE";
-        String type;
+        int type;
         String start;
         String end;
         String title;
@@ -141,9 +139,13 @@ public class event_generator_zone {
                     file.write("\"data\":{");
                     file.write("\"title\":\"" + title + "\",");
                     file.write("\"status\":\"" + status + "\",");
-                    file.write("\"type\":\"" + "type" + getRandomNumberUsingNextInt(0, 2) + "\",");
-                    file.write("\"zone\":\"" + "zone_" + getRandomNumberUsingNextInt(0, 1) + "\",");
-                    file.write("\"description\":\"" + description + "\",");
+                    type = getRandomNumberUsingNextInt(0,2);
+                    file.write("\"type\":\"" + "type" + type + "\",");
+                    if (type == 0) {
+                        file.write("\"zone\":\"" + "zone_" + getRandomNumberUsingNextInt(0, 1) + "\",");
+                        file.write("\"description\":\"" + description + "\",");
+                    } else
+                        file.write("\"description\":\"" + description + " out of zone" + "\",");
                     file.write("},");
                     file.write("\"session\":{");
                     file.write("\"color\":\"" + color + "\",");
