@@ -120,8 +120,8 @@ public class event_generator {
                 String year = new SimpleDateFormat("yyyy").format(date);
                 String month = new SimpleDateFormat("MM").format(date);
                 String day = new SimpleDateFormat("dd").format(date);
-                File file = new File("E:\\fdc_logs\\ESOC\\GNS_data\\" +
-                        year + "\\" + month + "\\" + day + "\\" + "events.json");
+                File file = new File("/data/" +
+                        year + "/" + month + "/" + day + "/" + "events.json");
                 event_generator events = new event_generator(date);
                 events.generate(file);
                 dateL = dateL + 3600 * 24 * 1000;
