@@ -2,7 +2,13 @@
 openbexi_timeline is a fully customizable user interface and a data-driven interactive gantt timeline for visualizing temporal data.
 
 # Docker image
+Run openbexi timeline from a Docker container platform:
 https://hub.docker.com/repository/docker/arcazj/openbexi_timeline
+
+Open a Edge, Firefox or Chrome browser and run one of the following URLs:
+https://localhost:8445/openbexi_timeline_secure.html 
+or 
+https://localhost:8443/openbexi_timeline_SSE.html
 
 # Getting started with a simple Openbexi Timeline 
 Here are a few easy steps to create a openbexi simple timeline. 
