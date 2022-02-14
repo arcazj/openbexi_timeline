@@ -19,8 +19,12 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tomcat/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/META-INF" />
+      <excludeFolder url="file://$MODULE_DIR$/openjdk-17.0.1" />
+      <excludeFolder url="file://$MODULE_DIR$/tomcat" />
+      <excludeFolder url="file://$MODULE_DIR$/tomcat.8080" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="openjdk-17" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="tomcat9" level="project" />
   </component>

@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "This document defines the openbexi timeline RESt API specification."
+  description: "This document defines the openbexi timeline REST API specification."
   version: "1.0.0"
   title: "openbexi timeline"
   termsOfService: "http://swagger.io/terms/"
