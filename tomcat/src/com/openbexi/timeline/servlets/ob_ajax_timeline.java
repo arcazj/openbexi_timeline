@@ -2,6 +2,8 @@ package com.openbexi.timeline.servlets;
 
 import com.openbexi.timeline.data_browser.json_files_manager;
 import com.openbexi.timeline.tests.test_timeline;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -110,14 +112,46 @@ ob_ajax_timeline extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+        // Read parameters
+        String title = req.getParameter("addEvent");
+        String startEvent = req.getParameter("startEvent");
+        String endEvent = req.getParameter("endEvent");
+        String description = req.getParameter("description");
+        String icon = req.getParameter("icon");
+        String startDate = req.getParameter("startDate");
+        String endDate = req.getParameter("endDate");
+        String ob_filter = req.getParameter("filter");
+        String ob_search = req.getParameter("search");
+        String data_path = getServletContext().getInitParameter("data_path");
+        String filter_include = getServletContext().getInitParameter("filter_include");
+        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
+        if (ob_filter != null && !ob_filter.equals("*"))
+            filter_include = ob_filter;
+        if (filter_include.equals(""))
+            filter_include = getServletContext().getInitParameter("filter_include");
+
+        Logger logger = Logger.getLogger("");
+
         PrintWriter out = resp.getWriter();
         resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
         resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
         resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+        resp.addHeader("Accept-Encoding", "gzip, compress, br");
+        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
-        resp.setCharacterEncoding("UTF-8");
-        out.println("{'name': 'test', 'openbexi.timeline.data': 'dataGET'}");
+        json_files_manager data = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, null,
+                null, null, getServletContext());
+        JSONArray eventJson = new JSONArray();
+        eventJson.add("title:" + title);
+        eventJson.add("startEvent:" + startEvent);
+        eventJson.add("endEvent:" + endEvent);
+        eventJson.add("description:" + description);
+        eventJson.add("icon:" + icon);
+        data.addEvents(eventJson);
+        Object json = data.getData(null);
+        out.write(json.toString());
         out.flush();
     }
 

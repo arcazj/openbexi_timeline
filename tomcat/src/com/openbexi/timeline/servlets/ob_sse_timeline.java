@@ -3,6 +3,7 @@ package com.openbexi.timeline.servlets;
 import com.openbexi.timeline.data_browser.json_files_manager;
 import com.openbexi.timeline.data_browser.json_files_watcher;
 import com.openbexi.timeline.tests.test_timeline;
+import org.json.simple.JSONArray;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -36,7 +37,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
     }
 
     @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp)  {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) {
         Logger logger = Logger.getLogger("");
         HttpSession session = req.getSession();
         resp.setCharacterEncoding("UTF-8");
@@ -99,12 +100,66 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Logger logger = Logger.getLogger("");
-        logger.info("POST " + req);
-        try {
-            tests = new test_timeline("POST", resp, null, id++);
-            tests.run();
-        } catch (Exception e) {
-            logger.severe(e.getMessage());
+        HttpSession session = req.getSession();
+        resp.setCharacterEncoding("UTF-8");
+        // Read parameters
+        String title = req.getParameter("addEvent");
+        String startEvent = req.getParameter("startEvent");
+        String endEvent = req.getParameter("endEvent");
+        String description = req.getParameter("description");
+        String icon = req.getParameter("icon");
+        String startDate = req.getParameter("startDate");
+        String endDate = req.getParameter("endDate");
+        String ob_filter = req.getParameter("filter");
+        String ob_search = req.getParameter("search");
+        String data_path = getServletContext().getInitParameter("data_path");
+        String filter_include = getServletContext().getInitParameter("filter_include");
+        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
+        if (ob_filter != null && !ob_filter.equals("*"))
+            filter_include = ob_filter;
+        if (filter_include.equals(""))
+            filter_include = getServletContext().getInitParameter("filter_include");
+
+        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
+
+        if (startDate.equals("test")) {
+            try {
+                tests = new test_timeline("GET", resp, null, id++);
+                tests.run();
+            } catch (Exception e) {
+                logger.severe(e.getMessage());
+            }
+        } else {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+            try {
+                simpleDateFormat.format(new Date(startDate));
+            } catch (Exception e) {
+                startDate = simpleDateFormat.format(new Date());
+            }
+            try {
+                simpleDateFormat.format(new Date(endDate));
+            } catch (Exception e) {
+                endDate = startDate;
+            }
+
+            json_files_manager data = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, null,
+                    null, null, getServletContext());
+            JSONArray eventJson = new JSONArray();
+            eventJson.add("title:" + title);
+            eventJson.add("startEvent:" + startEvent);
+            eventJson.add("endEvent:" + endEvent);
+            eventJson.add("description:" + description);
+            eventJson.add("icon:" + icon);
+            data.addEvents(eventJson);
+
+            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, "GET", resp,
+                    session, getServletContext());
+
+            // Start a json_files_watcher loop to check if any new events are coming.
+            // If any the json_files_watcher will update the openBexi Timeline client again.
+            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager);
+            json_files_watcher.run();
         }
     }
 

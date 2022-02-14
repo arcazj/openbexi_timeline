@@ -8,10 +8,7 @@ import org.json.simple.parser.ParseException;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -468,18 +465,89 @@ public class json_files_manager extends data_manager {
         return new_events2;
     }
 
+    private int getRandomNumberUsingNextInt(int min, int max) {
+        Random random = new Random();
+        return random.nextInt(max - min) + min;
+    }
+
+    private String lookForIcon(String myIcon) {
+        String[] icon = {"icon\\/ob_info.png", "icon\\/ob_start.png", "icon\\/ob_yellow_flag.png", "icon\\/ob_check.png",
+                "icon\\/ob_red_flag.png", "icon\\/ob_green_flag.png", "icon\\/ob_stop.png", "icon\\/ob_error.png",
+                "icon\\/ob_check_failed.png", "icon\\/ob_warning.png", "icon\\/ob_connect.png", "icon\\/ob_phone.png",
+                "icon\\/ob_conflict.png", "icon\\/ob_bug.png", "icon\\/ob_lost_connection.png", "icon\\/ob_swap.png",
+                "icon\\/ob_blue_square.png", "icon\\/ob_orange_square.png", "icon\\/ob_green_square.png",
+                "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png", "icon\\/ob_close.png",
+                "icon\\/ob_no_satellite.png", "icon\\/ob_red_square.png", "icon\\/ob_tlm_red.png",
+                "icon\\/ob_tlm_orange.png", "icon\\/ob_gate_open.png", "icon\\/ob_gate_close.png",
+        };
+        if (myIcon.equals("")) return "";
+        for (int i = 0; i < icon.length; i++) {
+            if (icon[i].contains(myIcon))
+                return icon[i];
+        }
+        return "";
+    }
+
     @Override
-    boolean addEvents(JSONArray events) {
+    public boolean addEvents(JSONArray events) {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        Date date = new Date(((String) events.get(1)).replaceAll("startEvent:", ""));
+        String yyyy = new SimpleDateFormat("yyyy").format(date);
+        String MM = new SimpleDateFormat("MM").format(date);
+        String dd = new SimpleDateFormat("dd").format(date);
+
+        String buildFile = _currentPathModel;
+        buildFile = buildFile.replace("/yyyy", "/" + yyyy);
+        buildFile = buildFile.replace("/mm", "/" + MM);
+        buildFile = buildFile.replace("/dd", "/" + dd);
+
+        String id = UUID.randomUUID().toString();
+
+        File outputs = new File(buildFile + "/" + id + ".json");
+
+        String start;
+        String end;
+        String title;
+        String description = "description1";
+        String icon = lookForIcon(((String) events.get(4)).replaceAll("icon:", ""));
+        String color = "#050100";
+        String line_start = "{\n" +
+                "  \"dateTimeFormat\": \"iso8601\",\n" +
+                "  \"events\": [\n";
+
+        if (!outputs.getParentFile().exists())
+            outputs.getParentFile().mkdirs();
+
+        try (FileWriter file = new FileWriter(outputs)) {
+            file.write(line_start);
+            file.write("  {\"id\":\"" + id + "\",");
+            file.write("  \"start\":\"" + ((String) events.get(1)).replaceAll("startEvent:", "") + "\",");
+            file.write("  \"end\":\"" + ((String) events.get(2)).replaceAll("endEvent:", "") + "\",");
+            file.write("\"data\":{");
+            file.write("\"title\":\"" + ((String) events.get(0)).replaceAll("title:", "") + "\",");
+            file.write("\"description\":\"" + ((String) events.get(3)).replaceAll("description:", "") + "\",");
+            file.write("},");
+            file.write("\"render\":{");
+            file.write("\"color\":\"" + color + "\",");
+            if (!icon.equals("") && !icon.contains("#"))
+                file.write("\"image\":\"" + icon + "\",");
+            file.write("}");
+            file.write("},");
+
+            file.write("]}");
+        } catch (IOException e) {
+            log(e, "Exception");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean updateEvents(JSONArray events) {
         return false;
     }
 
     @Override
-    boolean updateEvents(JSONArray events) {
-        return false;
-    }
-
-    @Override
-    boolean removeEvents(JSONArray events) {
+    public boolean removeEvents(JSONArray events) {
         return false;
     }
 

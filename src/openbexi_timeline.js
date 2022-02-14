@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
-Copyright (c) 2021 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.8b beta
+Copyright (c) 2022 arcazj All rights reserved.
+    OpenBEXI Timeline 0.9.8c beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -366,6 +366,33 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_camera_type, null, false);
     };
+    OB_TIMELINE.prototype.ob_add_event = function (ob_scene_index) {
+        let title = document.getElementById(this.name + "_addEvent").value;
+        let startEventUTC = "";
+        try {
+            let startEvent = document.getElementById(this.name + "_start").value;
+            startEventUTC = new Date(this.getUTCTime(Date.parse(startEvent))).toString().substring(0, 24) + " UTC";
+            if (startEventUTC.includes("Invalid")) endEventUTC = "";
+        } catch (e) {
+            startEventUTC = "";
+        }
+        let endEventUTC = "";
+        try {
+            let endEvent = document.getElementById(this.name + "_end").value;
+            endEventUTC = new Date(this.getUTCTime(Date.parse(endEvent))).toString().substring(0, 24) + " UTC";
+            if (endEventUTC.includes("Invalid")) endEventUTC = "";
+        } catch (e) {
+            endEventUTC = "";
+        }
+        let description = document.getElementById(this.name + "_description").value;
+        let icon = document.getElementById(this.name + "_icon").value;
+
+        this.data = this.data_head[0] + "?addEvent=" + title +
+            "&startEvent=" + startEventUTC + "&endEvent=" + endEventUTC + "&description=" + description +
+            "&startDate=" + this.minDate + "&endDate=" + this.maxDate + "&icon=" + icon +
+            "&filter=" + this.ob_filter_value + "&search=" + this.ob_search_value;
+        this.load_data(ob_scene_index);
+    };
 
     OB_TIMELINE.prototype.ob_create_sorting = function (ob_scene_index) {
         let ob_sorting_by = "NONE";
@@ -514,6 +541,8 @@ function OB_TIMELINE() {
             } catch (err) {
             }
 
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             div.innerHTML = "" +
                 "<div style='padding:8px;text-align:center;'>Setting<\div>\n" +
                 "<div class='ob_form1'>\n" +
@@ -532,7 +561,7 @@ function OB_TIMELINE() {
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info(" + ob_scene_index + ");\" value='Apply Timeline Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
                 "<fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_bands_info(" + ob_scene_index + ");\" value='Apply Bands Info' />\n" +
+                /*"<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_bands_info(" + ob_scene_index + ");\" value='Apply Bands Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
                 "<fieldset>\n" +
                 "<legend><span class='number'>2 - </span> Data Model</legend>\n" +
@@ -540,18 +569,44 @@ function OB_TIMELINE() {
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_data_model(" + ob_scene_index + ");\" value='Apply Model Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>3 - </span>Timeline Camera Info</legend>\n" +
+                "<fieldset>\n" +*/
+                "<legend><span class='number'>2 - </span>Timeline Camera Info</legend>\n" +
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_orthographic_camera(" + ob_scene_index + ");\" value='Orthographic' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_perspective_camera(" + ob_scene_index + ");\" value='Perspective' />\n" +
                 "</form>\n" +
-                "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container' style='position:absolute;'> </div>\n" +
+                "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
+                "</div>" +
+                "<div class='ob_form1'>\n" +
+                "<form>\n" +
+                "<fieldset>\n" +
+                "<legend><span class='number'>3- </span>Add an event or session</legend>\n" +
+                "<input type='label' disabled value='Title :'>\n" +
+                "<input type='text' id=" + this.name + "_addEvent value='title1'>\n" +
+                "<br>" +
+                "<input type='label' disabled value='Start :'>\n" +
+                "<input type='datetime-local' id=" + this.name + "_start value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='End :'>\n" +
+                "<input type='datetime-local' id=" + this.name + "_end value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='Description :'>\n" +
+                "<input type='text' id=" + this.name + "_description value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='icon :'>\n" +
+                "<input type='text' id=" + this.name + "_icon value=''>\n" +
+                "<br>" +
+                "</fieldset>\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_add_event(" + ob_scene_index + ");\" value='Add' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<fieldset>\n" +
+                "</form>\n" +
+                "<div class='ob_gui_iframe_container2' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
                 "</div>";
-
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
             this.ob_timeline_right_panel.appendChild(div);
+            document.getElementById(this.name + "_start").value = now.toISOString().slice(0, 16);
 
         } catch (err) {
         }
@@ -595,7 +650,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend> version 0.9.8b beta</legend>\n" +
+                "<legend> version 0.9.8c beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "</div>";
@@ -3606,12 +3661,18 @@ function OB_TIMELINE() {
             this.runUnitTestsHours(ob_scene_index);
             return;
         }
-
+        // GET data from a range of time
         if (!this.data.includes(".json") && !this.data.includes("=test") && !this.data.includes("UTC")) {
             this.ob_not_connected();
             this.data_head = this.data.split("?");
             this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
                 "&filter=" + this.ob_filter_value + "&search=" + this.ob_search_value;
+            this.method = "GET";
+        }
+        // Add an event or a session.
+        if (this.data.includes("addEvent")) {
+            this.ob_not_connected();
+            this.method = "POST";
         }
         let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
@@ -3647,7 +3708,7 @@ function OB_TIMELINE() {
         if (ob_url !== null && ob_url.length === 2) {
             let that = this;
             fetch(this.data, {
-                method: 'GET',
+                method: this.method,
                 dataType: 'json',
                 headers: {
                     "Accept": "application/json",
@@ -3713,7 +3774,7 @@ function OB_TIMELINE() {
             } else {
                 let that = this;
                 fetch(this.data, {
-                    method: 'GET',
+                    method: this.method,
                     dataType: 'json',
                     headers: {
                         "Accept": "application/json",
