@@ -36,17 +36,41 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
-    boolean addEvents(JSONArray events) {
+    public boolean addEvents(JSONArray events) {
         return false;
     }
 
     @Override
-    boolean updateEvents(JSONArray events) {
+    public boolean updateEvents(JSONArray events) {
         return false;
     }
 
     @Override
-    boolean removeEvents(JSONArray events) {
+    public boolean removeEvents(JSONArray events) {
+        return false;
+    }
+
+    @Override
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
+                     String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
+                     String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+        return false;
+    }
+
+    @Override
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_title, String ob_filter_name,
+                        String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
+                        String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+        return false;
+    }
+
+    @Override
+    public Object removeFilter(String ob_filter_name, String ob_timeline_name, String ob_user) {
+        return false;
+    }
+
+    @Override
+    boolean removeAllFilter(String ob_timeline_name, String ob_user) {
         return false;
     }
 

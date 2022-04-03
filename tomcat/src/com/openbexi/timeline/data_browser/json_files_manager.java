@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 public class json_files_manager extends data_manager {
 
-    private long startDateL = 0;
+    private final long startDateL = 0;
     private String dateS;
     private String yearS;
     private String monthS;
@@ -50,7 +50,7 @@ public class json_files_manager extends data_manager {
     }
 
     private String fileParentPathE;
-    private LinkedHashMap<File, String> files = new LinkedHashMap<>();
+    private final LinkedHashMap<File, String> files = new LinkedHashMap<>();
 
     final static Charset ENCODING = StandardCharsets.UTF_8;
     private TimerTask task;
@@ -59,27 +59,59 @@ public class json_files_manager extends data_manager {
     private long _currentStartDateL;
     private long _currentEndDateL;
     private String _currentPathModel;
-    private String _include;
-    private String _exclude;
-    private String _search;
+    private final String _include;
+    private final String _exclude;
+    private final String _filter_value;
+    private final String _search;
     private String _action_type;
-    private HttpServletResponse _response;
-    private HttpSession _session;
-    private ServletContext _servletContext;
-    private int _context_timer = 0;
+    private String _user_setting;
+    private final HttpServletResponse _response;
+    private final HttpSession _session;
+    private final ServletContext _servletContext;
+    private final int _context_timer = 0;
     private String _checksum = "*";
 
-    public json_files_manager(String currentStartDate, String currentEndDate, String currentPathModel, String search, String include, String exclude, String action_type,
+    public String get_include() {
+        return _include;
+    }
+
+    public String get_exclude() {
+        return _exclude;
+    }
+
+    public String get_filter() {
+        if (!_include.equals("") && !_exclude.equals(""))
+            return _include + "|" + _exclude;
+        if (_include.equals("") && !_exclude.equals(""))
+            return "|" + _exclude;
+        if (!_include.equals("") && _exclude.equals(""))
+            return _include;
+        return "";
+    }
+
+    public json_files_manager(String currentStartDate, String currentEndDate, String currentPathModel, String search,
+                              String filter, String action_type,
                               HttpServletResponse response, HttpSession session, ServletContext servletContext) {
         super();
 
-        String[] items = null;
-        _currentStartDate = currentStartDate.replaceAll("'", "");
-        _currentEndDate = currentEndDate.replaceAll("'", "");
+        if (currentStartDate != null) {
+            _currentStartDate = currentStartDate.replaceAll("'", "");
+            _currentEndDate = currentEndDate.replaceAll("'", "");
+        }
         if (currentPathModel != null)
             _currentPathModel = currentPathModel.replaceAll("\\\\", "/");
-        _include = include;
-        _exclude = exclude;
+        String[] filter_items = filter.split("\\|");
+        if (filter_items.length == 0) {
+            _include = "";
+            _exclude = "";
+        } else {
+            _include = filter_items[0];
+            if (filter_items.length > 1)
+                _exclude = filter_items[1];
+            else
+                _exclude = "";
+        }
+        _filter_value = get_filter();
         _search = search;
         _action_type = action_type;
         _response = response;
@@ -191,7 +223,7 @@ public class json_files_manager extends data_manager {
 
     }
 
-    private void print_events(JSONObject events) {
+    public void print_events(JSONObject events) {
         try {
             AtomicInteger count = new AtomicInteger();
             events.keySet().forEach(keyStr -> {
@@ -203,7 +235,7 @@ public class json_files_manager extends data_manager {
                             JSONObject data = (JSONObject) a.get(i);
                             data.keySet().forEach(keyStr2 -> {
                                 JSONObject keydata = (JSONObject) data.get(keyStr2);
-                                System.out.println("");
+                                System.out.println();
                                 System.out.print("Event: " + count.getAndIncrement() + ":" + " start: " + data.get("start") +
                                         " end: " + data.get("end"));
                                 keydata.keySet().forEach(keyStr3 -> {
@@ -287,7 +319,7 @@ public class json_files_manager extends data_manager {
         ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"events\" : [";
         long ob_time = new Date().getTime();
         Date ob_start_time = new Date(ob_time);
-        ob_data += "{\"ID\": \"" + UUID.randomUUID().toString() +
+        ob_data += "{\"ID\": \"" + UUID.randomUUID() +
                 "\",\"start\": \"" + ob_start_time + "\"," +
                 "\"end\": \"" + "\"," +
                 "\"data\":{ \"title\":\"" + title + "\",\"description\":\"NONE\"}}";
@@ -479,6 +511,7 @@ public class json_files_manager extends data_manager {
                 "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png", "icon\\/ob_close.png",
                 "icon\\/ob_no_satellite.png", "icon\\/ob_red_square.png", "icon\\/ob_tlm_red.png",
                 "icon\\/ob_tlm_orange.png", "icon\\/ob_gate_open.png", "icon\\/ob_gate_close.png",
+                "icon\\/ob_clock.png", "icon\\/ob_script.png", "icon\\/ob_crontab.png",
         };
         if (myIcon.equals("")) return "";
         for (int i = 0; i < icon.length; i++) {
@@ -551,9 +584,218 @@ public class json_files_manager extends data_manager {
         return false;
     }
 
-    @Override
-    JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
+    private StringBuilder checkFilter(StringBuilder jsonObjectMerged) {
+        return jsonObjectMerged;
+    }
 
+    @Override
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
+                            String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
+                            String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+        return updateFilter("addFilter", ob_timeline_name, ob_title, ob_filter_name, ob_backgroundColor, ob_user,
+                ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
+    }
+
+    @Override
+    public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_user) {
+        updateFilter("remove", ob_timeline_name, null, ob_filter_name, null,
+                null, null, null, null, null, null, null, null, null);
+        return false;
+    }
+
+    @Override
+    public boolean removeAllFilter(String ob_timeline_name, String ob_user) {
+
+        String buildFile = _currentPathModel;
+        buildFile = buildFile.replace("/yyyy", "");
+        buildFile = buildFile.replace("/mm", "");
+        buildFile = buildFile.replace("/dd", "");
+
+        File outputs = new File(buildFile + "/" + ob_user + "_filter_setting.json");
+        if (outputs.getParentFile().exists()) {
+            outputs.delete();
+            return true;
+        }
+        return false;
+    }
+
+    private JSONArray sortFilter(JSONArray filter_array, String ob_filter_name) {
+        JSONArray filters = filter_array;
+        JSONObject obj = null;
+        for (int f = 0; f < filter_array.size(); f++) {
+            String filter_name = ((JSONObject) filter_array.get(f)).get("name").toString();
+            if (ob_filter_name.equals(filter_name)) {
+                if (f == 0) return filters;
+                obj = ((JSONObject) filter_array.get(f));
+                filters.remove(f);
+            }
+        }
+        if (obj != null)
+            filters.add(0, obj);
+        return filters;
+    }
+
+    @Override
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_title, String ob_filter_name,
+                               String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
+                               String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+        JSONParser parser = new JSONParser();
+        Object filters = null;
+        StringBuilder jsonObjectMerged = null;
+        JSONObject jsonObject = new JSONObject();
+        String buildFile = _currentPathModel;
+        JSONArray openbexi_timeline = null;
+        JSONArray filter_array = null;
+        Boolean no_filter_found = true;
+        Boolean ob_first_filter_deleted = false;
+        String ob_current_filter = "no";
+        Boolean change_current = true;
+
+        buildFile = buildFile.replace("/yyyy", "");
+        buildFile = buildFile.replace("/mm", "");
+        buildFile = buildFile.replace("/dd", "");
+
+        File outputs = new File(buildFile + "/" + ob_user + "_" + ob_timeline_name + "_filter_setting.json");
+        if (!outputs.getParentFile().exists())
+            outputs.getParentFile().mkdirs();
+
+        try {
+            if (outputs.exists()) {
+                Reader reader = new FileReader(outputs);
+                try {
+                    filters = parser.parse(reader);
+                    if (ob_action.equals("readFilters")) {
+                        reader.close();
+                        return filters;
+                    }
+                    jsonObject = (JSONObject) filters;
+                    openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
+                    filter_array = (JSONArray) ((JSONObject) openbexi_timeline.get(0)).get("filters");
+                    filter_array = sortFilter(filter_array, ob_filter_name);
+                } catch (Exception e) {
+                }
+                reader.close();
+            }
+            if (filter_array == null || filter_array.size() == 0) {
+                filter_array = new JSONArray();
+                filter_array.add(0, ob_filter_name);
+            }
+
+            jsonObjectMerged = new StringBuilder("{\n" +
+                    "  \"dateTimeFormat\": \"iso8601\",\n" +
+                    "  \"openbexi_timeline\": [{\n" +
+                    "  \"name\": \"" + ob_timeline_name + "\"," +
+                    "  \"title1\": \"" + ob_title + "\"," +
+                    "  \"user\": \"" + ob_user + "\"," +
+                    "  \"email\": \"" + ob_email + "\"," +
+                    "  \"start\": \"current_time\"," +
+                    "  \"top\": \"" + ob_top + "\"," +
+                    "  \"left\": \"" + ob_left + "\"," +
+                    "  \"width\": \"" + ob_width + "\"," +
+                    "  \"height\": \"" + ob_height + "\"," +
+                    "  \"camera\": \"" + ob_camera + "\"," +
+                    "  \"backgroundColor\": \"" + ob_backgroundColor + "\"," +
+                    "  \"sortBy\": \"" + ob_sort_by + "\",");
+
+            String[] filter_list = ob_filter.split(":| ");
+            String current_att = filter_list[0];
+            jsonObjectMerged.append("  \"filters\":[");
+
+            String filter_name;
+            if (ob_action.equals("addFilter")) {
+                JSONObject obj = new JSONObject();
+                obj.put("name", ob_filter_name);
+                obj.put("backgroundColor", ob_backgroundColor);
+                obj.put("filter_value", ob_filter);
+                obj.put("sortBy", ob_sort_by);
+                obj.put("current", "yes");
+                filter_array.add(obj);
+                filter_array = sortFilter(filter_array, ob_filter_name);
+            }
+            int filter_size = filter_array.size();
+            for (int f = 0; f < filter_size; f++) {
+                try {
+                    filter_name = String.valueOf(((JSONObject) filter_array.get(f)).get("name"));
+                } catch (Exception e) {
+                    filter_name = ob_filter_name;
+                }
+                if (ob_filter_name.equals(filter_name)) {
+                    no_filter_found = false;
+                    if (!ob_action.equals("deleteFilter")) {
+                        if (f > 0)
+                            jsonObjectMerged.append(",{");
+                        else
+                            jsonObjectMerged.append("{");
+                        String[] filter_attributs = ob_filter.split(":| ");
+                        jsonObjectMerged.append("  \"name\":\"").append(ob_filter_name).append("\",");
+                        if (filter_attributs.length > 0) {
+                            jsonObjectMerged.append("  \"backgroundColor\":\"" + ob_backgroundColor + "\",");
+                            jsonObjectMerged.append("  \"filter_value\":\"" + get_filter() + "\",");
+                            jsonObjectMerged.append("  \"sortBy\":\"" + ob_sort_by + "\",");
+                            jsonObjectMerged.append("  \"current\":\"" + "yes");
+                            if (f == filter_size - 1)
+                                jsonObjectMerged.append("\"}]}");
+                            else
+                                jsonObjectMerged.append("\"}");
+                        } else {
+                            if (f == filter_size - 1)
+                                jsonObjectMerged.append("  \"current\":\"" + "yes" + "\"}]}");
+                            else
+                                jsonObjectMerged.append("  \"current\":\"" + "yes" + "\"}");
+                        }
+                    } else {
+                        if (f == filter_size - 1 && filter_size != 1)
+                            jsonObjectMerged.append("]}");
+                        if (filter_size == 1)
+                            jsonObjectMerged.append("]}");
+                        if (f == 0) ob_first_filter_deleted = true;
+                    }
+                } else {
+                    if (ob_first_filter_deleted && f == 1) {
+                    } else if (f > 0)
+                        jsonObjectMerged.append(",");
+                    if (ob_action.equals("deleteFilter") && change_current) {
+                        ((JSONObject) filter_array.get(f)).put("current", "yes");
+                        change_current = false;
+                    } else
+                        ((JSONObject) filter_array.get(f)).put("current", "no");
+                    jsonObjectMerged.append(filter_array.get(f));
+                    if (f == filter_size - 1)
+                        jsonObjectMerged.append("]}");
+                }
+            }
+            jsonObjectMerged.append("]}");
+        } catch (Exception e) {
+        }
+
+        if (no_filter_found && !ob_action.equals("deleteFilter")) {
+            return addFilter(ob_timeline_name, ob_title, ob_filter_name, ob_backgroundColor, ob_user,
+                    ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
+        } else {
+            jsonObjectMerged = this.checkFilter(jsonObjectMerged);
+        }
+
+        try (FileWriter file = new FileWriter(outputs)) {
+            file.write(jsonObjectMerged.toString());
+            file.flush();
+        } catch (IOException e) {
+            log(e, "Exception");
+        }
+
+        try {
+            return parser.parse(jsonObjectMerged.toString());
+        } catch (ParseException e) {
+            return "{\"dateTimeFormat\":\"iso8601\"," +
+                    "\"openbexi_timeline\":[{\"backgroundColor\":\"" + ob_backgroundColor + "\"," +
+                    "\"start\":\"current_time\",\"title\":\"" + ob_title + "\"," +
+                    "\"sortBy\":\"" + ob_sort_by + "\",\"filters\":[],\"top\":\"" + ob_top + "\",\"left\":\"" + ob_left + "\"," +
+                    "\"name\":\"" + ob_timeline_name + "\",\"width\":\"" + ob_width + "\",\"camera\":\"" + ob_camera + "\"," +
+                    "\"user\":\"" + ob_user + "\",\"email\":\"" + ob_email + "\",\"height\":\"" + ob_height + "\"}]}";
+        }
+    }
+
+    @Override
+    public JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
         if (filter_include.equals("") && filter_exclude.equals(""))
             return events;
 
@@ -562,63 +804,105 @@ public class json_files_manager extends data_manager {
         boolean found;
         JSONArray new_events = new JSONArray();
         if (filter_exclude != null && !filter_exclude.equals("")) {
-            String[] items = filter_exclude.split("\\+");
-            if (items.length > 1) {
+            String[] items = filter_exclude.split(";");
+            List<Boolean> list = new LinkedList<>();
+            if (items.length > 0) {
                 for (int i = 0; i < events.size(); i++) {
                     found = false;
+                    String event = events.get(i).toString().replaceAll("\"", "");
                     for (int j = 0; j < items.length; j++) {
-                        if (events.get(i).toString().toString().replaceAll("\"", "").contains(items[j]))
-                            found = true;
-                        else {
+                        if (items[j].contains("+")) {
                             found = false;
-                            break;
+                            String[] sub_items = items[j].split("\\+");
+                            for (int s = 0; s < sub_items.length; s++) {
+                                pattern = Pattern.compile(sub_items[s]);
+                                matcher = pattern.matcher(event);
+                                if (matcher.find() || (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", ""))))) {
+                                    found = true;
+                                } else {
+                                    found = false;
+                                    break;
+                                }
+                            }
+                            if (found) {
+                                list.add(true);
+                                break;
+                            } else
+                                list.add(false);
+                        } else {
+                            list = new LinkedList<>();
+                            if (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", "")))) {
+                                found = true;
+                                break;
+                            }
+                            pattern = Pattern.compile(items[j]);
+                            matcher = pattern.matcher(event);
+                            if (matcher.find()) {
+                                found = true;
+                                break;
+                            }
                         }
                     }
-                    if (found == false) {
+                    if (list.size() > 0)
+                        for (int l = 0; l < list.size(); l++)
+                            found = list.get(l);
+                    if (!found) {
                         new_events.add(events.get(i));
                         //System.out.println(i + "exclude:" + (events.get(i)).toString());
                     }
+                    list = new LinkedList<>();
                 }
-            } else {
-                pattern = Pattern.compile(filter_exclude.strip().replaceAll(" ", "|"));
+                events = new_events;
+            } else
+                events = new_events;
+        }
+
+        new_events = new JSONArray();
+        if (!filter_include.equals("")) {
+            String[] items = filter_include.split(";");
+            if (items.length > 0) {
                 for (int i = 0; i < events.size(); i++) {
-                    matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
-                    if (!matcher.find()) {
+                    found = false;
+                    String event = events.get(i).toString().replaceAll("\"", "");
+                    for (int j = 0; j < items.length; j++) {
+                        if (items[j].contains("+")) {
+                            found = false;
+                            String[] sub_items = items[j].split("\\+");
+                            for (int s = 0; s < sub_items.length; s++) {
+                                pattern = Pattern.compile(sub_items[s]);
+                                matcher = pattern.matcher(event);
+                                if (matcher.find() || (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", ""))))) {
+                                    found = true;
+                                } else {
+                                    found = false;
+                                    break;
+                                }
+                            }
+                            if (found) {
+                                new_events.add(events.get(i));
+                                found = false;
+                            }
+                        } else {
+                            if (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", "")))) {
+                                found = true;
+                                break;
+                            }
+                            pattern = Pattern.compile(items[j]);
+                            matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
+                            if (matcher.find()) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (found) {
                         new_events.add(events.get(i));
                         //System.out.println(i + "exclude:" + (events.get(i)).toString());
                     }
                 }
             }
-        }
-        if (filter_include != null && !filter_include.equals("")) {
-            String[] items = filter_include.split("\\+");
-            if (items.length > 1) {
-                for (int i = 0; i < events.size(); i++) {
-                    found = false;
-                    for (int j = 0; j < items.length; j++) {
-                        if (events.get(i).toString().toString().replaceAll("\"", "").contains(items[j]))
-                            found = true;
-                        else {
-                            found = false;
-                            break;
-                        }
-                    }
-                    if (found == true) {
-                        new_events.add(events.get(i));
-                        //System.out.println(i + "include:" + (events.get(i)).toString());
-                    }
-                }
-            } else {
-                pattern = Pattern.compile(filter_include.strip().replaceAll(" ", "|"));
-                for (int i = 0; i < events.size(); i++) {
-                    matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
-                    if (matcher.find()) {
-                        new_events.add(events.get(i));
-                        //System.out.println(i + "include:" + (events.get(i)).toString());
-                    }
-                }
-            }
-        }
+        } else
+            new_events = events;
 
         return new_events;
     }
