@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebListener;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -38,25 +39,43 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        Logger logger = Logger.getLogger("");
         HttpSession session = req.getSession();
         resp.setCharacterEncoding("UTF-8");
+
         // Read parameters
+        String ob_request = req.getParameter("ob_request");
+        String startEvent = req.getParameter("startEvent");
+        String endEvent = req.getParameter("endEvent");
+        String description = req.getParameter("description");
+        String icon = req.getParameter("icon");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
-        String ob_filter = req.getParameter("filter");
-        String ob_search = req.getParameter("search");
         String data_path = getServletContext().getInitParameter("data_path");
-        String filter_include = getServletContext().getInitParameter("filter_include");
-        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
-        if (ob_filter != null && !ob_filter.equals("*"))
-            filter_include = ob_filter;
-        if (filter_include.equals(""))
-            filter_include = getServletContext().getInitParameter("filter_include");
+
+        String ob_filter_name = req.getParameter("filterName");
+        String ob_timeline_name = req.getParameter("timelineName");
+        String ob_title = req.getParameter("title");
+        String ob_top = req.getParameter("top");
+        String ob_left = req.getParameter("left");
+        String ob_width = req.getParameter("width");
+        String ob_height = req.getParameter("height");
+        String ob_camera = req.getParameter("camera");
+        String ob_sort_by = req.getParameter("sortBy");
+        String ob_user = req.getParameter("userName");
+        String ob_backgroundColor = req.getParameter("backgroundColor");
+        if (ob_backgroundColor != null)
+            ob_backgroundColor = ob_backgroundColor.replace("@", "#");
+        String ob_email = req.getParameter("email");
+        String ob_filter = req.getParameter("filter");
+        ob_filter = ob_filter.replaceAll("_PIPE_", "|").replaceAll(" ", "+");
+        String ob_search = req.getParameter("search");
+
+        Logger logger = Logger.getLogger("");
+        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
-        if (startDate.equals("test")) {
+        if (startDate != null && startDate.equals("test")) {
             try {
                 tests = new test_timeline("GET", resp, null, id++);
                 tests.run();
@@ -64,21 +83,54 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 logger.severe(e.getMessage());
             }
         } else {
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
-            try {
-                simpleDateFormat.format(new Date(startDate));
-            } catch (Exception e) {
-                startDate = simpleDateFormat.format(new Date());
-            }
-            try {
-                simpleDateFormat.format(new Date(endDate));
-            } catch (Exception e) {
-                endDate = startDate;
-            }
-
-            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, "GET", resp,
+            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, ob_search,
+                    ob_filter, "GET", resp,
                     session, getServletContext());
+
+            if (ob_request != null && ob_request.equals("addEvent")) {
+                logger.info("GET addEvent - startDate=" + startDate + " - endDate=" + endDate);
+                JSONArray eventJson = new JSONArray();
+                eventJson.add("title:" + ob_title);
+                eventJson.add("startEvent:" + startEvent);
+                eventJson.add("endEvent:" + endEvent);
+                eventJson.add("description:" + description);
+                eventJson.add("icon:" + icon);
+                json_files_manager.addEvents(eventJson);
+            }
+            if (ob_request != null && (ob_request.equals("updateFilter") || ob_request.equals("readFilters") ||
+                    ob_request.equals("addFilter") || ob_request.equals("deleteFilter") ||
+                    ob_request.equals("saveFilter"))) {
+                if (resp != null && json_files_manager != null) {
+                    try {
+                        logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
+                        Object json = json_files_manager.updateFilter(ob_request, ob_timeline_name, ob_title, ob_filter_name,
+                                ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height,
+                                ob_camera, ob_sort_by, ob_filter);
+
+                        PrintWriter respWriter = resp.getWriter();
+                        //Important to put a "," not ";" between stream and charset
+                        resp.setContentType("text/event-stream");
+                        resp.setCharacterEncoding("UTF-8");
+                        //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
+                        resp.addHeader("Access-Control-Allow-Origin", "*");
+                        // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
+                        // credentials and access to resource by the client will be blocked by CORS policy.
+                        resp.addHeader("Access-Control-Allow-Credentials", "true");
+                        resp.addHeader("Cache-Control", "no-cache");
+                        resp.addHeader("Connection", "keep-alive");
+                        respWriter.write("data:" + json + "\n\n");
+                        respWriter.write("retry: 1000000000\n\n");
+                        respWriter.flush();
+                        boolean error = respWriter.checkError();
+                        if (error == true) {
+                            logger.info("Client disconnected");
+                        }
+                    } catch (IOException e) {
+                        logger.severe(e.getMessage());
+                    }
+                    return;
+                }
+            }
 
             // Start a json_files_watcher loop to check if any new events are coming.
             // If any the json_files_watcher will update the openBexi Timeline client again.
@@ -86,6 +138,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
             json_files_watcher.run();
         }
     }
+
 
     @Override
     protected long getLastModified(HttpServletRequest req) {
@@ -99,68 +152,6 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Logger logger = Logger.getLogger("");
-        HttpSession session = req.getSession();
-        resp.setCharacterEncoding("UTF-8");
-        // Read parameters
-        String title = req.getParameter("addEvent");
-        String startEvent = req.getParameter("startEvent");
-        String endEvent = req.getParameter("endEvent");
-        String description = req.getParameter("description");
-        String icon = req.getParameter("icon");
-        String startDate = req.getParameter("startDate");
-        String endDate = req.getParameter("endDate");
-        String ob_filter = req.getParameter("filter");
-        String ob_search = req.getParameter("search");
-        String data_path = getServletContext().getInitParameter("data_path");
-        String filter_include = getServletContext().getInitParameter("filter_include");
-        String filter_exclude = getServletContext().getInitParameter("filter_exclude");
-        if (ob_filter != null && !ob_filter.equals("*"))
-            filter_include = ob_filter;
-        if (filter_include.equals(""))
-            filter_include = getServletContext().getInitParameter("filter_include");
-
-        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
-
-        if (startDate.equals("test")) {
-            try {
-                tests = new test_timeline("GET", resp, null, id++);
-                tests.run();
-            } catch (Exception e) {
-                logger.severe(e.getMessage());
-            }
-        } else {
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
-            try {
-                simpleDateFormat.format(new Date(startDate));
-            } catch (Exception e) {
-                startDate = simpleDateFormat.format(new Date());
-            }
-            try {
-                simpleDateFormat.format(new Date(endDate));
-            } catch (Exception e) {
-                endDate = startDate;
-            }
-
-            json_files_manager data = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, null,
-                    null, null, getServletContext());
-            JSONArray eventJson = new JSONArray();
-            eventJson.add("title:" + title);
-            eventJson.add("startEvent:" + startEvent);
-            eventJson.add("endEvent:" + endEvent);
-            eventJson.add("description:" + description);
-            eventJson.add("icon:" + icon);
-            data.addEvents(eventJson);
-
-            json_files_manager json_files_manager = new json_files_manager(startDate, endDate, data_path, ob_search, filter_include, filter_exclude, "GET", resp,
-                    session, getServletContext());
-
-            // Start a json_files_watcher loop to check if any new events are coming.
-            // If any the json_files_watcher will update the openBexi Timeline client again.
-            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager);
-            json_files_watcher.run();
-        }
     }
 
     @Override

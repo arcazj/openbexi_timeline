@@ -126,8 +126,10 @@ public class event_generator_zone {
                             getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
                     if (i == 3 || i == 5 || i == 7 || i == 9 || i == 11) {
                         end = "";
+                        status = "NEW";
                     } else {
                         end = new Date(dateL + (getRandomNumberUsingNextInt(1, 20) * 100000)).toString();
+                        status = "SCHEDULE";
                     }
 
                     title = "title" + j + "_" + i;

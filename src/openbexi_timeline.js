@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.8c beta
+    OpenBEXI Timeline 0.9.9 beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -203,6 +203,8 @@ function OB_TIMELINE() {
 
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
+        if (this.ob_filter_name === undefined)
+            this.ob_filter_name = "My_filter1";
         if (this.ob_filter_value === undefined)
             this.ob_filter_value = "";
         if (this.ob_search_value === undefined)
@@ -321,30 +323,7 @@ function OB_TIMELINE() {
             this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
                 this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
                 this.ob_camera_type, null, false);
-        } catch (err) {
-        }
-    };
-    OB_TIMELINE.prototype.ob_apply_timeline_filter = function (ob_scene_index) {
-        let ob_checked;
-        this.ob_filter_value = "";
-        try {
-            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
-                let value_items = value.split(",");
-                if (value_items.length > 1) {
-                    for (let i = 0; i < value_items.length; i++) {
-                        try {
-                            ob_checked = document.getElementById(this.name + "_" + key + "_" + value_items[i]).checked;
-                        } catch (err) {
-                        }
-                        if (ob_checked !== undefined && ob_checked === true) {
-                            this.ob_filter_value += key + ":" + value_items[i] + " ";
-                        }
-                    }
-                }
-            }
-            this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-                this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-                this.ob_camera_type, null, true);
+            //this.ob_update_timeline_filter(ob_scene_index);
         } catch (err) {
         }
     };
@@ -387,14 +366,315 @@ function OB_TIMELINE() {
         let description = document.getElementById(this.name + "_description").value;
         let icon = document.getElementById(this.name + "_icon").value;
 
-        this.data = this.data_head[0] + "?addEvent=" + title +
+        this.data = this.data_head[0] + "?ob_request=" + "addEvent" + "&title=" + title +
             "&startEvent=" + startEventUTC + "&endEvent=" + endEventUTC + "&description=" + description +
             "&startDate=" + this.minDate + "&endDate=" + this.maxDate + "&icon=" + icon +
-            "&filter=" + this.ob_filter_value + "&search=" + this.ob_search_value;
+            "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value + "&search=" +
+            this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
         this.load_data(ob_scene_index);
     };
+    OB_TIMELINE.prototype.ob_get_all_sorting_options = function (ob_scene_index) {
+        let OB_MAX_ATT_VALUE = 15;
+        let ob_build_all_sorting_options = "<option value='" + "NONE" + "'>" + "NONE" + "</option>\n";
+        try {
+            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
+                let ob_key_display = true;
+                let value_items = value.split(",");
 
-    OB_TIMELINE.prototype.ob_create_sorting = function (ob_scene_index) {
+                if (value_items.length > 1) {
+                    for (let i = 0; i < value_items.length; i++) {
+                        if (value_items[i].length > OB_MAX_ATT_VALUE) {
+                            ob_key_display = false;
+                            break;
+                        }
+                    }
+                    // Allow only Sorting for short attribute value not longer than OB_MAX_ATT_VALUE
+                    if (ob_key_display === true) {
+                        ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
+                    }
+                }
+            }
+        } catch (err) {
+            return "";
+        }
+        return ob_build_all_sorting_options;
+    };
+    OB_TIMELINE.prototype.ob_get_all_filtering_options = function (ob_scene_index) {
+        let OB_MAX_ATT_VALUE = 15;
+        let ob_build_all_filtering_options = "<div>";
+        try {
+            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
+                let ob_key_display = true;
+                let value_items = value.split(",");
+
+                if (value_items.length > 1) {
+                    for (let i = 0; i < value_items.length; i++) {
+                        if (value_items[i].length > OB_MAX_ATT_VALUE) {
+                            ob_key_display = false;
+                            break;
+                        }
+                    }
+
+                    // Allow only Sorting for short attribute value not longer than OB_MAX_ATT_VALUE
+                    if (ob_key_display === true) {
+                        ob_build_all_filtering_options +=
+                            "<table><tr align=left ><td style='background:#CDCCCC;font-weight:bold;'>" + key +
+                            "</td><td></td><td></td><td></td></tr> \n";
+                        let ob_tr = true;
+                        for (let i = 0; i < value_items.length; i++) {
+                            if (i === 0 || (i % 4) === 0) {
+                                ob_build_all_filtering_options += "<tr>";
+                                ob_tr = false;
+                            }
+                            // Add filtering lists for items not longer than 12 characters
+                            if (value_items[i] !== "" && value_items[i].length <= OB_MAX_ATT_VALUE &&
+                                !value_items[i].includes("-->")) {
+                                ob_build_all_filtering_options += "<td><label>" + value_items[i] +
+                                    "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
+                                    "></label></td>";
+                            }
+                            if (ob_tr === true && i !== 0 && (i % 4) !== 0) {
+                                ob_build_all_filtering_options += "</tr>";
+                                ob_tr = true;
+                            }
+                        }
+                        if (ob_tr === true)
+                            ob_build_all_filtering_options += "</table>";
+                        else
+                            ob_build_all_filtering_options += "</tr></table>";
+                    }
+                }
+            }
+        } catch (err) {
+            return "";
+        }
+        ob_build_all_filtering_options += "</div>";
+        return ob_build_all_filtering_options;
+    };
+    OB_TIMELINE.prototype.ob_apply_timeline_filter = function (ob_scene_index, ob_filter_index) {
+        let ob_checked;
+        this.ob_filter_value = "";
+        try {
+            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
+                let value_items = value.split(",");
+                if (value_items.length > 1) {
+                    for (let i = 0; i < value_items.length; i++) {
+                        try {
+                            ob_checked = document.getElementById(this.name + "_" + key + "_" + value_items[i]).checked;
+                        } catch (err) {
+                        }
+                        if (ob_checked !== undefined && ob_checked === true) {
+                            this.ob_filter_value += key + ":" + value_items[i] + ";";
+                        }
+                    }
+                }
+            }
+            this.ob_update_filter(ob_scene_index, ob_filter_index);
+        } catch (err) {
+        }
+    };
+    OB_TIMELINE.prototype.ob_help_filters = function (ob_scene_index) {
+        alert("Usage: <Include filters>|<Exclude filters>\n\n" +
+            "<strong>Example 1: Include only all sessions with the status SCHEDULE:\n</strong>" +
+            "status=SCHEDULE\n\n" +
+            "Example 2: Include only all sessions with type0, type1 and type2:\n" +
+            "type=type0;type=type1;type=type2\n\n" +
+            "Example 3: Exclude all sessions with type0, type1 and type2:\n" +
+            "|type=type0;type=type1;type=type2\n\n" +
+            "Example 4: Include only all sessions with type0, type1 and type2 and exclude all sessions with type0 and status STARTED:\n" +
+            "type=type0;type=type1;type=type2|type0+status=STARTED");
+
+    }
+    OB_TIMELINE.prototype.ob_get_filter_value = function (ob_scene_index, ob_filter_index) {
+        let ob_filter_value;
+        try {
+            if (this.ob_filters !== undefined && ob_filter_index != undefined) {
+                ob_filter_value = document.getElementById("textarea2_" + this.name + "_" + this.ob_filters[ob_filter_index].name).value;
+            } else {
+                ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
+            }
+            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|+:]/g, "").replaceAll(" ", "");
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_");
+            return ob_filter_value;
+        } catch (err) {
+        }
+        try {
+            ob_filter_value = this.ob_filters[ob_filter_index].filter_value;
+            if (ob_filter_value === undefined)
+                ob_filter_value = this.ob_filter_value;
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_");
+        } catch (err) {
+            ob_filter_value = "";
+        }
+        return ob_filter_value;
+    }
+    OB_TIMELINE.prototype.ob_get_filter_name = function (ob_scene_index, ob_filter_index) {
+        let ob_filter_name = "";
+        try {
+            if (this.ob_filters !== undefined && ob_filter_index != undefined) {
+                ob_filter_name = this.ob_filters[ob_filter_index].name;
+            } else
+                ob_filter_name = document.getElementById("textarea_" + this.name + "_new").value;
+            ob_filter_name = ob_filter_name.replace(/[^a-zA-Z0-9_]/g, "").replaceAll(" ", "");
+            this.ob_filter_value = ob_filter_name;
+            return ob_filter_name;
+        } catch (err) {
+        }
+        return ob_filter_name;
+    }
+    OB_TIMELINE.prototype.ob_add_filters = function (ob_scene_index) {
+        this.ob_create_filters(ob_scene_index, undefined, "add_filter");
+    }
+    OB_TIMELINE.prototype.ob_read_filter = function (ob_scene_index, ob_filter_index) {
+        this.ob_load_filters("readFilters", ob_scene_index, ob_filter_index, false);
+    };
+    OB_TIMELINE.prototype.ob_update_filter = function (ob_scene_index, ob_filter_index) {
+        document.getElementById("ob_sort_by").value = this.ob_filters[ob_filter_index].sortBy;
+        this.ob_load_filters("updateFilter", ob_scene_index, ob_filter_index, false);
+    };
+    OB_TIMELINE.prototype.ob_save_filter = function (ob_scene_index, ob_filter_index) {
+        this.ob_load_filters("saveFilter", ob_scene_index, ob_filter_index, true);
+    }
+    OB_TIMELINE.prototype.ob_delete_filters = function (ob_scene_index, ob_filter_index) {
+        this.ob_load_filters("deleteFilter", ob_scene_index, ob_filter_index, true);
+    }
+    OB_TIMELINE.prototype.ob_load_filters = function (ob_request, ob_scene_index, ob_filter_index, ob_show) {
+        this.data_head = this.params[0].data.split("?");
+        let backgroundColor = "";
+        if (this.backgroundColor !== undefined)
+            backgroundColor = this.backgroundColor;
+        if (this.ob_camera_type === undefined)
+            this.ob_camera_type = "Orthographic";
+        let ob_filter_name = this.ob_get_filter_name(ob_scene_index, ob_filter_index);
+        let ob_filter_value = this.ob_get_filter_value(ob_scene_index, ob_filter_index);
+        let ob_sortBy;
+        try {
+            if (ob_request === "saveFilter") {
+                ob_sortBy = document.getElementById("ob_sort_by").value;
+                if (ob_sortBy === "") ob_sortBy = "NONE";
+                document.getElementById("ob_sort_by").value = ob_sortBy;
+            } else
+                ob_sortBy = this.ob_filters[ob_filter_index].sortBy;
+        } catch (err) {
+            ob_sortBy = "NONE";
+        }
+        if (this.ob_filters !== undefined && this.ob_filters[ob_filter_index] !== undefined) {
+            backgroundColor = this.ob_filters[ob_filter_index].backgroundColor;
+        }
+        backgroundColor = backgroundColor.replaceAll("#", "@");
+
+        this.data = this.data_head[0] + "?ob_request=" + ob_request +
+            "&filterName=" + ob_filter_name +
+            "&timelineName=" + this.name +
+            "&title=" + this.title +
+            "&backgroundColor=" + backgroundColor +
+            "&userName=" + this.ob_user.name +
+            "&email=" + this.ob_email.name +
+            "&top=" + this.top +
+            "&left=" + this.left +
+            "&width=" + this.params[0].width +
+            "&height=" + this.params[0].height +
+            "&camera=" + this.ob_camera_type +
+            "&sortBy=" + ob_sortBy +
+            "&filter=" + ob_filter_value;
+        this.load_data(ob_scene_index);
+        this.show_filters = ob_show;
+    }
+    OB_TIMELINE.prototype.ob_edit_filters = function (ob_scene_index, ob_filter_index) {
+        this.ob_create_filters(ob_scene_index, ob_filter_index, "edit_filter");
+    }
+    OB_TIMELINE.prototype.ob_select_filters = function (ob_scene_index, ob_filter_index) {
+        this.ob_create_filters(ob_scene_index, ob_filter_index, "select_filter");
+        if (ob_filter_index !== undefined)
+            this.ob_update_filter(ob_scene_index, ob_filter_index);
+        this.show_filters = true;
+    }
+    OB_TIMELINE.prototype.ob_get_all_filters = function (ob_scene_index, ob_filter_index, ob_request) {
+        let ob_build_all_filters = "<div>";
+        ob_build_all_filters +=
+            "<table><tr>\n";
+        try {
+            if (this.ob_filters !== undefined) {
+                for (let i = 0; i < this.ob_filters.length; i++) {
+                    try {
+                        ob_build_all_filters += "<tr>";
+                        ob_build_all_filters += "<td>";
+                        if (ob_filter_index === i) {
+                            ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' checked='checked' id=checkbox_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + "," + i + ")\"><span class='ob_filter_span_checkmark'></span></label>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows='1' >" + this.ob_filters[i].name + "</textarea>";
+                            ob_build_all_filters += "</td ><td>";
+                            if (ob_request === "edit_filter")
+                                ob_build_all_filters += "<img class='ob_filter_save' id=save_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + i + ")\"></img>";
+                            else
+                                ob_build_all_filters += "<img class='ob_filter_edit' id=edit_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + i + ")\"></img>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "<img class='ob_filter_delete' id=delete" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_delete_filters(" + ob_scene_index + "," + i + ")\"></img>";
+
+                        } else {
+                            ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' id=checkbox_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + "," + i + ")\"><span class='ob_filter_span_checkmark'></span></label>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows='1'" + ">" + this.ob_filters[i].name + "</textarea>";
+                            ob_build_all_filters += "</td ><td>";
+                            ob_build_all_filters += "</td ><td>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "</td ><td>";
+                        }
+                        ob_build_all_filters += "</td>";
+                        ob_build_all_filters += "</tr>";
+                        if (ob_request === "edit_filter" && i === ob_filter_index) {
+                            ob_build_all_filters += "<tr>";
+                            ob_build_all_filters += "<td>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "<textarea class='ob_filter_text' id=textarea2_" + this.name + "_" + this.ob_filters[i].name + " rows='2' >" + this.ob_filters[i].filter_value + "</textarea>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "</td><td>";
+                            ob_build_all_filters += "</td>";
+                            ob_build_all_filters += "</tr>";
+                        }
+                    } catch (e) {
+                        return "";
+                    }
+                }
+                ob_build_all_filters += "<tr>";
+                ob_build_all_filters += "<td>";
+                if (ob_filter_index === undefined)
+                    ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' checked='checked' id=checkbox_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_add_filters(" + ob_scene_index + "," + undefined + ")\"><span class='ob_filter_span_checkmark'></span></label>";
+                else
+                    ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' id=checkbox_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + ")\"><span class='ob_filter_span_checkmark'></span></label>";
+                ob_build_all_filters += "</td><td>";
+                if (ob_request === "edit_filter" && ob_filter_index === undefined)
+                    ob_build_all_filters += "<textarea class='ob_filter_name' id=textarea_" + this.name + "_new rows='1' >" + "<Add a new filter>" + "</textarea>";
+                else
+                    ob_build_all_filters += "<textarea disabled class='ob_filter_name' id=textarea_" + this.name + "_new rows='1' >" + "<Add a new filter>" + "</textarea>";
+                ob_build_all_filters += "</td><td>";
+                if (ob_request === "select_filter" && ob_filter_index === undefined)
+                    ob_build_all_filters += "<img class='ob_filter_edit' id=edit_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + undefined + ")\"></img>";
+                if (ob_request === "edit_filter" && ob_filter_index === undefined)
+                    ob_build_all_filters += "<img class='ob_filter_save' id=save_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + undefined + ")\"></img>";
+                ob_build_all_filters += "</td><td>";
+                ob_build_all_filters += "<img class='ob_filter_help' id=help_" + this.name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_help_filters(" + ob_scene_index + ")\"></img>";
+                ob_build_all_filters += "</td>";
+                ob_build_all_filters += "</tr>";
+                if (ob_request === "edit_filter" && ob_filter_index === undefined) {
+                    ob_build_all_filters += "<tr>";
+                    ob_build_all_filters += "<td>";
+                    ob_build_all_filters += "</td><td>";
+                    ob_build_all_filters += "<textarea class='ob_filter_text' id=textarea2_" + this.name + "_new rows='2' >" + "" + "</textarea>";
+                    ob_build_all_filters += "</td><td>";
+                    ob_build_all_filters += "</td><td>";
+                    ob_build_all_filters += "</td>";
+                    ob_build_all_filters += "</tr>";
+                }
+            }
+        } catch (err) {
+            return "";
+        }
+        ob_build_all_filters += "</table>";
+        return ob_build_all_filters;
+    }
+    OB_TIMELINE.prototype.ob_create_filters = function (ob_scene_index, ob_filter_index, ob_request) {
+        this.show_filters = false;
         let ob_sorting_by = "NONE";
         let ob_filtering = "";
         this.ob_remove_descriptor();
@@ -422,67 +702,15 @@ function OB_TIMELINE() {
                 div.style.height = window.innerHeight + "px";
             div.style.width = "100%";
 
-            let OB_MAX_ATT_VALUE = 15;
-            let ob_build_all_sorting_options = "<option value='" + "NONE" + "'>" + "NONE" + "</option>\n";
-            let ob_build_all_filtering_options = "<div>";
-            try {
-                for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
-                    let ob_key_display = true;
-                    let value_items = value.split(",");
-
-                    if (value_items.length > 1) {
-                        for (let i = 0; i < value_items.length; i++) {
-                            if (value_items[i].length > OB_MAX_ATT_VALUE) {
-                                ob_key_display = false;
-                                break;
-                            }
-                        }
-
-                        // Allow only Sorting for short attribute value not longer than OB_MAX_ATT_VALUE
-                        if (ob_key_display === true) {
-                            ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
-
-                            ob_build_all_filtering_options +=
-                                "<table><tr align=left ><td style='background:#CDCCCC;font-weight:bold;'>" + key +
-                                "</td><td></td><td></td><td></td></tr> \n";
-                            let ob_tr = true;
-                            for (let i = 0; i < value_items.length; i++) {
-                                if (i === 0 || (i % 4) === 0) {
-                                    ob_build_all_filtering_options += "<tr>";
-                                    ob_tr = false;
-                                }
-                                // Add filtering lists for items not longer than 12 characters
-                                if (value_items[i] !== "" && value_items[i].length <= OB_MAX_ATT_VALUE &&
-                                    !value_items[i].includes("-->")) {
-                                    ob_build_all_filtering_options += "<td><label>" + value_items[i] +
-                                        "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
-                                        "></label></td>";
-                                }
-                                if (ob_tr === true && i !== 0 && (i % 4) !== 0) {
-                                    ob_build_all_filtering_options += "</tr>";
-                                    ob_tr = true;
-                                }
-                            }
-                            if (ob_tr === true)
-                                ob_build_all_filtering_options += "</table>";
-                            else
-                                ob_build_all_filtering_options += "</tr></table>";
-                        }
-                    }
-                }
-            } catch (err) {
-            }
-            ob_build_all_filtering_options += "</div>";
-
             div.innerHTML = "" +
                 "<div class='ob_descriptor_head' >Sorting & Filtering<\div>\n" +
                 "<div class='ob_form1'>\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
-                "<legend><span class='number'>1 - </span>Timeline Sorting By " + ob_sorting_by + "</legend>\n" +
+                "<legend><span class='number'>1 - </span>Timeline sorting by " + ob_sorting_by + "</legend>\n" +
                 "<input class='ob_sort_by' type='label' disabled value='Sort by :'>\n" +
                 "<select id='ob_sort_by' name='ob_sorting_by'>\n" +
-                ob_build_all_sorting_options +
+                this.ob_get_all_sorting_options(ob_scene_index) +
                 "</select>      \n" +
                 "</fieldset>\n" +
                 "<fieldset>" +
@@ -491,12 +719,10 @@ function OB_TIMELINE() {
                 "</fieldset>\n" +
                 "<legend><span class='number'>2 - </span>Timeline Filtering " + ob_filtering + "</legend>\n" +
                 "<fieldset>\n" +
-                ob_build_all_filtering_options +
+                //this.ob_get_all_filtering_options(ob_scene_index) +
+                this.ob_get_all_filters(ob_scene_index, ob_filter_index, ob_request) +
                 "</fieldset>\n" +
                 "<fieldset>" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_filter(" + ob_scene_index + ");\" value='Apply Filtering' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
-                "</fieldset>\n" +
                 "</form>\n" +
                 "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container' style='position:absolute;'> </div>\n" +
                 "</div>";
@@ -632,7 +858,16 @@ function OB_TIMELINE() {
         this.ob_stop.style.visibility = "visible";
     };
 
-    OB_TIMELINE.prototype.ob_create_help = function () {
+    OB_TIMELINE.prototype.ob_save_user = function (ob_scene_index) {
+        this.ob_user.name = document.getElementById(this.name + "_user").value
+        this.ob_email.name = document.getElementById(this.name + "_email").value
+        localStorage.user = JSON.stringify({name: this.ob_user.name});
+        localStorage.email = JSON.stringify({name: this.ob_email.name});
+    };
+    OB_TIMELINE.prototype.ob_cancel_user = function (ob_scene_index) {
+        this.ob_remove_setting();
+    };
+    OB_TIMELINE.prototype.ob_create_help = function (ob_scene_index) {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
         this.ob_remove_setting();
@@ -648,11 +883,26 @@ function OB_TIMELINE() {
             div.id = this.name + '_help';
             div.innerHTML = "<div style='padding:8px;text-align: center;'>OpenBEXI timeline<\div>\n" +
                 "<div class=\"ob_form1\">\n" +
+                "</form>\n" +
                 "<form>\n" +
-                "<fieldset>\n" +
-                "<legend> version 0.9.8c beta</legend>\n" +
+                "<legend> version 0.9.9 beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
+                "<br>" + "<br>" +
+                "<form>\n" +
+                "<legend><span class='number'></span>User</legend>\n" +
+                "<input type='label' disabled value='Name :'>\n" +
+                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name + "'>\n" +
+                "<br>" +
+                "<input type='label' disabled value='email :'>\n" +
+                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name + "'>\n" +
+                "<fieldset>\n" +
+                "<br>" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<fieldset>\n" +
+                "</form>\n" +
+                "<fieldset>\n" +
                 "</div>";
 
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
@@ -990,7 +1240,7 @@ function OB_TIMELINE() {
                 that2.ob_settings.style.zIndex = "9999";
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
-                that2.ob_create_sorting(that2.ob_render_index);
+                that2.ob_create_filters(that2.ob_render_index, 0, "select_filter");
             };
             this.ob_filter.onmousemove = function () {
                 that2.moving = false;
@@ -1729,7 +1979,7 @@ function OB_TIMELINE() {
                     if (this.ob_scene[ob_scene_index].bands[i].model[j].sortBy === undefined)
                         this.ob_scene[ob_scene_index].bands[i].model[j].sortBy = "NONE";
                     if (i === 0) {
-                        if (this.ob_scene[ob_scene_index].sessions === undefined) return;
+                        if (this.ob_scene[ob_scene_index].sessions === undefined || this.ob_scene[ob_scene_index].sessions.events === undefined) return;
                         for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
                             // Remove all events events not visible in the bands
                             //pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].sessions.events[i].start, band.gregorianUnitLengths, band.intervalPixels);
@@ -1740,7 +1990,8 @@ function OB_TIMELINE() {
                                         this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString());
                                     this.ob_scene[ob_scene_index].sessions.events[k].data.sortByValue = sortByValue;
                                     if (ob_layouts.indexOf(sortByValue) === -1) {
-                                        ob_layouts.push(sortByValue);
+                                        if (sortByValue !== undefined)
+                                            ob_layouts.push(sortByValue);
                                         if ((ob_layouts[0]) !== undefined) {
                                             if ((ob_layouts[0]).length > max_name_length)
                                                 max_name_length = (ob_layouts[0]).length;
@@ -2273,9 +2524,73 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
     }
+    OB_TIMELINE.prototype.get_backgroundColor = function (ob_scene_index) {
+        if (this.ob_filters !== undefined) {
+            for (let i = 0; i < this.ob_filters.length; i++) {
+                try {
+                    if (this.ob_filters[i].current === "yes")
+                        return this.ob_filters[i].backgroundColor;
+                } catch (e) {
+                    return "";
+                }
+            }
+        }
+    }
+    OB_TIMELINE.prototype.get_current_filter_value = function (ob_scene_index) {
+        if (this.ob_filters !== undefined) {
+            for (let i = 0; i < this.ob_filters.length; i++) {
+                try {
+                    if (this.ob_filters[i].current === "yes")
+                        return this.ob_filters[i].filter_value;
+                } catch (e) {
+                    return "";
+                }
+            }
+        }
+    }
+    OB_TIMELINE.prototype.get_current_sortBy = function (ob_scene_index) {
+        if (this.ob_filters !== undefined) {
+            for (let i = 0; i < this.ob_filters.length; i++) {
+                try {
+                    if (this.ob_filters[i].current === "yes")
+                        return this.ob_filters[i].sortBy;
+                } catch (e) {
+                    return "";
+                }
+            }
+        }
+    }
+    OB_TIMELINE.prototype.set_user_setting_and_filters = function (ob_scene_index, setting_and_filters) {
+        this.setting_and_filters = setting_and_filters;
+        if (setting_and_filters.openbexi_timeline !== undefined) {
+            this.name = setting_and_filters.openbexi_timeline[0].name;
+            this.title = setting_and_filters.openbexi_timeline[0].title;
+            this.user = setting_and_filters.openbexi_timeline[0].user;
+            this.email = setting_and_filters.openbexi_timeline[0].email
+            this.top = setting_and_filters.openbexi_timeline[0].top;
+            this.left = setting_and_filters.openbexi_timeline[0].left;
+            this.params[0].width = setting_and_filters.openbexi_timeline[0].width;
+            this.params[0].height = setting_and_filters.openbexi_timeline[0].height;
+            this.ob_camera_type = setting_and_filters.openbexi_timeline[0].camera;
+            if (this.ob_scene !== undefined)
+                this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = setting_and_filters.openbexi_timeline[0].sortBy;
+            if (document.getElementById("ob_sort_by") !== null)
+                document.getElementById("ob_sort_by").value = setting_and_filters.openbexi_timeline[0].sortBy;
+            this.ob_filters = setting_and_filters.openbexi_timeline[0].filters;
+            this.backgroundColor = setting_and_filters.openbexi_timeline[0].backgroundColor;
+            if (this.ob_filters !== undefined && this.ob_filters.length !== 0) {
+                this.backgroundColor = this.get_backgroundColor(ob_scene_index);
+                this.ob_filter_value = this.get_current_filter_value(ob_scene_index);
+                this.ob_filter_value = this.ob_filter_value.replaceAll("|", "_PIPE_");
+                this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = this.get_current_sortBy(ob_scene_index);
+            } else
+                this.ob_filter_value = "";
+        }
+    }
 
     OB_TIMELINE.prototype.update_scenes = function (ob_scene_index, header, params, bands, model, sessions, camera,
                                                     band, load_data) {
+
         // If user is moving a band
         if (band !== null) {
             if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].ob_width ||
@@ -2287,20 +2602,22 @@ function OB_TIMELINE() {
                 this.ob_render(ob_scene_index);
             }
         } else {   // If user is not moving a band
-            if (this.first_sync === true) {
+            if (this.first_sync === undefined) {
                 this.ob_render_index = ob_scene_index;
-                this.first_sync = false;
-                this.second_sync = true;
+                this.first_sync = true;
+                this.ob_render_index = ob_scene_index;
                 this.reset_synced_time("new_sync", ob_scene_index);
-                this.load_data(ob_scene_index);
+                this.runEmptyTimeline(ob_scene_index);
+                if (this.data === "unit_tests_minutes")
+                    this.runUnitTestsMinutes(ob_scene_index);
+                else if (this.data === "unit_tests_hours")
+                    this.runUnitTestsHours(ob_scene_index);
+                else {
+                    this.ob_read_filter(ob_scene_index, 0);
+                }
                 return;
             }
 
-            /*if (this.ob_render_index === 2) {
-                this.ob_render_index = 0;
-            } else {
-                this.ob_render_index++;
-            }*/
             this.ob_scene_index = this.ob_render_index;
 
             if (load_data === true) {
@@ -2316,12 +2633,6 @@ function OB_TIMELINE() {
                 that_scene.update_scene(ob_scene_index, header, params, bands, model, sessions, camera);
             }, 0);
 
-            if (this.second_sync === true) {
-                this.ob_render_index = ob_scene_index;
-                this.second_sync = false;
-                this.reset_synced_time("re_sync", ob_scene_index);
-                this.load_data(ob_scene_index);
-            }
         }
     }
 
@@ -2354,6 +2665,8 @@ function OB_TIMELINE() {
                     ob_timeline.ob_start_clock();
                     if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].show_calendar)
                         ob_timeline.ob_create_calendar(new Date(ob_timeline.ob_scene[ob_timeline.ob_scene_index].date_cal));
+                    if (ob_timeline.show_filters)
+                        ob_timeline.ob_create_filters(ob_timeline.ob_scene_index, 0, "select_filter");
                     // Apply filter if any here:
                     let regex = ob_timeline.build_sessions_filter("");
                     ob_timeline.create_sessions(ob_timeline.ob_scene_index, false, regex);
@@ -2362,9 +2675,14 @@ function OB_TIMELINE() {
                 }
                 let endDate = new Date();
                 let ob_time = endDate.getTime() - startDate.getTime();
-                console.log("populated " + ob_timeline.ob_scene[ob_timeline.ob_scene_index].sessions.events.length +
-                    " session(s) in " + ob_time + " ms and updated scene " + ob_timeline.ob_scene_index +
-                    " (date min=" + ob_timeline.minDate + "- date max=" + ob_timeline.maxDate + ")");
+                try {
+                    if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].sessions.events.length !== 1)
+                        console.log("populated " +
+                            ob_timeline.ob_scene[ob_timeline.ob_scene_index].sessions.events.length +
+                            " session(s) in " + ob_time + " ms and updated scene " + ob_timeline.ob_scene_index +
+                            " (date min=" + ob_timeline.minDate + "- date max=" + ob_timeline.maxDate + ")");
+                } catch (e) {
+                }
             }
         );
         return null;
@@ -2620,6 +2938,7 @@ function OB_TIMELINE() {
                 // Assign each event to the right bands and store zones
                 if (sortByValue === undefined)
                     sortByValue = eval("this.ob_scene[ob_scene_index].bands[i].model[0].sortBy");
+                if (this.ob_scene[ob_scene_index].sessions.events === undefined) return;
                 for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
                     // Remove all events events not visible in the bands
                     //pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].sessions.events[k].start, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths, this.ob_scene[ob_scene_index].bands[i].intervalPixels);
@@ -2628,7 +2947,7 @@ function OB_TIMELINE() {
                         this.ob_scene[ob_scene_index].bands[i].zones.push(Object.assign({},
                             this.ob_scene[ob_scene_index].sessions.events[k]));
                     } else if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined) {
-                        if (sortByValue === "NONE") {
+                        if (sortByValue === "NONE" || sortByValue === "") {
                             this.ob_scene[ob_scene_index].bands[i].sessions.push(Object.assign({},
                                 this.ob_scene[ob_scene_index].sessions.events[k]));
                         } else {
@@ -2803,10 +3122,10 @@ function OB_TIMELINE() {
                         }
                     }
                 } catch (e) {
-                    console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
+                    /*console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
                         String(this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title) +
                         " - this.ob_scene[ob_scene_index].bands[i].heightMax=" +
-                        this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);
+                        this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);*/
                 }
             }
         }
@@ -3512,10 +3831,13 @@ function OB_TIMELINE() {
         }
         sessions += "]}";
         this.ob_scene[ob_scene_index].sessions = eval('(' + (sessions) + ')');
-
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-            this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+        this.ob_scene_index = this.ob_render_index;
+        let that_scene = this;
+        clearTimeout(this.update_this_scene);
+        this.update_this_scene = setTimeout(function () {
+            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+        }, 0);
     };
     OB_TIMELINE.prototype.runUnitTestsHours = function (ob_scene_index) {
         console.log("start runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
@@ -3635,14 +3957,39 @@ function OB_TIMELINE() {
         }
         sessions += "]}";
         this.ob_scene[ob_scene_index].sessions = eval('(' + (sessions) + ')');
-
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-            this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+        this.ob_scene_index = this.ob_render_index;
+        let that_scene = this;
+        clearTimeout(this.update_this_scene);
+        this.update_this_scene = setTimeout(function () {
+            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+        }, 0);
         console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
     };
+
+    OB_TIMELINE.prototype.runEmptyTimeline = function (ob_scene_index) {
+        let sessions = "{'dateTimeFormat': 'iso8601','events' : [{}]}";
+
+        this.ob_scene[ob_scene_index].sessions = eval('(' + (sessions) + ')');
+        this.ob_scene_index = this.ob_render_index;
+        let that_scene = this;
+        clearTimeout(this.update_this_scene);
+        this.update_this_scene = setTimeout(function () {
+            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+        }, 0);
+        this.update_this_scene = setTimeout(function () {
+            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+        }, 0);
+    };
+    OB_TIMELINE.prototype.ob_getDataType = function (ob_scene_index, json) {
+        if (json.openbexi_timeline !== undefined && json.openbexi_timeline[0].filters !== undefined)
+            return "filters";
+        return "events";
+    }
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
-        if (this.ob_scene[ob_scene_index].ob_interval_move !== undefined)
+        if (this.ob_scene !== undefined && this.ob_scene[ob_scene_index].ob_interval_move !== undefined)
             clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
 
         if (this.data === undefined) {
@@ -3651,29 +3998,29 @@ function OB_TIMELINE() {
                 this.ob_camera_type, null, false);
             return;
         }
-        if (this.data === "unit_tests_minutes") {
-            this.ob_not_connected();
-            this.runUnitTestsMinutes(ob_scene_index);
-            return;
-        }
-        if (this.data === "unit_tests_hours") {
-            this.ob_not_connected();
-            this.runUnitTestsHours(ob_scene_index);
-            return;
-        }
-        // GET data from a range of time
-        if (!this.data.includes(".json") && !this.data.includes("=test") && !this.data.includes("UTC")) {
-            this.ob_not_connected();
+
+        // Add/update/delete filters.
+        if (this.data.includes("startDate=test")) {
+            this.method = "POST";
+        } else if (this.data.includes("updateFilter") || this.data.includes("addFilter") ||
+            this.data.includes("saveFilter") || this.data.includes("deleteFilter") ||
+            this.data.includes("readFilters")) {
+            this.method = "POST";
+        } else if (this.data.includes("updateEvent") || this.data.includes("addEvent") ||
+            this.data.includes("deleteEvent")) {
+            // Add an event or a session.
+            this.method = "POST";
+        } else if (!this.data.includes(".json") && !this.data.includes("UTC")) {
+            // GET data from a range of time
             this.data_head = this.data.split("?");
             this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
-                "&filter=" + this.ob_filter_value + "&search=" + this.ob_search_value;
+                "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
+                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
             this.method = "GET";
+        } else {
         }
-        // Add an event or a session.
-        if (this.data.includes("addEvent")) {
-            this.ob_not_connected();
-            this.method = "POST";
-        }
+
+        console.log(this.data.toString());
         let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
             let that = this;
@@ -3681,6 +4028,7 @@ function OB_TIMELINE() {
             console.log(ob_ws[0]);
             ws.onopen = function () {
                 console.log("WS - onopen!");
+                this.ob_not_connected();
                 ws.send("Open WebSocket");
             };
             ws.onmessage = function (e) {
@@ -3703,44 +4051,12 @@ function OB_TIMELINE() {
             return;
         }
 
-        //let ob_url = this.data && this.data.match(/^(http?|chrome):\/\/[^\s$.?#].[^\s]*$/);
-        let ob_url = this.data && this.data.match(/^(http?):\/\//);
-        if (ob_url !== null && ob_url.length === 2) {
-            let that = this;
-            fetch(this.data, {
-                method: this.method,
-                dataType: 'json',
-                headers: {
-                    "Accept": "application/json",
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        that.ob_connected();
-                        console.log("Response OK!");
-                        return response.json();
-                    } else {
-                        console.log("Response not OK!");
-                    }
-                })
-                .then((json) => {
-                    that.ob_scene[that.ob_scene_index].sessions = json;
-                    that.update_scenes(that.ob_render_index, that.header, that.params,
-                        that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
-                        that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
-                }).catch(err => {
-                console.log('Error message:', err.statusText)
-                this.ob_not_connected();
-            });
-            return;
-        }
-        //let ob_url_secure = this.data && this.data.match(/^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/);
-        let ob_url_secure = this.data && this.data.match(/^(https?):\/\//);
+        // -- use SSE protocole --
+        let ob_url_secure = this.data && this.data.match(/^(https|http?):\/\//);
         if (ob_url_secure !== null && ob_url_secure.length === 2) {
             if (!!window.EventSource && this.data.includes("sse")) {
                 let that = this;
-
+                this.ob_not_connected();
                 //Close the previous eventSource request to notify the server to do  all cleanup on the server side;
                 if (this.eventSource !== undefined)
                     this.eventSource.close();
@@ -3751,12 +4067,27 @@ function OB_TIMELINE() {
                 });
                 this.eventSource = eventSource;
                 eventSource.onmessage = function (e) {
-                    //console.log('onmessage: Receiving sessions:' + e.openbexi.timeline.data);
                     that.ob_connected();
-                    that.ob_scene[that.ob_scene_index].sessions = eval('(' + (e.data) + ')');
-                    that.update_scenes(that.ob_scene_index, that.header, that.params,
-                        that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
-                        that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
+                    if (that.ob_getDataType(that.ob_scene_index, eval('(' + (e.data) + ')')) === "filters") {
+                        try {
+                            that.set_user_setting_and_filters(that.ob_scene_index, eval('(' + (e.data) + ')'));
+                            that.data_head = that.data.split("?");
+                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                                "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                                "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                                that.ob_user.name;
+                            that.update_scenes(that.ob_scene_index, that.header, that.params,
+                                that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
+                                that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, true);
+                        } catch (err) {
+                            console.log('POST - cannot save setting_and_filters ...');
+                        }
+                    } else {
+                        that.ob_scene[that.ob_scene_index].sessions = eval('(' + (e.data) + ')');
+                        that.update_scenes(that.ob_scene_index, that.header, that.params,
+                            that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
+                            that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
+                    }
                     //eventSource.close();
                 };
                 eventSource.onopen = function () {
@@ -3766,13 +4097,17 @@ function OB_TIMELINE() {
                     // Very important: Do not close the session otherwise this client would not reconnect
                     //eventSource.close();
                     that.ob_not_connected();
-                    console.log('SSE - onerror');
-                    that.load_data(ob_scene_index);
+                    if (!that.data.includes("updateFilter") && !that.data.includes("addFilter")
+                        && !that.data.includes("saveFilter") && !that.data.includes("deleteFilter")
+                        && !that.data.includes("readFilters")) {
+                        console.log('SSE - onerror');
+                        that.load_data(ob_scene_index);
+                    }
                     console.log('SSE - reconnecting ...');
                 }
-
             } else {
                 let that = this;
+                this.ob_not_connected();
                 fetch(this.data, {
                     method: this.method,
                     dataType: 'json',
@@ -3780,22 +4115,37 @@ function OB_TIMELINE() {
                         "Accept": "application/json",
                         'Content-Type': 'application/json',
                     }
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            console.log("Response OK!");
-                            this.ob_connected();
-                            return response.json();
-                        } else {
-                            console.log("Response not OK!");
+                }).then(response => {
+                    if (response.ok) {
+                        console.log("Response OK!");
+                        this.ob_connected();
+                        return response.json();
+                    } else {
+                        console.log("Response not OK!");
+                    }
+                }).then((json) => {
+                    if (that.ob_getDataType(that.ob_scene_index, json) === "filters") {
+                        try {
+                            that.set_user_setting_and_filters(that.ob_scene_index, json);
+                            that.data_head = that.data.split("?");
+                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                                "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                                "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                                that.ob_user.name;
+                            that.method = "GET";
+                            that.update_scenes(that.ob_scene_index, that.header, that.params,
+                                that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
+                                that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, true);
+                        } catch (err) {
+                            console.log('POST - cannot save setting_and_filters ...');
                         }
-                    })
-                    .then((json) => {
+                    } else {
                         that.ob_scene[that.ob_scene_index].sessions = json;
                         that.update_scenes(that.ob_scene_index, that.header, that.params,
                             that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                             that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
-                    }).catch(err => {
+                    }
+                }).catch(err => {
                     console.log('Error message:', err.statusText)
                     this.ob_not_connected();
                 });
@@ -3822,13 +4172,28 @@ function OB_TIMELINE() {
             ob_timeline.ob_init(ob_timeline.ob_render_index);
         });
     }, false);
+
+    OB_TIMELINE.prototype.getLocalStorage = function () {
+        this.ob_user = "?";
+        this.ob_email = "?";
+        if (localStorage.user !== undefined) {
+            this.ob_user = JSON.parse(localStorage.user);
+            this.ob_email = JSON.parse(localStorage.email);
+        }
+        if (this.ob_user.name === "?") {
+            this.ob_email = "?";
+            localStorage.user = JSON.stringify({name: "?"});
+        }
+    }
 }
+
 
 function ob_load_timeline(ob_timeline_instance) {
     ob_timelines.push(ob_timeline_instance);
-    ob_timeline_instance.first_sync = true;
+    ob_timeline_instance.getLocalStorage();
     ob_timeline_instance.ob_scene_index = 0;
+    ob_timeline_instance.first_sync = undefined;
     ob_timeline_instance.update_scenes(ob_timeline_instance.ob_scene_index, null, ob_timeline_instance.params,
         ob_timeline_instance.bands, ob_timeline_instance.model, ob_timeline_instance.sessions, null, null,
-        true);
+        false);
 }
