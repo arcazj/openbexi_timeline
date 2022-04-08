@@ -10,7 +10,7 @@ https://localhost:8445/openbexi_timeline_secure.html
 or 
 https://localhost:8443/openbexi_timeline_SSE.html
 
-# Getting started with a simple Openbexi Timeline 
+# Getting started with a simple OpenBexi Timeline 
 Here are a few easy steps to create a openbexi simple timeline. 
 Two bands are created, A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
 
