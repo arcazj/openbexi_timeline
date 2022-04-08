@@ -650,6 +650,10 @@ public class json_files_manager extends data_manager {
         Boolean ob_first_filter_deleted = false;
         String ob_current_filter = "no";
         Boolean change_current = true;
+        String StringBuilder_default = "{\n" +
+                "  \"dateTimeFormat\": \"iso8601\",\n" +
+                "  \"openbexi_timeline\": [{\n" +
+                "  \"name\": \"ob_timeline_2\",  \"title1\": \"GNS report\",  \"user\": \"\",  \"email\": \"\",  \"start\": \"current_time\",  \"top\": \"0\",  \"left\": \"0\",  \"width\": \"1350\",  \"height\": \"600\",  \"camera\": \"Orthographic\",  \"backgroundColor\": \"#a1d9ff\",  \"sortBy\": \"NONE\",  \"filters\":[]}]}";
 
         buildFile = buildFile.replace("/yyyy", "");
         buildFile = buildFile.replace("/mm", "");
@@ -674,11 +678,11 @@ public class json_files_manager extends data_manager {
                     filter_array = sortFilter(filter_array, ob_filter_name);
                 } catch (Exception e) {
                 }
-                reader.close();
             }
             if (filter_array == null || filter_array.size() == 0) {
                 filter_array = new JSONArray();
                 filter_array.add(0, ob_filter_name);
+                if (ob_filter_name.equals("")) ob_filter_name = "ALL";
             }
 
             jsonObjectMerged = new StringBuilder("{\n" +
@@ -785,12 +789,7 @@ public class json_files_manager extends data_manager {
         try {
             return parser.parse(jsonObjectMerged.toString());
         } catch (ParseException e) {
-            return "{\"dateTimeFormat\":\"iso8601\"," +
-                    "\"openbexi_timeline\":[{\"backgroundColor\":\"" + ob_backgroundColor + "\"," +
-                    "\"start\":\"current_time\",\"title\":\"" + ob_title + "\"," +
-                    "\"sortBy\":\"" + ob_sort_by + "\",\"filters\":[],\"top\":\"" + ob_top + "\",\"left\":\"" + ob_left + "\"," +
-                    "\"name\":\"" + ob_timeline_name + "\",\"width\":\"" + ob_width + "\",\"camera\":\"" + ob_camera + "\"," +
-                    "\"user\":\"" + ob_user + "\",\"email\":\"" + ob_email + "\",\"height\":\"" + ob_height + "\"}]}";
+            return null;
         }
     }
 

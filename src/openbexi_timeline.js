@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9 beta
+    OpenBEXI Timeline 0.9.9a beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -515,7 +515,7 @@ function OB_TIMELINE() {
                 ob_filter_name = this.ob_filters[ob_filter_index].name;
             } else
                 ob_filter_name = document.getElementById("textarea_" + this.name + "_new").value;
-            ob_filter_name = ob_filter_name.replace(/[^a-zA-Z0-9_]/g, "").replaceAll(" ", "");
+            ob_filter_name = ob_filter_name.replaceAll(" ", "_").replace(/[^a-zA-Z0-9_]/g, "");
             this.ob_filter_value = ob_filter_name;
             return ob_filter_name;
         } catch (err) {
@@ -885,7 +885,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9 beta</legend>\n" +
+                "<legend> version 0.9.9a beta</legend>\n" +
                 "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
                 "</form>\n" +
                 "<br>" + "<br>" +
@@ -2430,7 +2430,7 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[i].y,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].z) + 50,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) *
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].fontSizeInt) * 2,
+                    parseInt(this.ob_scene[ob_scene_index].bands[i].fontSizeInt) * 2.2 ,
                     this.ob_scene[ob_scene_index].bands[i].heightMax,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].depth) + 1,
                     this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
