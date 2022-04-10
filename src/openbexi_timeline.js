@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9a beta
+    OpenBEXI Timeline 0.9.9b beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -173,7 +173,7 @@ function OB_TIMELINE() {
             } else if (ob_case === "new_search") {
                 this.ob_scene.sync_time = Date.parse(this.ob_markerDate.toString());
             } else if (ob_case === "new_calendar_date") {
-                //this.first_sync = true;
+                this.first_sync = true;
                 if (this.timeZone === "UTC")
                     this.ob_scene.sync_time =
                         this.getUTCTime(Date.parse(this.ob_scene[ob_scene_index].date_cal));
@@ -199,12 +199,12 @@ function OB_TIMELINE() {
         // Set all timeline parameters:
         this.name = this.params[0].name;
         this.title = "";
-        this.multiples = 30;
+        this.multiples = 90;
 
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
         if (this.ob_filter_name === undefined)
-            this.ob_filter_name = "My_filter1";
+            this.ob_filter_name = "ALL";
         if (this.ob_filter_value === undefined)
             this.ob_filter_value = "";
         if (this.ob_search_value === undefined)
@@ -493,8 +493,8 @@ function OB_TIMELINE() {
             } else {
                 ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
             }
-            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|+:]/g, "").replaceAll(" ", "");
-            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_");
+            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\\\-+:_ ]/g, "");
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
             return ob_filter_value;
         } catch (err) {
         }
@@ -502,7 +502,7 @@ function OB_TIMELINE() {
             ob_filter_value = this.ob_filters[ob_filter_index].filter_value;
             if (ob_filter_value === undefined)
                 ob_filter_value = this.ob_filter_value;
-            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_");
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
         } catch (err) {
             ob_filter_value = "";
         }
@@ -681,6 +681,7 @@ function OB_TIMELINE() {
         this.ob_remove_calendar();
         this.ob_remove_help();
         this.ob_remove_setting();
+        this.ob_remove_login();
         try {
             ob_sorting_by = this.ob_scene[ob_scene_index].bands[0].model[0].sortBy;
         } catch (err) {
@@ -751,6 +752,7 @@ function OB_TIMELINE() {
         this.ob_remove_calendar();
         this.ob_remove_help();
         this.ob_remove_sorting();
+        this.ob_remove_login();
         try {
             if (document.getElementById(this.name + "_setting") !== null) {
                 this.ob_remove_setting();
@@ -867,11 +869,60 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_cancel_user = function (ob_scene_index) {
         this.ob_remove_setting();
     };
+    OB_TIMELINE.prototype.ob_login = function (ob_scene_index) {
+        this.ob_remove_descriptor();
+        this.ob_remove_calendar();
+        this.ob_remove_setting();
+        this.ob_remove_sorting();
+        this.ob_remove_help();
+        try {
+            if (document.getElementById(this.name + "_help") !== null) {
+                this.ob_remove_login();
+                return;
+            }
+            this.ob_timeline_right_panel.style.visibility = "visible";
+            let div = document.createElement("div");
+            div.className = "ob_head_panel";
+            div.id = this.name + '_login';
+            div.innerHTML = "<div style='padding:8px;text-align: center;'>OpenBEXI timeline<\div>\n" +
+                "<div class=\"ob_form1\">\n" +
+                "<br>" + "<br>" +
+                "<form>\n" +
+                "<legend><span class='number'></span>User</legend>\n" +
+                "<br>" +
+                "<input type='label' disabled value='Name :'>\n" +
+                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name + "'>\n" +
+                "<br>" +
+                "<input type='label' disabled value='email :'>\n" +
+                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name + "'>\n" +
+                "<fieldset>\n" +
+                "<br>" + "<br>" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<fieldset>\n" +
+                "</form>\n" +
+                "<fieldset>\n" +
+                "</div>";
+
+            this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
+            this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
+            this.ob_timeline_right_panel.appendChild(div);
+        } catch (err) {
+        }
+    };
+    OB_TIMELINE.prototype.ob_remove_login = function () {
+        try {
+            this.ob_timeline_right_panel.style.visibility = "hidden";
+            this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_login"));
+        } catch (err) {
+        }
+    };
     OB_TIMELINE.prototype.ob_create_help = function (ob_scene_index) {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
         this.ob_remove_setting();
         this.ob_remove_sorting();
+        this.ob_remove_login();
         try {
             if (document.getElementById(this.name + "_help") !== null) {
                 this.ob_remove_help();
@@ -885,20 +936,13 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9a beta</legend>\n" +
-                "<a  href='https://github.com/arcazj/openbexi'>'https://github.com/arcazj/openbexi'</a >\n" +
+                "<legend> version 0.9.9b beta</legend>\n" +
+                "<br>" + "<br>" +
                 "</form>\n" +
+                "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
+                "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0px 50px'>" +
                 "<br>" + "<br>" +
                 "<form>\n" +
-                "<legend><span class='number'></span>User</legend>\n" +
-                "<input type='label' disabled value='Name :'>\n" +
-                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name + "'>\n" +
-                "<br>" +
-                "<input type='label' disabled value='email :'>\n" +
-                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name + "'>\n" +
-                "<fieldset>\n" +
-                "<br>" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
                 "<fieldset>\n" +
                 "</form>\n" +
@@ -951,6 +995,7 @@ function OB_TIMELINE() {
         this.ob_remove_help();
         this.ob_remove_setting();
         this.ob_remove_sorting();
+        this.ob_remove_login();
         try {
             if (document.getElementById(this.name + "_cal") !== null) {
                 this.ob_remove_calendar();
@@ -1037,6 +1082,7 @@ function OB_TIMELINE() {
         this.ob_remove_calendar();
         this.ob_remove_setting();
         this.ob_remove_sorting();
+        this.ob_remove_login();
         try {
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_descriptor"));
         } catch (err) {
@@ -1124,6 +1170,7 @@ function OB_TIMELINE() {
                 that2.ob_remove_calendar();
                 that2.ob_remove_descriptor();
                 that2.ob_remove_setting();
+                that2.ob_remove_login();
                 that2.pos1 = that2.pos3 - event.clientX;
                 that2.pos2 = that2.pos4 - event.clientY;
                 that2.pos3 = event.clientX;
@@ -1156,6 +1203,7 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
+                that2.ob_login();
             };
             this.ob_start.onmousemove = function () {
                 that2.moving = false;
@@ -1172,6 +1220,7 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
+                that2.ob_login();
             };
             this.ob_stop.onmousemove = function () {
                 that2.moving = false;
@@ -1209,20 +1258,12 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
-                that2.first_sync = true;
+                that2.first_sync = undefined;
                 that2.ob_scene_index = 0;
                 that2.reset_synced_time("new_sync", that2.ob_render_index);
-                if (that2.data && that2.data.match(/^(http?):\/\//) ||
-                    that2.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
-                    that2.data && that2.data.match(/^(https?):\/\//)) {
-                    that2.data_head = that2.data.split("?");
-                    that2.update_scenes(that2.ob_render_index, that2.header, that2.params, that2.ob_scene[that2.ob_render_index].bands,
-                        that2.ob_scene[that2.ob_render_index].model, that2.ob_scene[that2.ob_render_index].sessions,
-                        that2.ob_camera_type, null, true);
-                } else
-                    that2.update_scenes(that2.ob_render_index, that2.header, that2.params, that2.ob_scene[that2.ob_render_index].bands,
-                        that2.ob_scene[that2.ob_render_index].model, that2.ob_scene[that2.ob_render_index].sessions,
-                        that2.ob_camera_type, null, false);
+                that2.update_scenes(that2.ob_render_index, that2.header, that2.params, that2.ob_scene[that2.ob_render_index].bands,
+                    that2.ob_scene[that2.ob_render_index].model, that2.ob_scene[that2.ob_render_index].sessions,
+                    that2.ob_camera_type, null, false);
             };
             this.ob_sync.onmousemove = function () {
                 that2.moving = false;
@@ -1336,7 +1377,7 @@ function OB_TIMELINE() {
             this.ob_help.onclick = function () {
                 clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
-                that2.ob_create_help();
+                that2.ob_create_help(that2.ob_render_index);
             };
             this.ob_help.onmousemove = function () {
                 that2.moving = false;
@@ -1455,6 +1496,7 @@ function OB_TIMELINE() {
                 that2.ob_remove_calendar();
                 that2.ob_remove_descriptor();
                 that2.ob_remove_setting();
+                that2.ob_remove_login();
             };
             this.ob_timeline_panel_resizer.onmousemove = function (event) {
                 if (that2.moving !== true) return;
@@ -1813,14 +1855,6 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].bands[i].z, ob_sync);
         }
     };
-    OB_TIMELINE.prototype.get_MinDate = function (ob_scene_index, date) {
-        let pixelOffSet = this.dateToPixelOffSet(ob_scene_index, date,
-            this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-            this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-        this.pixelOffSetToDate(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].viewOffset +
-            pixelOffSet, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-            this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-    }
     OB_TIMELINE.prototype.update_bands_MinDate = function (ob_scene_index, date) {
         this.minDateL = 0;
         this.iniMinDateL = 0;
@@ -1988,13 +2022,15 @@ function OB_TIMELINE() {
                                 if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined && this.ob_scene[ob_scene_index].sessions.events[k].zone === undefined) {
                                     sortByValue = eval("this.ob_scene[ob_scene_index].sessions.events[k]" + ".data." +
                                         this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString());
+                                    if (!isNaN(sortByValue)) sortByValue = this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString() + " " + sortByValue;
                                     this.ob_scene[ob_scene_index].sessions.events[k].data.sortByValue = sortByValue;
                                     if (ob_layouts.indexOf(sortByValue) === -1) {
-                                        if (sortByValue !== undefined)
+                                        if (sortByValue !== undefined) {
                                             ob_layouts.push(sortByValue);
+                                        }
                                         if ((ob_layouts[0]) !== undefined) {
                                             if ((ob_layouts[0]).length > max_name_length)
-                                                max_name_length = (ob_layouts[0]).length;
+                                                max_name_length = (ob_layouts[0]).length + 1;
                                         }
                                     }
                                 }
@@ -2353,7 +2389,7 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].add(ob_model_name);
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
 
-        this.add_text_sprite(ob_scene_index, ob_model_name, text, 50, 0, 10, 24, "Normal",
+        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, 24, "Normal",
             "Normal", textColor, 'Arial', undefined);
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
@@ -2430,7 +2466,7 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[i].y,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].z) + 50,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) *
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].fontSizeInt) * 2.2 ,
+                    parseInt(this.ob_scene[ob_scene_index].bands[i].fontSizeInt) * 2.2,
                     this.ob_scene[ob_scene_index].bands[i].heightMax,
                     parseInt(this.ob_scene[ob_scene_index].bands[i].depth) + 1,
                     this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
@@ -2581,7 +2617,7 @@ function OB_TIMELINE() {
             if (this.ob_filters !== undefined && this.ob_filters.length !== 0) {
                 this.backgroundColor = this.get_backgroundColor(ob_scene_index);
                 this.ob_filter_value = this.get_current_filter_value(ob_scene_index);
-                this.ob_filter_value = this.ob_filter_value.replaceAll("|", "_PIPE_");
+                this.ob_filter_value = this.ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
                 this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = this.get_current_sortBy(ob_scene_index);
             } else
                 this.ob_filter_value = "";

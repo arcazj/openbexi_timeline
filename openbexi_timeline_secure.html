@@ -28,12 +28,12 @@
         ob_timeline1 = new OB_TIMELINE();
         ob_timeline1.params = [{
             name: "ob_timeline_2",
-            title: "GNS report",
-            //date: "Jul 02 00:00:00 UTC 2020",
+            title: "Timeline report",
+            //date: "Apr 10 00:00:00 UTC 2022",
             date: "current_time",
             timeZone: "UTC",
             top: 0,
-            filter: "|RNG", //Exclude RNG
+            //filter: "|system:RNG", //Exclude RNG
             left: 0,
             height: 600,
             fontSize: "12",
@@ -63,11 +63,11 @@
                 alternateColor: "#9ac1db",
             }]
         },
-            /* {
+             /*{
                  name: "ob_overview_band_2",
-                 height: "20%",
+                 height: "10%",
                  color: "lightgrey",
-                 intervalPixels: 400,
+                 intervalPixels: 1000,
                  intervalUnit: "DAY",
                  dateFormat: "yyyy mmm",
                  SessionColor: "#a110ff",
