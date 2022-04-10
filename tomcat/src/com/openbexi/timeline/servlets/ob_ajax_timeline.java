@@ -41,7 +41,7 @@ ob_ajax_timeline extends HttpServlet {
         String endDate = req.getParameter("endDate");
         String data_path = getServletContext().getInitParameter("data_path");
         String ob_filter = req.getParameter("filter");
-        ob_filter = ob_filter.replaceAll("_PIPE_", "|");
+        ob_filter = ob_filter.replaceAll("_PIPE_", "|").replaceAll("_PLUS_", "+");
         //String filter_include = getServletContext().getInitParameter("filter_include");
         //String filter_exclude = getServletContext().getInitParameter("filter_exclude");
         String ob_search = req.getParameter("search");
@@ -137,7 +137,7 @@ ob_ajax_timeline extends HttpServlet {
             ob_backgroundColor = ob_backgroundColor.replace("@", "#");
         String ob_email = req.getParameter("email");
         String ob_filter = req.getParameter("filter");
-        ob_filter = ob_filter.replaceAll("_PIPE_", "|").replaceAll(" ", "+");
+        ob_filter = ob_filter.replaceAll("_PIPE_", "|").replaceAll("_PLUS_", "+");
         String ob_search = req.getParameter("search");
 
         Logger logger = Logger.getLogger("");
