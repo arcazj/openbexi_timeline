@@ -389,17 +389,17 @@ public class json_files_manager extends data_manager {
         double step = 0;
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        long startDateS = new Date(startDate).getTime();
-        long startDateE = new Date(endDate).getTime();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-
-        // Loop on
         if (_currentPathModel.contains("dd"))
             step = 86400000;
         else
             step = 2629746000.0;
         if (_currentPathModel.contains("yyyy") && !_currentPathModel.contains("mm") && !_currentPathModel.contains("dd"))
             step = 31556952000.0;
+
+        long startDateS = (long) (new Date(startDate).getTime() - step);
+        long startDateE = (long) (new Date(endDate).getTime() + step);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
         for (double d = startDateS; d <= startDateE; d = d + step) {
             String formatedDateS = dateFormat.format(d);
             yyyy = formatedDateS.substring(6, 10);
