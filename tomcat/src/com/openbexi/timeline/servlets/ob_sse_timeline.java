@@ -67,7 +67,11 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
             ob_backgroundColor = ob_backgroundColor.replace("@", "#");
         String ob_email = req.getParameter("email");
         String ob_filter = req.getParameter("filter");
-        ob_filter = ob_filter.replaceAll("_PIPE_", "|").replaceAll("_PLUS_", "+");
+        ob_filter = ob_filter.replaceAll("_PIPE_", "|")
+                .replaceAll("_PARR_", ")")
+                .replaceAll("_PARL_", "(")
+                .replaceAll("_PERC_", "%")
+                .replaceAll("_PLUS_", "+");
         String ob_search = req.getParameter("search");
 
         Logger logger = Logger.getLogger("");

@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9b beta
+    OpenBEXI Timeline 0.9.9c beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -493,8 +493,12 @@ function OB_TIMELINE() {
             } else {
                 ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
             }
-            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\\\-+:_ ]/g, "");
-            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
+            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\\\-+:_()% ]/g, "");
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_")
+                .replaceAll("+", "_PLUS_")
+                .replaceAll("%", "_PERC_")
+                .replaceAll("(", "_PARL_")
+                .replaceAll(")", "_PARR_");
             return ob_filter_value;
         } catch (err) {
         }
@@ -502,7 +506,11 @@ function OB_TIMELINE() {
             ob_filter_value = this.ob_filters[ob_filter_index].filter_value;
             if (ob_filter_value === undefined)
                 ob_filter_value = this.ob_filter_value;
-            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
+            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_")
+                .replaceAll("+", "_PLUS_")
+                .replaceAll("%", "_PERC_")
+                .replaceAll(")", "_PARR_")
+                .replaceAll("(", "_PARL_");
         } catch (err) {
             ob_filter_value = "";
         }
@@ -936,7 +944,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9b beta</legend>\n" +
+                "<legend> version 0.9.9c beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2617,7 +2625,11 @@ function OB_TIMELINE() {
             if (this.ob_filters !== undefined && this.ob_filters.length !== 0) {
                 this.backgroundColor = this.get_backgroundColor(ob_scene_index);
                 this.ob_filter_value = this.get_current_filter_value(ob_scene_index);
-                this.ob_filter_value = this.ob_filter_value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_");
+                this.ob_filter_value = this.ob_filter_value.replaceAll("|", "_PIPE_")
+                    .replaceAll("+", "_PLUS_")
+                    .replaceAll("%", "_PERC_")
+                    .replaceAll("(", "_PARL_")
+                    .replaceAll(")", "_PARR_");
                 this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = this.get_current_sortBy(ob_scene_index);
             } else
                 this.ob_filter_value = "";
