@@ -17,12 +17,19 @@ ob_texture.set("icon/ob_gate_close.png", new THREE.TextureLoader().load("icon/ob
 ob_texture.set("icon/ob_red_flag.png", new THREE.TextureLoader().load("icon/ob_red_flag.png"));
 ob_texture.set("icon/ob_green_flag.png", new THREE.TextureLoader().load("icon/ob_green_flag.png"));
 ob_texture.set("icon/ob_yellow_flag.png", new THREE.TextureLoader().load("icon/ob_yellow_flag.png"));
+ob_texture.set("icon/ob_orange_flag.png", new THREE.TextureLoader().load("icon/ob_orange_flag.png"));
 ob_texture.set("icon/ob_yellow_square.png", new THREE.TextureLoader().load("icon/ob_yellow_square.png"));
 ob_texture.set("icon/ob_orange_square.png", new THREE.TextureLoader().load("icon/ob_orange_square.png"));
 ob_texture.set("icon/ob_red_square.png", new THREE.TextureLoader().load("icon/ob_red_square.png"));
 ob_texture.set("icon/ob_purple_square.png", new THREE.TextureLoader().load("icon/ob_purple_square.png"));
 ob_texture.set("icon/ob_green_square.png", new THREE.TextureLoader().load("icon/ob_green_square.png"));
 ob_texture.set("icon/ob_blue_square.png", new THREE.TextureLoader().load("icon/ob_blue_square.png"));
+ob_texture.set("icon/ob_script.png", new THREE.TextureLoader().load("icon/ob_script.png"));
+ob_texture.set("icon/ob_crontab.png", new THREE.TextureLoader().load("icon/ob_crontab.png"));
+ob_texture.set("icon/ob_clock.png", new THREE.TextureLoader().load("icon/ob_clock.png"));
+ob_texture.set("icon/ob_info2.png", new THREE.TextureLoader().load("icon/ob_info2.png"));
+ob_texture.set("icon/ob_delete.png", new THREE.TextureLoader().load("icon/ob_delete.png"));
+
 
 // Satellite/Communication texture
 ob_texture.set("icon/ob_connect.png", new THREE.TextureLoader().load("icon/ob_connect.png"));
