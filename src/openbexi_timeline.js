@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9c beta
+    OpenBEXI Timeline 0.9.9d beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -199,7 +199,7 @@ function OB_TIMELINE() {
         // Set all timeline parameters:
         this.name = this.params[0].name;
         this.title = "";
-        this.multiples = 90;
+        //this.multiples = 90;
 
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
@@ -944,7 +944,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9c beta</legend>\n" +
+                "<legend> version 0.9.9d beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2722,6 +2722,10 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_camera(ob_timeline.ob_scene_index);
                 }
                 let endDate = new Date();
+                if (ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index, ob_timeline.multiples) === true) {
+                    ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index)
+                    ob_timeline.update_scenes(ob_scene_index, header, params, bands, model, sessions, camera, null, true);
+                }
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
                     if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].sessions.events.length !== 1)
@@ -3101,7 +3105,26 @@ function OB_TIMELINE() {
         }
         return this.regex;
     }
+    OB_TIMELINE.prototype.add_tolerance = function (ob_scene_index, ob_object, band_name, x, y, z, session, color, tolerance) {
+        if (tolerance === undefined) {
+            //return;
+            tolerance = 100;
+        }
+        if (color === undefined) {
+            color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
+        }
+        let ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
 
+        let ob_tolerance = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width, 1, 10)), ob_material));
+        ob_tolerance.position.set(session.x_relative+ session.width, session.y, session.z);
+
+        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
+        if (ob_band !== undefined) {
+            ob_band.add(ob_tolerance);
+        }
+
+        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_tolerance(" + ob_object + "," + "," + x + "," + y + "," + z + "," + color + "," + tolerance + ")");
+    };
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
 
@@ -3167,6 +3190,12 @@ function OB_TIMELINE() {
                                 this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title,
                                 this.ob_scene[ob_scene_index].bands[i].sessions[j].textX, 0, 5, fontSizeInt,
                                 fontStyle, fontWeight, textColor, fontFamily, backgroundColor);
+
+                            this.add_tolerance(ob_scene_index, ob_obj,
+                                this.ob_scene[ob_scene_index].bands[i].name,
+                                this.ob_scene[ob_scene_index].bands[i].sessions[j].textX, 0, 5,
+                                this.ob_scene[ob_scene_index].bands[i].sessions[j],
+                                "#040404", this.ob_scene[ob_scene_index].bands[i].sessions[j].tolerance);
                         }
                     }
                 } catch (e) {
@@ -4036,6 +4065,15 @@ function OB_TIMELINE() {
             return "filters";
         return "events";
     }
+    OB_TIMELINE.prototype.ob_optimize_load_time = function (ob_scene_index, multiples) {
+        if (multiples === undefined)
+            this.multiples = 90;
+        else
+            this.multiples = multiples;
+        if (this.multiples === 480)
+            return true;
+        return false;
+    }
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
         if (this.ob_scene !== undefined && this.ob_scene[ob_scene_index].ob_interval_move !== undefined)
             clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
@@ -4054,10 +4092,12 @@ function OB_TIMELINE() {
             this.data.includes("saveFilter") || this.data.includes("deleteFilter") ||
             this.data.includes("readFilters")) {
             this.method = "POST";
+            this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (this.data.includes("updateEvent") || this.data.includes("addEvent") ||
             this.data.includes("deleteEvent")) {
             // Add an event or a session.
             this.method = "POST";
+            this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (!this.data.includes(".json") && !this.data.includes("UTC")) {
             // GET data from a range of time
             this.data_head = this.data.split("?");
