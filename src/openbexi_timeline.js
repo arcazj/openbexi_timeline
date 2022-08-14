@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9d beta
+    OpenBEXI Timeline 0.9.9e beta
 
 The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
 
@@ -347,11 +347,10 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.ob_add_event = function (ob_scene_index) {
         let title = document.getElementById(this.name + "_addEvent").value;
-        let startEventUTC = "";
+        let startEventUTC;
         try {
             let startEvent = document.getElementById(this.name + "_start").value;
             startEventUTC = new Date(this.getUTCTime(Date.parse(startEvent))).toString().substring(0, 24) + " UTC";
-            if (startEventUTC.includes("Invalid")) endEventUTC = "";
         } catch (e) {
             startEventUTC = "";
         }
@@ -399,81 +398,8 @@ function OB_TIMELINE() {
         }
         return ob_build_all_sorting_options;
     };
-    OB_TIMELINE.prototype.ob_get_all_filtering_options = function (ob_scene_index) {
-        let OB_MAX_ATT_VALUE = 15;
-        let ob_build_all_filtering_options = "<div>";
-        try {
-            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
-                let ob_key_display = true;
-                let value_items = value.split(",");
 
-                if (value_items.length > 1) {
-                    for (let i = 0; i < value_items.length; i++) {
-                        if (value_items[i].length > OB_MAX_ATT_VALUE) {
-                            ob_key_display = false;
-                            break;
-                        }
-                    }
-
-                    // Allow only Sorting for short attribute value not longer than OB_MAX_ATT_VALUE
-                    if (ob_key_display === true) {
-                        ob_build_all_filtering_options +=
-                            "<table><tr align=left ><td style='background:#CDCCCC;font-weight:bold;'>" + key +
-                            "</td><td></td><td></td><td></td></tr> \n";
-                        let ob_tr = true;
-                        for (let i = 0; i < value_items.length; i++) {
-                            if (i === 0 || (i % 4) === 0) {
-                                ob_build_all_filtering_options += "<tr>";
-                                ob_tr = false;
-                            }
-                            // Add filtering lists for items not longer than 12 characters
-                            if (value_items[i] !== "" && value_items[i].length <= OB_MAX_ATT_VALUE &&
-                                !value_items[i].includes("-->")) {
-                                ob_build_all_filtering_options += "<td><label>" + value_items[i] +
-                                    "<input type='checkbox' id= " + this.name + "_" + key + "_" + value_items[i] +
-                                    "></label></td>";
-                            }
-                            if (ob_tr === true && i !== 0 && (i % 4) !== 0) {
-                                ob_build_all_filtering_options += "</tr>";
-                                ob_tr = true;
-                            }
-                        }
-                        if (ob_tr === true)
-                            ob_build_all_filtering_options += "</table>";
-                        else
-                            ob_build_all_filtering_options += "</tr></table>";
-                    }
-                }
-            }
-        } catch (err) {
-            return "";
-        }
-        ob_build_all_filtering_options += "</div>";
-        return ob_build_all_filtering_options;
-    };
-    OB_TIMELINE.prototype.ob_apply_timeline_filter = function (ob_scene_index, ob_filter_index) {
-        let ob_checked;
-        this.ob_filter_value = "";
-        try {
-            for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
-                let value_items = value.split(",");
-                if (value_items.length > 1) {
-                    for (let i = 0; i < value_items.length; i++) {
-                        try {
-                            ob_checked = document.getElementById(this.name + "_" + key + "_" + value_items[i]).checked;
-                        } catch (err) {
-                        }
-                        if (ob_checked !== undefined && ob_checked === true) {
-                            this.ob_filter_value += key + ":" + value_items[i] + ";";
-                        }
-                    }
-                }
-            }
-            this.ob_update_filter(ob_scene_index, ob_filter_index);
-        } catch (err) {
-        }
-    };
-    OB_TIMELINE.prototype.ob_help_filters = function (ob_scene_index) {
+    OB_TIMELINE.prototype.ob_help_filters = function () {
         alert("Usage: <Include filters>|<Exclude filters>\n\n" +
             "<strong>Example 1: Include only all sessions with the status SCHEDULE:\n</strong>" +
             "status=SCHEDULE\n\n" +
@@ -488,7 +414,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_get_filter_value = function (ob_scene_index, ob_filter_index) {
         let ob_filter_value;
         try {
-            if (this.ob_filters !== undefined && ob_filter_index != undefined) {
+            if (this.ob_filters !== undefined && ob_filter_index !== undefined) {
                 ob_filter_value = document.getElementById("textarea2_" + this.name + "_" + this.ob_filters[ob_filter_index].name).value;
             } else {
                 ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
@@ -519,7 +445,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_get_filter_name = function (ob_scene_index, ob_filter_index) {
         let ob_filter_name = "";
         try {
-            if (this.ob_filters !== undefined && ob_filter_index != undefined) {
+            if (this.ob_filters !== undefined && ob_filter_index !== undefined) {
                 ob_filter_name = this.ob_filters[ob_filter_index].name;
             } else
                 ob_filter_name = document.getElementById("textarea_" + this.name + "_new").value;
@@ -617,7 +543,7 @@ function OB_TIMELINE() {
                             else
                                 ob_build_all_filters += "<img class='ob_filter_edit' id=edit_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + i + ")\"></img>";
                             ob_build_all_filters += "</td><td>";
-                            ob_build_all_filters += "<img class='ob_filter_delete' id=delete" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_delete_filters(" + ob_scene_index + "," + i + ")\"></img>";
+                            ob_build_all_filters += "<img class='ob_filter_delete' alt='' id=delete" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_delete_filters(" + ob_scene_index + "," + i + ")\"></img>";
 
                         } else {
                             ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' id=checkbox_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + "," + i + ")\"><span class='ob_filter_span_checkmark'></span></label>";
@@ -657,11 +583,11 @@ function OB_TIMELINE() {
                     ob_build_all_filters += "<textarea disabled class='ob_filter_name' id=textarea_" + this.name + "_new rows='1' >" + "<Add a new filter>" + "</textarea>";
                 ob_build_all_filters += "</td><td>";
                 if (ob_request === "select_filter" && ob_filter_index === undefined)
-                    ob_build_all_filters += "<img class='ob_filter_edit' id=edit_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + undefined + ")\"></img>";
+                    ob_build_all_filters += "<img class='ob_filter_edit' alt='' id=edit_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + undefined + ")\"></img>";
                 if (ob_request === "edit_filter" && ob_filter_index === undefined)
-                    ob_build_all_filters += "<img class='ob_filter_save' id=save_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + undefined + ")\"></img>";
+                    ob_build_all_filters += "<img class='ob_filter_save' alt='' id=save_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + undefined + ")\"></img>";
                 ob_build_all_filters += "</td><td>";
-                ob_build_all_filters += "<img class='ob_filter_help' id=help_" + this.name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_help_filters(" + ob_scene_index + ")\"></img>";
+                ob_build_all_filters += "<img class='ob_filter_help' alt='' id=help_" + this.name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_help_filters(" + ob_scene_index + ")\"></img>";
                 ob_build_all_filters += "</td>";
                 ob_build_all_filters += "</tr>";
                 if (ob_request === "edit_filter" && ob_filter_index === undefined) {
@@ -944,7 +870,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9d beta</legend>\n" +
+                "<legend> version 0.9.9e beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1129,13 +1055,21 @@ function OB_TIMELINE() {
                         ob_descriptor_body += "<tr><td class=ob_descriptor_td>" + key + ":</td><td>" + value +
                             "</td></tr>";
                 }
-                div.innerHTML = "<div class=ob_descriptor_head >" + "data" + "<\div><br><br>" +
+                let innerHTML = "<div class=ob_descriptor_head >" + "data" + "<\div><br><br>" +
                     "<table class=ob_descriptor_table id=" + this.name + "_table_start_end" + ">" +
                     "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>id : </td><td class=ob_descriptor_td2>" +
-                    descriptor.id + "</td></tr>" +
-                    "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>start : </td><td class=ob_descriptor_td2>" +
-                    descriptor.start + "</td></tr>" +
-                    "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>end : </td><td class=ob_descriptor_td2>" +
+                    descriptor.id + "</td></tr>";
+                if (descriptor.original_start !== undefined) {
+                    innerHTML = innerHTML + "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>original_start : </td><td class=ob_descriptor_td2>" +
+                        descriptor.original_start + "</td></tr>"
+                }
+                innerHTML = innerHTML + "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>start : </td><td class=ob_descriptor_td2>" +
+                    descriptor.start + "</td></tr>";
+                if (descriptor.original_end !== undefined) {
+                    innerHTML = innerHTML + "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>original_end : </td><td class=ob_descriptor_td2>" +
+                        descriptor.original_end + "</td></tr>"
+                }
+                innerHTML = innerHTML + "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>end : </td><td class=ob_descriptor_td2>" +
                     descriptor.end + "</td></tr>" +
                     "<tr class=ob_descriptor_tr><td></td></tr>" +
                     "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>title:</td><td class=ob_descriptor_td2>" +
@@ -1145,6 +1079,7 @@ function OB_TIMELINE() {
                     "<tr class=ob_descriptor_tr><td class=ob_descriptor_td>description:</td><td class=ob_descriptor_td2>" +
                     descriptor.data.description + "</td></tr>" +
                     "</table>";
+                div.innerHTML = innerHTML;
                 this.ob_timeline_right_panel.appendChild(div);
             } else {
                 // Build, eval and display he descriptor
@@ -2592,7 +2527,7 @@ function OB_TIMELINE() {
             }
         }
     }
-    OB_TIMELINE.prototype.get_current_sortBy = function (ob_scene_index) {
+    OB_TIMELINE.prototype.get_current_sortBy = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
                 try {
@@ -2605,7 +2540,6 @@ function OB_TIMELINE() {
         }
     }
     OB_TIMELINE.prototype.set_user_setting_and_filters = function (ob_scene_index, setting_and_filters) {
-        this.setting_and_filters = setting_and_filters;
         if (setting_and_filters.openbexi_timeline !== undefined) {
             this.name = setting_and_filters.openbexi_timeline[0].name;
             this.title = setting_and_filters.openbexi_timeline[0].title;
@@ -2904,41 +2838,41 @@ function OB_TIMELINE() {
                 }
                 // If no room, so check for the next track.
                 if (sessions[l].y === this.ob_scene[ob_scene_index].bands[i].track) {
-                    if (parseInt(session.x) >= parseInt(sessions[l].x) &&
-                        parseInt(session.x) <= parseInt(sessions[l].x + sessions[l].total_width)) {
+                    if (parseInt(session.original_x) >= parseInt(sessions[l].original_x) &&
+                        parseInt(session.original_x) <= parseInt(sessions[l].original_x + sessions[l].total_width)) {
                         //  session i        ___
                         //  session l      _________
                         if (ob_debug_room) console.log("case1: this.ob_scene[ob_scene_index].bands[i].name=" +
                             this.ob_scene[ob_scene_index].bands[i].name +
                             " - session.data.title=" + session.data.title +
-                            " - session.x=" + session.x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
+                            " - session.original_x=" + session.original_x +
+                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
                             " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].x=" + sessions[l].x +
+                            " - sessions[l].original_x=" + sessions[l].original_x +
                             " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions.x + sessions.total_width) + ")");
 
                         break;
-                    } else if (parseInt(session.x) <= parseInt(sessions[l].x) &&
-                        parseInt(session.x + session.total_width) >= parseInt(sessions[l].x)) {
+                    } else if (parseInt(session.original_x) <= parseInt(sessions[l].original_x) &&
+                        parseInt(session.original_x + session.total_width) >= parseInt(sessions[l].original_x)) {
                         //  session i      _________
                         //  session l              ________
                         if (ob_debug_room) console.log("case2: this.ob_scene[ob_scene_index].bands[i].name=" + this.ob_scene[ob_scene_index].bands[i].name +
                             " - session.data.title=" + session.data.title +
-                            " - session.x=" + session.x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
+                            " - session.original_x=" + session.original_x +
+                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
                             " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].x=" + sessions[l].x +
-                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].x + sessions[l].total_width) + ")");
+                            " - sessions[l].original_x=" + sessions[l].original_x +
+                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].original_x + sessions[l].total_width) + ")");
 
                         break;
                     } else {
                         if (ob_debug_room) console.log("case normal: this.ob_scene[ob_scene_index].bands[i].name=" + this.ob_scene[ob_scene_index].bands[i].name +
                             " - session.data.title=" + session.data.title +
-                            " - session.x=" + session.x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.x + session.total_width) + ")" +
+                            " - session.original_x=" + session.original_x +
+                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
                             " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].x=" + sessions[l].x +
-                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].x + sessions[l].total_width) + ")");
+                            " - sessions[l].original_x=" + sessions[l].original_x +
+                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].original_x + sessions[l].total_width) + ")");
                     }
                 }
                 // Reset increment if there is enough room to plot the session otherwise increase bandwidth.
@@ -2972,6 +2906,8 @@ function OB_TIMELINE() {
         let textX = 0;
         let pixelOffSetStart = 0;
         let pixelOffSetEnd = 0;
+        let original_pixelOffSetStart = 0;
+        let original_pixelOffSetEnd = 0;
         this.ob_scene[ob_scene_index].bands.updated = false;
 
         // two passes are necessary if bands height change because we need to calculate again all sessions coordinates
@@ -3021,14 +2957,26 @@ function OB_TIMELINE() {
                     if (this.ob_scene[ob_scene_index].sessions.events[j].id !== undefined) {
                         let session = this.ob_scene[ob_scene_index].bands[i].sessions[j];
                         if (session.data !== null && session.data.title === undefined) session.data.title = "";
-
                         pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, session.start,
                             this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
                             this.ob_scene[ob_scene_index].bands[i].intervalPixels);
                         pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index, session.end,
                             this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
                             this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-
+                        if (session.original_start !== undefined) {
+                            original_pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, session.original_start,
+                                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
+                                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_pixelOffSetStart = original_pixelOffSetStart;
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x = parseInt(original_pixelOffSetStart);
+                        } else
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x = pixelOffSetStart;
+                        if (session.original_end !== undefined) {
+                            original_pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index, session.original_end,
+                                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
+                                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_pixelOffSetEnd = original_pixelOffSetEnd;
+                        }
                         if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
                             if (isNaN(parseInt(pixelOffSetEnd))) {
                                 h = this.ob_scene[ob_scene_index].bands[i].trackIncrement;
@@ -3066,8 +3014,12 @@ function OB_TIMELINE() {
                         this.ob_scene[ob_scene_index].bands[i].sessions[j].textX = textX;
                         this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetStart = pixelOffSetStart;
                         this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd = pixelOffSetEnd;
+                        let add_tolerance = 0;
+                        if (session.data.tolerance !== undefined) {
+                            add_tolerance = parseInt(session.data.tolerance);
+                        }
                         this.ob_scene[ob_scene_index].bands[i].sessions[j].total_width =
-                            w + (session.data.title.length * this.ob_scene[ob_scene_index].bands[i].fontSizeInt);
+                            w + (session.data.title.length * this.ob_scene[ob_scene_index].bands[i].fontSizeInt) + add_tolerance;
 
                         y = this.get_room_for_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].sessions,
                             this.ob_scene[ob_scene_index].bands[i].sessions[j], i);
@@ -3105,18 +3057,27 @@ function OB_TIMELINE() {
         }
         return this.regex;
     }
-    OB_TIMELINE.prototype.add_tolerance = function (ob_scene_index, ob_object, band_name, x, y, z, session, color, tolerance) {
-        if (tolerance === undefined) {
-            //return;
-            tolerance = 100;
+    OB_TIMELINE.prototype.add_tolerance = function (ob_scene_index, ob_object, band_name, session, color) {
+        if (session.data.tolerance === undefined || parseInt(session.data.tolerance < 1)) {
+            return;
         }
         if (color === undefined) {
-            color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
+            color = session.render.color;
         }
         let ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
 
-        let ob_tolerance = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width, 1, 10)), ob_material));
-        ob_tolerance.position.set(session.x_relative+ session.width, session.y, session.z);
+        let ob_tolerance = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width + parseInt(session.data.tolerance), 1, 10)), ob_material));
+        ob_tolerance.position.set(session.original_x + ((session.width + parseInt(session.data.tolerance)) / 2), session.y - session.height / 2, session.z + 1);
+        let ob_original_circle;
+        ob_original_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
+        ob_original_circle.position.set(-((session.width + parseInt(session.data.tolerance)) / 2), 0, session.z);
+        ob_tolerance.add(ob_original_circle);
+
+        let ob_circle;
+        ob_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
+        ob_circle.position.set(parseInt(session.width + parseInt(session.data.tolerance)) / 2, 0, session.z);
+        ob_tolerance.add(ob_circle);
+
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
@@ -3190,12 +3151,10 @@ function OB_TIMELINE() {
                                 this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title,
                                 this.ob_scene[ob_scene_index].bands[i].sessions[j].textX, 0, 5, fontSizeInt,
                                 fontStyle, fontWeight, textColor, fontFamily, backgroundColor);
-
                             this.add_tolerance(ob_scene_index, ob_obj,
                                 this.ob_scene[ob_scene_index].bands[i].name,
-                                this.ob_scene[ob_scene_index].bands[i].sessions[j].textX, 0, 5,
                                 this.ob_scene[ob_scene_index].bands[i].sessions[j],
-                                "#040404", this.ob_scene[ob_scene_index].bands[i].sessions[j].tolerance);
+                                this.ob_scene[ob_scene_index].bands[i].sessions[j].render.toleranceColor);
                         }
                     }
                 } catch (e) {

@@ -12,7 +12,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 public class event_generator {
-    private Date _date;
+    private final Date _date;
 
     public Date get_date() {
         return _date;
@@ -24,10 +24,10 @@ public class event_generator {
 
     public void log(Object msg, String err) {
         if (msg != null)
-            if (err == "info")
-                System.out.println(String.valueOf(msg));
+            if (err.equals("info"))
+                System.out.println(msg);
             else
-                System.err.println(String.valueOf(msg));
+                System.err.println(msg);
     }
 
     public int getRandomNumberUsingNextInt(int min, int max) {
@@ -38,12 +38,14 @@ public class event_generator {
     private void generate(File outputs) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date date = this.get_date();
-        String status = "SCHEDULE";
+        String status;
         String type;
         String priority;
         String tolerance;
         String system;
+        String original_start;
         String start;
+        String original_end;
         String end;
         String title;
         String description;
@@ -68,7 +70,7 @@ public class event_generator {
             file.write(line_start);
             for (int j = 0; j < 1600; j++) {
                 if (j != 0)
-                    dateL += 3600 * getRandomNumberUsingNextInt(10, 500);
+                    dateL += 3600L * getRandomNumberUsingNextInt(10, 500);
                 start = new Date(dateL).toString();
 
                 for (int i = 0; i < 8; i++) {
@@ -78,13 +80,14 @@ public class event_generator {
                     if (i == 1 || i == 3 || i == 5 || i == 7) {
                         end = "";
                     } else {
-                        end = new Date(dateL + (getRandomNumberUsingNextInt(1, 20) * 100000)).toString();
+                        end = new Date(dateL + (getRandomNumberUsingNextInt(1, 20) * 100000L)).toString();
                     }
-
+                    original_start = start;
+                    original_end = end;
                     int s = getRandomNumberUsingNextInt(0, 4);
                     if (s == 1)
                         status = "STARTED";
-                    else if (s == 1)
+                    else if (s == 2)
                         status = "COMPLETED";
                     else
                         status = "SCHEDULE";
@@ -94,17 +97,33 @@ public class event_generator {
 
                     int p = getRandomNumberUsingNextInt(0, 2);
                     priority = String.valueOf(p);
-                    int t = getRandomNumberUsingNextInt(0, 10);
-                    tolerance = String.valueOf(t);
+                    int t = getRandomNumberUsingNextInt(10, 400);
+                    if (i == 2) {
+                        tolerance = String.valueOf(t);
+                        int o = getRandomNumberUsingNextInt(0, t);
+                        if (o > 50)
+                            original_start = new Date(dateL - (getRandomNumberUsingNextInt(1, 5) * 100000L)).toString();
+                        if (o > 100) {
+                            long te = dateL + (getRandomNumberUsingNextInt(1, 10) * 100000L);
+                            long te2 = dateL + (getRandomNumberUsingNextInt(11, 15) * 100000L);
+                            end = new Date(te2).toString();
+                            original_end = new Date(te).toString();
+                        }
+                    } else
+                        tolerance = String.valueOf(0);
 
                     title = "title" + j + "_" + i;
                     int tt = getRandomNumberUsingNextInt(0, 5);
                     type = "type" + tt;
 
-                    description = "description"+t +" __"+i+"__  --"+tt+"--";
+                    description = "description" + t + " __" + i + "__  --" + tt + "--";
 
-                    file.write("  {\"id\":\"" + UUID.randomUUID().toString() + "\",");
+                    file.write("  {\"id\":\"" + UUID.randomUUID() + "\",");
+                    if (!start.equals(original_start))
+                        file.write("  \"original_start\":\"" + original_start + "\",");
                     file.write("  \"start\":\"" + start + "\",");
+                    if (!end.equals(original_end))
+                        file.write("  \"original_end\":\"" + original_end + "\",");
                     file.write("  \"end\":\"" + end + "\",");
                     file.write("\"data\":{");
                     file.write("\"title\":\"" + title + "\",");
@@ -112,12 +131,13 @@ public class event_generator {
                     file.write("\"type\":\"" + type + "\",");
                     file.write("\"system\":\"" + system + "\",");
                     file.write("\"priority\":\"" + priority + "\",");
-                    file.write("\"tolerance\":\"" + tolerance + "\",");
+                    if (!tolerance.equals("0"))
+                        file.write("\"tolerance\":\"" + tolerance + "\",");
                     file.write("\"description\":\"" + description + "\",");
                     file.write("},");
                     file.write("\"render\":{");
                     file.write("\"color\":\"" + color + "\",");
-                    if (i == 0 || i == 1 || i == 3 || i == 5 || i == 7 || i == 9)
+                    if (i == 0 || i == 1 || i == 3 || i == 5 || i == 7)
                         file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 20)] + "\",");
                     file.write("}");
                     file.write("},");
