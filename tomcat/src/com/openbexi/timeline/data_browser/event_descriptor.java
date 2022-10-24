@@ -5,7 +5,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -13,19 +12,35 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 public class event_descriptor {
-    private String _event_id;
-    private String _start_time;
-    private File _file;
-    private String _currentPathModel;
+    private final String _event_id;
+    private final File _file;
+    private String _currentPathModel = null;
     private Object _data;
-    private HttpServletResponse _response;
+    private String _original_start;
+    private String _start;
+    private String _original_end;
+    private String _end;
+    private String _title;
+    private String _status;
+    private String _priority;
+    private String _tolerance;
+    private String _type;
 
-    event_descriptor(String event_id, String start_time, String currentPathModel, HttpServletResponse response) {
-        _event_id = event_id;
-        _start_time = start_time;
-        _currentPathModel = currentPathModel;
+    public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
+                            String title, String type, String status, String priority, String tolerance, String currentPathModel) {
+        _event_id = String.valueOf(event_id);
+        _original_start = original_start;
+        _start = start;
+        _original_end = original_end;
+        _end = end;
+        _title = title;
+        _status = status;
+        _priority = priority;
+        _tolerance = tolerance;
+        _type = type;
+        if (currentPathModel != null)
+            _currentPathModel = currentPathModel.replaceAll("\\\\", "/");
         _file = get_file();
-        _response = response;
     }
 
     /**
@@ -39,11 +54,10 @@ public class event_descriptor {
         SimpleDateFormat year = new SimpleDateFormat("yyyy");
         SimpleDateFormat month = new SimpleDateFormat("MM");
         SimpleDateFormat day = new SimpleDateFormat("dd");
-        SimpleDateFormat hour = new SimpleDateFormat("hh");
 
-        String yearS = year.format(new Date(_start_time));
-        String monthS = month.format(new Date(_start_time));
-        String dayS = day.format(new Date(_start_time));
+        String yearS = year.format(new Date(_start));
+        String monthS = month.format(new Date(_start));
+        String dayS = day.format(new Date(_start));
 
         String buildFile = _currentPathModel.replace(".json", "");
         buildFile = buildFile.replace("/yyyy", "/" + yearS);
@@ -57,21 +71,64 @@ public class event_descriptor {
     }
 
     /**
+     * if descriptor exist return true.
+     */
+    private boolean exist() {
+        return _file.exists();
+    }
+
+    /**
+     * write descriptor according event id requested by the client
+     */
+    public void write(String description) {
+        String jsonObjectMergedHead = "{\n" +
+                "  \"dateTimeFormat\": \"iso8601\",\n" +
+                "  \"event_descriptor\": [{\n";
+        String jsonObjectMerged = "";
+
+        try {
+            if (!_file.getParentFile().exists())
+                _file.mkdirs();
+            if (_file.exists())
+                _file.delete();
+            Writer writer = new FileWriter(_file);
+            jsonObjectMerged += "\"id\":\"" + _event_id + "\",";
+            jsonObjectMerged += "\"start\":\"" + _start + "\",";
+            jsonObjectMerged += "\"end\":\"" + _end + "\",";
+            jsonObjectMerged += "\"original_start\":\"" + _original_start + "\",";
+            jsonObjectMerged += "\"original_end\":\"" + _original_end + "\",";
+            jsonObjectMerged += "\"data\":{";
+            jsonObjectMerged += "\"title\":\"" + _title + "\",";
+            jsonObjectMerged += "\"type\":\"" + _type + "\",";
+            jsonObjectMerged += "\"priority\":\"" + _priority + "\",";
+            jsonObjectMerged += "\"status\":\"" + _status + "\",";
+            jsonObjectMerged += "\"tolerance\":\"" + _tolerance + "\",";
+            jsonObjectMerged += "\"description\":\"" + description + "\"";
+            jsonObjectMerged += "}";
+            jsonObjectMerged += "}]}";
+            writer.write(jsonObjectMergedHead + jsonObjectMerged);
+            writer.close();
+        } catch (Exception e) {
+            System.err.print(e.getMessage());
+        }
+    }
+
+    /**
      * Read descriptor according event id requested by the client
      */
-    private void read() {
+    public Object read(String event_id) {
         JSONParser parser = new JSONParser();
 
         String jsonObjectMerged = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"events\": [\n";
+                "  \"event_descriptor\": [\n";
 
         if (_file.exists()) {
             try {
                 Reader reader = new FileReader(_file);
                 Object events = parser.parse(reader);
                 JSONObject jsonObject = (JSONObject) events;
-                JSONArray data = (JSONArray) jsonObject.get("events");
+                JSONArray data = (JSONArray) jsonObject.get("event_descriptor");
                 jsonObjectMerged += data.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                 reader.close();
             } catch (IOException e) {
@@ -87,40 +144,7 @@ public class event_descriptor {
         } catch (ParseException e) {
             _data = getDummyDescriptorJson("Cannot parse event descriptor for " + _event_id);
         }
-    }
-
-    /**
-     * Send descriptor to the client
-     *
-     * @return
-     */
-    private boolean send() {
-        if (_response == null) return false;
-        // here we code the action on a change
-        try {
-            PrintWriter respWriter = _response.getWriter();
-            //Important to put a "," not ";" between stream and charset
-            _response.setContentType("text/event-stream");
-            _response.setCharacterEncoding("UTF-8");
-            //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
-            _response.addHeader("Access-Control-Allow-Origin", "*");
-            // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
-            // credentials and access to resource by the client will be blocked by CORS policy.
-            _response.addHeader("Access-Control-Allow-Credentials", "true");
-            _response.addHeader("Cache-Control", "no-cache");
-            _response.addHeader("Connection", "keep-alive");
-            respWriter.write("event: ob_timeline\n\n");
-            respWriter.write("data:" + _data + "\n\n");
-            respWriter.write("retry: 1000000000\n\n");
-            respWriter.flush();
-            boolean error = respWriter.checkError();
-            if (error == true) {
-                return false;
-            }
-        } catch (Exception e) {
-            //log(e.getMessage(), "err");
-        }
-        return false;
+        return _data;
     }
 
     /**

@@ -1,9 +1,9 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9e beta
+    OpenBEXI Timeline 0.9.9f beta
 
-The latest version is available at http://www.openbexi.comhttps://github.com/arcazj/openbexi_timeline.
+The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -69,11 +69,6 @@ class ResourceTracker {
         }
         return resource;
     }
-
-    untrack(resource) {
-        this.resources.delete(resource);
-    }
-
 
     dispose() {
         for (const resource of this.resources) {
@@ -199,7 +194,8 @@ function OB_TIMELINE() {
         // Set all timeline parameters:
         this.name = this.params[0].name;
         this.title = "";
-        //this.multiples = 90;
+        this.multiples = 90;
+        this.increment = 20;
 
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
@@ -290,58 +286,46 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.ob_apply_data_model = function (ob_scene_index) {
-        try {
-            this.ob_scene[ob_scene_index].model = eval(document.getElementById(this.name + "_model").innerHTML);
-        } catch (err) {
-        }
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-            this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
-    };
-    OB_TIMELINE.prototype.ob_apply_bands_info = function (ob_scene_index) {
-        try {
-            this.ob_scene[ob_scene_index].bands = eval(document.getElementById(this.name + "_bands").innerHTML);
-        } catch (err) {
-        }
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-            this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
-    };
     OB_TIMELINE.prototype.ob_apply_timeline_info = function (ob_scene_index) {
         this.params[0].top = parseInt(document.getElementById(this.name + "_top").value);
         this.params[0].left = parseInt(document.getElementById(this.name + "_left").value);
         this.params[0].height = parseInt(document.getElementById(this.name + "_height").value);
         this.params[0].width = parseInt(document.getElementById(this.name + "_width").value);
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+        this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_apply_timeline_sorting = function (ob_scene_index) {
         try {
             this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = document.getElementById("ob_sort_by").value;
-            this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+            if (this.ob_scene[ob_scene_index].bands[0].model[0].sortBy === "NONE") {
+                this.ob_view.style.visibility = "visible";
+                this.ob_no_view.style.visibility = "visible";
+            } else {
+                this.ob_view.style.visibility = "hidden";
+                this.ob_no_view.style.visibility = "hidden";
+            }
+            this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
                 this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
                 this.ob_camera_type, null, false);
-            //this.ob_update_timeline_filter(ob_scene_index);
         } catch (err) {
         }
     };
     OB_TIMELINE.prototype.ob_apply_orthographic_camera = function (ob_scene_index) {
         this.ob_camera_type = "Orthographic";
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+        this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_apply_perspective_camera = function (ob_scene_index) {
         this.ob_camera_type = "Perspective";
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+        this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_cancel_setting = function (ob_scene_index) {
         this.ob_remove_setting();
-        this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+        this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_camera_type, null, false);
     };
@@ -419,7 +403,7 @@ function OB_TIMELINE() {
             } else {
                 ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
             }
-            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\\\-+:_()% ]/g, "");
+            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\-+=:_()% ]/g, "");
             ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_")
                 .replaceAll("+", "_PLUS_")
                 .replaceAll("%", "_PERC_")
@@ -536,19 +520,19 @@ function OB_TIMELINE() {
                         if (ob_filter_index === i) {
                             ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' checked='checked' id=checkbox_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + "," + i + ")\"><span class='ob_filter_span_checkmark'></span></label>";
                             ob_build_all_filters += "</td><td>";
-                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows='1' >" + this.ob_filters[i].name + "</textarea>";
+                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows=' 1' >" + this.ob_filters[i].name + "</textarea>";
                             ob_build_all_filters += "</td ><td>";
                             if (ob_request === "edit_filter")
-                                ob_build_all_filters += "<img class='ob_filter_save' id=save_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + i + ")\"></img>";
+                                ob_build_all_filters += "<img alt='' class='ob_filter_save' id=save_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + i + ")\">";
                             else
-                                ob_build_all_filters += "<img class='ob_filter_edit' id=edit_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + i + ")\"></img>";
+                                ob_build_all_filters += "<img alt='' class='ob_filter_edit' id=edit_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + i + ")\">";
                             ob_build_all_filters += "</td><td>";
-                            ob_build_all_filters += "<img class='ob_filter_delete' alt='' id=delete" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_delete_filters(" + ob_scene_index + "," + i + ")\"></img>";
+                            ob_build_all_filters += "<img alt='' class='ob_filter_delete' alt='' id=delete" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_delete_filters(" + ob_scene_index + "," + i + ")\">";
 
                         } else {
                             ob_build_all_filters += "<label class='ob_filter_checkbox_container'><input type='radio' id=checkbox_" + this.name + "_" + this.ob_filters[i].name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_select_filters(" + ob_scene_index + "," + i + ")\"><span class='ob_filter_span_checkmark'></span></label>";
                             ob_build_all_filters += "</td><td>";
-                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows='1'" + ">" + this.ob_filters[i].name + "</textarea>";
+                            ob_build_all_filters += "<textarea disabled class='ob_filter_name id=textarea_" + this.name + "_" + this.ob_filters[i].name + " rows=' 1'" + ">" + this.ob_filters[i].name + "</textarea>";
                             ob_build_all_filters += "</td ><td>";
                             ob_build_all_filters += "</td ><td>";
                             ob_build_all_filters += "</td><td>";
@@ -583,11 +567,11 @@ function OB_TIMELINE() {
                     ob_build_all_filters += "<textarea disabled class='ob_filter_name' id=textarea_" + this.name + "_new rows='1' >" + "<Add a new filter>" + "</textarea>";
                 ob_build_all_filters += "</td><td>";
                 if (ob_request === "select_filter" && ob_filter_index === undefined)
-                    ob_build_all_filters += "<img class='ob_filter_edit' alt='' id=edit_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + undefined + ")\"></img>";
+                    ob_build_all_filters += "<img alt='' class='ob_filter_edit' alt='' id=edit_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_edit_filters(" + ob_scene_index + "," + undefined + ")\">";
                 if (ob_request === "edit_filter" && ob_filter_index === undefined)
-                    ob_build_all_filters += "<img class='ob_filter_save' alt='' id=save_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + undefined + ")\"></img>";
+                    ob_build_all_filters += "<img class='ob_filter_save' alt='' id=save_" + this.name + "_" + "new" + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_filter(" + ob_scene_index + "," + undefined + ")\">";
                 ob_build_all_filters += "</td><td>";
-                ob_build_all_filters += "<img class='ob_filter_help' alt='' id=help_" + this.name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_help_filters(" + ob_scene_index + ")\"></img>";
+                ob_build_all_filters += "<img alt='' class='ob_filter_help' alt='' id=help_" + this.name + " onclick=\"get_ob_timeline(\'" + this.name + "\').ob_help_filters(" + ob_scene_index + ")\">";
                 ob_build_all_filters += "</td>";
                 ob_build_all_filters += "</tr>";
                 if (ob_request === "edit_filter" && ob_filter_index === undefined) {
@@ -696,13 +680,6 @@ function OB_TIMELINE() {
             let div = document.createElement("div");
             div.className = "ob_head_panel";
             div.id = this.name + '_setting';
-            let ob_model_line_count = 20;
-            try {
-                ob_model_line_count = JSON.stringify(this.ob_scene[ob_scene_index].model, null,
-                    2).split('\n').length;
-            } catch (err) {
-            }
-
             let now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             div.innerHTML = "" +
@@ -723,47 +700,12 @@ function OB_TIMELINE() {
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info(" + ob_scene_index + ");\" value='Apply Timeline Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
                 "<fieldset>\n" +
-                /*"<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_bands_info(" + ob_scene_index + ");\" value='Apply Bands Info' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>2 - </span> Data Model</legend>\n" +
-                "<textarea id=" + this.name + "_data rows='" + ob_model_line_count + "' >" + JSON.stringify(this.ob_scene[ob_scene_index].model, null, 2) + "</textarea>\n" +
-                "</fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_data_model(" + ob_scene_index + ");\" value='Apply Model Info' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
-                "<fieldset>\n" +*/
                 "<legend><span class='number'>2 - </span>Timeline Camera Info</legend>\n" +
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_orthographic_camera(" + ob_scene_index + ");\" value='Orthographic' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_perspective_camera(" + ob_scene_index + ");\" value='Perspective' />\n" +
                 "</form>\n" +
                 "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
-                "</div>" +
-                "<div class='ob_form1'>\n" +
-                "<form>\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>3- </span>Add an event or session</legend>\n" +
-                "<input type='label' disabled value='Title :'>\n" +
-                "<input type='text' id=" + this.name + "_addEvent value='title1'>\n" +
-                "<br>" +
-                "<input type='label' disabled value='Start :'>\n" +
-                "<input type='datetime-local' id=" + this.name + "_start value=''>\n" +
-                "<br>" +
-                "<input type='label' disabled value='End :'>\n" +
-                "<input type='datetime-local' id=" + this.name + "_end value=''>\n" +
-                "<br>" +
-                "<input type='label' disabled value='Description :'>\n" +
-                "<input type='text' id=" + this.name + "_description value=''>\n" +
-                "<br>" +
-                "<input type='label' disabled value='icon :'>\n" +
-                "<input type='text' id=" + this.name + "_icon value=''>\n" +
-                "<br>" +
-                "</fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_add_event(" + ob_scene_index + ");\" value='Add' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
-                "<fieldset>\n" +
-                "</form>\n" +
-                "<div class='ob_gui_iframe_container2' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
                 "</div>";
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
@@ -782,25 +724,27 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.ob_connected = function () {
+    OB_TIMELINE.prototype.ob_connected = function (ob_scene_index) {
         if (this.ob_start === undefined) return;
         this.ob_start.style.visibility = "visible";
         this.ob_stop.style.visibility = "hidden";
+        this.ob_scene[ob_scene_index].connected = true;
     };
 
-    OB_TIMELINE.prototype.ob_not_connected = function () {
+    OB_TIMELINE.prototype.ob_not_connected = function (ob_scene_index) {
         if (this.ob_start === undefined) return;
         this.ob_start.style.visibility = "hidden";
         this.ob_stop.style.visibility = "visible";
+        this.ob_scene[ob_scene_index].connected = false;
     };
 
-    OB_TIMELINE.prototype.ob_save_user = function (ob_scene_index) {
+    OB_TIMELINE.prototype.ob_save_user = function () {
         this.ob_user.name = document.getElementById(this.name + "_user").value
         this.ob_email.name = document.getElementById(this.name + "_email").value
         localStorage.user = JSON.stringify({name: this.ob_user.name});
         localStorage.email = JSON.stringify({name: this.ob_email.name});
     };
-    OB_TIMELINE.prototype.ob_cancel_user = function (ob_scene_index) {
+    OB_TIMELINE.prototype.ob_cancel_user = function () {
         this.ob_remove_setting();
     };
     OB_TIMELINE.prototype.ob_login = function (ob_scene_index) {
@@ -870,11 +814,11 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9e beta</legend>\n" +
+                "<legend> version 0.9.9f beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
-                "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0px 50px'>" +
+                "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0 50px'>" +
                 "<br>" + "<br>" +
                 "<form>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
@@ -923,7 +867,7 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.ob_create_calendar = function (date) {
+    OB_TIMELINE.prototype.ob_create_calendar = function (ob_scene_index, date) {
         if (date === undefined || date === "current_time") date = "now";
         this.ob_remove_descriptor();
         this.ob_remove_help();
@@ -948,12 +892,15 @@ function OB_TIMELINE() {
             this.ob_cal = jsCalendar.new(this.div_cal, date, {
                 navigator: true,
                 navigatorPosition: "both",
-                zeroFill: false,
-                monthFormat: "month YYYY",
+                zeroFill: true,
+                monthFormat: "MONTH YYYY",
                 dayFormat: "DDD",
                 firstDayOfTheWeek: "2",
                 language: "en"
             });
+            /*this.ob_cal.onDateRender(function(date, element, info) {
+                element.style.fontWeight = 'bold';
+            });*/
 
             let that3 = this;
             this.ob_cal.onDateClick(function (event, date) {
@@ -964,14 +911,14 @@ function OB_TIMELINE() {
                 that3.reset_synced_time("new_calendar_date", that3.ob_render_index);
                 that3.ob_remove_calendar();
                 if (that3.data && that3.data.match(/^(http?):\/\//) ||
-                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                     that3.data && that3.data.match(/^(https?):\/\//)) {
                     that3.data_head = that3.data.split("?");
-                    that3.update_scenes(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
+                    that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, true);
                 } else
-                    that3.update_scenes(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
+                    that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, false);
             })
@@ -982,14 +929,14 @@ function OB_TIMELINE() {
                 that3.ob_scene[that3.ob_render_index].show_calendar = true;
                 that3.reset_synced_time("new_calendar_date", that3.ob_render_index);
                 if (that3.data && that3.data.match(/^(http?):\/\//) ||
-                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                     that3.data && that3.data.match(/^(https?):\/\//)) {
                     that3.data_head = that3.data.split("?");
-                    that3.update_scenes(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
+                    that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, true);
                 } else
-                    that3.update_scenes(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
+                    that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, false);
             })
@@ -998,7 +945,40 @@ function OB_TIMELINE() {
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft +
                 parseInt(this.ob_timeline_panel.style.width) + "px";
+
+            //Add event panel
+            let ob_add_event_div = document.createElement("div");
+            ob_add_event_div.innerHTML = "<br><div div style='padding:8px;text-align: left;' class='ob_form1'>\n" +
+                "<form>\n" +
+                "<fieldset>\n" +
+                "<legend><span class='number'> </span><b>Add an event or session :</b></legend>\n" +
+                "<input type='label' disabled value='Title :'>\n" +
+                "<input type='text' id=" + this.name + "_addEvent value='title1'>\n" +
+                "<br>" +
+                "<input type='label' disabled value='   Start :'>\n" +
+                "<input type='datetime-local' id=" + this.name + "_start value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='   End :'>\n" +
+                "<input type='datetime-local' id=" + this.name + "_end value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='Description :'>\n" +
+                "<input type='text' id=" + this.name + "_description value=''>\n" +
+                "<br>" +
+                "<input type='label' disabled value='icon :'>\n" +
+                "<input type='text' id=" + this.name + "_icon value=''>\n" +
+                "<br>" +
+                "</fieldset>\n" +
+                "<br>" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_add_event(" + ob_scene_index + ");\" value='Add' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<fieldset>\n" +
+                "</form>\n" +
+                "<div class='ob_gui_iframe_container2' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
+                "</div>";
+
+            this.div_cal.appendChild(ob_add_event_div);
             this.ob_timeline_right_panel.appendChild(this.div_cal);
+
         } catch (err) {
         }
     };
@@ -1011,18 +991,33 @@ function OB_TIMELINE() {
         }
     };
 
+    OB_TIMELINE.prototype.ob_read_descriptor = function (ob_scene_index, ob_event_id, start) {
+        this.data = this.data_head[0] + "?ob_request=" + "readDescriptor" + "&event_id=" +
+            ob_event_id + "&start=" + start + "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
+            "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+        this.load_data(ob_scene_index);
+    };
     OB_TIMELINE.prototype.ob_open_descriptor = function (ob_scene_index, data) {
+
         this.ob_remove_help();
         this.ob_remove_calendar();
         this.ob_remove_setting();
         this.ob_remove_sorting();
         this.ob_remove_login();
+
         try {
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_descriptor"));
         } catch (err) {
         }
-        if (data !== undefined) {
-            this.ob_createDescriptor(ob_scene_index, data);
+
+        try {
+            if (data !== undefined && data.data.description !== "") {
+                this.ob_createDescriptor(ob_scene_index, data);
+            } else {
+                this.ob_createDescriptor(ob_scene_index, data);
+                this.ob_read_descriptor(ob_scene_index, data.id, data.start);
+            }
+        } catch (err) {
         }
     };
 
@@ -1082,7 +1077,7 @@ function OB_TIMELINE() {
                 div.innerHTML = innerHTML;
                 this.ob_timeline_right_panel.appendChild(div);
             } else {
-                // Build, eval and display he descriptor
+                // Build, eval and display the descriptor
                 this.descriptor = "this." + this.descriptor.replace(".js",
                     "(descriptor)").replace("this.", "");
                 this.ob_timeline_right_panel.appendChild(eval(this.descriptor));
@@ -1181,7 +1176,7 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].show_calendar === undefined)
                     that2.ob_scene[that2.ob_render_index].show_calendar = true;
                 if (that2.ob_scene[that2.ob_render_index].show_calendar === true) {
-                    that2.ob_create_calendar(that2.ob_markerDate);
+                    that2.ob_create_calendar(that2.ob_render_index, that2.ob_markerDate);
                     that2.ob_scene[that2.ob_render_index].show_calendar = false;
                 }
             };
@@ -1204,7 +1199,7 @@ function OB_TIMELINE() {
                 that2.first_sync = undefined;
                 that2.ob_scene_index = 0;
                 that2.reset_synced_time("new_sync", that2.ob_render_index);
-                that2.update_scenes(that2.ob_render_index, that2.header, that2.params, that2.ob_scene[that2.ob_render_index].bands,
+                that2.update_scene(that2.ob_render_index, that2.header, that2.params, that2.ob_scene[that2.ob_render_index].bands,
                     that2.ob_scene[that2.ob_render_index].model, that2.ob_scene[that2.ob_render_index].sessions,
                     that2.ob_camera_type, null, false);
             };
@@ -1215,7 +1210,7 @@ function OB_TIMELINE() {
 
             this.ob_filter = document.createElement("IMG");
             this.ob_filter.className = "ob_filter";
-            this.ob_filter.alt = "Filtering&Sorting menu";
+            this.ob_filter.alt = "Filtering&Sorting menu3";
             this.ob_filter.style.left = "131px";
             this.ob_filter.style.height = 32 + "px";
             this.ob_filter.style.width = 32 + "px";
@@ -1243,7 +1238,7 @@ function OB_TIMELINE() {
                 that2.reset_synced_time("new_search", that2.ob_render_index);
                 clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.ob_search_value = that2.ob_search_input.value;
-                that2.update_scenes(that2.ob_render_index, that2.header, that2.params,
+                that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                     that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                     that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, true);
             };
@@ -1265,6 +1260,61 @@ function OB_TIMELINE() {
             this.ob_time_marker.className = "ob_time_marker";
             this.ob_time_marker.style.zIndex = "10";
             this.ob_time_marker.style.visibility = "visible";
+
+            this.ob_view = document.createElement("IMG");
+            this.ob_no_view = document.createElement("IMG");
+            this.ob_view.className = "ob_view";
+            this.ob_no_view.className = "ob_no_view";
+            this.ob_view.alt = "Overview";
+            this.ob_no_view.alt = "No overview";
+            this.ob_view.style.visibility = "hidden";
+            this.ob_no_view.style.visibility = "visible";
+            this.ob_view.style.zIndex = "10";
+            this.ob_no_view.style.zIndex = "10";
+            this.ob_view.style.height = 32 + "px";
+            this.ob_no_view.style.height = 32 + "px";
+            this.ob_view.style.width = 32 + "px";
+            this.ob_no_view.style.width = 32 + "px";
+            this.ob_view.onmouseenter = function (e) {
+            };
+            this.ob_no_view.onmouseenter = function (e) {
+            };
+            this.ob_view.onclick = function () {
+                that2.moving = false;
+                that2.ob_view.style.zIndex = "9999";
+                clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
+                that2.ob_view.className = "ob_view";
+                if (that2.ob_view.style.visibility === "visible") {
+                    that2.ob_view.style.visibility = "hidden";
+                    that2.ob_no_view.style.visibility = "visible";
+                    that2.ob_visible_view = false;
+                    that2.update_scene(that2.ob_render_index, this.header, that2.params,
+                        that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
+                        that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
+                }
+            }
+            this.ob_no_view.onclick = function () {
+                that2.moving = false;
+                that2.ob_no_view.style.zIndex = "9999";
+                clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
+                that2.ob_view.className = "ob_view";
+                if (that2.ob_no_view.style.visibility === "visible") {
+                    that2.ob_no_view.style.visibility = "hidden";
+                    that2.ob_view.style.visibility = "visible";
+                    that2.ob_visible_view = true;
+                    that2.update_scene(that2.ob_render_index, this.header, that2.params,
+                        that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
+                        that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
+                }
+            }
+            this.ob_view.onmousemove = function () {
+                that2.moving = false;
+                that2.ob_view.style.cursor = "pointer";
+            };
+            this.ob_no_view.onmousemove = function () {
+                that2.moving = false;
+                that2.ob_no_view.style.cursor = "pointer";
+            };
 
             this.ob_3d = document.createElement("IMG");
             this.ob_3d.className = "ob_3d";
@@ -1345,7 +1395,7 @@ function OB_TIMELINE() {
                     that2.reset_synced_time("new_search", that2.ob_render_index);
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                     that2.ob_search_value = that2.ob_search_input.value;
-                    that2.update_scenes(that2.ob_render_index, that2.header, that2.params,
+                    that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                         that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                         that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, true);
                 }
@@ -1358,12 +1408,14 @@ function OB_TIMELINE() {
             this.ob_timeline_header.appendChild(this.ob_search);
             this.ob_timeline_header.appendChild(this.ob_marker);
             this.ob_timeline_header.appendChild(this.ob_time_marker);
+            this.ob_timeline_header.appendChild(this.ob_view);
+            this.ob_timeline_header.appendChild(this.ob_no_view);
             this.ob_timeline_header.appendChild(this.ob_3d);
             this.ob_timeline_header.appendChild(this.ob_settings);
             this.ob_timeline_header.appendChild(this.ob_help);
             this.ob_timeline_header.appendChild(this.ob_search_input);
             this.ob_timeline_header.appendChild(this.ob_search_label);
-            this.ob_connected();
+            this.ob_connected(this.ob_render_index);
         }
 
         if (this.header !== undefined) {
@@ -1463,7 +1515,7 @@ function OB_TIMELINE() {
                 that2.ob_timeline_panel_resizer.style.left = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
                 that2.params[0].width = parseInt(that2.ob_timeline_panel.style.width);
                 that2.params[0].height = parseInt(that2.ob_timeline_panel.style.height);
-                that2.update_scenes(that2.ob_render_index, that2.header, that2.params,
+                that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                     that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                     that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
                 that2.pos1 = undefined;
@@ -1483,7 +1535,7 @@ function OB_TIMELINE() {
                 that2.ob_timeline_panel_resizer.style.left = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
                 that2.params[0].width = parseInt(that2.ob_timeline_panel.style.width);
                 that2.params[0].height = parseInt(that2.ob_timeline_panel.style.height);
-                that2.update_scenes(that2.ob_render_index, that2.header, that2.params,
+                that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                     that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                     that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
             };
@@ -1536,6 +1588,10 @@ function OB_TIMELINE() {
             this.ob_settings.style.left = (this.ob_timeline_header.offsetWidth - 72) + "px";
         if (this.ob_3d !== undefined)
             this.ob_3d.style.left = (this.ob_timeline_header.offsetWidth - 110) + "px";
+        if (this.ob_view !== undefined)
+            this.ob_view.style.left = (this.ob_timeline_header.offsetWidth - 150) + "px";
+        if (this.ob_no_view !== undefined)
+            this.ob_no_view.style.left = (this.ob_timeline_header.offsetWidth - 150) + "px";
     };
     OB_TIMELINE.prototype.setGregorianUnitLengths = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
@@ -1720,11 +1776,6 @@ function OB_TIMELINE() {
             return String(new Date(totalGregorianUnitLengths).toISOString());
         else
             return String(new Date(totalGregorianUnitLengths).getHours());
-    };
-    OB_TIMELINE.prototype.getPixelOffSetIncrement = function (ob_scene_index, gregorianUnitLengths, intervalPixels) {
-        return this.dateToPixelOffSet(ob_scene_index, new Date(gregorianUnitLengths), gregorianUnitLengths,
-            intervalPixels) - this.dateToPixelOffSet(ob_scene_index, new Date(0), gregorianUnitLengths,
-            intervalPixels);
     };
     OB_TIMELINE.prototype.dateToPixelOffSet = function (ob_scene_index, date, gregorianUnitLengths, intervalPixels) {
         if (date === undefined || date === "") {
@@ -1958,12 +2009,10 @@ function OB_TIMELINE() {
                     if (i === 0) {
                         if (this.ob_scene[ob_scene_index].sessions === undefined || this.ob_scene[ob_scene_index].sessions.events === undefined) return;
                         for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
-                            // Remove all events events not visible in the bands
-                            //pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].sessions.events[i].start, band.gregorianUnitLengths, band.intervalPixels);
-                            //if (pixelOffSetStart > -this.ob_scene[ob_scene_index].ob_width && this.ob_scene[ob_scene_index].ob_width > pixelOffSetStart) {
                             try {
                                 if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined && this.ob_scene[ob_scene_index].sessions.events[k].zone === undefined) {
-                                    sortByValue = eval("this.ob_scene[ob_scene_index].sessions.events[k]" + ".data." +
+                                    let that_eval = this;
+                                    sortByValue = eval("that_eval.ob_scene[ob_scene_index].sessions.events[k]" + ".data." +
                                         this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString());
                                     if (!isNaN(sortByValue)) sortByValue = this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString() + " " + sortByValue;
                                     this.ob_scene[ob_scene_index].sessions.events[k].data.sortByValue = sortByValue;
@@ -2001,25 +2050,37 @@ function OB_TIMELINE() {
         // Height may have changed depending on how many sessions or events populated in the bands
         // So here we need to check the Timeline height changed
         let new_timeline_height = 0;
+        let original_ob_height = this.ob_scene[ob_scene_index].ob_height;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].height !== undefined) {
-                if (this.ob_scene[ob_scene_index].bands[i].minY !== undefined) {
-                    this.ob_scene[ob_scene_index].bands[i].height =
-                        Math.abs(this.ob_scene[ob_scene_index].bands[i].maxY) +
-                        Math.abs(this.ob_scene[ob_scene_index].bands[i].minY);
-                    new_timeline_height += this.ob_scene[ob_scene_index].bands[i].height;
-                } else {
+                if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
                     try {
                         if (this.ob_scene[ob_scene_index].bands[i].height.match(/%/) !== null)
                             this.ob_scene[ob_scene_index].bands[i].height = (this.ob_scene[ob_scene_index].ob_height *
                                 parseInt(this.ob_scene[ob_scene_index].bands[i].height)) / 100;
-                        if (this.ob_scene[ob_scene_index].bands[i].height.match(/px/) !== null)
+                        else if (this.ob_scene[ob_scene_index].bands[i].height.match(/px/) !== null)
                             this.ob_scene[ob_scene_index].bands[i].height =
                                 parseInt(this.ob_scene[ob_scene_index].bands[i].height);
+                        else {
+                            if (this.ob_scene[ob_scene_index].bands[i].minY !== undefined) {
+                                this.ob_scene[ob_scene_index].bands[i].height =
+                                    Math.abs(this.ob_scene[ob_scene_index].bands[i].maxY) +
+                                    Math.abs(this.ob_scene[ob_scene_index].bands[i].minY);
+                            }
+                        }
                     } catch (err) {
+                    }
+                    new_timeline_height += this.ob_scene[ob_scene_index].bands[i].height;
+                } else {
+                    if (this.ob_scene[ob_scene_index].bands[i].minY !== undefined) {
+                        this.ob_scene[ob_scene_index].bands[i].height =
+                            Math.abs(this.ob_scene[ob_scene_index].bands[i].maxY) +
+                            Math.abs(this.ob_scene[ob_scene_index].bands[i].minY);
+                        new_timeline_height += this.ob_scene[ob_scene_index].bands[i].height;
                     }
                 }
             } else {
+                this.ob_scene[ob_scene_index].bands[i].height = this.ob_scene[ob_scene_index].bands[i].y = this.ob_scene[ob_scene_index].ob_height;
                 this.ob_scene[ob_scene_index].bands[i].y = this.ob_scene[ob_scene_index].ob_height -
                     ((this.ob_scene[ob_scene_index].ob_height / this.ob_scene[ob_scene_index].bands.length) / 2);
                 this.ob_scene[ob_scene_index].bands[i].pos_x = this.ob_scene[ob_scene_index].bands[i].x;
@@ -2035,9 +2096,34 @@ function OB_TIMELINE() {
         if (new_timeline_height !== 0) {
             this.ob_scene[ob_scene_index].ob_height = new_timeline_height;
         }
+
         let pos = 0;
         let offSet, offSetOverview;
+        let ob_overview = true;
+        let ob_index_overview = this.get_band_overview_index(ob_scene_index);
+        if (ob_index_overview == null)
+            ob_overview = false;
+
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                offSetOverview = parseInt(this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths) /
+                    parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+            } else {
+                offSet = parseInt(this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths) /
+                    parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+                if (ob_overview === true && i === this.ob_scene[ob_scene_index].bands.length - 2 &&
+                    this.params[0].height > this.ob_scene[ob_scene_index].ob_height) {
+                    this.ob_scene[ob_scene_index].bands[i].height += this.params[0].height -
+                        this.ob_scene[ob_scene_index].ob_height;
+                    this.ob_scene[ob_scene_index].ob_height = this.params[0].height;
+                }
+                if (ob_overview === false && i === this.ob_scene[ob_scene_index].bands.length - 1 &&
+                    this.params[0].height > this.ob_scene[ob_scene_index].ob_height) {
+                    this.ob_scene[ob_scene_index].bands[i].height += this.params[0].height -
+                        this.ob_scene[ob_scene_index].ob_height;
+                    this.ob_scene[ob_scene_index].ob_height = this.params[0].height;
+                }
+            }
             if (this.ob_scene[ob_scene_index].bands[i].height !== undefined) {
                 this.ob_scene[ob_scene_index].bands[i].y =
                     this.ob_scene[ob_scene_index].ob_height - pos - (this.ob_scene[ob_scene_index].bands[i].height / 2);
@@ -2049,45 +2135,105 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].bands[i].maxY = this.ob_scene[ob_scene_index].bands[i].heightMax / 2;
                 this.ob_scene[ob_scene_index].bands[i].minY = -this.ob_scene[ob_scene_index].bands[i].maxY;
                 this.ob_scene[ob_scene_index].bands[i].heightMin = this.ob_scene[ob_scene_index].ob_height - pos;
-                if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                    offSetOverview = parseInt(this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths) /
-                        parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                } else {
-                    offSet = parseInt(this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths) /
-                        parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                }
             }
         }
-        /*console.log("this.params[" + 0 + "].height =" + this.params[0].height +
-            " | this.ob_scene[ob_scene_index].bands[" + 0 + "].trackIncrement=" +
-            this.ob_scene[ob_scene_index].bands[0].trackIncrement +
-            " | this.ob_scene[ob_scene_index].ob_height=" + this.ob_scene[ob_scene_index].ob_height);*/
+
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                /*try {
+                try {
                     this.ob_scene[ob_scene_index].bands[i].trackIncrement =
-                        (offSet / offSetOverview) * this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                    if (this.ob_scene[ob_scene_index].bands[i].trackIncrement === undefined)
-                        this.ob_scene[ob_scene_index].bands[i].trackIncrement = 1;
+                        this.get_overview_track_increment(offSet, offSetOverview, ob_scene_index)
                 } catch {
-                    this.ob_scene[ob_scene_index].bands[i].trackIncrement = 1;
-                }*/
-                this.ob_scene[ob_scene_index].bands[i].trackIncrement = 1;
+                    this.ob_scene[ob_scene_index].bands[i].trackIncrement = 2;
+                }
             }
-            /*console.log("this.ob_scene[ob_scene_index].bands[" + i + "].name=" + this.ob_scene[ob_scene_index].bands[i].name +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].height=" + this.ob_scene[ob_scene_index].bands[i].height +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].heightMin=" + this.ob_scene[ob_scene_index].bands[i].heightMin +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].heightMax=" + this.ob_scene[ob_scene_index].bands[i].heightMax +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].maxY=" + this.ob_scene[ob_scene_index].bands[i].maxY +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].pos_x=" + this.ob_scene[ob_scene_index].bands[i].pos_x +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].x=" + this.ob_scene[ob_scene_index].bands[i].x +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].minY=" + this.ob_scene[ob_scene_index].bands[i].minY +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].pos_y=" + this.ob_scene[ob_scene_index].bands[i].pos_y +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].y=" + this.ob_scene[ob_scene_index].bands[i].y +
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].lastGreaterY=" + this.ob_scene[ob_scene_index].bands[i].lastGreaterY);*/
+            /*console.log("this.ob_scene[ob_scene_index].bands[" + i + "].name=" + this.ob_scene[ob_scene_index].bands[i].name +"\n"+
+                " | offSet=" + offSet +"\n"+
+                " | offSetOverview=" + offSetOverview +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].intervalPixels=" + this.ob_scene[ob_scene_index].bands[i].intervalPixels +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].height=" + this.ob_scene[ob_scene_index].bands[i].height +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].heightMin=" + this.ob_scene[ob_scene_index].bands[i].heightMin +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].heightMax=" + this.ob_scene[ob_scene_index].bands[i].heightMax +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].maxY=" + this.ob_scene[ob_scene_index].bands[i].maxY +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].pos_x=" + this.ob_scene[ob_scene_index].bands[i].pos_x +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].x=" + this.ob_scene[ob_scene_index].bands[i].x +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].minY=" + this.ob_scene[ob_scene_index].bands[i].minY +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].pos_y=" + this.ob_scene[ob_scene_index].bands[i].pos_y +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].y=" + this.ob_scene[ob_scene_index].bands[i].y +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].lastGreaterY=" + this.ob_scene[ob_scene_index].bands[i].lastGreaterY +"\n"+
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].trackIncrement=" + this.ob_scene[ob_scene_index].bands[i].trackIncrement);*/
+
         }
     };
+    OB_TIMELINE.prototype.get_band_default_index = function (ob_scene_index) {
+        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+    OB_TIMELINE.prototype.get_band_overview_index = function (ob_scene_index) {
+        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                return i;
+            }
+        }
+        return null;
+    }
+    OB_TIMELINE.prototype.get_overview_track_increment = function (offSet, offSetOverview, ob_scene_index) {
+        let ob_overview_track_increment;
+        let ob_band_overview_index = this.get_band_overview_index(ob_scene_index);
+        let ob_band_default_index = this.get_band_default_index(ob_scene_index);
+        try {
+            ob_overview_track_increment = (this.ob_scene[ob_scene_index].bands[ob_band_default_index].intervalPixels /
+                    this.ob_scene[ob_scene_index].bands[ob_band_overview_index].intervalPixels) *
+                (this.ob_scene[ob_scene_index].bands[ob_band_default_index].height /
+                    this.ob_scene[ob_scene_index].bands[ob_band_overview_index].height) *
+                (offSet / offSetOverview) * this.ob_scene[ob_scene_index].bands[ob_band_default_index].trackIncrement;
+            if (isNaN(ob_overview_track_increment)) ob_overview_track_increment = 2;
+        } catch (e) {
+            ob_overview_track_increment = 2;
+        }
+        return ob_overview_track_increment;
+    }
+    OB_TIMELINE.prototype.remove_band_overview = function (ob_scene_index) {
+        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                this.ob_scene[ob_scene_index].bands.splice(i, i + 1);
+            }
+        }
+    }
+    OB_TIMELINE.prototype.add_band_overview = function (ob_scene_index) {
+        let ob_default_overview_index = this.get_band_default_index(ob_scene_index);
+        let ob_default_overview = {};
+        if (this.get_band_overview_index(ob_scene_index) == null) {
+            ob_default_overview = JSON.stringify({
+                name: "ob_overview_band",
+                height: "25%",
+                color: "#8ac7f6",
+                intervalPixels: this.ob_scene[ob_scene_index].bands[ob_default_overview_index].intervalPixels,
+                intervalUnit: "DAY",
+                dateFormat: "yyyy mmm",
+                gregorianUnitLengths: "86400000",
+                dateColor: "#040404",
+                textColor: "#040404",
+                SessionColor: "#a110ff",
+                eventColor: "#238448",
+                defaultEventSize: 1,
+                dateColor: "#f31733",
+            });
+            ob_default_overview = JSON.parse(ob_default_overview);
+            this.ob_scene[ob_scene_index].bands.push(ob_default_overview);
+        }
+    }
     OB_TIMELINE.prototype.set_bands = function (ob_scene_index) {
+        //If no overview defined, add a default one
+        if (this.ob_visible_view) {
+            this.add_band_overview(ob_scene_index);
+        } else {
+            this.remove_band_overview(ob_scene_index);
+        }
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].textColor === undefined)
                 this.ob_scene[ob_scene_index].bands[i].textColor = "#000000";
@@ -2209,7 +2355,7 @@ function OB_TIMELINE() {
             }
             this.ob_scene[ob_scene_index].bands[i].multiples =
                 parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / this.multiples;
-            this.ob_scene[ob_scene_index].bands[i].trackIncrement = 20;
+            this.ob_scene[ob_scene_index].bands[i].trackIncrement = this.increment;
         }
         this.create_new_bands(ob_scene_index);
         this.set_bands_height(ob_scene_index);
@@ -2268,8 +2414,8 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].objects.push(ob_zone);
 
         if (!band_name.includes("overview"))
-            this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, 24, "Normal",
-                "Normal", textColor, 'Arial', undefined);
+            this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, undefined,
+                24, "Normal", "Normal", textColor, 'Arial');
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
@@ -2332,8 +2478,8 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].add(ob_model_name);
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
 
-        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, 24, "Normal",
-            "Normal", textColor, 'Arial', undefined);
+        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, undefined,
+            24, "Normal", "Normal", textColor, 'Arial');
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
             text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
@@ -2355,7 +2501,6 @@ function OB_TIMELINE() {
             c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
             rgb += ("00" + c).substr(c.length);
         }
-
         return rgb;
     }
 
@@ -2491,19 +2636,12 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].objects = [];
     };
 
-    OB_TIMELINE.prototype.destroy_all_scenes = function (ob_scene_index) {
-        if (this.ob_scene !== undefined)
-            for (let i = 0; i < this.ob_scene.length; i++)
-                this.destroy_scene(i);
-        this.ob_scene = undefined;
-    }
-
     OB_TIMELINE.prototype.ob_render = function (ob_scene_index) {
         //console.log("OB_TIMELINE.prototype.ob_render(ob_render_index=" + ob_scene_index + ")");
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
     }
-    OB_TIMELINE.prototype.get_backgroundColor = function (ob_scene_index) {
+    OB_TIMELINE.prototype.get_backgroundColor = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
                 try {
@@ -2515,7 +2653,7 @@ function OB_TIMELINE() {
             }
         }
     }
-    OB_TIMELINE.prototype.get_current_filter_value = function (ob_scene_index) {
+    OB_TIMELINE.prototype.get_current_filter_value = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
                 try {
@@ -2570,9 +2708,8 @@ function OB_TIMELINE() {
         }
     }
 
-    OB_TIMELINE.prototype.update_scenes = function (ob_scene_index, header, params, bands, model, sessions, camera,
-                                                    band, load_data) {
-
+    OB_TIMELINE.prototype.update_scene = function (ob_scene_index, header, params, bands, model, sessions, camera,
+                                                   band, load_data) {
         // If user is moving a band
         if (band !== null) {
             if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].ob_width ||
@@ -2587,14 +2724,16 @@ function OB_TIMELINE() {
             if (this.first_sync === undefined) {
                 this.ob_render_index = ob_scene_index;
                 this.first_sync = true;
-                this.ob_render_index = ob_scene_index;
                 this.reset_synced_time("new_sync", ob_scene_index);
                 this.runEmptyTimeline(ob_scene_index);
                 if (this.data === "unit_tests_minutes")
                     this.runUnitTestsMinutes(ob_scene_index);
                 else if (this.data === "unit_tests_hours")
                     this.runUnitTestsHours(ob_scene_index);
-                else {
+                else if (this.data.includes("readDescriptor")) {
+                    if (sessions.events.data !== undefined)
+                        this.ob_open_descriptor(ob_scene_index, sessions.events.data);
+                } else {
                     this.ob_read_filter(ob_scene_index, 0);
                 }
                 return;
@@ -2612,18 +2751,18 @@ function OB_TIMELINE() {
             let that_scene = this;
             clearTimeout(this.update_this_scene);
             this.update_this_scene = setTimeout(function () {
-                that_scene.update_scene(ob_scene_index, header, params, bands, model, sessions, camera);
+                that_scene.update_all_timelines(ob_scene_index, header, params, bands, model, sessions, camera);
             }, 0);
 
         }
     }
 
-    OB_TIMELINE.prototype.update_scene = function (ob_scene_index, header, params, bands, model, sessions, camera) {
+    OB_TIMELINE.prototype.update_all_timelines = function (ob_scene_index, header, params, bands, model, sessions, camera) {
         ob_timelines.forEach(function (ob_timeline) {
                 let startDate = new Date();
                 if (ob_timeline.name === params[0].name) {
                     let current_camera = ob_timeline.ob_camera_type;
-                    ob_timeline.destroy_scene(ob_timeline.ob_scene_index);
+                    ob_timeline.destroy_scene(ob_scene_index);
                     ob_timeline.ob_scene_index = ob_scene_index;
                     ob_timeline.ob_camera_type = camera;
                     ob_timeline.header = header;
@@ -2646,7 +2785,7 @@ function OB_TIMELINE() {
                     ob_timeline.ob_camera_type = current_camera;
                     ob_timeline.ob_start_clock();
                     if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].show_calendar)
-                        ob_timeline.ob_create_calendar(new Date(ob_timeline.ob_scene[ob_timeline.ob_scene_index].date_cal));
+                        ob_timeline.ob_create_calendar(ob_timeline.ob_scene_index, new Date(ob_timeline.ob_scene[ob_timeline.ob_scene_index].date_cal));
                     if (ob_timeline.show_filters)
                         ob_timeline.ob_create_filters(ob_timeline.ob_scene_index, 0, "select_filter");
                     // Apply filter if any here:
@@ -2658,7 +2797,7 @@ function OB_TIMELINE() {
                 let endDate = new Date();
                 if (ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index, ob_timeline.multiples) === true) {
                     ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index)
-                    ob_timeline.update_scenes(ob_scene_index, header, params, bands, model, sessions, camera, null, true);
+                    ob_timeline.update_scene(ob_scene_index, header, params, bands, model, sessions, camera, null, true);
                 }
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
@@ -2767,7 +2906,7 @@ function OB_TIMELINE() {
                     incrementPixelOffSet, this.ob_scene[ob_scene_index].bands[i].heightMax -
                     (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5,
                     this.ob_scene[ob_scene_index].bands[i].heightMax, "black", false);
-                // Trick: Add an extra segment to make a thinnest segment
+                // Trick: Add an extra segment to make the thinnest segment
                 this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                     incrementPixelOffSet + 0.15, this.ob_scene[ob_scene_index].bands[i].heightMax -
                     (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5,
@@ -2793,11 +2932,12 @@ function OB_TIMELINE() {
                         this.ob_scene[ob_scene_index].bands[i].fontSizeInt / 2;
 
                 //this.add_text_CSS2D(ob_band, text, textX, textY, 5,this.ob_scene[ob_scene_index].bands[i].fontSizeInt, this.ob_scene[ob_scene_index].bands[i].dateColor);
-                this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5,
+                this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, undefined,
                     this.ob_scene[ob_scene_index].bands[i].fontSizeInt,
                     this.ob_scene[ob_scene_index].bands[i].fontStyle,
-                    this.ob_scene[ob_scene_index].bands[i].fontWeight, this.ob_scene[ob_scene_index].bands[i].dateColor,
-                    this.ob_scene[ob_scene_index].bands[i].fontFamily, undefined);
+                    this.ob_scene[ob_scene_index].bands[i].fontWeight,
+                    this.ob_scene[ob_scene_index].bands[i].dateColor,
+                    this.ob_scene[ob_scene_index].bands[i].fontFamily);
 
                 //Create sub-segments if required
                 if (this.ob_scene[ob_scene_index].bands[i].subIntervalPixels !== "NONE") {
@@ -2807,7 +2947,7 @@ function OB_TIMELINE() {
                             this.ob_scene[ob_scene_index].bands[i].heightMax -
                             (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5
                             , this.ob_scene[ob_scene_index].bands[i].heightMax, "black", true);
-                        // Trick: Add an extra segment to make a thinnest segment
+                        // Trick: Add an extra segment to make the thinnest segment
                         this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                             incrementPixelOffSet + incrementSubPixelOffSet + 0.20,
                             this.ob_scene[ob_scene_index].bands[i].heightMax -
@@ -2823,65 +2963,84 @@ function OB_TIMELINE() {
         //console.log("create_segments_and_dates done at:" + Date() + " - " + new Date().getMilliseconds());
     };
 
-    OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i) {
+    OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, activity, i) {
+        let ob_break = false;
         let ob_enough_room = true;
+        let ob_activity_x = activity.original_x;
         this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].maxY -
             this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
+        this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
 
         // if not enough room to plot the session increase bandWith regarding this.ob_scene[ob_scene_index].bands[i].trackIncrement
         while (ob_enough_room) {
-            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+            ob_break = false;
             for (let l = 0; l < sessions.length; l++) {
-                if (sessions[l].y === undefined) {
-                    return this.ob_scene[ob_scene_index].bands[i].track;
-                }
-                // If no room, so check for the next track.
-                if (sessions[l].y === this.ob_scene[ob_scene_index].bands[i].track) {
-                    if (parseInt(session.original_x) >= parseInt(sessions[l].original_x) &&
-                        parseInt(session.original_x) <= parseInt(sessions[l].original_x + sessions[l].total_width)) {
-                        //  session i        ___
-                        //  session l      _________
-                        if (ob_debug_room) console.log("case1: this.ob_scene[ob_scene_index].bands[i].name=" +
-                            this.ob_scene[ob_scene_index].bands[i].name +
-                            " - session.data.title=" + session.data.title +
-                            " - session.original_x=" + session.original_x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
-                            " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].original_x=" + sessions[l].original_x +
-                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions.x + sessions.total_width) + ")");
-
-                        break;
-                    } else if (parseInt(session.original_x) <= parseInt(sessions[l].original_x) &&
-                        parseInt(session.original_x + session.total_width) >= parseInt(sessions[l].original_x)) {
-                        //  session i      _________
-                        //  session l              ________
-                        if (ob_debug_room) console.log("case2: this.ob_scene[ob_scene_index].bands[i].name=" + this.ob_scene[ob_scene_index].bands[i].name +
-                            " - session.data.title=" + session.data.title +
-                            " - session.original_x=" + session.original_x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
-                            " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].original_x=" + sessions[l].original_x +
-                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].original_x + sessions[l].total_width) + ")");
-
-                        break;
-                    } else {
-                        if (ob_debug_room) console.log("case normal: this.ob_scene[ob_scene_index].bands[i].name=" + this.ob_scene[ob_scene_index].bands[i].name +
-                            " - session.data.title=" + session.data.title +
-                            " - session.original_x=" + session.original_x +
-                            " - session.total_width=" + session.total_width + " -->(" + parseInt(session.original_x + session.total_width) + ")" +
-                            " - sessions[l].data.title=" + sessions[l].data.title +
-                            " - sessions[l].original_x=" + sessions[l].original_x +
-                            " - sessions[l].total_width=" + sessions[l].total_width + " -->(" + parseInt(sessions[l].original_x + sessions[l].total_width) + ")");
+                for (let a = 0; a < sessions[l].activities.length; a++) {
+                    // If no room, so check for the next track.
+                    if (sessions[l].activities[a].y === this.ob_scene[ob_scene_index].bands[i].track) {
+                        if (ob_activity_x >= sessions[l].activities[a].original_x &&
+                            ob_activity_x <= sessions[l].activities[a].original_x + sessions[l].activities[a].total_width) {
+                            //  session a        ___
+                            //  session l      _________
+                            ob_break = true;
+                            if (a > 1 && a === sessions[l].activities.length - 1)
+                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            break;
+                        } else if (ob_activity_x <= sessions[l].activities[a].original_x &&
+                            ob_activity_x + activity.total_width >= sessions[l].activities[a].original_x) {
+                            //  session a      _________
+                            //  session l              ________
+                            ob_break = true;
+                            if (a > 1 && a === sessions[l].activities.length - 1)
+                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            break;
+                        } else if (ob_activity_x >= sessions[l].activities[a].original_x &&
+                            ob_activity_x <= sessions[l].activities[a].original_x + sessions[l].activities[a].total_width) {
+                            //  session a      _________
+                            //  session l    ________
+                            ob_break = true;
+                            if (a > 1 && a === sessions[l].activities.length - 1)
+                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            break;
+                        } else if (ob_activity_x <= sessions[l].activities[a].original_x &&
+                            ob_activity_x >= sessions[l].activities[a].original_x) {
+                            //  session a      _________
+                            //  session l        _____
+                            ob_break = true;
+                            if (a > 1 && a === sessions[l].activities.length - 1)
+                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
+                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            break;
+                        } else {
+                            ob_break = false;
+                        }
                     }
                 }
-                // Reset increment if there is enough room to plot the session otherwise increase bandwidth.
+                if (ob_break === true) {
+                    break;
+                }
+            }
+            // Reset increment if there is enough room to plot the session otherwise increase bandwidth.
+            if (ob_break === true) {
                 if (this.ob_scene[ob_scene_index].bands[i].track <= this.ob_scene[ob_scene_index].bands[i].minY + this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
                     this.ob_scene[ob_scene_index].bands.updated = true;
                     this.ob_scene[ob_scene_index].bands[i].minY = this.ob_scene[ob_scene_index].bands[i].track - (2 * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                     return this.ob_scene[ob_scene_index].bands[i].track;
                 }
-            }
+            } else
+                return this.ob_scene[ob_scene_index].bands[i].track;
         }
         //console.log("this.ob_scene[ob_scene_index].bands[i].heightMax=" + this.ob_scene[ob_scene_index].bands[i].heightMax + " " + this.ob_scene[ob_scene_index].bands[i].name + " title=" + String(session.data.title) + " x=" + session.x + " w=" + session.w + " y=" + y);
         return this.ob_scene[ob_scene_index].bands[i].track;
@@ -2900,133 +3059,284 @@ function OB_TIMELINE() {
         }
     }
 
-    OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
-        let layout;
-        let y = 0, z = 5, h = 0, w = 0;
+    function getSessionWidth(activities) {
+        let ob_w = activities[0].width;
+        try {
+            //return the larger activity width.
+            for (let i = 1; i < activities.length; i++) {
+                if (activities[i].width > ob_w) ob_w = activities[i].width;
+            }
+        } catch (e) {
+            return ob_w;
+        }
+        return ob_w;
+    }
+
+    function getSessionHeight(activities) {
+        let ob_offset = 2 * activities[0].height;
+        let ob_h = 0;
+        let ob_y_min = activities[0].y;
+        let ob_y_max = activities[0].y;
+        if (activities[activities.length - 1].y === undefined) return ob_h;
+        try {
+            for (let i = 1; i < activities.length; i++) {
+                if (ob_y_min > activities[i].y) ob_y_min = activities[i].y;
+                if (ob_y_max < activities[i].y) ob_y_max = activities[i].y;
+            }
+            ob_h = ob_y_max - ob_y_min + ob_offset;
+        } catch (e) {
+            return ob_h;
+        }
+        return ob_h;
+    }
+
+    function getSessionY(activities, h) {
+        let ob_y = activities[0].y;
+        if (activities.length < 2) return ob_y;
+        try {
+            ob_y = activities[0].y - (h / 2) + (activities[0].height);
+        } catch (e) {
+            return parseInt(ob_y);
+        }
+        return parseInt(ob_y);
+    }
+
+    function getSessionX(activities, total_w) {
+        let ob_x = activities[0].x;
+        if (activities.length < 2) return ob_x;
+        try {
+            for (let i = 1; i < activities.length; i++) {
+                if (ob_x > activities[i].x) ob_x = activities[i].x;
+            }
+            ob_x = ob_x + (total_w / 2);
+        } catch (e) {
+            return parseInt(ob_x);
+        }
+        return parseInt(ob_x);
+    }
+
+    function getSession_originalX(activities) {
+        let ob_x = activities[0].original_x;
+        if (activities.length < 2) return ob_x;
+        try {
+            for (let i = 1; i < activities.length; i++) {
+                if (ob_x < activities[i].original_x) ob_x = activities[i].original_x;
+            }
+        } catch (e) {
+            return parseInt(ob_x);
+        }
+        return parseInt(ob_x);
+    }
+
+    OB_TIMELINE.prototype.init_activities = function (ob_scene_index, band_index, session_index) {
+        let z = 5, h = 0, w = 0;
         let textX = 0;
         let pixelOffSetStart = 0;
         let pixelOffSetEnd = 0;
         let original_pixelOffSetStart = 0;
         let original_pixelOffSetEnd = 0;
+        let ob_band_index = 0;
+        if (band_index === 0) ob_band_index = 1;
+
+        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].maxY -
+            this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt;
+
+        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].track -
+            this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
+
+        for (let a = 0; a < this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities.length; a++) {
+            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data !== null &&
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title === undefined)
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title = "";
+            pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].start,
+                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+            pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end,
+                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== undefined &&
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== "") {
+                original_pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start,
+                    this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                    this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetStart =
+                    original_pixelOffSetStart;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                    parseInt(original_pixelOffSetStart);
+            } else
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                    parseInt(pixelOffSetStart);
+            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== undefined &&
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== "") {
+                original_pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end,
+                    this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                    this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetEnd =
+                    parseInt(original_pixelOffSetEnd);
+            }
+            let add_tolerance = 0;
+            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance !== undefined &&
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end !== "") {
+                add_tolerance =
+                    parseInt(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance);
+            }
+
+            if (isNaN(parseInt(pixelOffSetEnd))) {
+                h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
+                w = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
+                textX = getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
+                textX = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize * 2 + textX / 2;
+            } else {
+                h = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
+                w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
+                textX = getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
+                textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textX / 2;
+            }
+
+            if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+                h = this.ob_scene[ob_scene_index].bands[band_index].trackIncrement / 2;
+                if (isNaN(parseInt(pixelOffSetEnd)))
+                    w = h / 2;
+            }
+
+            // Do not write texts for any overview bands.
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x = parseInt(pixelOffSetStart);
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x_relative = parseInt(pixelOffSetStart) + w / 2;
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                getSession_originalX(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities);
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].width = w;
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].height = h;
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].size = h;
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].z = z;
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetStart =
+                parseInt(pixelOffSetStart);
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetEnd =
+                parseInt(pixelOffSetEnd);
+
+            if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX =
+                    parseInt(textX) * (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
+                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].y =
+                    this.ob_scene[ob_scene_index].bands[band_index].track *
+                    (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
+                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width = w +
+                    (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title.length *
+                        this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt) + add_tolerance;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width *
+                    (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
+                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths)
+            } else {
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX = parseInt(textX);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].y =
+                    this.ob_scene[ob_scene_index].bands[band_index].track;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width = w +
+                    (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title.length *
+                        this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt) + add_tolerance;
+            }
+        }
+    }
+
+    OB_TIMELINE.prototype.init_sessions = function (ob_scene_index, band_index) {
+        let layout;
+        let sortByValue;
+        let session = {};
+
+        // Assign each event to the right bands and store zones
+        if (sortByValue === undefined) {
+            let that_eval2 = this;
+            sortByValue = eval("that_eval2.ob_scene[ob_scene_index].bands[band_index].model[0].sortBy");
+        }
+        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].maxY -
+            this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt;
+
+        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].track -
+            this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
+
+        for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
+            if (this.ob_scene[ob_scene_index].sessions.events[k].activities === undefined) {
+                let activity = Object.assign({}, this.ob_scene[ob_scene_index].sessions.events[k]);
+                this.ob_scene[ob_scene_index].sessions.events[k].activities = [];
+                this.ob_scene[ob_scene_index].sessions.events[k].activities[0] = activity;
+            }
+            session = JSON.parse(JSON.stringify(this.ob_scene[ob_scene_index].sessions.events[k]));
+            //session = this.ob_scene[ob_scene_index].sessions.events[k];
+            session.y = this.ob_scene[ob_scene_index].bands[band_index].track;
+            if (session.zone !== undefined) {
+                this.ob_scene[ob_scene_index].bands[band_index].zones.push(session);
+            } else if (session.id !== undefined) {
+                if (sortByValue === "NONE" || sortByValue === "") {
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions.push(session);
+                } else {
+                    layout = session.data.sortByValue;
+                    if (layout === undefined)
+                        layout = eval("session.data." + sortByValue);
+                    if (layout !== undefined && this.ob_scene[ob_scene_index].bands[band_index].layout_name === layout) {
+                        this.ob_scene[ob_scene_index].bands[band_index].sessions.push(session);
+                    }
+                }
+                this.build_model(ob_scene_index, session.data);
+            }
+        }
+    }
+
+    OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
+        let y = 0, z = 5;
         this.ob_scene[ob_scene_index].bands.updated = false;
 
         // two passes are necessary if bands height change because we need to calculate again all sessions coordinates
-        let sortByValue;
         for (let p = 0; p < 2; p++) {
             if (p === 1 && this.ob_scene[ob_scene_index].bands.updated === false)
                 break;
 
             // for each bands
             for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+                if (this.ob_scene[ob_scene_index].sessions === undefined) break;
+                if (this.ob_scene[ob_scene_index].sessions.events === undefined) return;
+
                 this.ob_scene[ob_scene_index].bands[i].zones = [];
                 this.ob_scene[ob_scene_index].bands[i].sessions = [];
                 this.ob_scene[ob_scene_index].bands[i].lastGreaterY = -this.ob_scene[ob_scene_index].ob_height / 2;
-                if (this.ob_scene[ob_scene_index].sessions === undefined) break;
+
+                this.init_sessions(ob_scene_index, i);
 
                 // Assign each event to the right bands and store zones
-                if (sortByValue === undefined)
-                    sortByValue = eval("this.ob_scene[ob_scene_index].bands[i].model[0].sortBy");
-                if (this.ob_scene[ob_scene_index].sessions.events === undefined) return;
-                for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
-                    // Remove all events events not visible in the bands
-                    //pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].sessions.events[k].start, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths, this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                    //if (pixelOffSetStart > -this.ob_scene[ob_scene_index].ob_width && this.ob_scene[ob_scene_index].ob_width > pixelOffSetStart) {
-                    if (this.ob_scene[ob_scene_index].sessions.events[k].zone !== undefined) {
-                        this.ob_scene[ob_scene_index].bands[i].zones.push(Object.assign({},
-                            this.ob_scene[ob_scene_index].sessions.events[k]));
-                    } else if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined) {
-                        if (sortByValue === "NONE" || sortByValue === "") {
-                            this.ob_scene[ob_scene_index].bands[i].sessions.push(Object.assign({},
-                                this.ob_scene[ob_scene_index].sessions.events[k]));
-                        } else {
-                            layout = this.ob_scene[ob_scene_index].sessions.events[k].data.sortByValue;
-                            if (layout === undefined)
-                                layout = eval("this.ob_scene[ob_scene_index].sessions.events[k].data." + sortByValue);
-                            if (layout !== undefined && this.ob_scene[ob_scene_index].bands[i].layout_name === layout) {
-                                this.ob_scene[ob_scene_index].sessions.events[k].y = undefined;
-                                this.ob_scene[ob_scene_index].bands[i].sessions.push(Object.assign({},
-                                    this.ob_scene[ob_scene_index].sessions.events[k]));
-                            }
-                        }
-                        this.build_model(ob_scene_index, this.ob_scene[ob_scene_index].sessions.events[k].data);
-                        //}
-                    }
-                }
-
                 for (let j = 0; j < this.ob_scene[ob_scene_index].bands[i].sessions.length; j++) {
-                    if (this.ob_scene[ob_scene_index].sessions.events[j].id !== undefined) {
-                        let session = this.ob_scene[ob_scene_index].bands[i].sessions[j];
-                        if (session.data !== null && session.data.title === undefined) session.data.title = "";
-                        pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, session.start,
-                            this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                            this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                        pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index, session.end,
-                            this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                            this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                        if (session.original_start !== undefined) {
-                            original_pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, session.original_start,
-                                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_pixelOffSetStart = original_pixelOffSetStart;
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x = parseInt(original_pixelOffSetStart);
-                        } else
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x = pixelOffSetStart;
-                        if (session.original_end !== undefined) {
-                            original_pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index, session.original_end,
-                                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j].original_pixelOffSetEnd = original_pixelOffSetEnd;
-                        }
-                        if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                            if (isNaN(parseInt(pixelOffSetEnd))) {
-                                h = this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                                w = this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            } else {
-                                h = this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                                w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                            }
-                        } else {
-                            if (isNaN(parseInt(pixelOffSetEnd))) {
-                                h = this.ob_scene[ob_scene_index].bands[i].defaultEventSize;
-                                w = this.ob_scene[ob_scene_index].bands[i].defaultEventSize;
-                                textX = getTextWidth(session.data.title,
-                                    this.ob_scene[ob_scene_index].bands[i].fontSize + " " +
-                                    this.ob_scene[ob_scene_index].bands[i].fontFamily);
-                                textX = this.ob_scene[ob_scene_index].bands[i].defaultEventSize * 2 + textX / 2;
 
-                            } else {
-                                h = this.ob_scene[ob_scene_index].bands[i].sessionHeight;
-                                w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                                textX = getTextWidth(session.data.title,
-                                    this.ob_scene[ob_scene_index].bands[i].fontSize + " " +
-                                    this.ob_scene[ob_scene_index].bands[i].fontFamily);
-                                textX = (w / 2) + this.ob_scene[ob_scene_index].bands[i].defaultEventSize + textX / 2;
-                            }
-                        }
+                    this.init_activities(ob_scene_index, i, j);
 
-                        // Do not write texts for any overview bands.
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].x = parseInt(pixelOffSetStart);
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].x_relative = parseInt(pixelOffSetStart) + w / 2;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].width = w;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].height = h;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].size = h;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].z = z;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].textX = textX;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetStart = pixelOffSetStart;
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd = pixelOffSetEnd;
-                        let add_tolerance = 0;
-                        if (session.data.tolerance !== undefined) {
-                            add_tolerance = parseInt(session.data.tolerance);
-                        }
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].total_width =
-                            w + (session.data.title.length * this.ob_scene[ob_scene_index].bands[i].fontSizeInt) + add_tolerance;
-
+                    for (let a = 0; a < this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length; a++) {
                         y = this.get_room_for_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].sessions,
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j], i);
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], i);
+                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].y = y;
+                        if (y > this.ob_scene[ob_scene_index].bands[i].lastGreaterY)
+                            this.ob_scene[ob_scene_index].bands[i].lastGreaterY = y;
                     }
-                    this.ob_scene[ob_scene_index].bands[i].sessions[j].y = y;
-                    if (y > this.ob_scene[ob_scene_index].bands[i].lastGreaterY)
-                        this.ob_scene[ob_scene_index].bands[i].lastGreaterY = y;
+                    // Set width and height for the session to build later the box containing all activities.
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].width =
+                        getSessionWidth(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].height =
+                        getSessionHeight(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].x =
+                        getSessionX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].width);
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x =
+                        getSession_originalX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].z = z;
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].y =
+                        getSessionY(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].height);
+                    //this.ob_scene[ob_scene_index].bands[i].sessions[j].y =y;
                 }
                 if (this.ob_scene[ob_scene_index].bands[i].lastGreaterY !== -this.ob_scene[ob_scene_index].ob_height / 2) {
                     this.ob_scene[ob_scene_index].bands[i].lastGreaterY =
@@ -3066,130 +3376,220 @@ function OB_TIMELINE() {
         }
         let ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
 
-        let ob_tolerance = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width + parseInt(session.data.tolerance), 1, 10)), ob_material));
-        ob_tolerance.position.set(session.original_x + ((session.width + parseInt(session.data.tolerance)) / 2), session.y - session.height / 2, session.z + 1);
+        let ob_tolerance =
+            this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width +
+                parseInt(session.data.tolerance), 1, 10)), ob_material));
+        ob_tolerance.position.set(session.original_x + ((session.width + parseInt(session.data.tolerance)) / 2),
+            session.y - session.height / 2, session.z + 1);
         let ob_original_circle;
-        ob_original_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
+        ob_original_circle =
+            this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)),
+                ob_material));
         ob_original_circle.position.set(-((session.width + parseInt(session.data.tolerance)) / 2), 0, session.z);
         ob_tolerance.add(ob_original_circle);
 
         let ob_circle;
-        ob_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
+        ob_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)),
+            ob_material));
         ob_circle.position.set(parseInt(session.width + parseInt(session.data.tolerance)) / 2, 0, session.z);
         ob_tolerance.add(ob_circle);
-
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_tolerance);
         }
 
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_tolerance(" + ob_object + "," + "," + x + "," + y + "," + z + "," + color + "," + tolerance + ")");
+        if (ob_debug_ADD_WEBGL_OBJECT)
+            console.log("OB_TIMELINE.add_tolerance(" +
+                ob_object + "," + "," + x + "," + y + "," + z + "," + color + ")");
     };
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
+        let ob_group_visible;
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             let ob_obj;
             for (let j = 0; j < this.ob_scene[ob_scene_index].bands[i].sessions.length; j++) {
-                try {
-                    if (regex === null || this.ob_scene[ob_scene_index].bands[i].sessions[j].id !== undefined ||
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title.match(regex)) {
-                        if ((this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd === undefined ||
-                                isNaN(parseInt(this.ob_scene[ob_scene_index].bands[i].sessions[j].pixelOffSetEnd))) &&
-                            !this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                            if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render !== undefined)
-                                ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                    this.ob_scene[ob_scene_index].bands[i].backgroundColor,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j].render.color,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j],
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j].render.image);
-                            else
-                                ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                    this.ob_scene[ob_scene_index].bands[i].backgroundColor,
-                                    this.ob_scene[ob_scene_index].bands[i].eventColor,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j]);
-                        } else {
-                            if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render !== undefined &&
-                                !this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                                ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                    this.ob_scene[ob_scene_index].bands[i].backgroundColor,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j].render.color,
-                                    this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j],
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j].render.image);
-                            } else
-                                ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                    this.ob_scene[ob_scene_index].bands[i].backgroundColor,
-                                    this.ob_scene[ob_scene_index].bands[i].SessionColor,
-                                    this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
-                                    this.ob_scene[ob_scene_index].bands[i].sessions[j]);
-                        }
-                        if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                for (let a = 0; a < this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length; a++) {
+                    try {
+                        ob_group_visible = false;
+                        if (regex === null || this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].id !== undefined ||
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].data.title.match(regex)) {
                             let textColor = this.ob_scene[ob_scene_index].bands[i].dateColor;
                             let fontSizeInt = this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
                             let fontWeight = this.ob_scene[ob_scene_index].bands[i].fontWeight;
                             let fontFamily = this.ob_scene[ob_scene_index].bands[i].fontFamily;
                             let fontStyle = this.ob_scene[ob_scene_index].bands[i].fontStyle;
                             let backgroundColor = this.ob_scene[ob_scene_index].bands[i].backgroundColor;
-                            if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render !== undefined) {
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.textColor !== undefined)
-                                    textColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.textColor;
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontSize !== undefined)
-                                    fontSizeInt = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontSize;
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontWeight !== undefined)
-                                    fontWeight = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontWeight;
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontFamily !== undefined)
-                                    fontFamily = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontFamily;
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontStyle !== undefined)
-                                    fontStyle = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.fontStyle;
-                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].render.backgroundColor !== undefined)
-                                    backgroundColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].render.backgroundColor;
+                            let luminance = undefined;
+                            let opacity = undefined;
+                            if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render !== undefined) {
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.textColor !== undefined)
+                                    textColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.textColor;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontSize !== undefined)
+                                    fontSizeInt = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontSize;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontWeight !== undefined)
+                                    fontWeight = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontWeight;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontFamily !== undefined)
+                                    fontFamily = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontFamily;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontStyle !== undefined)
+                                    fontStyle = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.fontStyle;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor !== undefined)
+                                    backgroundColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.luminance !== undefined)
+                                    luminance = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.luminance;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.opacity !== undefined)
+                                    opacity = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.opacity;
                             }
 
-                            this.add_text_sprite(ob_scene_index, ob_obj,
-                                this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title,
-                                this.ob_scene[ob_scene_index].bands[i].sessions[j].textX, 0, 5, fontSizeInt,
-                                fontStyle, fontWeight, textColor, fontFamily, backgroundColor);
-                            this.add_tolerance(ob_scene_index, ob_obj,
-                                this.ob_scene[ob_scene_index].bands[i].name,
-                                this.ob_scene[ob_scene_index].bands[i].sessions[j],
-                                this.ob_scene[ob_scene_index].bands[i].sessions[j].render.toleranceColor);
+                            // If any events and overview
+                            if ((this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].pixelOffSetEnd === undefined ||
+                                isNaN(parseInt(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].pixelOffSetEnd)))) {
+                                if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                                    if (this.ob_search_value === "" ||
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor === "#F8DF09") {
+                                        ob_group_visible = true;
+                                        ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
+                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
+                                            undefined,
+                                            backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                    }
+                                } else {
+                                    // If any events and no overview
+                                    ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image,
+                                        backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                }
+                            } else {
+                                // If any sessions and overview
+                                if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                                    // make not visible all events/sessions if not searched
+                                    if (this.ob_search_value === "" ||
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor === "#F8DF09") {
+                                        ob_group_visible = true;
+                                        ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
+                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
+                                            this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
+                                            undefined,
+                                            backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                    }
+                                } else {
+                                    // If any sessions and no overview
+                                    ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
+                                        this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image,
+                                        backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                }
+                            }
                         }
+                    } catch (e) {
+                        /*console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
+                            String(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].data.title) +
+                            " - this.ob_scene[ob_scene_index].bands[i].heightMax=" +
+                            this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);*/
                     }
-                } catch (e) {
-                    /*console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
-                        String(this.ob_scene[ob_scene_index].bands[i].sessions[j].data.title) +
-                        " - this.ob_scene[ob_scene_index].bands[i].heightMax=" +
-                        this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);*/
+                }
+                // Create box if multiple activities
+                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length > 1) {
+                    if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                        if (this.ob_search_value === "" || ob_group_visible === true) {
+                            this.add_sessionsBox(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                this.ob_scene[ob_scene_index].bands[i].sessions[j],
+                                undefined,
+                                undefined,
+                                undefined,
+                                undefined);
+                        }
+                    } else {
+                        this.add_sessionsBox(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                            this.ob_scene[ob_scene_index].bands[i].sessions[j],
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined);
+                    }
                 }
             }
         }
     }
+    OB_TIMELINE.prototype.add_sessionsBox = function (ob_scene_index, band_name, session, color, texture, luminance, opacity) {
+        let ob_box_activities = this.ob_scene[ob_scene_index].getObjectByName(band_name + "_sessionBox_" + session.id);
+        if (ob_box_activities !== undefined)
+            return;
 
-    OB_TIMELINE.prototype.move_session = function (session, x, y, z) {
-        if (session !== undefined) {
-            try {
-                session.position.set(x, y, z);
-            } catch (err) {
-                if (x === undefined)
-                    x = session.position.x;
-                if (y === undefined)
-                    y = session.position.y;
-                if (z === undefined)
-                    z = session.position.z;
-                session.position.set(x, y, z);
-            }
+        if (luminance === undefined)
+            luminance = -0.15;
+        if (opacity === undefined)
+            opacity = 0.35;
+        if (color === undefined) {
+            if (session.render.color !== undefined)
+                color = this.hex_Luminance(session.render.color, luminance);
+        } else
+            color = this.hex_Luminance(color, luminance);
+
+        let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(session.width, session.height, 1));
+        let ob_material;
+        if (texture !== undefined) {
+            let loader = this.track[ob_scene_index](new THREE.CubeTextureLoader());
+            loader.setCrossOrigin("");
+            loader.setPath('three.js/examples/textures/cube/pisa/');
+            let textureCube = loader.load([
+                'px.png', 'nx.png',
+                'py.png', 'ny.png',
+                'pz.png', 'nz.png'
+            ]);
+            let ob_dirLight = this.track[ob_scene_index](new THREE.DirectionalLight(0xffffff));
+            ob_dirLight.position.set(10, 10, 10);
+            this.ob_scene[ob_scene_index].add(ob_dirLight);
+            this.ob_scene[ob_scene_index].add(this.track[ob_scene_index](new THREE.AmbientLight(0x404040)));
+            ob_material = this.track[ob_scene_index](new THREE.MeshStandardMaterial({
+                envMap: textureCube,
+                roughness: 0.5,
+                metalness: 1
+            }));
+            ob_box.computeVertexNormals();
+        } else {
+            ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
+                color: color, transparent: true,
+                opacity: opacity
+            }));
         }
+
+        ob_box_activities = this.track[ob_scene_index](new THREE.Mesh(ob_box, ob_material));
+        ob_box_activities.name = band_name + "_" + session.id;
+        ob_box_activities.sortBy = "true";
+        ob_box_activities.pos_x = session.x;
+        ob_box_activities.pos_y = session.y;
+        ob_box_activities.pos_z = 1;
+        ob_box_activities.position.set(session.x, session.y, 1);
+
+        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
+        if (ob_band !== undefined) {
+            ob_band.add(ob_box_activities);
+        }
+
+
+        if (ob_debug_ADD_SESSION_WEBGL_OBJECT) console.log("OB_TIMELINE.add_sessionsBox(" + band_name + "," +
+            session.start, "," + session.end + "---" + session.data.title + ",lenght=" +
+            session.activities.length + "," + session.activities[0].start + session.activities[0].data.description + ")");
     };
 
 // WebGl OpenBexi library
-    OB_TIMELINE.prototype.add_session = function (ob_scene_index, band_name, background, color, texture, session, image) {
+    OB_TIMELINE.prototype.add_session = function (ob_scene_index, band_name, session, color, texture, image,
+                                                  backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
+                                                  fontFamily) {
         if (image !== undefined) {
-            let copy = Object.assign({}, session);
-            copy.x_relative = copy.pixelOffSetStart - 8;
-            copy.z = parseInt(session.z + 41);
-            this.add_event(ob_scene_index, band_name, background, color, copy, image);
+            let copy_session = Object.assign({}, session);
+            copy_session.x_relative = copy_session.pixelOffSetStart - 8;
+            copy_session.z = parseInt(session.z + 41);
+            this.add_event(ob_scene_index, band_name, copy_session, color, image, backgroundColor, fontSizeInt,
+                fontStyle, fontWeight, textColor, fontFamily);
         }
         let ob_material;
         if (texture !== undefined) {
@@ -3216,6 +3616,14 @@ function OB_TIMELINE() {
         ob_session.pos_y = session.y;
         ob_session.pos_z = session.z;
         ob_session.data = session;
+
+        // Add text and tolerance
+        if (!band_name.match(/overview_/)) {
+            this.add_text_sprite(ob_scene_index, ob_session, session.data.title, session.textX, 0, 5, backgroundColor,
+                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+            this.add_tolerance(ob_scene_index, ob_session, band_name, session, undefined);
+        }
+
         //this.ob_scene[ob_scene_index].add(ob_session);
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
@@ -3225,20 +3633,14 @@ function OB_TIMELINE() {
             session.y + "," + session.z + "," + session.width + "," + session.height + "," + session.color + ")");
         return ob_session;
     };
-    OB_TIMELINE.prototype.removeSession = function (ob_scene_index, band_name, session_id) {
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.remove(session_id);
-        }
-        if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("removeEvent(" + band_name + "+event_id=" + session_id + ")");
-    };
 
     OB_TIMELINE.prototype.load_texture = function (image) {
         if (image === undefined || ob_texture === undefined) return undefined;
         return ob_texture.get(image);
     }
 
-    OB_TIMELINE.prototype.add_event = function (ob_scene_index, band_name, background, color, session, image) {
+    OB_TIMELINE.prototype.add_event = function (ob_scene_index, band_name, session, color, image, backgroundColor,
+                                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily) {
         let geometry, material, ob_event;
         let texture = this.load_texture(image);
         if (texture === undefined) {
@@ -3249,7 +3651,7 @@ function OB_TIMELINE() {
             texture.minFilter = THREE.LinearFilter;
             material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
                 map: texture,
-                color: background,
+                color: backgroundColor,
                 transparent: true,
                 opacity: 1
             }));
@@ -3261,6 +3663,12 @@ function OB_TIMELINE() {
         ob_event.pos_z = session.z;
         ob_event.data = session;
 
+        // Add text and tolerance
+        if (!band_name.match(/overview_/)) {
+            this.add_text_sprite(ob_scene_index, ob_event, session.data.title, session.textX, 0, 5, backgroundColor,
+                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+        }
+
         this.ob_scene[ob_scene_index].add(ob_event);
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
@@ -3270,13 +3678,7 @@ function OB_TIMELINE() {
         if (ob_debug_ADD_EVENT_WEBGL_OBJECT) console.log("OB_TIMELINE.ob_addEvent(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
         return ob_event;
     };
-    OB_TIMELINE.prototype.removeEvent = function (ob_scene_index, band_name, event_id) {
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.remove(event_id);
-        }
-        if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("OB_TIMELINE.removeEvent(" + band_name + "+event_id=" + event_id + ")");
-    };
+
     OB_TIMELINE.prototype.add_segment = function (ob_scene_index, band_name, x, y, z, size, color, dashed) {
         if (color === undefined) {
             color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
@@ -3298,14 +3700,6 @@ function OB_TIMELINE() {
             ob_band.add(segment);
         }
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_segment(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
-    };
-
-    OB_TIMELINE.prototype.remove_segments = function (ob_scene_index, band_name) {
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.children = [];
-        }
-        if (ob_debug_REMOVE_WEBGL_OBJECT) console.log("OB_TIMELINE.remove_segments(" + band_name + ")");
     };
 
     OB_TIMELINE.prototype.add_line_current_time = function (ob_scene_index, date, color) {
@@ -3335,8 +3729,8 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, fontSize, fontStyle,
-                                                      fontWeight, color, fontFamily, backgroundColor) {
+    OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, backgroundColor,
+                                                      fontSize, fontStyle, fontWeight, color, fontFamily) {
         if (color === undefined) {
             color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
         }
@@ -3407,7 +3801,7 @@ function OB_TIMELINE() {
             let sessions = that.request.response; // get the string from the response
             try {
                 that.ob_scene[that.ob_render_index].sessions = eval('(' + (sessions) + ')');
-                that.update_scenes(that.ob_render_index, that.header, that.params, that.ob_scene[that.ob_render_index].bands,
+                that.update_scene(that.ob_render_index, that.header, that.params, that.ob_scene[that.ob_render_index].bands,
                     that.ob_scene[that.ob_render_index].model, that.ob_scene[that.ob_render_index].sessions,
                     that.ob_camera_type, null, false);
             } catch (err) {
@@ -3415,14 +3809,6 @@ function OB_TIMELINE() {
             }
         };
     };
-
-    function getFileExtension(fileName) {
-        let matches = fileName && fileName.match(/\.([^.]+)$/);
-        if (matches) {
-            return matches[1].toLowerCase();
-        }
-        return '';
-    }
 
     OB_TIMELINE.prototype.ob_setListeners = function (ob_scene_index) {
         let that = this;
@@ -3507,7 +3893,7 @@ function OB_TIMELINE() {
             }
 
             if (that.data && that.data.match(/^(http?):\/\//) ||
-                that.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/) ||
+                that.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                 that.data && that.data.match(/^(https?):\/\//)) {
                 that.data_head = that.data.split("?");
 
@@ -3536,7 +3922,7 @@ function OB_TIMELINE() {
 
                             that.move_band(that.ob_render_index, ob_obj.parent.name, ob_obj.parent.ob_drag_end_source,
                                 ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
-                            that.update_scenes(that.ob_render_index, that.header, that.params,
+                            that.update_scene(that.ob_render_index, that.header, that.params,
                                 that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
                                 that.ob_scene[that.ob_render_index].sessions, that.ob_camera_type, ob_obj.parent, true);
                         }
@@ -3558,7 +3944,7 @@ function OB_TIMELINE() {
 
                             that.move_band(that.ob_render_index, ob_obj.name, ob_obj.ob_drag_end_source, ob_obj.pos_y,
                                 ob_obj.pos_z, true);
-                            that.update_scenes(that.ob_render_index, that.header, that.params,
+                            that.update_scene(that.ob_render_index, that.header, that.params,
                                 that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
                                 that.ob_scene[that.ob_render_index].sessions, that.ob_camera_type, ob_obj, true);
                         }
@@ -3590,7 +3976,7 @@ function OB_TIMELINE() {
                         } else {
                             that.move_band(that.ob_render_index, ob_obj.name, ob_obj.ob_drag_end_source, ob_obj.pos_y,
                                 ob_obj.pos_z, true);
-                            that.update_scenes(that.ob_render_index, that.header, that.params,
+                            that.update_scene(that.ob_render_index, that.header, that.params,
                                 that.ob_scene[that.ob_render_index].bands, that.ob_scene[that.ob_render_index].model,
                                 that.ob_scene[that.ob_render_index].sessions, that.ob_camera_type, ob_obj, null, false);
                         }
@@ -3640,6 +4026,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_set_scene = function (ob_scene_index) {
         if (this.ob_scene === undefined) {
             this.ob_scene = new Array(ob_MAX_SCENES);
+            this.ob_scene.sync_time = 0;
             this.resTracker = new Array(ob_MAX_SCENES);
             this.track = new Array(ob_MAX_SCENES);
             this.original_bands = new Array(ob_MAX_SCENES);
@@ -3648,7 +4035,7 @@ function OB_TIMELINE() {
         let ob_sort_by = "NONE";
         for (let s = 0; s < this.ob_scene.length; s++) {
             if (this.ob_scene[s] === undefined) {
-                // Tracking all objects which will be create in order to do full cleanup when needed.
+                // Tracking all objects which will be created in order to do full cleanup when needed.
                 this.resTracker[s] = new ResourceTracker();
                 this.track[s] = this.resTracker[s].track.bind(this.resTracker[s]);
                 this.ob_scene[s] = this.track[s](new THREE.Scene());
@@ -3871,7 +4258,7 @@ function OB_TIMELINE() {
         let that_scene = this;
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
                 that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
         }, 0);
     };
@@ -3997,7 +4384,7 @@ function OB_TIMELINE() {
         let that_scene = this;
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
                 that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
         }, 0);
         console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
@@ -4011,17 +4398,19 @@ function OB_TIMELINE() {
         let that_scene = this;
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
                 that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
         }, 0);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_scene(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
                 that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
         }, 0);
     };
     OB_TIMELINE.prototype.ob_getDataType = function (ob_scene_index, json) {
         if (json.openbexi_timeline !== undefined && json.openbexi_timeline[0].filters !== undefined)
             return "filters";
+        if (json.event_descriptor !== undefined)
+            return "event_descriptor";
         return "events";
     }
     OB_TIMELINE.prototype.ob_optimize_load_time = function (ob_scene_index, multiples) {
@@ -4029,16 +4418,14 @@ function OB_TIMELINE() {
             this.multiples = 90;
         else
             this.multiples = multiples;
-        if (this.multiples === 480)
-            return true;
-        return false;
+        return this.multiples === 480;
     }
-    OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
+    OB_TIMELINE.prototype.load_data = async function (ob_scene_index) {
         if (this.ob_scene !== undefined && this.ob_scene[ob_scene_index].ob_interval_move !== undefined)
             clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
 
         if (this.data === undefined) {
-            this.update_scenes(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
+            this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
                 this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
                 this.ob_camera_type, null, false);
             return;
@@ -4047,6 +4434,9 @@ function OB_TIMELINE() {
         // Add/update/delete filters.
         if (this.data.includes("startDate=test")) {
             this.method = "POST";
+        } else if (this.data.includes("readDescriptor")) {
+            this.method = "POST";
+            this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (this.data.includes("updateFilter") || this.data.includes("addFilter") ||
             this.data.includes("saveFilter") || this.data.includes("deleteFilter") ||
             this.data.includes("readFilters")) {
@@ -4065,35 +4455,46 @@ function OB_TIMELINE() {
                 "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
             this.method = "GET";
         } else {
+            // GET data from a range of time
+            this.data_head = this.data.split("?");
+            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
+                "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
+                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+            this.method = "GET";
+            //if (!this.ob_scene[ob_scene_index].connected)
+            //return;
         }
 
         console.log(this.data.toString());
-        let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].[^\s]*$/);
+
+        let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/);
         if (ob_ws !== null && ob_ws.length === 2) {
             let that = this;
-            let ws = new WebSocket(ob_ws[0]);
+            let ws = await new WebSocket(ob_ws[0]);
             console.log(ob_ws[0]);
             ws.onopen = function () {
                 console.log("WS - onopen!");
-                this.ob_not_connected();
+                that.ob_not_connected(that.ob_scene_index);
                 ws.send("Open WebSocket");
             };
             ws.onmessage = function (e) {
-                that.ob_connected();
+                that.ob_connected(that.ob_scene_index);
                 that.ob_scene[that.ob_scene_index].sessions = eval('(' + (e.data) + ')');
-                that.update_scenes(that.ob_scene_index, that.header, that.params, that.ob_scene[that.ob_scene_index].bands,
+                that.update_scene(that.ob_scene_index, that.header, that.params, that.ob_scene[that.ob_scene_index].bands,
                     that.ob_scene[that.ob_scene_index].model, that.ob_scene[that.ob_scene_index].sessions,
                     that.ob_camera_type, null, false);
             };
             ws.onerror = function () {
-                that.ob_not_connected();
+                that.ob_not_connected(that.ob_scene_index);
             }
             ws.onclose = function () {
                 // connection closed, discard old websocket and create a new one in 5s
                 console.log("WS - onclose!");
-                that.ob_not_connected();
+                that.ob_not_connected(that.ob_scene_index);
                 that.ws = null;
-                setTimeout(that.load_data(that.ob_scene_index), 10000);
+                setTimeout(function () {
+                    that.load_data(that.ob_scene_index)
+                }, 10000);
             }
             return;
         }
@@ -4103,18 +4504,18 @@ function OB_TIMELINE() {
         if (ob_url_secure !== null && ob_url_secure.length === 2) {
             if (!!window.EventSource && this.data.includes("sse")) {
                 let that = this;
-                this.ob_not_connected();
+                this.ob_not_connected(this.ob_scene_index);
                 //Close the previous eventSource request to notify the server to do  all cleanup on the server side;
                 if (this.eventSource !== undefined)
                     this.eventSource.close();
-                let eventSource = new EventSource(this.data, {
+                let eventSource = await new EventSource(this.data, {
                     // If clients have set Access-Control-Allow-Credentials to true, the openbexi.timeline.server
                     // will not permit the use of credentials and access to resource by the client will be blocked
                     // by CORS policy withCredentials: true
                 });
                 this.eventSource = eventSource;
                 eventSource.onmessage = function (e) {
-                    that.ob_connected();
+                    that.ob_connected(that.ob_scene_index);
                     if (that.ob_getDataType(that.ob_scene_index, eval('(' + (e.data) + ')')) === "filters") {
                         try {
                             that.set_user_setting_and_filters(that.ob_scene_index, eval('(' + (e.data) + ')'));
@@ -4123,15 +4524,28 @@ function OB_TIMELINE() {
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
                                 that.ob_user.name;
-                            that.update_scenes(that.ob_scene_index, that.header, that.params,
+                            that.update_scene(that.ob_scene_index, that.header, that.params,
                                 that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                                 that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, true);
                         } catch (err) {
                             console.log('POST - cannot save setting_and_filters ...');
                         }
+                    } else if (that.ob_getDataType(that.ob_scene_index, eval('(' + (e.data) + ')')) === "event_descriptor") {
+                        try {
+                            let data = eval('(' + (e.data) + ')');
+                            if (data !== undefined && data.event_descriptor[0] !== undefined)
+                                that.ob_open_descriptor(that.ob_render_index, data.event_descriptor[0]);
+                            that.data_head = that.data.split("?");
+                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                                "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                                "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                                that.ob_user.name;
+                        } catch (err) {
+                            console.log('POST - cannot read event_descriptor ...');
+                        }
                     } else {
                         that.ob_scene[that.ob_scene_index].sessions = eval('(' + (e.data) + ')');
-                        that.update_scenes(that.ob_scene_index, that.header, that.params,
+                        that.update_scene(that.ob_scene_index, that.header, that.params,
                             that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                             that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
                     }
@@ -4143,10 +4557,10 @@ function OB_TIMELINE() {
                 eventSource.onerror = function () {
                     // Very important: Do not close the session otherwise this client would not reconnect
                     //eventSource.close();
-                    that.ob_not_connected();
+                    that.ob_not_connected(that.ob_scene_index);
                     if (!that.data.includes("updateFilter") && !that.data.includes("addFilter")
                         && !that.data.includes("saveFilter") && !that.data.includes("deleteFilter")
-                        && !that.data.includes("readFilters")) {
+                        && !that.data.includes("readFilters") && !that.data.includes("event_descriptor")) {
                         console.log('SSE - onerror');
                         that.load_data(ob_scene_index);
                     }
@@ -4154,8 +4568,8 @@ function OB_TIMELINE() {
                 }
             } else {
                 let that = this;
-                this.ob_not_connected();
-                fetch(this.data, {
+                this.ob_not_connected(this.ob_scene_index);
+                await fetch(this.data, {
                     method: this.method,
                     dataType: 'json',
                     headers: {
@@ -4165,7 +4579,7 @@ function OB_TIMELINE() {
                 }).then(response => {
                     if (response.ok) {
                         console.log("Response OK!");
-                        this.ob_connected();
+                        this.ob_connected(that.ob_scene_index);
                         return response.json();
                     } else {
                         console.log("Response not OK!");
@@ -4180,21 +4594,33 @@ function OB_TIMELINE() {
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
                                 that.ob_user.name;
                             that.method = "GET";
-                            that.update_scenes(that.ob_scene_index, that.header, that.params,
+                            that.update_scene(that.ob_scene_index, that.header, that.params,
                                 that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                                 that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, true);
                         } catch (err) {
                             console.log('POST - cannot save setting_and_filters ...');
                         }
+                    } else if (that.ob_getDataType(that.ob_scene_index, json) === "event_descriptor") {
+                        try {
+                            if (json !== undefined && json.event_descriptor[0] !== undefined)
+                                that.ob_open_descriptor(that.ob_render_index, json.event_descriptor[0]);
+                            that.data_head = that.data.split("?");
+                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                                "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                                "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                                that.ob_user.name;
+                        } catch (err) {
+                            console.log('POST - cannot read event_descriptor ...');
+                        }
                     } else {
                         that.ob_scene[that.ob_scene_index].sessions = json;
-                        that.update_scenes(that.ob_scene_index, that.header, that.params,
+                        that.update_scene(that.ob_scene_index, that.header, that.params,
                             that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                             that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, false);
                     }
                 }).catch(err => {
                     console.log('Error message:', err.statusText)
-                    this.ob_not_connected();
+                    this.ob_not_connected(this.ob_scene_index);
                 });
                 return;
             }
@@ -4240,7 +4666,7 @@ function ob_load_timeline(ob_timeline_instance) {
     ob_timeline_instance.getLocalStorage();
     ob_timeline_instance.ob_scene_index = 0;
     ob_timeline_instance.first_sync = undefined;
-    ob_timeline_instance.update_scenes(ob_timeline_instance.ob_scene_index, null, ob_timeline_instance.params,
+    ob_timeline_instance.update_scene(ob_timeline_instance.ob_scene_index, null, ob_timeline_instance.params,
         ob_timeline_instance.bands, ob_timeline_instance.model, ob_timeline_instance.sessions, null, null,
         false);
 }
