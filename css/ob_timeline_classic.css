@@ -349,6 +349,39 @@
     border: 1px solid #000009;
 }
 
+.ob_view {
+    position: absolute;
+    content: url("../icon/ob_view.png");
+}
+
+.ob_view:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_view_black.png");
+}
+
+.ob_view:hover {
+    border-radius: 5px;
+    border: 1px solid #000009;
+}
+
+.ob_no_view {
+    position: absolute;
+    content: url("../icon/ob_no_view.png");
+}
+
+.ob_no_view:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_no_view.png");
+}
+
+.ob_no_view:hover {
+    border-radius: 5px;
+    border: 2px solid #000009;
+}
 .ob_3d {
     position: absolute;
     content: url("../icon/ob_3d.png");

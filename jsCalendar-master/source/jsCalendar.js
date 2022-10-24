@@ -1,5 +1,5 @@
 /*
- * jsCalendar v1.4.5-beta
+ * jsCalendar v1.4.4
  *
  *
  * MIT License
@@ -42,7 +42,7 @@ var jsCalendar = (function(){
     }
 
     // Version
-    JsCalendar.version = 'v1.4.5-beta';
+    JsCalendar.version = 'v1.4.4';
 
     // Sub-Constructor
     JsCalendar.prototype._construct = function(args) {
@@ -62,8 +62,6 @@ var jsCalendar = (function(){
         );
         // If invalid date
         if (!this._now) throw new Error('jsCalendar: Date is outside range.');
-        // Extensions call init
-        this.extensionsCall('init', []);
         // Create
         this._create();
         // Update
@@ -81,21 +79,6 @@ var jsCalendar = (function(){
             // Default handlers
             _dateStringParser : function(key, date) {return JsCalendar._defaultDateStringParser(key, date, this);},
             _dayStringParser : function(key, date) {return JsCalendar._defaultDayStringParser(key, date, this);}
-        }
-    };
-
-    // Extensions object
-    JsCalendar.extension = {};
-    JsCalendar.prototype.extensionCall = function(extension, method, args) {
-        extension = JsCalendar.extension[extension];
-        return extension[method].apply(extension, args);
-    };
-    JsCalendar.prototype.extensionsCall = function(method, args) {
-        args = [this].concat(args);
-        for (var i in JsCalendar.extension) {
-            if (JsCalendar.extension.hasOwnProperty(i) && JsCalendar.extension[i].hasOwnProperty(method)) {
-                this.extensionCall(i, method, args);
-            }
         }
     };
 
@@ -231,15 +214,6 @@ var jsCalendar = (function(){
             else if (this._target.dataset.hasOwnProperty(item)) {
                 options[item] = this._target.dataset[item];
             }
-        }
-
-        // Also load alias
-        item = 'fdotw'
-        if (doptions.hasOwnProperty(item)) {
-            options[item] = doptions[item];
-        }
-        else if (this._target.dataset.hasOwnProperty(item)) {
-            options[item] = this._target.dataset[item];
         }
 
         // Check options
@@ -433,7 +407,7 @@ var jsCalendar = (function(){
         if (!this._isDateInRange(date)) {
             return;
         }
-        // Set openbexi.timeline.data
+        // Set data
         this._now = date;
         this._date = new Date(this._now.getFullYear(), this._now.getMonth(), 1);
     };
@@ -523,7 +497,6 @@ var jsCalendar = (function(){
         while (previous > 0) {
             // Calculate previous day
             day.setDate(day.getDate() - 1);
-            day.setHours(0, 0, 0, 0);
             // Add page on frond of the list
             dates.unshift(new Date(day.getTime()));
             // Previous
@@ -538,7 +511,6 @@ var jsCalendar = (function(){
             dates.push(new Date(day.getTime()));
             // Calculate next day
             day.setDate(day.getDate() + 1);
-            day.setHours(0, 0, 0, 0);
             // Repeat until next month
         } while (day.getDate() !== 1);
 
@@ -550,7 +522,6 @@ var jsCalendar = (function(){
             dates.push(new Date(day.getTime()));
             // Calculate next day
             day.setDate(day.getDate() + 1);
-            day.setHours(0, 0, 0, 0);
             // Next
             next --;
         }
@@ -655,9 +626,6 @@ var jsCalendar = (function(){
                 })(i * 7 + j), false);
             }
         }
-
-        // Extensions call create
-        this.extensionsCall('create', [this._elements]);
     };
 
     // Select dates on calendar
@@ -716,7 +684,7 @@ var jsCalendar = (function(){
     JsCalendar.prototype._update = function() {
         // Get month info
         var month = this._getVisibleMonth(this._date);
-        // Save openbexi.timeline.data
+        // Save data
         this._active = month.days.slice();
         // Update month name
         this._elements.month.textContent = month.name;
@@ -771,7 +739,7 @@ var jsCalendar = (function(){
         // Call render handlers
         var j;
         if (this._events.month_render.length > 0) {
-            var date = month.days[month.start - 1];
+            var date = month.days[month.start];
             // Clear any style
             this._elements.month.removeAttribute('style');
             // Call the render handlers
@@ -783,7 +751,7 @@ var jsCalendar = (function(){
                     this._elements.month,
                     // Info about that month
                     {
-                        start : new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0),
+                        start : new Date(date.getTime()),
                         end : new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999),
                         numberOfDays : month.end - month.start + 1
                     }
@@ -824,17 +792,15 @@ var jsCalendar = (function(){
                         {
                             isCurrent : (month.current == i),
                             isSelected : (this._selected.indexOf(month.days[i].getTime()) >= 0),
-                            isPreviousMonth : (i + 1 < month.start),
-                            isCurrentMonth : (month.start <= i + 1 && i + 1 <= month.end),
-                            isNextMonth : (month.end < i + 1),
+                            isPreviousMonth : (i < month.start),
+                            isCurrentMonth : (month.start <= i && i <= month.end),
+                            isNextMonth : (month.end < i),
                             position : {x: i%7, y: Math.floor(i/7)}
                         }
                     );
                 }
             }
         }
-        // Extensions call update
-        this.extensionsCall('update', [month]);
     };
 
     // Fire all event listeners
@@ -1287,7 +1253,7 @@ var jsCalendar = (function(){
             date = new Date(date);
         }
 
-        // If it not a date
+        // If it not a date 
         else if (!(date instanceof Date)) {
             // Throw an error
             if (!silent) throw new Error('jsCalendar: Invalid date.');
@@ -1423,11 +1389,6 @@ var jsCalendar = (function(){
             function(key, day) {return language.dayStringParser(key, day) || JsCalendar._defaultDayStringParser(key, day, language);} :
             function(key, day) {return JsCalendar._defaultDayStringParser(key, day, language);}
         );
-    };
-
-    // Exetnsion load
-    JsCalendar.ext = function(id, extension) {
-        JsCalendar.extension[id] = extension;
     };
 
     // Default function to handle date-string parsing

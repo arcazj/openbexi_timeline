@@ -1,5 +1,6 @@
 package com.openbexi.timeline.data_browser;
 
+import com.openbexi.timeline.event_generator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,36 +21,10 @@ import java.util.regex.Pattern;
 
 public class json_files_manager extends data_manager {
 
-    private final long startDateL = 0;
-    private String dateS;
-    private String yearS;
-    private String monthS;
-    private String dayS;
-    private String hourS;
-    private String fileParentPathS;
-
     private long endDateL;
     private String dateE;
-    private String yearE;
-    private String monthE;
-    private String dayE;
-    private String hourE;
     private String previous_date = "NONE";
     private String next_date = "NONE";
-
-    public String get_currentStartDate() {
-        return _currentStartDate;
-    }
-
-    public String get_currentEndDate() {
-        return _currentEndDate;
-    }
-
-    public String get_currentPathModel() {
-        return _currentPathModel;
-    }
-
-    private String fileParentPathE;
     private final LinkedHashMap<File, String> files = new LinkedHashMap<>();
 
     final static Charset ENCODING = StandardCharsets.UTF_8;
@@ -61,13 +36,10 @@ public class json_files_manager extends data_manager {
     private String _currentPathModel;
     private final String _include;
     private final String _exclude;
-    private final String _filter_value;
     private final String _search;
-    private String _action_type;
     private String _user_setting;
     private final HttpServletResponse _response;
     private final HttpSession _session;
-    private final ServletContext _servletContext;
     private final int _context_timer = 0;
     private String _checksum = "*";
 
@@ -111,13 +83,12 @@ public class json_files_manager extends data_manager {
             else
                 _exclude = "";
         }
-        _filter_value = get_filter();
+        String _filter_value = get_filter();
         _search = search;
-        _action_type = action_type;
+        String _action_type = action_type;
         _response = response;
         _session = session;
         _action_type = action_type;
-        _servletContext = servletContext;
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -128,33 +99,73 @@ public class json_files_manager extends data_manager {
 
         try {
             _currentStartDateL = new Date(_currentStartDate).getTime();
-            yearS = year.format(new Date(_currentStartDate));
-            monthS = month.format(new Date(_currentStartDate));
-            dayS = day.format(new Date(_currentStartDate));
-            hourS = hour.format(new Date(_currentStartDate));
+            String yearS = year.format(new Date(_currentStartDate));
+            String monthS = month.format(new Date(_currentStartDate));
+            String dayS = day.format(new Date(_currentStartDate));
+            String hourS = hour.format(new Date(_currentStartDate));
 
             _currentEndDateL = new Date(_currentEndDate).getTime();
-            yearE = year.format(new Date(_currentEndDate));
-            monthE = month.format(new Date(_currentEndDate));
-            dayE = day.format(new Date(_currentEndDate));
-            hourE = hour.format(new Date(_currentEndDate));
+            String yearE = year.format(new Date(_currentEndDate));
+            String monthE = month.format(new Date(_currentEndDate));
+            String dayE = day.format(new Date(_currentEndDate));
+            String hourE = hour.format(new Date(_currentEndDate));
 
             String buildFile = _currentPathModel.replace(".json", "");
             buildFile = buildFile.replace("/yyyy", "/" + yearS);
             buildFile = buildFile.replace("/mm", "/" + monthS);
             buildFile = buildFile.replace("/dd", "/" + dayS);
-            fileParentPathS = new File(buildFile + "_" + dateS + ".json").getParent();
+            String dateS = null;
+            String fileParentPathS = new File(buildFile + "_" + dateS + ".json").getParent();
 
             buildFile = buildFile.replace("/yyyy", "/" + yearE);
             buildFile = buildFile.replace("/mm", "/" + monthE);
             buildFile = buildFile.replace("/dd", "/" + dayE);
-            fileParentPathE = new File(buildFile + "_" + dateE + ".json").getParent();
+            String fileParentPathE = new File(buildFile + "_" + dateE + ".json").getParent();
 
             //if (resp != null) start_watching();
 
         } catch (Exception e) {
             log(e.getMessage(), "err");
         }
+    }
+
+    private JSONArray create_descriptors(File file, JSONArray events) {
+        JSONArray new_events = new JSONArray();
+        for (Object event : events) {
+            JSONObject obj = (JSONObject) event;
+            event_descriptor descriptor = new event_descriptor(obj.get("id").toString(), obj.get("start").toString(),
+                    null, null, null, null, null, null, null,
+                    null, _currentPathModel);
+            JSONObject data_s = (JSONObject) obj.get("data");
+            if (!data_s.get("description").toString().equals(""))
+                descriptor.write(data_s.get("description").toString());
+            data_s.put("description", "");
+
+            JSONObject obj1 = (JSONObject) event;
+            JSONArray activities = (JSONArray) obj1.get("activities");
+            if (activities != null) {
+                for (Object activity : activities) {
+                    JSONObject obja = (JSONObject) activity;
+                    JSONObject data_a = (JSONObject) obja.get("data");
+                    if (!data_a.get("description").toString().equals(""))
+                        descriptor.write(data_a.get("description").toString());
+                    data_a.put("description", "");
+                }
+            }
+            new_events.add(event);
+        }
+        // Save events without descriptor
+        /*try {
+            if (file.exists()) {
+                String json_header = "{ \"dateTimeFormat\": \"iso8601\", \"events\":";
+                Writer writer = new FileWriter(file);
+                writer.write(json_header + new_events.toJSONString() + "}");
+                writer.close();
+            }
+        } catch (Exception e) {
+            System.err.print(e.getMessage());
+        }*/
+        return new_events;
     }
 
     @Override
@@ -177,8 +188,7 @@ public class json_files_manager extends data_manager {
         JSONObject jsonObject = new JSONObject();
 
 
-        // Look for for all files in the pathModel directory according startDate and endDate.
-
+        // Look for all files in the pathModel directory according startDate and endDate.
         try {
             getFiles(_currentStartDate, _currentEndDate, new File(_currentPathModel));
         } catch (Exception e) {
@@ -188,10 +198,11 @@ public class json_files_manager extends data_manager {
         if (files == null)
             return getDummyJson("no data_manager found");
 
-        String jsonObjectMerged = "{\n" +
+        String jsonObjectMerged_begin = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"events\": [\n";
+                "  \"events\": \n";
         int count = 0;
+        JSONArray all_obj = new JSONArray();
         for (Map.Entry<File, String> entry : files.entrySet()) {
             try {
                 File file = new File(entry.getKey().toString());
@@ -201,26 +212,29 @@ public class json_files_manager extends data_manager {
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
                     obj = filterDates(obj, _currentStartDateL, _currentEndDateL);
-                    obj = filterEvents(obj, _include, _exclude);
+                    if (!_include.equals("") || !_exclude.equals(""))
+                        obj = filterEvents(obj, _include, _exclude);
+                    if (!_search.equals(""))
                     obj = searchEvents(obj, _search);
                     count += obj.size();
-                    jsonObjectMerged += obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
+                    //jsonObjectMerged += all_obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
+                    if (obj.size() != 0)
+                        all_obj.addAll(obj);
                     reader.close();
                 }
             } catch (Exception e) {
                 return getDummyJson("no data_manager found");
             }
         }
-        jsonObjectMerged += "]}";
+        String jsonObjectMerged_end = "}";
 
         try {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
                     String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis", "info");
-            return parser.parse(jsonObjectMerged);
+            return parser.parse(jsonObjectMerged_begin + all_obj.toJSONString().replaceAll("\\\\/", "/") + jsonObjectMerged_end);
         } catch (ParseException e) {
             return getDummyJson("no data_manager found");
         }
-
     }
 
     public void print_events(JSONObject events) {
@@ -230,9 +244,9 @@ public class json_files_manager extends data_manager {
                 Object keyvalue = events.get(keyStr);
                 try {
                     JSONArray a = (JSONArray) keyvalue;
-                    for (int i = 0; i < a.size(); i++) {
+                    for (Object o : a) {
                         try {
-                            JSONObject data = (JSONObject) a.get(i);
+                            JSONObject data = (JSONObject) o;
                             data.keySet().forEach(keyStr2 -> {
                                 JSONObject keydata = (JSONObject) data.get(keyStr2);
                                 System.out.println();
@@ -252,13 +266,15 @@ public class json_files_manager extends data_manager {
                                 });
                             });
                         } catch (Exception e) {
+                            System.err.print(e.getMessage());
                         }
                     }
                 } catch (Exception e) {
+                    System.err.print(e.getMessage());
                 }
             });
         } catch (Exception e) {
-
+            System.err.print(e.getMessage());
         }
     }
 
@@ -283,7 +299,7 @@ public class json_files_manager extends data_manager {
             respWriter.write("retry: 1000000000\n\n");
             respWriter.flush();
             boolean error = respWriter.checkError();
-            if (error == true) {
+            if (error) {
                 return false;
             }
         } catch (Exception e) {
@@ -299,7 +315,7 @@ public class json_files_manager extends data_manager {
 
         //Update client regarding  HTTP service
         boolean able_to_send_data = sendData(getData(_include + "|" + _exclude));
-        if (able_to_send_data == false) {
+        if (!able_to_send_data) {
             logger.info("Client disconnected");
             _session.invalidate();
             return false;
@@ -334,7 +350,7 @@ public class json_files_manager extends data_manager {
         String yyyy;
         String MM;
         String dd;
-        double step = 0;
+        double step;
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -363,12 +379,12 @@ public class json_files_manager extends data_manager {
             File[] file_list = new File(buildFile).listFiles();
 
             if (file_list != null) {
-                for (int f = 0; f < file_list.length; f++) {
-                    if (file_list[f].exists() && file_list[f].isFile() && file_list[f].getName().contains(".json")) {
-                        checksum += this.MD5Hash(file_list[f].getCanonicalPath());
+                for (File file : file_list) {
+                    if (file.exists() && file.isFile() && file.getName().contains(".json")) {
+                        checksum += this.MD5Hash(file.getCanonicalPath());
                     }
-                    if (file_list[f].exists() && file_list[f].isDirectory()) {
-                        this.getFiles(_currentStartDate, _currentEndDate, file_list[f]);
+                    if (file.exists() && file.isDirectory()) {
+                        this.getFiles(_currentStartDate, _currentEndDate, file);
                     }
                 }
             }
@@ -380,7 +396,7 @@ public class json_files_manager extends data_manager {
         return false;
     }
 
-    private void getFiles(String startDate, String endDate, File dir) throws Exception {
+    private void getFiles(String startDate, String endDate, File dir) {
 
         // Build file list according date range
         String yyyy;
@@ -411,16 +427,28 @@ public class json_files_manager extends data_manager {
             buildFile = buildFile.replace("/mm", "/" + MM);
             buildFile = buildFile.replace("/dd", "/" + dd);
 
-            File[] file_list = new File(buildFile).listFiles();
+            FilenameFilter filter = new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    boolean result;
+                    if (name.startsWith("descriptors")) {
+                        result = false;
+                    } else {
+                        result = true;
+                    }
+                    return result;
+                }
+            };
+            File[] file_list = new File(buildFile).listFiles(filter);
 
             if (file_list != null) {
-                for (int f = 0; f < file_list.length; f++) {
-                    if (file_list[f].exists() && file_list[f].isFile() && file_list[f].getName().contains(".json")) {
-                        files.put(file_list[f], MD5Hash(file_list[f].toString()));
+                for (File file : file_list) {
+                    if (file.exists() && file.isFile() && file.getName().contains(".json")) {
+                        files.put(file, MD5Hash(file.toString()));
                         //log(file_list[f], "info");
                     }
-                    if (file_list[f].exists() && file_list[f].isDirectory()) {
-                        this.getFiles(startDate, endDate, file_list[f]);
+                    if (file.exists() && file.isDirectory()) {
+                        this.getFiles(startDate, endDate, file);
                     }
                 }
             }
@@ -460,23 +488,40 @@ public class json_files_manager extends data_manager {
     JSONArray searchEvents(JSONArray events, String search) {
         Pattern pattern;
         Matcher matcher;
+        search = search.replaceAll(";", "|");
         JSONArray new_events = new JSONArray();
         JSONArray new_events2 = new JSONArray();
-        if (search != null && !search.equals("*") && !search.equals("")) {
+        if (!search.equals("*") && !search.equals("")) {
             pattern = Pattern.compile(search.replaceAll(" ", "|"));
             for (Object event : events) {
-                matcher = pattern.matcher(event.toString().replaceAll(" ", "").replaceAll("\"", ""));
-                if (matcher.find()) {
-                    JSONObject obj1 = (JSONObject) event;
-                    JSONObject obj2 = (JSONObject) obj1.get("render");
-                    obj2.put("backgroundColor", "#F8DF09");
-                    obj2.put("next_date", next_date);
-                    next_date = obj1.get("start").toString();
-                    new_events.add(event);
-                } else
-                    new_events.add(event);
+                JSONObject obj1 = (JSONObject) event;
+                JSONArray activities = (JSONArray) obj1.get("activities");
+                if (activities != null) {
+                    for (Object activity : activities) {
+                        JSONObject obja = (JSONObject) activity;
+                        matcher = pattern.matcher(obja.toString().replaceAll(" ", "").replaceAll("\"", ""));
+                        if (matcher.find()) {
+                            JSONObject obj2 = (JSONObject) obja.get("render");
+                            obj2.put("backgroundColor", "#F8DF09");
+                            //obj2.put("next_date", next_date);
+                            //next_date = obja.get("start").toString();
+                            new_events.add(activity);
+                        } else
+                            new_events.add(activity);
+                    }
+                } else {
+                    matcher = pattern.matcher(event.toString().replaceAll(" ", "").replaceAll("\"", ""));
+                    if (matcher.find()) {
+                        JSONObject obj2 = (JSONObject) obj1.get("render");
+                        obj2.put("backgroundColor", "#F8DF09");
+                        obj2.put("next_date", next_date);
+                        next_date = obj1.get("start").toString();
+                        new_events.add(event);
+                    } else
+                        new_events.add(event);
+                }
             }
-            for (int i = new_events.size() - 1; i >= 0; i--) {
+            /*for (int i = new_events.size() - 1; i >= 0; i--) {
                 matcher = pattern.matcher(new_events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
                 if (matcher.find()) {
                     JSONObject obj1 = (JSONObject) new_events.get(i);
@@ -488,18 +533,13 @@ public class json_files_manager extends data_manager {
                     //(obj2.get("previous_date")+"  ---next_date = "+next_date));
                 } else
                     new_events2.add(new_events.get(i));
-            }
+            }*/
         }
 
         if (new_events2.size() == 0)
             new_events2 = events;
 
         return new_events2;
-    }
-
-    private int getRandomNumberUsingNextInt(int min, int max) {
-        Random random = new Random();
-        return random.nextInt(max - min) + min;
     }
 
     private String lookForIcon(String myIcon) {
@@ -514,9 +554,9 @@ public class json_files_manager extends data_manager {
                 "icon\\/ob_clock.png", "icon\\/ob_script.png", "icon\\/ob_crontab.png",
         };
         if (myIcon.equals("")) return "";
-        for (int i = 0; i < icon.length; i++) {
-            if (icon[i].contains(myIcon))
-                return icon[i];
+        for (String s : icon) {
+            if (s.contains(myIcon))
+                return s;
         }
         return "";
     }
@@ -538,10 +578,6 @@ public class json_files_manager extends data_manager {
 
         File outputs = new File(buildFile + "/" + id + ".json");
 
-        String start;
-        String end;
-        String title;
-        String description = "description1";
         String icon = lookForIcon(((String) events.get(4)).replaceAll("icon:", ""));
         String color = "#050100";
         String line_start = "{\n" +
@@ -584,10 +620,6 @@ public class json_files_manager extends data_manager {
         return false;
     }
 
-    private StringBuilder checkFilter(StringBuilder jsonObjectMerged) {
-        return jsonObjectMerged;
-    }
-
     @Override
     public Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
                             String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
@@ -620,19 +652,18 @@ public class json_files_manager extends data_manager {
     }
 
     private JSONArray sortFilter(JSONArray filter_array, String ob_filter_name) {
-        JSONArray filters = filter_array;
         JSONObject obj = null;
         for (int f = 0; f < filter_array.size(); f++) {
             String filter_name = ((JSONObject) filter_array.get(f)).get("name").toString();
             if (ob_filter_name.equals(filter_name)) {
-                if (f == 0) return filters;
+                if (f == 0) return filter_array;
                 obj = ((JSONObject) filter_array.get(f));
-                filters.remove(f);
+                filter_array.remove(f);
             }
         }
         if (obj != null)
-            filters.add(0, obj);
-        return filters;
+            filter_array.add(0, obj);
+        return filter_array;
     }
 
     @Override
@@ -640,20 +671,16 @@ public class json_files_manager extends data_manager {
                                String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
                                String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
         JSONParser parser = new JSONParser();
-        Object filters = null;
+        Object filters;
         StringBuilder jsonObjectMerged = null;
-        JSONObject jsonObject = new JSONObject();
+        JSONObject jsonObject;
         String buildFile = _currentPathModel;
-        JSONArray openbexi_timeline = null;
+        JSONArray openbexi_timeline;
         JSONArray filter_array = null;
-        Boolean no_filter_found = true;
-        Boolean ob_first_filter_deleted = false;
-        String ob_current_filter = "no";
-        Boolean change_current = true;
-        String StringBuilder_default = "{\n" +
-                "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"openbexi_timeline\": [{\n" +
-                "  \"name\": \"ob_timeline_2\",  \"title1\": \"GNS report\",  \"user\": \"\",  \"email\": \"\",  \"start\": \"current_time\",  \"top\": \"0\",  \"left\": \"0\",  \"width\": \"1350\",  \"height\": \"600\",  \"camera\": \"Orthographic\",  \"backgroundColor\": \"#a1d9ff\",  \"sortBy\": \"NONE\",  \"filters\":[]}]}";
+        JSONArray filter_array2;
+        boolean no_filter_found = true;
+        boolean ob_first_filter_deleted = false;
+        boolean change_current = true;
 
         buildFile = buildFile.replace("/yyyy", "");
         buildFile = buildFile.replace("/mm", "");
@@ -674,9 +701,10 @@ public class json_files_manager extends data_manager {
                     }
                     jsonObject = (JSONObject) filters;
                     openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
-                    filter_array = (JSONArray) ((JSONObject) openbexi_timeline.get(0)).get("filters");
-                    filter_array = sortFilter(filter_array, ob_filter_name);
+                    filter_array2 = (JSONArray) ((JSONObject) openbexi_timeline.get(0)).get("filters");
+                    filter_array = sortFilter(filter_array2, ob_filter_name);
                 } catch (Exception e) {
+                    System.err.print("updateFilter:" + e.getMessage());
                 }
             }
             if (filter_array == null || filter_array.size() == 0) {
@@ -701,8 +729,6 @@ public class json_files_manager extends data_manager {
                     "  \"backgroundColor\": \"" + ob_backgroundColor + "\"," +
                     "  \"sortBy\": \"" + ob_sort_by + "\",");
 
-            String[] filter_list = ob_filter.split(":| ");
-            String current_att = filter_list[0];
             jsonObjectMerged.append("  \"filters\":[");
 
             String filter_name;
@@ -770,13 +796,12 @@ public class json_files_manager extends data_manager {
             }
             jsonObjectMerged.append("]}");
         } catch (Exception e) {
+            System.err.print("updateFilter:" + e.getMessage());
         }
 
         if (no_filter_found && !ob_action.equals("deleteFilter")) {
             return addFilter(ob_timeline_name, ob_title, ob_filter_name, ob_backgroundColor, ob_user,
                     ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
-        } else {
-            jsonObjectMerged = this.checkFilter(jsonObjectMerged);
         }
 
         try (FileWriter file = new FileWriter(outputs)) {
@@ -806,17 +831,16 @@ public class json_files_manager extends data_manager {
             String[] items = filter_exclude.split(";");
             List<Boolean> list = new LinkedList<>();
             if (items.length > 0) {
-                for (int i = 0; i < events.size(); i++) {
+                for (Object o : events) {
                     found = false;
-                    String event = events.get(i).toString().replaceAll("\"", "");
-                    for (int j = 0; j < items.length; j++) {
-                        if (items[j].contains("+")) {
-                            found = false;
-                            String[] sub_items = items[j].split("\\+");
-                            for (int s = 0; s < sub_items.length; s++) {
-                                pattern = Pattern.compile(sub_items[s]);
+                    String event = o.toString().replaceAll("\"", "");
+                    for (String item : items) {
+                        if (item.contains("+")) {
+                            String[] sub_items = item.split("\\+");
+                            for (String sub_item : sub_items) {
+                                pattern = Pattern.compile(sub_item);
                                 matcher = pattern.matcher(event);
-                                if (matcher.find() || (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", ""))))) {
+                                if (matcher.find() || (item.contains("description:") && (o.toString().replaceAll("\"", "").contains(item.replace("description:", ""))))) {
                                     found = true;
                                 } else {
                                     found = false;
@@ -830,11 +854,11 @@ public class json_files_manager extends data_manager {
                                 list.add(false);
                         } else {
                             list = new LinkedList<>();
-                            if (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", "")))) {
+                            if (item.contains("description:") && (o.toString().replaceAll("\"", "").contains(item.replace("description:", "")))) {
                                 found = true;
                                 break;
                             }
-                            pattern = Pattern.compile(items[j]);
+                            pattern = Pattern.compile(item);
                             matcher = pattern.matcher(event);
                             if (matcher.find()) {
                                 found = true;
@@ -843,10 +867,9 @@ public class json_files_manager extends data_manager {
                         }
                     }
                     if (list.size() > 0)
-                        for (int l = 0; l < list.size(); l++)
-                            found = list.get(l);
+                        for (Boolean aBoolean : list) found = aBoolean;
                     if (!found) {
-                        new_events.add(events.get(i));
+                        new_events.add(o);
                         //System.out.println(i + "exclude:" + (events.get(i)).toString());
                     }
                     list = new LinkedList<>();
@@ -860,17 +883,16 @@ public class json_files_manager extends data_manager {
         if (!filter_include.equals("")) {
             String[] items = filter_include.split(";");
             if (items.length > 0) {
-                for (int i = 0; i < events.size(); i++) {
+                for (Object o : events) {
                     found = false;
-                    String event = events.get(i).toString().replaceAll("\"", "");
-                    for (int j = 0; j < items.length; j++) {
-                        if (items[j].contains("+")) {
-                            found = false;
-                            String[] sub_items = items[j].split("\\+");
-                            for (int s = 0; s < sub_items.length; s++) {
-                                pattern = Pattern.compile(sub_items[s]);
+                    String event = o.toString().replaceAll("\"", "");
+                    for (String item : items) {
+                        if (item.contains("+")) {
+                            String[] sub_items = item.split("\\+");
+                            for (String sub_item : sub_items) {
+                                pattern = Pattern.compile(sub_item);
                                 matcher = pattern.matcher(event);
-                                if (matcher.find() || (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", ""))))) {
+                                if (matcher.find() || (item.contains("description:") && (o.toString().replaceAll("\"", "").contains(item.replace("description:", ""))))) {
                                     found = true;
                                 } else {
                                     found = false;
@@ -878,16 +900,16 @@ public class json_files_manager extends data_manager {
                                 }
                             }
                             if (found) {
-                                new_events.add(events.get(i));
+                                new_events.add(o);
                                 found = false;
                             }
                         } else {
-                            if (items[j].contains("description:") && (events.get(i).toString().replaceAll("\"", "").contains(items[j].replace("description:", "")))) {
+                            if (item.contains("description:") && (o.toString().replaceAll("\"", "").contains(item.replace("description:", "")))) {
                                 found = true;
                                 break;
                             }
-                            pattern = Pattern.compile(items[j]);
-                            matcher = pattern.matcher(events.get(i).toString().replaceAll("\"", ""));
+                            pattern = Pattern.compile(item);
+                            matcher = pattern.matcher(o.toString().replaceAll("\"", ""));
                             if (matcher.find()) {
                                 found = true;
                                 break;
@@ -895,7 +917,7 @@ public class json_files_manager extends data_manager {
                         }
                     }
                     if (found) {
-                        new_events.add(events.get(i));
+                        new_events.add(o);
                         //System.out.println(i + "exclude:" + (events.get(i)).toString());
                     }
                 }
@@ -905,6 +927,4 @@ public class json_files_manager extends data_manager {
 
         return new_events;
     }
-
-
 }

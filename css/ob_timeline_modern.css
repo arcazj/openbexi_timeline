@@ -122,6 +122,7 @@
     background-position: bottom right;
     background-repeat: no-repeat;
 }
+
 .ob_filter_add {
     width: 32px;
     heigth: 32px;
@@ -138,6 +139,7 @@
     background-color: rgb(211, 216, 223);
     content: url("../icon/ob_add.png");
 }
+
 .ob_filter_save {
     width: 32px;
     heigth: 32px;
@@ -154,6 +156,7 @@
     background-color: rgb(211, 216, 223);
     content: url("../icon/ob_save.png");
 }
+
 .ob_filter_help {
     width: 32px;
     heigth: 32px;
@@ -355,6 +358,40 @@
 .ob_2d:hover {
     border-radius: 5px;
     border: 1px solid #000009;
+}
+
+.ob_view {
+    position: absolute;
+    content: url("../icon/ob_view.png");
+}
+
+.ob_view:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_view_black.png");
+}
+
+.ob_view:hover {
+    border-radius: 5px;
+    border: 1px solid #000009;
+}
+
+.ob_no_view {
+    position: absolute;
+    content: url("../icon/ob_no_view.png");
+}
+
+.ob_no_view:active {
+    border-radius: 5px;
+    border: 1px solid #f3f3ed;
+    background-color: rgb(211, 216, 223);
+    content: url("../icon/ob_no_view.png");
+}
+
+.ob_no_view:hover {
+    border-radius: 5px;
+    border: 2px solid #000009;
 }
 
 .ob_3d {

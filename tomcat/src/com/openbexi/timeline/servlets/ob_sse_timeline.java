@@ -1,5 +1,6 @@
 package com.openbexi.timeline.servlets;
 
+import com.openbexi.timeline.data_browser.event_descriptor;
 import com.openbexi.timeline.data_browser.json_files_manager;
 import com.openbexi.timeline.data_browser.json_files_watcher;
 import com.openbexi.timeline.tests.test_timeline;
@@ -14,9 +15,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.logging.Logger;
 
 
@@ -92,6 +90,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                     ob_filter, "GET", resp,
                     session, getServletContext());
 
+            // Add event in timeline
             if (ob_request != null && ob_request.equals("addEvent")) {
                 logger.info("GET addEvent - startDate=" + startDate + " - endDate=" + endDate);
                 JSONArray eventJson = new JSONArray();
@@ -102,6 +101,43 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 eventJson.add("icon:" + icon);
                 json_files_manager.addEvents(eventJson);
             }
+
+            // Read descriptor for a given event or sesson/activity.
+            if (ob_request != null && ob_request.equals("readDescriptor")) {
+                String event_id = req.getParameter("event_id");
+                String start = req.getParameter("start");
+                logger.info("POST readDescriptor - id=" + event_id);
+                if (resp != null && json_files_manager != null) {
+                    try {
+                        event_descriptor descriptor = new event_descriptor(event_id, null, start, null, null, null, null,
+                                null, null, null, data_path);
+                        Object json = descriptor.read(event_id);
+
+                        PrintWriter respWriter = resp.getWriter();
+                        //Important to put a "," not ";" between stream and charset
+                        resp.setContentType("text/event-stream");
+                        resp.setCharacterEncoding("UTF-8");
+                        //Important, otherwise only  test URL  like https://localhost:8443/openbexi_timeline.html works
+                        resp.addHeader("Access-Control-Allow-Origin", "*");
+                        // If clients have set Access-Control-Allow-Credentials to true, the server will not permit the use of
+                        // credentials and access to resource by the client will be blocked by CORS policy.
+                        resp.addHeader("Access-Control-Allow-Credentials", "true");
+                        resp.addHeader("Cache-Control", "no-cache");
+                        resp.addHeader("Connection", "keep-alive");
+                        respWriter.write("data:" + json + "\n\n");
+                        respWriter.write("retry: 1000000000\n\n");
+                        respWriter.flush();
+                        boolean error = respWriter.checkError();
+                        if (error == true) {
+                            logger.info("Client disconnected");
+                        }
+                    } catch (IOException e) {
+                        logger.severe(e.getMessage());
+                    }
+                    return;
+                }
+            }
+
             if (ob_request != null && (ob_request.equals("updateFilter") || ob_request.equals("readFilters") ||
                     ob_request.equals("addFilter") || ob_request.equals("deleteFilter") ||
                     ob_request.equals("saveFilter"))) {

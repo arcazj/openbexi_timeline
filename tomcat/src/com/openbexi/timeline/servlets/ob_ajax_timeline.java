@@ -1,9 +1,11 @@
 package com.openbexi.timeline.servlets;
 
+import com.openbexi.timeline.data_browser.db_oracle_watcher;
+import com.openbexi.timeline.data_browser.event_descriptor;
 import com.openbexi.timeline.data_browser.json_files_manager;
+import com.openbexi.timeline.event_generator;
 import com.openbexi.timeline.tests.test_timeline;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -144,11 +146,12 @@ ob_ajax_timeline extends HttpServlet {
             ob_backgroundColor = ob_backgroundColor.replace("@", "#");
         String ob_email = req.getParameter("email");
         String ob_filter = req.getParameter("filter");
-        ob_filter = ob_filter.replaceAll("_PIPE_", "|")
-                .replaceAll("_PARR_", ")")
-                .replaceAll("_PARL_", "(")
-                .replaceAll("_PERC_", "%")
-                .replaceAll("_PLUS_", "+");
+        if (ob_filter != null)
+            ob_filter = ob_filter.replaceAll("_PIPE_", "|")
+                    .replaceAll("_PARR_", ")")
+                    .replaceAll("_PARL_", "(")
+                    .replaceAll("_PERC_", "%")
+                    .replaceAll("_PLUS_", "+");
         String ob_search = req.getParameter("search");
 
         Logger logger = Logger.getLogger("");
@@ -165,8 +168,21 @@ ob_ajax_timeline extends HttpServlet {
                 ob_filter, null, null, null,
                 getServletContext());
 
+        // Read descriptor for a given event or sesson/activity.
+        if (ob_request != null && ob_request.equals("readDescriptor")) {
+            String event_id = req.getParameter("event_id");
+            String start = req.getParameter("start");
+            logger.info("POST readDescriptor - id=" + event_id);
+            event_descriptor descriptor =
+                    new event_descriptor(event_id, null, start, null, null, null, null,
+                            null, null, null, data_path);
+            Object json = descriptor.read(event_id);
+            out.write(json.toString());
+            out.flush();
+        }
+
         // Add event in timeline
-        if (ob_request.equals("addEvent")) {
+        if (ob_request != null && ob_request.equals("addEvent")) {
             logger.info("POST addEvent - startDate=" + startDate + " - endDate=" + endDate);
             JSONArray eventJson = new JSONArray();
             eventJson.add("title:" + ob_title);

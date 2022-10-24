@@ -12,7 +12,6 @@ COPY THREE.TextTexture THREE.TextTexture
 COPY tomcat tomcat
 COPY openbexi_timeline_secure.html openbexi_timeline_secure.html
 COPY openbexi_timeline_SSE.html openbexi_timeline_SSE.html
-COPY openbexi_timeline_overview_SSE.html openbexi_timeline_overview_SSE.html
 COPY tests tests
 EXPOSE 8443
 EXPOSE 8445
