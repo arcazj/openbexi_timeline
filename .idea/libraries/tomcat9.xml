@@ -8,7 +8,6 @@
       <root url="jar://$PROJECT_DIR$/tomcat/lib/tomcat-embed-core.jar!/" />
       <root url="jar://$PROJECT_DIR$/tomcat/lib/tomcat-embed-el.jar!/" />
       <root url="jar://$PROJECT_DIR$/tomcat/lib/tomcat-embed-jasper.jar!/" />
-      <root url="jar://$PROJECT_DIR$/tomcat/lib/tomcat-embed-programmatic.jar!/" />
       <root url="jar://$PROJECT_DIR$/tomcat/lib/tomcat-embed-websocket.jar!/" />
     </CLASSES>
     <JAVADOC />

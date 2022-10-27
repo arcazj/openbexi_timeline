@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9f beta
+    OpenBEXI Timeline 1.0
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -814,7 +814,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9f beta</legend>\n" +
+                "<legend> version 1.0</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2710,7 +2710,8 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.update_scene = function (ob_scene_index, header, params, bands, model, sessions, camera,
                                                    band, load_data) {
-        // If user is moving a band
+        let ob_scene_update_required_with_no_reload = false
+        // If user is moving a band, check when we need to load a new scene when we reach the boundary.
         if (band !== null) {
             if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].ob_width ||
                 band.position.x < band.pos_x + this.ob_scene[ob_scene_index].ob_width)) {
@@ -2720,7 +2721,7 @@ function OB_TIMELINE() {
             } else {
                 this.ob_render(ob_scene_index);
             }
-        } else {   // If user is not moving a band
+        } else {   // If user is not moving a band but he is requesting a new  view from a new date.
             if (this.first_sync === undefined) {
                 this.ob_render_index = ob_scene_index;
                 this.first_sync = true;
@@ -2746,14 +2747,17 @@ function OB_TIMELINE() {
                 //console.log("-->Not going to update_scene and load_data - minDate=" + this.minDate + " maxDate=" + this.maxDate);
                 return;
             }
+            ob_scene_update_required_with_no_reload = true;
+        }
 
+        if (ob_scene_update_required_with_no_reload) {
             //console.log("---->Go to update_scene[" + ob_scene_index + "] - minDate=" + this.minDate + " maxDate=" + this.maxDate);
+            this.ob_scene_index = this.ob_render_index;
             let that_scene = this;
             clearTimeout(this.update_this_scene);
             this.update_this_scene = setTimeout(function () {
                 that_scene.update_all_timelines(ob_scene_index, header, params, bands, model, sessions, camera);
             }, 0);
-
         }
     }
 
