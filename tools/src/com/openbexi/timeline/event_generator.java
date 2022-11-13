@@ -231,7 +231,7 @@ public class event_generator {
 
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
-            for (int j = 0; j < 600; j++) {
+            for (int j = 0; j < 350; j++) {
                 color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                         + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
                         getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
@@ -251,7 +251,7 @@ public class event_generator {
                 original_start = "";
                 original_end = "";
 
-                if (j < 3000) {
+                if (j < 30000) {
                     if (j == 0) {
                         nb_act = 4;
                         start = new Date(dateL).toString();
@@ -368,8 +368,9 @@ public class event_generator {
                     int des = getRandomNumberUsingNextInt(0, 2);
                     if (des == 0)
                         file.write("\"title\":\"" + title + "_read_descriptor" + "\",");
-                    else
+                    else {
                         file.write("\"title\":\"" + title + "\",");
+                    }
                     file.write("\"status\":\"" + status + "\",");
                     file.write("\"type\":\"" + type + "\",");
                     file.write("\"system\":\"" + system + "\",");
@@ -423,8 +424,15 @@ public class event_generator {
                             des = getRandomNumberUsingNextInt(0, 2);
                             if (des == 0)
                                 file.write("\"title\":\"" + title + "_read_descriptor" + "\",");
-                            else
+                            else {
+                                int ob_long_text = getRandomNumberUsingNextInt(1, 10);
+                                int ob_long_text2 = getRandomNumberUsingNextInt(1, 15);
+                                if (ob_long_text > 7) {
+                                    for (int l = 0; l < ob_long_text2; l++)
+                                        title = title + "_long_text";
+                                }
                                 file.write("\"title\":\"" + title + "\",");
+                            }
                             file.write("\"status\":\"" + status + "\",");
                             file.write("\"priority\":\"" + priority + "\",");
                             if (!tolerance.equals("0"))
@@ -449,9 +457,15 @@ public class event_generator {
                             file.write("},");
                             file.write("\"render\":{");
                             file.write("\"color\":\"" + color + "\",");
-                            if (end.equals(""))
+                            if (end.equals("")) {
                                 if (ic < icon.length - 1)
                                     file.write("\"image\":\"" + icon[ic] + "\",");
+                            } else {
+                                int ob_icon = getRandomNumberUsingNextInt(1, 10);
+                                if (ob_icon > 7)
+                                    if (ic < icon.length - 1)
+                                        file.write("\"image\":\"" + icon[ic] + "\",");
+                            }
                             file.write("},");
                             file.write("},");
                         }

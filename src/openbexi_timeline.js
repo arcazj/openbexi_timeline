@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 1.0
+    OpenBEXI Timeline 0.9.9g beta
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -190,12 +190,29 @@ function OB_TIMELINE() {
         }
     };
 
+    OB_TIMELINE.prototype.ob_get_url_head = function (ob_scene_index, type) {
+        if (this.data === undefined)
+            this.data = this.params[0].data.replace("data_default_port",
+                this.data_default_port).replace("data_sse_port", this.data_sse_port);
+        this.data_head = this.data.split("?");
+        if (this.params[0].data.match(/_sse/))
+            return this.data_head[0].replace(this.data_default_port, this.data_sse_port).split("?");
+        else
+            return this.data_head[0].replace(this.data_default_port, this.data_default_port).split("?");
+    }
+
     OB_TIMELINE.prototype.ob_init = function (ob_scene_index) {
         // Set all timeline parameters:
         this.name = this.params[0].name;
-        this.title = "";
-        this.multiples = 90;
+        this.title = this.params[0].title;
+        this.multiples = 45;
         this.increment = 20;
+        this.data_default_port = this.params[0].data_default_port;
+        this.data_sse_port = this.params[0].data_sse_port;
+        /*this.data_head = this.params[0].data.replace("data_default_port",
+            this.data_default_port).replace("data_sse_port", this.data_sse_port).split("?");*/
+        this.data = this.params[0].data.replace("data_default_port",
+            this.data_default_port).replace("data_sse_port", this.data_sse_port);
 
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
@@ -226,7 +243,6 @@ function OB_TIMELINE() {
         this.ob_lookAt_z = 0;
 
         this.descriptor = this.params[0].descriptor;
-        this.data = this.params[0].data;
         this.center = "center";
         this.font_align = "right";
 
@@ -349,7 +365,7 @@ function OB_TIMELINE() {
         let description = document.getElementById(this.name + "_description").value;
         let icon = document.getElementById(this.name + "_icon").value;
 
-        this.data = this.data_head[0] + "?ob_request=" + "addEvent" + "&title=" + title +
+        this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + "addEvent" + "&title=" + title +
             "&startEvent=" + startEventUTC + "&endEvent=" + endEventUTC + "&description=" + description +
             "&startDate=" + this.minDate + "&endDate=" + this.maxDate + "&icon=" + icon +
             "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value + "&search=" +
@@ -457,7 +473,6 @@ function OB_TIMELINE() {
         this.ob_load_filters("deleteFilter", ob_scene_index, ob_filter_index, true);
     }
     OB_TIMELINE.prototype.ob_load_filters = function (ob_request, ob_scene_index, ob_filter_index, ob_show) {
-        this.data_head = this.params[0].data.split("?");
         let backgroundColor = "";
         if (this.backgroundColor !== undefined)
             backgroundColor = this.backgroundColor;
@@ -481,7 +496,7 @@ function OB_TIMELINE() {
         }
         backgroundColor = backgroundColor.replaceAll("#", "@");
 
-        this.data = this.data_head[0] + "?ob_request=" + ob_request +
+        this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + ob_request +
             "&filterName=" + ob_filter_name +
             "&timelineName=" + this.name +
             "&title=" + this.title +
@@ -738,14 +753,16 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].connected = false;
     };
 
-    OB_TIMELINE.prototype.ob_save_user = function () {
+    OB_TIMELINE.prototype.ob_save_user = function (ob_scene_index) {
         this.ob_user.name = document.getElementById(this.name + "_user").value
         this.ob_email.name = document.getElementById(this.name + "_email").value
         localStorage.user = JSON.stringify({name: this.ob_user.name});
         localStorage.email = JSON.stringify({name: this.ob_email.name});
+        this.ob_remove_login();
+        this.ob_read_filter(ob_scene_index, 0);
     };
     OB_TIMELINE.prototype.ob_cancel_user = function () {
-        this.ob_remove_setting();
+        this.ob_remove_login();
     };
     OB_TIMELINE.prototype.ob_login = function (ob_scene_index) {
         this.ob_remove_descriptor();
@@ -814,7 +831,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0</legend>\n" +
+                "<legend> version 0.9.9g beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -911,9 +928,8 @@ function OB_TIMELINE() {
                 that3.reset_synced_time("new_calendar_date", that3.ob_render_index);
                 that3.ob_remove_calendar();
                 if (that3.data && that3.data.match(/^(http?):\/\//) ||
-                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                     that3.data && that3.data.match(/^(https?):\/\//)) {
-                    that3.data_head = that3.data.split("?");
+                    that3.data_head = that3.ob_get_url_head(that3.ob_scene[that3.ob_render_index]);
                     that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, true);
@@ -929,9 +945,8 @@ function OB_TIMELINE() {
                 that3.ob_scene[that3.ob_render_index].show_calendar = true;
                 that3.reset_synced_time("new_calendar_date", that3.ob_render_index);
                 if (that3.data && that3.data.match(/^(http?):\/\//) ||
-                    that3.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                     that3.data && that3.data.match(/^(https?):\/\//)) {
-                    that3.data_head = that3.data.split("?");
+                    that3.data_head = that3.ob_get_url_head(that3.ob_scene[that3.ob_render_index]);
                     that3.update_scene(that3.ob_render_index, that3.header, that3.params, that3.ob_scene[that3.ob_render_index].bands,
                         that3.ob_scene[that3.ob_render_index].model, that3.ob_scene[that3.ob_render_index].sessions,
                         that3.ob_camera_type, null, true);
@@ -992,7 +1007,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_read_descriptor = function (ob_scene_index, ob_event_id, start) {
-        this.data = this.data_head[0] + "?ob_request=" + "readDescriptor" + "&event_id=" +
+        this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + "readDescriptor" + "&event_id=" +
             ob_event_id + "&start=" + start + "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
             "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
         this.load_data(ob_scene_index);
@@ -1141,7 +1156,7 @@ function OB_TIMELINE() {
                 if (that2.ob_scene[that2.ob_render_index].ob_interval_move !== undefined)
                     clearInterval(that2.ob_scene[that2.ob_render_index].ob_interval_move);
                 that2.moving = false;
-                that2.ob_login();
+                that2.ob_login(that2.ob_render_index);
             };
             this.ob_start.onmousemove = function () {
                 that2.moving = false;
@@ -1765,6 +1780,10 @@ function OB_TIMELINE() {
         else if (dateFormat === "yyyy" + ob_date_separator + "MM")
             return String(new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
                 + new Date(totalGregorianUnitLengths).getMonth());
+        if (dateFormat === "yyyy" + ob_date_separator + "mmm" + ob_date_separator + "dd")
+            return new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
+                + this.getMonth(totalGregorianUnitLengths, "mmm") + ob_date_separator +
+                this.getDay(totalGregorianUnitLengths, "dd");
         if (dateFormat === "yyyy" + ob_date_separator + "mmm")
             return new Date(totalGregorianUnitLengths).getFullYear() + ob_date_separator
                 + this.getMonth(totalGregorianUnitLengths, "mmm");
@@ -2030,7 +2049,6 @@ function OB_TIMELINE() {
                             }
                         }
                     }
-
                     if (this.ob_scene[ob_scene_index].bands[i].model[j].alternateColor !== undefined)
                         this.update_timeline_model(ob_scene_index, this.ob_scene[ob_scene_index].bands[i],
                             this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString(),
@@ -2731,11 +2749,22 @@ function OB_TIMELINE() {
                     this.runUnitTestsMinutes(ob_scene_index);
                 else if (this.data === "unit_tests_hours")
                     this.runUnitTestsHours(ob_scene_index);
+                else if (this.data && this.data.match(/^(https|http?):\/\//))
+                    this.ob_read_filter(ob_scene_index, 0);
                 else if (this.data.includes("readDescriptor")) {
                     if (sessions.events.data !== undefined)
                         this.ob_open_descriptor(ob_scene_index, sessions.events.data);
                 } else {
-                    this.ob_read_filter(ob_scene_index, 0);
+                    try {
+                        let ob_data = this.data.split("?");
+                        let fileExtension = this.data && ob_data[0].match(/\.([^.]+)$/);
+                        if (fileExtension !== null) {
+                            if (fileExtension[1].toLowerCase() === "json") {
+                                this.loadJSON();
+                            }
+                        }
+                    } catch (e) {
+                    }
                 }
                 return;
             }
@@ -2799,10 +2828,7 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_camera(ob_timeline.ob_scene_index);
                 }
                 let endDate = new Date();
-                if (ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index, ob_timeline.multiples) === true) {
-                    ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index)
-                    ob_timeline.update_scene(ob_scene_index, header, params, bands, model, sessions, camera, null, true);
-                }
+                ob_timeline.ob_optimize_load_time(ob_timeline.ob_scene_index, ob_timeline.multiples);
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
                     if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].sessions.events.length !== 1)
@@ -2966,94 +2992,109 @@ function OB_TIMELINE() {
         }
         //console.log("create_segments_and_dates done at:" + Date() + " - " + new Date().getMilliseconds());
     };
+    OB_TIMELINE.prototype.get_first_free_tracks = function (ob_scene_index, ob_busy_tracks, session, i) {
+        let ob_current_track = this.ob_scene[ob_scene_index].bands[i].maxY -
+            this.ob_scene[ob_scene_index].bands[i].fontSizeInt -
+            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
 
-    OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, activity, i) {
+        if (ob_busy_tracks.length === 0) {
+            return ob_current_track;
+        } else {
+            for (let t = 0; t < ob_busy_tracks.length; t++) {
+                let ob_count_track;
+                try {
+                    if (ob_current_track > ob_busy_tracks[t]) {
+                        ob_count_track = (ob_current_track - ob_busy_tracks[t]) /
+                            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                        if (isNaN(ob_count_track)) {
+                            return ob_current_track;
+                        }
+                        if (t !== 0 && ob_count_track > session.activities.length)
+                            return ob_current_track + this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                        if (ob_count_track > session.activities.length) {
+                            return ob_current_track;
+                        }
+                    } else {
+                        ob_count_track = (ob_busy_tracks[t] - ob_busy_tracks[t + 1]) /
+                            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                        if (isNaN(ob_count_track)) {
+                            ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
+                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            return ob_current_track;
+                        }
+                        if (ob_count_track > session.activities.length) {
+                            ob_current_track = ob_busy_tracks[t] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            return ob_current_track;
+                        }
+                    }
+                    ob_current_track = ob_current_track - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                } catch (e) {
+                    ob_current_track = ob_busy_tracks[ob_busy_tracks[t]] -
+                        this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                    return ob_current_track;
+                }
+            }
+        }
+        return ob_busy_tracks[ob_busy_tracks.length - 1] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+    }
+    OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
         let ob_break = false;
-        let ob_enough_room = true;
-        let ob_activity_x = activity.original_x;
+        let ob_busy_track = [];
         this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].maxY -
             this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
         this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
             this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        let ob_first_free_track;
 
         // if not enough room to plot the session increase bandWith regarding this.ob_scene[ob_scene_index].bands[i].trackIncrement
-        while (ob_enough_room) {
-            ob_break = false;
-            for (let l = 0; l < sessions.length; l++) {
+        for (let l = 0; l < j; l++) {
+            if (session.original_x >= sessions[l].original_x &&
+                session.original_x + session.total_width <= sessions[l].original_x + sessions[l].total_width) {
+                //  session a        ___
+                //  session l      _________
+                ob_break = true;
+            } else if (session.original_x + session.total_width >= sessions[l].original_x &&
+                session.original_x + session.total_width <= sessions[l].original_x + sessions[l].total_width) {
+                //  session a      _________
+                //  session l              ________
+                ob_break = true;
+            } else if (session.original_x >= sessions[l].original_x &&
+                session.original_x <= sessions[l].original_x + sessions[l].total_width) {
+                //  session a      _________
+                //  session l    ________
+                ob_break = true;
+            } else if (session.original_x <= sessions[l].original_x &&
+                session.original_x + session.total_width >= sessions[l].original_x + sessions[l].total_width) {
+                //  session a      _________
+                //  session l        _____
+                ob_break = true;
+            } else {
+                ob_break = false;
+            }
+            if (ob_break === true) {
                 for (let a = 0; a < sessions[l].activities.length; a++) {
-                    // If no room, so check for the next track.
-                    if (sessions[l].activities[a].y === this.ob_scene[ob_scene_index].bands[i].track) {
-                        if (ob_activity_x >= sessions[l].activities[a].original_x &&
-                            ob_activity_x <= sessions[l].activities[a].original_x + sessions[l].activities[a].total_width) {
-                            //  session a        ___
-                            //  session l      _________
-                            ob_break = true;
-                            if (a > 1 && a === sessions[l].activities.length - 1)
-                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            break;
-                        } else if (ob_activity_x <= sessions[l].activities[a].original_x &&
-                            ob_activity_x + activity.total_width >= sessions[l].activities[a].original_x) {
-                            //  session a      _________
-                            //  session l              ________
-                            ob_break = true;
-                            if (a > 1 && a === sessions[l].activities.length - 1)
-                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            break;
-                        } else if (ob_activity_x >= sessions[l].activities[a].original_x &&
-                            ob_activity_x <= sessions[l].activities[a].original_x + sessions[l].activities[a].total_width) {
-                            //  session a      _________
-                            //  session l    ________
-                            ob_break = true;
-                            if (a > 1 && a === sessions[l].activities.length - 1)
-                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            break;
-                        } else if (ob_activity_x <= sessions[l].activities[a].original_x &&
-                            ob_activity_x >= sessions[l].activities[a].original_x) {
-                            //  session a      _________
-                            //  session l        _____
-                            ob_break = true;
-                            if (a > 1 && a === sessions[l].activities.length - 1)
-                                this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                    this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].track -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            break;
-                        } else {
-                            ob_break = false;
-                        }
-                    }
-                }
-                if (ob_break === true) {
-                    break;
+                    ob_busy_track.push(sessions[l].activities[a].y);
                 }
             }
-            // Reset increment if there is enough room to plot the session otherwise increase bandwidth.
-            if (ob_break === true) {
-                if (this.ob_scene[ob_scene_index].bands[i].track <= this.ob_scene[ob_scene_index].bands[i].minY + this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
-                    this.ob_scene[ob_scene_index].bands.updated = true;
-                    this.ob_scene[ob_scene_index].bands[i].minY = this.ob_scene[ob_scene_index].bands[i].track - (2 * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
-                    return this.ob_scene[ob_scene_index].bands[i].track;
-                }
-            } else
-                return this.ob_scene[ob_scene_index].bands[i].track;
         }
+        // Reset increment if there is enough room to plot the session otherwise increase bandwidth.
+        ob_first_free_track = this.get_first_free_tracks(ob_scene_index, ob_busy_track.sort(function (a, b) {
+            return b - a
+        }), session, i);
+        if (ob_first_free_track <= this.ob_scene[ob_scene_index].bands[i].minY + this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
+            this.ob_scene[ob_scene_index].bands.updated = true;
+            this.ob_scene[ob_scene_index].bands[i].minY = ob_first_free_track -
+                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement) -
+                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        }
+        return ob_first_free_track;
         //console.log("this.ob_scene[ob_scene_index].bands[i].heightMax=" + this.ob_scene[ob_scene_index].bands[i].heightMax + " " + this.ob_scene[ob_scene_index].bands[i].name + " title=" + String(session.data.title) + " x=" + session.x + " w=" + session.w + " y=" + y);
-        return this.ob_scene[ob_scene_index].bands[i].track;
     };
 
-    function getTextWidth(text, font) {
+    OB_TIMELINE.prototype.getTextWidth = function (text, font) {
         // re-use canvas object for better performance
         try {
-            let canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+            let canvas = this.getTextWidth.canvas || (this.getTextWidth.canvas = document.createElement("canvas"));
             let context = canvas.getContext("2d");
             context.font = font;
             let metrics = context.measureText(text);
@@ -3063,7 +3104,7 @@ function OB_TIMELINE() {
         }
     }
 
-    function getSessionWidth(activities) {
+    OB_TIMELINE.prototype.getSessionWidth = function (activities) {
         let ob_w = activities[0].width;
         try {
             //return the larger activity width.
@@ -3076,25 +3117,20 @@ function OB_TIMELINE() {
         return ob_w;
     }
 
-    function getSessionHeight(activities) {
-        let ob_offset = 2 * activities[0].height;
-        let ob_h = 0;
-        let ob_y_min = activities[0].y;
-        let ob_y_max = activities[0].y;
-        if (activities[activities.length - 1].y === undefined) return ob_h;
+    OB_TIMELINE.prototype.getSessionTotalWidth = function (activities) {
+        let ob_w = activities[0].total_width;
         try {
+            //return the larger activity width.
             for (let i = 1; i < activities.length; i++) {
-                if (ob_y_min > activities[i].y) ob_y_min = activities[i].y;
-                if (ob_y_max < activities[i].y) ob_y_max = activities[i].y;
+                if (activities[i].total_width > ob_w) ob_w = activities[i].total_width;
             }
-            ob_h = ob_y_max - ob_y_min + ob_offset;
         } catch (e) {
-            return ob_h;
+            return ob_w;
         }
-        return ob_h;
+        return ob_w;
     }
 
-    function getSessionY(activities, h) {
+    OB_TIMELINE.prototype.getSessionY = function (activities, h) {
         let ob_y = activities[0].y;
         if (activities.length < 2) return ob_y;
         try {
@@ -3105,7 +3141,7 @@ function OB_TIMELINE() {
         return parseInt(ob_y);
     }
 
-    function getSessionX(activities, total_w) {
+    OB_TIMELINE.prototype.getSessionX = function (activities, total_w) {
         let ob_x = activities[0].x;
         if (activities.length < 2) return ob_x;
         try {
@@ -3119,7 +3155,7 @@ function OB_TIMELINE() {
         return parseInt(ob_x);
     }
 
-    function getSession_originalX(activities) {
+    OB_TIMELINE.prototype.getSession_originalX = function (activities) {
         let ob_x = activities[0].original_x;
         if (activities.length < 2) return ob_x;
         try {
@@ -3141,12 +3177,16 @@ function OB_TIMELINE() {
         let original_pixelOffSetEnd = 0;
         let ob_band_index = 0;
         if (band_index === 0) ob_band_index = 1;
-
-        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].maxY -
-            this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt;
-
-        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].track -
-            this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
+        let ob_coef_overview = 1;
+        if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+            ob_coef_overview = ((this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
+                    this.ob_scene[ob_scene_index].bands[ob_band_index].intervalPixels) /
+                (this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths /
+                    this.ob_scene[ob_scene_index].bands[band_index].intervalPixels));
+            /*ob_coef_overview = (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
+                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths)*/
+            ;
+        }
 
         for (let a = 0; a < this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities.length; a++) {
             if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data !== null &&
@@ -3188,25 +3228,25 @@ function OB_TIMELINE() {
                 add_tolerance =
                     parseInt(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance);
             }
-
             if (isNaN(parseInt(pixelOffSetEnd))) {
                 h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
                 w = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
-                textX = getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
                     this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
                     this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
-                textX = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize * 2 + textX / 2;
+                textX = h * 2 + textX / 2;
             } else {
                 h = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
                 w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                textX = getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
                     this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
                     this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
                 textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textX / 2;
             }
 
             if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
-                h = this.ob_scene[ob_scene_index].bands[band_index].trackIncrement / 2;
+                h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize /
+                    this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
                 if (isNaN(parseInt(pixelOffSetEnd)))
                     w = h / 2;
             }
@@ -3215,7 +3255,7 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x = parseInt(pixelOffSetStart);
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x_relative = parseInt(pixelOffSetStart) + w / 2;
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
-                getSession_originalX(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities);
+                this.getSession_originalX(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities);
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].width = w;
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].height = h;
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].size = h;
@@ -3224,29 +3264,17 @@ function OB_TIMELINE() {
                 parseInt(pixelOffSetStart);
             this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetEnd =
                 parseInt(pixelOffSetEnd);
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX =
+                parseInt(textX);
 
+            // IMPORTANT: Provide more space and balance to display sessions/events based on title length by multiple textX by 2.1
+            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
+                w + (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX * 2.1)
+                + add_tolerance;
             if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX =
-                    parseInt(textX) * (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
-                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths);
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].y =
-                    this.ob_scene[ob_scene_index].bands[band_index].track *
-                    (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
-                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths);
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width = w +
-                    (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title.length *
-                        this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt) + add_tolerance;
                 this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
                     this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width *
-                    (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
-                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths)
-            } else {
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX = parseInt(textX);
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].y =
-                    this.ob_scene[ob_scene_index].bands[band_index].track;
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width = w +
-                    (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title.length *
-                        this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt) + add_tolerance;
+                    ob_coef_overview;
             }
         }
     }
@@ -3261,24 +3289,18 @@ function OB_TIMELINE() {
             let that_eval2 = this;
             sortByValue = eval("that_eval2.ob_scene[ob_scene_index].bands[band_index].model[0].sortBy");
         }
-        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].maxY -
-            this.ob_scene[ob_scene_index].bands[band_index].fontSizeInt;
-
-        this.ob_scene[ob_scene_index].bands[band_index].track = this.ob_scene[ob_scene_index].bands[band_index].track -
-            this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
-
         for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
             if (this.ob_scene[ob_scene_index].sessions.events[k].activities === undefined) {
+                if (this.ob_scene[ob_scene_index].sessions.events[k].id === undefined)
+                    this.ob_scene[ob_scene_index].sessions.events[k].id = 0;
                 let activity = Object.assign({}, this.ob_scene[ob_scene_index].sessions.events[k]);
                 this.ob_scene[ob_scene_index].sessions.events[k].activities = [];
                 this.ob_scene[ob_scene_index].sessions.events[k].activities[0] = activity;
             }
             session = JSON.parse(JSON.stringify(this.ob_scene[ob_scene_index].sessions.events[k]));
-            //session = this.ob_scene[ob_scene_index].sessions.events[k];
-            session.y = this.ob_scene[ob_scene_index].bands[band_index].track;
             if (session.zone !== undefined) {
                 this.ob_scene[ob_scene_index].bands[band_index].zones.push(session);
-            } else if (session.id !== undefined) {
+            } else {
                 if (sortByValue === "NONE" || sortByValue === "") {
                     this.ob_scene[ob_scene_index].bands[band_index].sessions.push(session);
                 } else {
@@ -3319,28 +3341,34 @@ function OB_TIMELINE() {
 
                     this.init_activities(ob_scene_index, i, j);
 
-                    for (let a = 0; a < this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length; a++) {
-                        y = this.get_room_for_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].sessions,
-                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], i);
-                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].y = y;
-                        if (y > this.ob_scene[ob_scene_index].bands[i].lastGreaterY)
-                            this.ob_scene[ob_scene_index].bands[i].lastGreaterY = y;
-                    }
                     // Set width and height for the session to build later the box containing all activities.
                     this.ob_scene[ob_scene_index].bands[i].sessions[j].width =
-                        getSessionWidth(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
-                    this.ob_scene[ob_scene_index].bands[i].sessions[j].height =
-                        getSessionHeight(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                        this.getSessionWidth(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].total_width =
+                        this.getSessionTotalWidth(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
                     this.ob_scene[ob_scene_index].bands[i].sessions[j].x =
-                        getSessionX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
+                        this.getSessionX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
                             this.ob_scene[ob_scene_index].bands[i].sessions[j].width);
                     this.ob_scene[ob_scene_index].bands[i].sessions[j].original_x =
-                        getSession_originalX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
+                        this.getSession_originalX(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities);
                     this.ob_scene[ob_scene_index].bands[i].sessions[j].z = z;
+                    this.ob_scene[ob_scene_index].bands[i].sessions[j].height =
+                        this.ob_scene[ob_scene_index].bands[i].trackIncrement *
+                        (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length) -
+                        this.ob_scene[ob_scene_index].bands[i].trackIncrement / 2;
+                    y = this.get_room_for_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].sessions,
+                        this.ob_scene[ob_scene_index].bands[i].sessions[j], i, j);
+                    for (let a = 0; a < this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length; a++) {
+                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].y = y;
+                        y = y - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                    }
+
                     this.ob_scene[ob_scene_index].bands[i].sessions[j].y =
-                        getSessionY(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
+                        this.getSessionY(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities,
                             this.ob_scene[ob_scene_index].bands[i].sessions[j].height);
-                    //this.ob_scene[ob_scene_index].bands[i].sessions[j].y =y;
+
+                    if (y > this.ob_scene[ob_scene_index].bands[i].lastGreaterY)
+                        this.ob_scene[ob_scene_index].bands[i].lastGreaterY = y;
                 }
                 if (this.ob_scene[ob_scene_index].bands[i].lastGreaterY !== -this.ob_scene[ob_scene_index].ob_height / 2) {
                     this.ob_scene[ob_scene_index].bands[i].lastGreaterY =
@@ -3412,21 +3440,25 @@ function OB_TIMELINE() {
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            let ob_obj;
             for (let j = 0; j < this.ob_scene[ob_scene_index].bands[i].sessions.length; j++) {
                 for (let a = 0; a < this.ob_scene[ob_scene_index].bands[i].sessions[j].activities.length; a++) {
                     try {
                         ob_group_visible = false;
+                        let eventColor = this.ob_scene[ob_scene_index].bands[i].eventColor;
+                        let SessionColor = this.ob_scene[ob_scene_index].bands[i].SessionColor;
+                        let textColor = this.ob_scene[ob_scene_index].bands[i].dateColor;
+                        let fontSizeInt = this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
+                        let fontWeight = this.ob_scene[ob_scene_index].bands[i].fontWeight;
+                        let fontFamily = this.ob_scene[ob_scene_index].bands[i].fontFamily;
+                        let fontStyle = this.ob_scene[ob_scene_index].bands[i].fontStyle;
+                        let image = this.ob_scene[ob_scene_index].bands[i].image;
+                        let texture = this.ob_scene[ob_scene_index].bands[i].texture;
+                        let backgroundColor = this.ob_scene[ob_scene_index].bands[i].backgroundColor;
+                        let luminance = this.ob_scene[ob_scene_index].bands[i].luminance;
+                        let opacity = this.ob_scene[ob_scene_index].bands[i].opacity;
+
                         if (regex === null || this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].id !== undefined ||
                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].data.title.match(regex)) {
-                            let textColor = this.ob_scene[ob_scene_index].bands[i].dateColor;
-                            let fontSizeInt = this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
-                            let fontWeight = this.ob_scene[ob_scene_index].bands[i].fontWeight;
-                            let fontFamily = this.ob_scene[ob_scene_index].bands[i].fontFamily;
-                            let fontStyle = this.ob_scene[ob_scene_index].bands[i].fontStyle;
-                            let backgroundColor = this.ob_scene[ob_scene_index].bands[i].backgroundColor;
-                            let luminance = undefined;
-                            let opacity = undefined;
                             if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render !== undefined) {
                                 if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.textColor !== undefined)
                                     textColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.textColor;
@@ -3444,6 +3476,14 @@ function OB_TIMELINE() {
                                     luminance = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.luminance;
                                 if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.opacity !== undefined)
                                     opacity = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.opacity;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.texture !== undefined)
+                                    texture = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.texture;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image !== undefined)
+                                    image = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image;
+                                if (this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color !== undefined) {
+                                    eventColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color;
+                                    SessionColor = this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color;
+                                }
                             }
 
                             // If any events and overview
@@ -3455,17 +3495,15 @@ function OB_TIMELINE() {
                                         ob_group_visible = true;
                                         ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
-                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
-                                            undefined,
-                                            backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                            eventColor, undefined, backgroundColor, fontSizeInt, fontStyle, fontWeight,
+                                            textColor, fontFamily, false);
                                     }
                                 } else {
                                     // If any events and no overview
                                     ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image,
-                                        backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], eventColor,
+                                        image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
+                                        fontFamily, true);
                                 }
                             } else {
                                 // If any sessions and overview
@@ -3476,27 +3514,23 @@ function OB_TIMELINE() {
                                         ob_group_visible = true;
                                         ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
-                                            this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
-                                            this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
-                                            undefined,
-                                            backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                            SessionColor, texture, undefined, backgroundColor, fontSizeInt, fontStyle,
+                                            fontWeight, textColor, fontFamily);
                                     }
                                 } else {
                                     // If any sessions and no overview
                                     ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.color,
-                                        this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture,
-                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.image,
-                                        backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                                        this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], SessionColor,
+                                        texture, image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
+                                        fontFamily);
                                 }
                             }
                         }
                     } catch (e) {
-                        /*console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
+                        console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
                             String(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].data.title) +
                             " - this.ob_scene[ob_scene_index].bands[i].heightMax=" +
-                            this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);*/
+                            this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);
                     }
                 }
                 // Create box if multiple activities
@@ -3580,7 +3614,7 @@ function OB_TIMELINE() {
 
 
         if (ob_debug_ADD_SESSION_WEBGL_OBJECT) console.log("OB_TIMELINE.add_sessionsBox(" + band_name + "," +
-            session.start, "," + session.end + "---" + session.data.title + ",lenght=" +
+            session.start, "," + session.end + "---" + session.data.title + ",length=" +
             session.activities.length + "," + session.activities[0].start + session.activities[0].data.description + ")");
     };
 
@@ -3593,7 +3627,7 @@ function OB_TIMELINE() {
             copy_session.x_relative = copy_session.pixelOffSetStart - 8;
             copy_session.z = parseInt(session.z + 41);
             this.add_event(ob_scene_index, band_name, copy_session, color, image, backgroundColor, fontSizeInt,
-                fontStyle, fontWeight, textColor, fontFamily);
+                fontStyle, fontWeight, textColor, fontFamily, false);
         }
         let ob_material;
         if (texture !== undefined) {
@@ -3644,7 +3678,7 @@ function OB_TIMELINE() {
     }
 
     OB_TIMELINE.prototype.add_event = function (ob_scene_index, band_name, session, color, image, backgroundColor,
-                                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily) {
+                                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, display_text) {
         let geometry, material, ob_event;
         let texture = this.load_texture(image);
         if (texture === undefined) {
@@ -3668,7 +3702,7 @@ function OB_TIMELINE() {
         ob_event.data = session;
 
         // Add text and tolerance
-        if (!band_name.match(/overview_/)) {
+        if (display_text === true) {
             this.add_text_sprite(ob_scene_index, ob_event, session.data.title, session.textX, 0, 5, backgroundColor,
                 fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
         }
@@ -3805,9 +3839,12 @@ function OB_TIMELINE() {
             let sessions = that.request.response; // get the string from the response
             try {
                 that.ob_scene[that.ob_render_index].sessions = eval('(' + (sessions) + ')');
-                that.update_scene(that.ob_render_index, that.header, that.params, that.ob_scene[that.ob_render_index].bands,
-                    that.ob_scene[that.ob_render_index].model, that.ob_scene[that.ob_render_index].sessions,
-                    that.ob_camera_type, null, false);
+                clearTimeout(this.update_this_scene);
+                this.update_this_scene = setTimeout(function () {
+                    that.update_scene(that.ob_render_index, that.header, that.params, that.ob_scene[that.ob_render_index].bands,
+                        that.ob_scene[that.ob_render_index].model, that.ob_scene[that.ob_render_index].sessions,
+                        that.ob_camera_type, null, false);
+                }, 10);
             } catch (err) {
                 console.log("loadJSON - no file to load");
             }
@@ -3897,9 +3934,8 @@ function OB_TIMELINE() {
             }
 
             if (that.data && that.data.match(/^(http?):\/\//) ||
-                that.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/) ||
                 that.data && that.data.match(/^(https?):\/\//)) {
-                that.data_head = that.data.split("?");
+                that.data_head = that.ob_get_url_head(that.ob_scene[that.ob_render_index]);
 
                 clearInterval(that.ob_scene[that.ob_render_index].ob_interval_move);
                 that.ob_scene[that.ob_render_index].ob_interval_move = setInterval(ob_move, 5);
@@ -4246,6 +4282,7 @@ function OB_TIMELINE() {
             sessions += "'id': '" + i + "',";
             sessions += "'start': '" + ob_start + "',";
             sessions += "'end': '" + ob_end + "',";
+            sessions += "'render': {} ,";
             sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
@@ -4372,6 +4409,7 @@ function OB_TIMELINE() {
             sessions += "'id': '" + i + "',";
             sessions += "'start': '" + ob_start + "',";
             sessions += "'end': '" + ob_end + "',";
+            sessions += "'render': {} ,";
             sessions += "'data': {";
             sessions += "'title': '" + ob_title + "',";
             sessions += "'type': '" + ob_type + "',";
@@ -4453,15 +4491,13 @@ function OB_TIMELINE() {
             this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (!this.data.includes(".json") && !this.data.includes("UTC")) {
             // GET data from a range of time
-            this.data_head = this.data.split("?");
-            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
+            this.data = this.ob_get_url_head(ob_scene_index) + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
                 "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
                 "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
             this.method = "GET";
         } else {
             // GET data from a range of time
-            this.data_head = this.data.split("?");
-            this.data = this.data_head[0] + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
+            this.data = this.ob_get_url_head(ob_scene_index) + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
                 "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
                 "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
             this.method = "GET";
@@ -4470,38 +4506,6 @@ function OB_TIMELINE() {
         }
 
         console.log(this.data.toString());
-
-        let ob_ws = this.data && this.data.match(/^(wss?|ws):\/\/[^\s$.?#].\S*$/);
-        if (ob_ws !== null && ob_ws.length === 2) {
-            let that = this;
-            let ws = await new WebSocket(ob_ws[0]);
-            console.log(ob_ws[0]);
-            ws.onopen = function () {
-                console.log("WS - onopen!");
-                that.ob_not_connected(that.ob_scene_index);
-                ws.send("Open WebSocket");
-            };
-            ws.onmessage = function (e) {
-                that.ob_connected(that.ob_scene_index);
-                that.ob_scene[that.ob_scene_index].sessions = eval('(' + (e.data) + ')');
-                that.update_scene(that.ob_scene_index, that.header, that.params, that.ob_scene[that.ob_scene_index].bands,
-                    that.ob_scene[that.ob_scene_index].model, that.ob_scene[that.ob_scene_index].sessions,
-                    that.ob_camera_type, null, false);
-            };
-            ws.onerror = function () {
-                that.ob_not_connected(that.ob_scene_index);
-            }
-            ws.onclose = function () {
-                // connection closed, discard old websocket and create a new one in 5s
-                console.log("WS - onclose!");
-                that.ob_not_connected(that.ob_scene_index);
-                that.ws = null;
-                setTimeout(function () {
-                    that.load_data(that.ob_scene_index)
-                }, 10000);
-            }
-            return;
-        }
 
         // -- use SSE protocole --
         let ob_url_secure = this.data && this.data.match(/^(https|http?):\/\//);
@@ -4523,8 +4527,7 @@ function OB_TIMELINE() {
                     if (that.ob_getDataType(that.ob_scene_index, eval('(' + (e.data) + ')')) === "filters") {
                         try {
                             that.set_user_setting_and_filters(that.ob_scene_index, eval('(' + (e.data) + ')'));
-                            that.data_head = that.data.split("?");
-                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                            that.data = that.ob_get_url_head(that.ob_scene_index,) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
                                 that.ob_user.name;
@@ -4539,11 +4542,6 @@ function OB_TIMELINE() {
                             let data = eval('(' + (e.data) + ')');
                             if (data !== undefined && data.event_descriptor[0] !== undefined)
                                 that.ob_open_descriptor(that.ob_render_index, data.event_descriptor[0]);
-                            that.data_head = that.data.split("?");
-                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
-                                "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
-                                "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
-                                that.ob_user.name;
                         } catch (err) {
                             console.log('POST - cannot read event_descriptor ...');
                         }
@@ -4556,7 +4554,7 @@ function OB_TIMELINE() {
                     //eventSource.close();
                 };
                 eventSource.onopen = function () {
-                    that.ob_connected();
+                    that.ob_connected(that.ob_scene_index);
                 };
                 eventSource.onerror = function () {
                     // Very important: Do not close the session otherwise this client would not reconnect
@@ -4564,9 +4562,17 @@ function OB_TIMELINE() {
                     that.ob_not_connected(that.ob_scene_index);
                     if (!that.data.includes("updateFilter") && !that.data.includes("addFilter")
                         && !that.data.includes("saveFilter") && !that.data.includes("deleteFilter")
-                        && !that.data.includes("readFilters") && !that.data.includes("event_descriptor")) {
+                        && !that.data.includes("readFilters") && !that.data.includes("event_descriptor")
+                        && !that.data.includes("readDescriptor")) {
                         console.log('SSE - onerror');
+                        that.data = that.ob_get_url_head(that.ob_scene_index,) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                            "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                            "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                            that.ob_user.name;
                         that.load_data(ob_scene_index);
+                    } else {
+                        that.ob_connected(that.ob_scene_index);
+                        return;
                     }
                     console.log('SSE - reconnecting ...');
                 }
@@ -4576,6 +4582,7 @@ function OB_TIMELINE() {
                 await fetch(this.data, {
                     method: this.method,
                     dataType: 'json',
+                    mode: 'no-cors',
                     headers: {
                         "Accept": "application/json",
                         'Content-Type': 'application/json',
@@ -4592,8 +4599,7 @@ function OB_TIMELINE() {
                     if (that.ob_getDataType(that.ob_scene_index, json) === "filters") {
                         try {
                             that.set_user_setting_and_filters(that.ob_scene_index, json);
-                            that.data_head = that.data.split("?");
-                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                            that.data = that.ob_get_url_head(that.ob_scene_index) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
                                 that.ob_user.name;
@@ -4608,8 +4614,7 @@ function OB_TIMELINE() {
                         try {
                             if (json !== undefined && json.event_descriptor[0] !== undefined)
                                 that.ob_open_descriptor(that.ob_render_index, json.event_descriptor[0]);
-                            that.data_head = that.data.split("?");
-                            that.data = that.data_head[0] + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                            that.data = that.ob_get_url_head(that.ob_scene_index) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
                                 that.ob_user.name;
@@ -4628,14 +4633,6 @@ function OB_TIMELINE() {
                 });
                 return;
             }
-            return;
-        }
-
-        let fileExtension = this.data && this.data.match(/\.([^.]+)$/);
-        if (fileExtension !== null) {
-            if (fileExtension[1].toLowerCase() === "json") {
-                this.loadJSON();
-            }
         }
     };
 
@@ -4651,11 +4648,17 @@ function OB_TIMELINE() {
     }, false);
 
     OB_TIMELINE.prototype.getLocalStorage = function () {
-        this.ob_user = "?";
-        this.ob_email = "?";
-        if (localStorage.user !== undefined) {
-            this.ob_user = JSON.parse(localStorage.user);
-            this.ob_email = JSON.parse(localStorage.email);
+        this.ob_user = "Guest";
+        this.ob_email = "";
+        try {
+            if (localStorage.user !== undefined) {
+                this.ob_user = JSON.parse(localStorage.user);
+                this.ob_email = JSON.parse(localStorage.email);
+            } else {
+                localStorage.user = JSON.stringify({name: "Guest"});
+                localStorage.email = JSON.stringify({name: ""});
+            }
+        } catch (e) {
         }
         if (this.ob_user.name === "?") {
             this.ob_email = "?";

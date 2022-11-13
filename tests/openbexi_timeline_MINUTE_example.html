@@ -40,7 +40,7 @@
         ob_timeline4.bands = [{
             name: "ob_band_1",
             height: "100%",
-            color: "#f8f2f2",
+            color: "#ececbc",
             intervalPixels: "200",
             intervalUnit: "MINUTE",
             dateColor: "#070707",
@@ -50,7 +50,18 @@
             defaultEventSize: 5,
             model: [{sortBy: "NONE"}
             ]
-        }]
+        },
+            {
+                name: "ob_overview_band_2",
+                height: "25%",
+                color: "#f4f6f8",
+                intervalPixels: 200,
+                intervalUnit: "HOUR",
+                dateFormat: "yyyy mmm dd",
+                SessionColor: "#137bf8",
+                eventColor: "#ef0432",
+                dateColor: "#f31733",
+            }]
     </script>
 </head>
 
