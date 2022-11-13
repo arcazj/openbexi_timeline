@@ -17,8 +17,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Logger;
 
-
-//@WebServlet("/openbexi_timeline_sse/sessions")
 @WebServlet(asyncSupported = true)
 @WebListener
 public class ob_sse_timeline extends HttpServlet implements HttpSessionListener {
@@ -163,7 +161,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                         respWriter.write("retry: 1000000000\n\n");
                         respWriter.flush();
                         boolean error = respWriter.checkError();
-                        if (error == true) {
+                        if (error) {
                             logger.info("Client disconnected");
                         }
                     } catch (IOException e) {

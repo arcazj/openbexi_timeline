@@ -35,15 +35,14 @@
             fontSize: 12,
             //width: window.innerWidth,
             width: 1100,
-            model: [{sortBy: "NONE"}],
             data: "../json/jfk.json"
         }];
         ob_timeline2.bands = [{
             name: "ob_band_1",
             height: "90%",
             color: "#f3f3ed",
-            intervalPixels: "800",
-            intervalUnit: "WEEK",
+            intervalPixels: "3200",
+            intervalUnit: "DAY",
             dateColor: "#7d8a86",
             textColor: "#040404",
             SessionColor: "#9f0dff",
@@ -81,9 +80,9 @@
         },
             {
                 name: "ob_overview_band_2",
-                height: "10%",
+                height: "25%",
                 color: "lightgrey",
-                intervalPixels: "200",
+                intervalPixels: "6400",
                 intervalUnit: "MONTH",
                 SessionColor: "#a110ff",
                 eventColor: "#238448",
