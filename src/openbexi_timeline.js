@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9g beta
+    OpenBEXI Timeline 0.9.9h beta
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -190,7 +190,7 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.ob_get_url_head = function (ob_scene_index, type) {
+    OB_TIMELINE.prototype.ob_get_url_head = function () {
         if (this.data === undefined)
             this.data = this.params[0].data.replace("data_default_port",
                 this.data_default_port).replace("data_sse_port", this.data_sse_port);
@@ -199,7 +199,7 @@ function OB_TIMELINE() {
             return this.data_head[0].replace(this.data_default_port, this.data_sse_port).split("?");
         else
             return this.data_head[0].replace(this.data_default_port, this.data_default_port).split("?");
-    }
+    };
 
     OB_TIMELINE.prototype.ob_init = function (ob_scene_index) {
         // Set all timeline parameters:
@@ -501,8 +501,8 @@ function OB_TIMELINE() {
             "&timelineName=" + this.name +
             "&title=" + this.title +
             "&backgroundColor=" + backgroundColor +
-            "&userName=" + this.ob_user.name +
-            "&email=" + this.ob_email.name +
+            "&userName=" + this.ob_user.name.toLowerCase() +
+            "&email=" + this.ob_email.name.toLowerCase() +
             "&top=" + this.top +
             "&left=" + this.left +
             "&width=" + this.params[0].width +
@@ -754,10 +754,10 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_save_user = function (ob_scene_index) {
-        this.ob_user.name = document.getElementById(this.name + "_user").value
-        this.ob_email.name = document.getElementById(this.name + "_email").value
-        localStorage.user = JSON.stringify({name: this.ob_user.name});
-        localStorage.email = JSON.stringify({name: this.ob_email.name});
+        this.ob_user.name = document.getElementById(this.name + "_user").value.toLowerCase();
+        this.ob_email.name = document.getElementById(this.name + "_email").value.toLowerCase();
+        localStorage.user = JSON.stringify({name: this.ob_user.name.toLowerCase()});
+        localStorage.email = JSON.stringify({name: this.ob_email.name.toLowerCase()});
         this.ob_remove_login();
         this.ob_read_filter(ob_scene_index, 0);
     };
@@ -786,10 +786,10 @@ function OB_TIMELINE() {
                 "<legend><span class='number'></span>User</legend>\n" +
                 "<br>" +
                 "<input type='label' disabled value='Name :'>\n" +
-                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name + "'>\n" +
+                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name.toLowerCase() + "'>\n" +
                 "<br>" +
                 "<input type='label' disabled value='email :'>\n" +
-                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name + "'>\n" +
+                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name.toLowerCase() + "'>\n" +
                 "<fieldset>\n" +
                 "<br>" + "<br>" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
@@ -831,7 +831,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9g beta</legend>\n" +
+                "<legend> version 0.9.9h beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -963,7 +963,7 @@ function OB_TIMELINE() {
 
             //Add event panel
             let ob_add_event_div = document.createElement("div");
-            ob_add_event_div.innerHTML = "<br><div div style='padding:8px;text-align: left;' class='ob_form1'>\n" +
+            ob_add_event_div.innerHTML = "<br><div style='padding:8px;text-align: left;' class='ob_form1'>\n" +
                 "<form>\n" +
                 "<fieldset>\n" +
                 "<legend><span class='number'> </span><b>Add an event or session :</b></legend>\n" +
@@ -1303,7 +1303,7 @@ function OB_TIMELINE() {
                     that2.ob_view.style.visibility = "hidden";
                     that2.ob_no_view.style.visibility = "visible";
                     that2.ob_visible_view = false;
-                    that2.update_scene(that2.ob_render_index, this.header, that2.params,
+                    that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                         that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                         that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
                 }
@@ -1317,7 +1317,7 @@ function OB_TIMELINE() {
                     that2.ob_no_view.style.visibility = "hidden";
                     that2.ob_view.style.visibility = "visible";
                     that2.ob_visible_view = true;
-                    that2.update_scene(that2.ob_render_index, this.header, that2.params,
+                    that2.update_scene(that2.ob_render_index, that2.header, that2.params,
                         that2.ob_scene[that2.ob_render_index].bands, that2.ob_scene[that2.ob_render_index].model,
                         that2.ob_scene[that2.ob_render_index].sessions, that2.ob_camera_type, null, false);
                 }
@@ -2068,7 +2068,6 @@ function OB_TIMELINE() {
         // Height may have changed depending on how many sessions or events populated in the bands
         // So here we need to check the Timeline height changed
         let new_timeline_height = 0;
-        let original_ob_height = this.ob_scene[ob_scene_index].ob_height;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].height !== undefined) {
                 if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
@@ -2239,7 +2238,6 @@ function OB_TIMELINE() {
                 SessionColor: "#a110ff",
                 eventColor: "#238448",
                 defaultEventSize: 1,
-                dateColor: "#f31733",
             });
             ob_default_overview = JSON.parse(ob_default_overview);
             this.ob_scene[ob_scene_index].bands.push(ob_default_overview);
@@ -2699,8 +2697,8 @@ function OB_TIMELINE() {
         if (setting_and_filters.openbexi_timeline !== undefined) {
             this.name = setting_and_filters.openbexi_timeline[0].name;
             this.title = setting_and_filters.openbexi_timeline[0].title;
-            this.user = setting_and_filters.openbexi_timeline[0].user;
-            this.email = setting_and_filters.openbexi_timeline[0].email
+            this.user = setting_and_filters.openbexi_timeline[0].user.toLowerCase();
+            this.email = setting_and_filters.openbexi_timeline[0].email.toLowerCase();
             this.top = setting_and_filters.openbexi_timeline[0].top;
             this.left = setting_and_filters.openbexi_timeline[0].left;
             this.params[0].width = setting_and_filters.openbexi_timeline[0].width;
@@ -3183,9 +3181,6 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[ob_band_index].intervalPixels) /
                 (this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths /
                     this.ob_scene[ob_scene_index].bands[band_index].intervalPixels));
-            /*ob_coef_overview = (this.ob_scene[ob_scene_index].bands[ob_band_index].gregorianUnitLengths /
-                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths)*/
-            ;
         }
 
         for (let a = 0; a < this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities.length; a++) {
@@ -3436,7 +3431,8 @@ function OB_TIMELINE() {
                 ob_object + "," + "," + x + "," + y + "," + z + "," + color + ")");
     };
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
-        let ob_group_visible;
+        let ob_group_visible = false;
+        if (ob_scene_index === undefined) ob_scene_index = 0;
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
@@ -4063,7 +4059,7 @@ function OB_TIMELINE() {
         });
     };
 
-    OB_TIMELINE.prototype.ob_set_scene = function (ob_scene_index) {
+    OB_TIMELINE.prototype.ob_set_scene = function () {
         if (this.ob_scene === undefined) {
             this.ob_scene = new Array(ob_MAX_SCENES);
             this.ob_scene.sync_time = 0;
@@ -4631,7 +4627,6 @@ function OB_TIMELINE() {
                     console.log('Error message:', err.statusText)
                     this.ob_not_connected(this.ob_scene_index);
                 });
-                return;
             }
         }
     };
@@ -4648,21 +4643,21 @@ function OB_TIMELINE() {
     }, false);
 
     OB_TIMELINE.prototype.getLocalStorage = function () {
-        this.ob_user = "Guest";
+        this.ob_user = "guest";
         this.ob_email = "";
         try {
             if (localStorage.user !== undefined) {
-                this.ob_user = JSON.parse(localStorage.user);
-                this.ob_email = JSON.parse(localStorage.email);
+                this.ob_user = JSON.parse(localStorage.user.toLowerCase());
+                this.ob_email = JSON.parse(localStorage.email.toLowerCase());
             } else {
-                localStorage.user = JSON.stringify({name: "Guest"});
+                localStorage.user = JSON.stringify({name: "guest"});
                 localStorage.email = JSON.stringify({name: ""});
             }
         } catch (e) {
         }
         if (this.ob_user.name === "?") {
-            this.ob_email = "?";
-            localStorage.user = JSON.stringify({name: "?"});
+            this.ob_email = "";
+            localStorage.user = JSON.stringify({name: "guest"});
         }
     }
 }
