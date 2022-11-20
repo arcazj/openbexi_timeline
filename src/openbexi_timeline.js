@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9h beta
+    OpenBEXI Timeline 0.9.9i beta
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -203,6 +203,8 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.ob_init = function (ob_scene_index) {
         // Set all timeline parameters:
+        if (this.ob_user_name === undefined)
+            this.getLocalStorage();
         this.name = this.params[0].name;
         this.title = this.params[0].title;
         this.multiples = 45;
@@ -369,7 +371,7 @@ function OB_TIMELINE() {
             "&startEvent=" + startEventUTC + "&endEvent=" + endEventUTC + "&description=" + description +
             "&startDate=" + this.minDate + "&endDate=" + this.maxDate + "&icon=" + icon +
             "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value + "&search=" +
-            this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+            this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user_name;
         this.load_data(ob_scene_index);
     };
     OB_TIMELINE.prototype.ob_get_all_sorting_options = function (ob_scene_index) {
@@ -501,8 +503,8 @@ function OB_TIMELINE() {
             "&timelineName=" + this.name +
             "&title=" + this.title +
             "&backgroundColor=" + backgroundColor +
-            "&userName=" + this.ob_user.name.toLowerCase() +
-            "&email=" + this.ob_email.name.toLowerCase() +
+            "&userName=" + this.ob_user_name +
+            "&email=" + this.ob_email_name +
             "&top=" + this.top +
             "&left=" + this.left +
             "&width=" + this.params[0].width +
@@ -754,10 +756,12 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_save_user = function (ob_scene_index) {
-        this.ob_user.name = document.getElementById(this.name + "_user").value.toLowerCase();
-        this.ob_email.name = document.getElementById(this.name + "_email").value.toLowerCase();
-        localStorage.user = JSON.stringify({name: this.ob_user.name.toLowerCase()});
-        localStorage.email = JSON.stringify({name: this.ob_email.name.toLowerCase()});
+        this.ob_user_name = document.getElementById(this.name + "_user").value.toLowerCase();
+        this.ob_email_name = document.getElementById(this.name + "_email").value.toLowerCase();
+        if (this.ob_user_name.replace(/ /g, "") !== "") {
+            localStorage.user = JSON.stringify({name: this.ob_user_name.toLowerCase()});
+            localStorage.email = JSON.stringify({name: this.ob_email_name.toLowerCase()});
+        }
         this.ob_remove_login();
         this.ob_read_filter(ob_scene_index, 0);
     };
@@ -786,10 +790,10 @@ function OB_TIMELINE() {
                 "<legend><span class='number'></span>User</legend>\n" +
                 "<br>" +
                 "<input type='label' disabled value='Name :'>\n" +
-                "<input type='string' id=" + this.name + "_user value='" + this.ob_user.name.toLowerCase() + "'>\n" +
+                "<input type='string' id=" + this.name + "_user value='" + this.ob_user_name.toLowerCase() + "'>\n" +
                 "<br>" +
                 "<input type='label' disabled value='email :'>\n" +
-                "<input type='string' id=" + this.name + "_email value='" + this.ob_email.name.toLowerCase() + "'>\n" +
+                "<input type='string' id=" + this.name + "_email value='" + this.ob_email_name.toLowerCase() + "'>\n" +
                 "<fieldset>\n" +
                 "<br>" + "<br>" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
@@ -831,7 +835,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9h beta</legend>\n" +
+                "<legend> version 0.9.9i beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1009,7 +1013,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_read_descriptor = function (ob_scene_index, ob_event_id, start) {
         this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + "readDescriptor" + "&event_id=" +
             ob_event_id + "&start=" + start + "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
-            "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+            "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user_name;
         this.load_data(ob_scene_index);
     };
     OB_TIMELINE.prototype.ob_open_descriptor = function (ob_scene_index, data) {
@@ -2026,14 +2030,18 @@ function OB_TIMELINE() {
                     if (this.ob_scene[ob_scene_index].bands[i].model[j].sortBy === undefined)
                         this.ob_scene[ob_scene_index].bands[i].model[j].sortBy = "NONE";
                     if (i === 0) {
-                        if (this.ob_scene[ob_scene_index].sessions === undefined || this.ob_scene[ob_scene_index].sessions.events === undefined) return;
+                        if (this.ob_scene[ob_scene_index].sessions === undefined ||
+                            this.ob_scene[ob_scene_index].sessions.events === undefined) return;
                         for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
                             try {
-                                if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined && this.ob_scene[ob_scene_index].sessions.events[k].zone === undefined) {
+                                if (this.ob_scene[ob_scene_index].sessions.events[k].id !== undefined &&
+                                    this.ob_scene[ob_scene_index].sessions.events[k].zone === undefined) {
                                     let that_eval = this;
-                                    sortByValue = eval("that_eval.ob_scene[ob_scene_index].sessions.events[k]" + ".data." +
-                                        this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString());
-                                    if (!isNaN(sortByValue)) sortByValue = this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString() + " " + sortByValue;
+                                    sortByValue = eval("that_eval.ob_scene[ob_scene_index].sessions.events[k]" +
+                                        ".data." + this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString());
+                                    if (!isNaN(sortByValue))
+                                        sortByValue = this.ob_scene[ob_scene_index].bands[i].model[j].sortBy.toString()
+                                            + " " + sortByValue;
                                     this.ob_scene[ob_scene_index].sessions.events[k].data.sortByValue = sortByValue;
                                     if (ob_layouts.indexOf(sortByValue) === -1) {
                                         if (sortByValue !== undefined) {
@@ -2097,7 +2105,8 @@ function OB_TIMELINE() {
                     }
                 }
             } else {
-                this.ob_scene[ob_scene_index].bands[i].height = this.ob_scene[ob_scene_index].bands[i].y = this.ob_scene[ob_scene_index].ob_height;
+                this.ob_scene[ob_scene_index].bands[i].height = this.ob_scene[ob_scene_index].bands[i].y =
+                    this.ob_scene[ob_scene_index].ob_height;
                 this.ob_scene[ob_scene_index].bands[i].y = this.ob_scene[ob_scene_index].ob_height -
                     ((this.ob_scene[ob_scene_index].ob_height / this.ob_scene[ob_scene_index].bands.length) / 2);
                 this.ob_scene[ob_scene_index].bands[i].pos_x = this.ob_scene[ob_scene_index].bands[i].x;
@@ -2178,7 +2187,8 @@ function OB_TIMELINE() {
                 " | this.ob_scene[ob_scene_index].bands[" + i + "].pos_y=" + this.ob_scene[ob_scene_index].bands[i].pos_y +"\n"+
                 " | this.ob_scene[ob_scene_index].bands[" + i + "].y=" + this.ob_scene[ob_scene_index].bands[i].y +"\n"+
                 " | this.ob_scene[ob_scene_index].bands[" + i + "].lastGreaterY=" + this.ob_scene[ob_scene_index].bands[i].lastGreaterY +"\n"+
-                " | this.ob_scene[ob_scene_index].bands[" + i + "].trackIncrement=" + this.ob_scene[ob_scene_index].bands[i].trackIncrement);*/
+                " | this.ob_scene[ob_scene_index].bands[" + i + "].trackIncrement=" + this.ob_scene[ob_scene_index].bands[i].trackIncrement);
+                */
 
         }
     };
@@ -2379,8 +2389,8 @@ function OB_TIMELINE() {
         this.set_bands_minDate(ob_scene_index);
         this.set_bands_maxDate(ob_scene_index);
     };
-    OB_TIMELINE.prototype.add_zone = function (ob_scene_index, band_number, zone_number, band_name, zone_name, text, textColor, x, y, z, width, height,
-                                               depth, color, texture) {
+    OB_TIMELINE.prototype.add_zone = function (ob_scene_index, band_number, zone_number, band_name, zone_name, text,
+                                               textColor, x, y, z, width, height, depth, color, texture) {
         if (isNaN(x)) x = 0;
         if (isNaN(y)) y = 0;
         if (isNaN(z)) z = 0;
@@ -2737,7 +2747,8 @@ function OB_TIMELINE() {
             } else {
                 this.ob_render(ob_scene_index);
             }
-        } else {   // If user is not moving a band but he is requesting a new  view from a new date.
+        } else {
+            //If user is not moving a band but requesting a new  view from a new date.
             if (this.first_sync === undefined) {
                 this.ob_render_index = ob_scene_index;
                 this.first_sync = true;
@@ -2816,7 +2827,8 @@ function OB_TIMELINE() {
                     ob_timeline.ob_camera_type = current_camera;
                     ob_timeline.ob_start_clock();
                     if (ob_timeline.ob_scene[ob_timeline.ob_scene_index].show_calendar)
-                        ob_timeline.ob_create_calendar(ob_timeline.ob_scene_index, new Date(ob_timeline.ob_scene[ob_timeline.ob_scene_index].date_cal));
+                        ob_timeline.ob_create_calendar(ob_timeline.ob_scene_index,
+                            new Date(ob_timeline.ob_scene[ob_timeline.ob_scene_index].date_cal));
                     if (ob_timeline.show_filters)
                         ob_timeline.ob_create_filters(ob_timeline.ob_scene_index, 0, "select_filter");
                     // Apply filter if any here:
@@ -2970,17 +2982,17 @@ function OB_TIMELINE() {
                 //Create sub-segments if required
                 if (this.ob_scene[ob_scene_index].bands[i].subIntervalPixels !== "NONE") {
                     incrementSubPixelOffSet = parseInt(this.ob_scene[ob_scene_index].bands[i].subIntervalPixels);
-                    while (parseInt(incrementPixelOffSet) + parseInt(incrementSubPixelOffSet) < parseInt(incrementPixelOffSet) + parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels)) {
-                        this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, incrementPixelOffSet + incrementSubPixelOffSet,
-                            this.ob_scene[ob_scene_index].bands[i].heightMax -
-                            (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5
-                            , this.ob_scene[ob_scene_index].bands[i].heightMax, "black", true);
+                    while (parseInt(incrementPixelOffSet) + incrementSubPixelOffSet < parseInt(incrementPixelOffSet) +
+                    parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels)) {
+                        this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                            incrementPixelOffSet + incrementSubPixelOffSet,
+                            this.ob_scene[ob_scene_index].bands[i].heightMax - (this.ob_scene[ob_scene_index].bands[i].heightMax / 2),
+                            5, this.ob_scene[ob_scene_index].bands[i].heightMax, "black", true);
                         // Trick: Add an extra segment to make the thinnest segment
                         this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                             incrementPixelOffSet + incrementSubPixelOffSet + 0.20,
-                            this.ob_scene[ob_scene_index].bands[i].heightMax -
-                            (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5,
-                            this.ob_scene[ob_scene_index].bands[i].heightMax,
+                            this.ob_scene[ob_scene_index].bands[i].heightMax - (this.ob_scene[ob_scene_index].bands[i].heightMax / 2),
+                            5, this.ob_scene[ob_scene_index].bands[i].heightMax,
                             this.ob_scene[ob_scene_index].bands[i].color, true);
                         incrementSubPixelOffSet += parseInt(this.ob_scene[ob_scene_index].bands[i].subIntervalPixels);
                     }
@@ -3079,7 +3091,8 @@ function OB_TIMELINE() {
         ob_first_free_track = this.get_first_free_tracks(ob_scene_index, ob_busy_track.sort(function (a, b) {
             return b - a
         }), session, i);
-        if (ob_first_free_track <= this.ob_scene[ob_scene_index].bands[i].minY + this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
+        if (ob_first_free_track <= this.ob_scene[ob_scene_index].bands[i].minY +
+            this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
             this.ob_scene[ob_scene_index].bands.updated = true;
             this.ob_scene[ob_scene_index].bands[i].minY = ob_first_free_track -
                 (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement) -
@@ -3184,92 +3197,94 @@ function OB_TIMELINE() {
         }
 
         for (let a = 0; a < this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities.length; a++) {
-            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data !== null &&
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title === undefined)
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title = "";
-            pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].start,
-                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
-            pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end,
-                this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
-            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== undefined &&
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== "") {
-                original_pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
-                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start,
+            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data !== undefined &&
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data !== null) {
+                if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title === undefined)
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title = "";
+                pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].start,
                     this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
                     this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetStart =
-                    original_pixelOffSetStart;
+                pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end,
+                    this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                    this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+                if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== undefined &&
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start !== "") {
+                    original_pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index,
+                        this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_start,
+                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                        this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetStart =
+                        original_pixelOffSetStart;
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                        parseInt(original_pixelOffSetStart);
+                } else
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                        parseInt(pixelOffSetStart);
+                if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== undefined &&
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== "") {
+                    original_pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
+                        this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end,
+                        this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
+                        this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetEnd =
+                        parseInt(original_pixelOffSetEnd);
+                }
+                let add_tolerance = 0;
+                if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance !== undefined &&
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end !== "") {
+                    add_tolerance =
+                        parseInt(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance);
+                }
+                if (isNaN(parseInt(pixelOffSetEnd))) {
+                    h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
+                    w = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
+                    textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                        this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                        this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
+                    textX = h * 2 + textX / 2;
+                } else {
+                    h = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
+                    w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
+                    textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
+                        this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                        this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
+                    textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textX / 2;
+                }
+
+                if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+                    h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize /
+                        this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
+                    if (isNaN(parseInt(pixelOffSetEnd)))
+                        w = h / 2;
+                }
+
+                // Do not write texts for any overview bands.
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x = parseInt(pixelOffSetStart);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x_relative = parseInt(pixelOffSetStart) + w / 2;
                 this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
-                    parseInt(original_pixelOffSetStart);
-            } else
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
+                    this.getSession_originalX(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].width = w;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].height = h;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].size = h;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].z = z;
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetStart =
                     parseInt(pixelOffSetStart);
-            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== undefined &&
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end !== "") {
-                original_pixelOffSetEnd = this.dateToPixelOffSet(ob_scene_index,
-                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_end,
-                    this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_pixelOffSetEnd =
-                    parseInt(original_pixelOffSetEnd);
-            }
-            let add_tolerance = 0;
-            if (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance !== undefined &&
-                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].end !== "") {
-                add_tolerance =
-                    parseInt(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.tolerance);
-            }
-            if (isNaN(parseInt(pixelOffSetEnd))) {
-                h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
-                w = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
-                textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
-                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
-                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
-                textX = h * 2 + textX / 2;
-            } else {
-                h = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
-                w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                textX = this.getTextWidth(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].data.title,
-                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
-                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
-                textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textX / 2;
-            }
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetEnd =
+                    parseInt(pixelOffSetEnd);
+                this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX =
+                    parseInt(textX);
 
-            if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
-                h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize /
-                    this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
-                if (isNaN(parseInt(pixelOffSetEnd)))
-                    w = h / 2;
-            }
-
-            // Do not write texts for any overview bands.
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x = parseInt(pixelOffSetStart);
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].x_relative = parseInt(pixelOffSetStart) + w / 2;
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].original_x =
-                this.getSession_originalX(this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities);
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].width = w;
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].height = h;
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].size = h;
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].z = z;
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetStart =
-                parseInt(pixelOffSetStart);
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].pixelOffSetEnd =
-                parseInt(pixelOffSetEnd);
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX =
-                parseInt(textX);
-
-            // IMPORTANT: Provide more space and balance to display sessions/events based on title length by multiple textX by 2.1
-            this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
-                w + (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX * 2.1)
-                + add_tolerance;
-            if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+                // IMPORTANT: Provide more space and balance to display sessions/events based on title length by multiple textX by 2.1
                 this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
-                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width *
-                    ob_coef_overview;
+                    w + (this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].textX * 2.1)
+                    + add_tolerance;
+                if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
+                    this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width =
+                        this.ob_scene[ob_scene_index].bands[band_index].sessions[session_index].activities[a].total_width *
+                        ob_coef_overview;
+                }
             }
         }
     }
@@ -3489,14 +3504,14 @@ function OB_TIMELINE() {
                                     if (this.ob_search_value === "" ||
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor === "#F8DF09") {
                                         ob_group_visible = true;
-                                        ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                        his.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
                                             eventColor, undefined, backgroundColor, fontSizeInt, fontStyle, fontWeight,
                                             textColor, fontFamily, false);
                                     }
                                 } else {
                                     // If any events and no overview
-                                    ob_obj = this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                    this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], eventColor,
                                         image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
                                         fontFamily, true);
@@ -3508,14 +3523,14 @@ function OB_TIMELINE() {
                                     if (this.ob_search_value === "" ||
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].render.backgroundColor === "#F8DF09") {
                                         ob_group_visible = true;
-                                        ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                        this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
                                             SessionColor, texture, undefined, backgroundColor, fontSizeInt, fontStyle,
                                             fontWeight, textColor, fontFamily);
                                     }
                                 } else {
                                     // If any sessions and no overview
-                                    ob_obj = this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
+                                    this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], SessionColor,
                                         texture, image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
                                         fontFamily);
@@ -3523,10 +3538,6 @@ function OB_TIMELINE() {
                             }
                         }
                     } catch (e) {
-                        console.log(this.ob_scene[ob_scene_index].bands[i].name + " title=" +
-                            String(this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a].data.title) +
-                            " - this.ob_scene[ob_scene_index].bands[i].heightMax=" +
-                            this.ob_scene[ob_scene_index].bands[i].heightMax + "  i=" + i + " - j=" + j);
                     }
                 }
                 // Create box if multiple activities
@@ -4489,13 +4500,13 @@ function OB_TIMELINE() {
             // GET data from a range of time
             this.data = this.ob_get_url_head(ob_scene_index) + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
                 "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
-                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user_name;
             this.method = "GET";
         } else {
             // GET data from a range of time
             this.data = this.ob_get_url_head(ob_scene_index) + "?startDate=" + this.minDate + "&endDate=" + this.maxDate +
                 "&filterName=" + this.ob_filter_name + "&filter=" + this.ob_filter_value +
-                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user.name;
+                "&search=" + this.ob_search_value + "&timelineName=" + this.name + "&userName=" + this.ob_user_name;
             this.method = "GET";
             //if (!this.ob_scene[ob_scene_index].connected)
             //return;
@@ -4526,7 +4537,7 @@ function OB_TIMELINE() {
                             that.data = that.ob_get_url_head(that.ob_scene_index,) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
-                                that.ob_user.name;
+                                that.ob_user_name;
                             that.update_scene(that.ob_scene_index, that.header, that.params,
                                 that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
                                 that.ob_scene[that.ob_scene_index].sessions, that.ob_camera_type, null, true);
@@ -4564,9 +4575,13 @@ function OB_TIMELINE() {
                         that.data = that.ob_get_url_head(that.ob_scene_index,) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                             "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                             "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
-                            that.ob_user.name;
+                            that.ob_user_name;
                         that.load_data(ob_scene_index);
                     } else {
+                        that.data = that.ob_get_url_head(that.ob_scene_index,) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
+                            "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
+                            "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
+                            that.ob_user_name;
                         that.ob_connected(that.ob_scene_index);
                         return;
                     }
@@ -4598,7 +4613,7 @@ function OB_TIMELINE() {
                             that.data = that.ob_get_url_head(that.ob_scene_index) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
-                                that.ob_user.name;
+                                that.ob_user_name;
                             that.method = "GET";
                             that.update_scene(that.ob_scene_index, that.header, that.params,
                                 that.ob_scene[that.ob_scene_index].bands, that.ob_scene[that.ob_scene_index].model,
@@ -4613,7 +4628,7 @@ function OB_TIMELINE() {
                             that.data = that.ob_get_url_head(that.ob_scene_index) + "?startDate=" + that.minDate + "&endDate=" + that.maxDate +
                                 "&filterName=" + that.ob_filter_name + "&filter=" + that.ob_filter_value +
                                 "&search=" + that.ob_search_value + "&timelineName=" + that.name + "&userName=" +
-                                that.ob_user.name;
+                                that.ob_user_name;
                         } catch (err) {
                             console.log('POST - cannot read event_descriptor ...');
                         }
@@ -4643,21 +4658,23 @@ function OB_TIMELINE() {
     }, false);
 
     OB_TIMELINE.prototype.getLocalStorage = function () {
-        this.ob_user = "guest";
-        this.ob_email = "";
+        this.ob_user_name = "guest";
+        this.ob_email_name = "";
         try {
             if (localStorage.user !== undefined) {
                 this.ob_user = JSON.parse(localStorage.user.toLowerCase());
                 this.ob_email = JSON.parse(localStorage.email.toLowerCase());
+                this.ob_user_name = this.ob_user.name;
+                this.ob_email_name = this.ob_email.name;
             } else {
                 localStorage.user = JSON.stringify({name: "guest"});
                 localStorage.email = JSON.stringify({name: ""});
             }
         } catch (e) {
         }
-        if (this.ob_user.name === "?") {
-            this.ob_email = "";
+        if (this.ob_user_name === "guest") {
             localStorage.user = JSON.stringify({name: "guest"});
+            localStorage.email = JSON.stringify({name: ""});
         }
     }
 }
