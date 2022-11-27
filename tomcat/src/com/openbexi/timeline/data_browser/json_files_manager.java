@@ -1,6 +1,5 @@
 package com.openbexi.timeline.data_browser;
 
-import com.openbexi.timeline.event_generator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,9 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class json_files_manager extends data_manager {
-
-    private long endDateL;
-    private String dateE;
+    private String _dateE;
     private String previous_date = "NONE";
     private String next_date = "NONE";
     private final LinkedHashMap<File, String> files = new LinkedHashMap<>();
@@ -120,52 +117,13 @@ public class json_files_manager extends data_manager {
             buildFile = buildFile.replace("/yyyy", "/" + yearE);
             buildFile = buildFile.replace("/mm", "/" + monthE);
             buildFile = buildFile.replace("/dd", "/" + dayE);
-            String fileParentPathE = new File(buildFile + "_" + dateE + ".json").getParent();
+            String fileParentPathE = new File(buildFile + "_" + _dateE + ".json").getParent();
 
             //if (resp != null) start_watching();
 
         } catch (Exception e) {
             log(e.getMessage(), "err");
         }
-    }
-
-    private JSONArray create_descriptors(File file, JSONArray events) {
-        JSONArray new_events = new JSONArray();
-        for (Object event : events) {
-            JSONObject obj = (JSONObject) event;
-            event_descriptor descriptor = new event_descriptor(obj.get("id").toString(), obj.get("start").toString(),
-                    null, null, null, null, null, null, null,
-                    null, _currentPathModel);
-            JSONObject data_s = (JSONObject) obj.get("data");
-            if (!data_s.get("description").toString().equals(""))
-                descriptor.write(data_s.get("description").toString());
-            data_s.put("description", "");
-
-            JSONObject obj1 = (JSONObject) event;
-            JSONArray activities = (JSONArray) obj1.get("activities");
-            if (activities != null) {
-                for (Object activity : activities) {
-                    JSONObject obja = (JSONObject) activity;
-                    JSONObject data_a = (JSONObject) obja.get("data");
-                    if (!data_a.get("description").toString().equals(""))
-                        descriptor.write(data_a.get("description").toString());
-                    data_a.put("description", "");
-                }
-            }
-            new_events.add(event);
-        }
-        // Save events without descriptor
-        /*try {
-            if (file.exists()) {
-                String json_header = "{ \"dateTimeFormat\": \"iso8601\", \"events\":";
-                Writer writer = new FileWriter(file);
-                writer.write(json_header + new_events.toJSONString() + "}");
-                writer.close();
-            }
-        } catch (Exception e) {
-            System.err.print(e.getMessage());
-        }*/
-        return new_events;
     }
 
     @Override
@@ -176,7 +134,7 @@ public class json_files_manager extends data_manager {
     /**
      * @return data according a range of time.
      */
-    public Object getData(String filter) {
+    public Object getData(String filter, String ob_scene) {
         Date t1 = new Date();
         if (_currentPathModel == null || _currentStartDate == null)
             return getDummyJson("no data_manager found");
@@ -200,6 +158,7 @@ public class json_files_manager extends data_manager {
 
         String jsonObjectMerged_begin = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
+                "  \"scene\": \"" + ob_scene + "\",\n" +
                 "  \"events\": \n";
         int count = 0;
         JSONArray all_obj = new JSONArray();
@@ -215,7 +174,7 @@ public class json_files_manager extends data_manager {
                     if (!_include.equals("") || !_exclude.equals(""))
                         obj = filterEvents(obj, _include, _exclude);
                     if (!_search.equals(""))
-                    obj = searchEvents(obj, _search);
+                        obj = searchEvents(obj, _search);
                     count += obj.size();
                     //jsonObjectMerged += all_obj.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
                     if (obj.size() != 0)
@@ -310,11 +269,11 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    public boolean onDataChange() throws InterruptedException {
+    public boolean onDataChange(String ob_scene) throws InterruptedException {
         Logger logger = Logger.getLogger("");
 
         //Update client regarding  HTTP service
-        boolean able_to_send_data = sendData(getData(_include + "|" + _exclude));
+        boolean able_to_send_data = sendData(getData(_include + "|" + _exclude, ob_scene));
         if (!able_to_send_data) {
             logger.info("Client disconnected");
             _session.invalidate();
@@ -332,7 +291,7 @@ public class json_files_manager extends data_manager {
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         String ob_data = "", ob_data_start, ob_data_end = "";
-        ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"events\" : [";
+        ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"scene\": \"0\",\"events\" : [";
         long ob_time = new Date().getTime();
         Date ob_start_time = new Date(ob_time);
         ob_data += "{\"ID\": \"" + UUID.randomUUID() +
@@ -562,7 +521,7 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    public boolean addEvents(JSONArray events) {
+    public boolean addEvents(JSONArray events, String ob_scene) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date date = new Date(((String) events.get(1)).replaceAll("startEvent:", ""));
         String yyyy = new SimpleDateFormat("yyyy").format(date);
@@ -582,6 +541,7 @@ public class json_files_manager extends data_manager {
         String color = "#050100";
         String line_start = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
+                "  \"scene\": \"" + ob_scene + "\",\n" +
                 "  \"events\": [\n";
 
         if (!outputs.getParentFile().exists())
@@ -611,27 +571,29 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    public boolean updateEvents(JSONArray events) {
+    public boolean updateEvents(JSONArray events, String ob_scene) {
         return false;
     }
 
     @Override
-    public boolean removeEvents(JSONArray events) {
+    public boolean removeEvents(JSONArray events, String ob_scene) {
         return false;
     }
 
     @Override
-    public Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_filter_name,
                             String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
                             String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
-        return updateFilter("addFilter", ob_timeline_name, ob_title, ob_filter_name, ob_backgroundColor, ob_user,
-                ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
+        return updateFilter("addFilter", ob_timeline_name, ob_scene, ob_title, ob_filter_name,
+                ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by,
+                ob_filter);
     }
 
     @Override
-    public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_user) {
-        updateFilter("remove", ob_timeline_name, null, ob_filter_name, null,
-                null, null, null, null, null, null, null, null, null);
+    public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_scene, String ob_user) {
+        updateFilter("remove", ob_timeline_name, ob_scene, null, ob_filter_name, null,
+                null, null, null, null, null, null, null,
+                null, null);
         return false;
     }
 
@@ -667,9 +629,10 @@ public class json_files_manager extends data_manager {
     }
 
     @Override
-    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_title, String ob_filter_name,
-                               String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
-                               String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
+                               String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
+                               String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
+                               String ob_sort_by, String ob_filter) {
         JSONParser parser = new JSONParser();
         Object filters;
         StringBuilder jsonObjectMerged = null;
@@ -715,6 +678,7 @@ public class json_files_manager extends data_manager {
 
             jsonObjectMerged = new StringBuilder("{\n" +
                     "  \"dateTimeFormat\": \"iso8601\",\n" +
+                    "  \"scene\": \"" + ob_scene + "\",\n" +
                     "  \"openbexi_timeline\": [{\n" +
                     "  \"name\": \"" + ob_timeline_name + "\"," +
                     "  \"title1\": \"" + ob_title + "\"," +
@@ -800,7 +764,7 @@ public class json_files_manager extends data_manager {
         }
 
         if (no_filter_found && !ob_action.equals("deleteFilter")) {
-            return addFilter(ob_timeline_name, ob_title, ob_filter_name, ob_backgroundColor, ob_user,
+            return addFilter(ob_timeline_name, ob_title, ob_scene, ob_filter_name, ob_backgroundColor, ob_user,
                     ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
         }
 

@@ -200,6 +200,7 @@ public class event_generator {
         Date date = this.get_date();
         String status;
         String type;
+        String platform = "";
         String priority;
         String tolerance;
         String system;
@@ -388,6 +389,7 @@ public class event_generator {
                                 status,
                                 priority,
                                 tolerance,
+                                platform,
                                 "/data/yyyy/mm/dd");
                         event_descriptor.write(description + "_read_descriptor_in_file");
                         file.write("\"description\":\"" + "" + "\",");
@@ -449,6 +451,7 @@ public class event_generator {
                                         status,
                                         priority,
                                         tolerance,
+                                        platform,
                                         "/data/yyyy/mm/dd");
                                 event_descriptor.write(description + "_read_descriptor_in_file");
                                 file.write("\"description\":\"" + "" + "\",");

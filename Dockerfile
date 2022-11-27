@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk13
+FROM openjdk:17
 COPY out/artifacts/openbexi_timeline_jar/openbexi_timeline.jar openbexi_timeline.jar
 COPY css css
 COPY icon icon
@@ -13,6 +13,6 @@ COPY tomcat tomcat
 COPY openbexi_timeline_secure.html openbexi_timeline_secure.html
 COPY openbexi_timeline_SSE.html openbexi_timeline_SSE.html
 COPY tests tests
-EXPOSE 8443
-EXPOSE 8445
-CMD java -cp openbexi_timeline.jar com.openbexi.timeline.server.openbexi_timeline -data_path "/data/yyyy/mm/dd" -connector "secure_sse:8443|secure:8445"
+EXPOSE 8444
+EXPOSE 8446
+CMD java -cp openbexi_timeline.jar com.openbexi.timeline.server.openbexi_timeline -data_path "/data/yyyy/mm/dd" -connector "secure_sse:8444|secure:8444"
