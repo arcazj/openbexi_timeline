@@ -10,10 +10,9 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
-    Object getData(String filter) {
+    Object getData(String filter, String ob_scene) {
         return null;
     }
-
 
     @Override
     boolean sendData(Object data) {
@@ -36,36 +35,37 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
-    public boolean addEvents(JSONArray events) {
+    public boolean addEvents(JSONArray events, String ob_scene) {
         return false;
     }
 
     @Override
-    public boolean updateEvents(JSONArray events) {
+    public boolean updateEvents(JSONArray events, String ob_scene) {
         return false;
     }
 
     @Override
-    public boolean removeEvents(JSONArray events) {
+    public boolean removeEvents(JSONArray events, String ob_scene) {
         return false;
     }
 
     @Override
-    public Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
-                     String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
-                     String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_filter_name,
+                            String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
+                            String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
         return false;
     }
 
     @Override
-    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_title, String ob_filter_name,
-                        String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
-                        String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
+                               String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
+                               String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
+                               String ob_sort_by, String ob_filter) {
         return false;
     }
 
     @Override
-    public Object removeFilter(String ob_filter_name, String ob_timeline_name, String ob_user) {
+    public Object removeFilter(String ob_filter_name, String ob_timeline_name, String ob_scene, String ob_user) {
         return false;
     }
 
@@ -75,7 +75,7 @@ public class db_oracle_manager extends data_manager {
     }
 
     @Override
-    boolean onDataChange() {
+    boolean onDataChange(String ob_scene) {
         return false;
     }
 }

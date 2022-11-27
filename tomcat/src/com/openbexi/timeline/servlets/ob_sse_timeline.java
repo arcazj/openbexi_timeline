@@ -40,6 +40,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
         // Read parameters
         String ob_request = req.getParameter("ob_request");
+        String ob_scene = req.getParameter("scene");
         String startEvent = req.getParameter("startEvent");
         String endEvent = req.getParameter("endEvent");
         String description = req.getParameter("description");
@@ -97,7 +98,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 eventJson.add("endEvent:" + endEvent);
                 eventJson.add("description:" + description);
                 eventJson.add("icon:" + icon);
-                json_files_manager.addEvents(eventJson);
+                json_files_manager.addEvents(eventJson, ob_scene);
             }
 
             // Read descriptor for a given event or sesson/activity.
@@ -108,7 +109,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 if (resp != null && json_files_manager != null) {
                     try {
                         event_descriptor descriptor = new event_descriptor(event_id, null, start, null, null, null, null,
-                                null, null, null, data_path);
+                                null, null, null, null, data_path);
                         Object json = descriptor.read(event_id);
 
                         PrintWriter respWriter = resp.getWriter();
@@ -142,9 +143,9 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 if (resp != null && json_files_manager != null) {
                     try {
                         logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
-                        Object json = json_files_manager.updateFilter(ob_request, ob_timeline_name, ob_title, ob_filter_name,
-                                ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height,
-                                ob_camera, ob_sort_by, ob_filter);
+                        Object json = json_files_manager.updateFilter(ob_request, ob_timeline_name, ob_scene, ob_title,
+                                ob_filter_name, ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width,
+                                ob_height, ob_camera, ob_sort_by, ob_filter);
 
                         PrintWriter respWriter = resp.getWriter();
                         //Important to put a "," not ";" between stream and charset
@@ -173,7 +174,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
             // Start a json_files_watcher loop to check if any new events are coming.
             // If any the json_files_watcher will update the openBexi Timeline client again.
-            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager);
+            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager, ob_scene);
             json_files_watcher.run();
         }
     }

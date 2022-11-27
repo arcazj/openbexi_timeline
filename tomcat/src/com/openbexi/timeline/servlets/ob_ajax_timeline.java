@@ -38,6 +38,7 @@ ob_ajax_timeline extends HttpServlet {
 
         // Read parameters
         String ob_user = req.getParameter("userName");
+        String ob_scene = req.getParameter("scene");
         String ob_timeline_name = req.getParameter("timelineName");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
@@ -102,7 +103,7 @@ ob_ajax_timeline extends HttpServlet {
             json_files_manager data = new json_files_manager(startDate, endDate, data_path, ob_search,
                     ob_filter, null, null, null,
                     getServletContext());
-            Object json = data.getData(data.get_filter());
+            Object json = data.getData(data.get_filter(), ob_scene);
             out.write(json.toString());
             out.flush();
         }
@@ -134,6 +135,7 @@ ob_ajax_timeline extends HttpServlet {
         String ob_filter_name = req.getParameter("filterName");
         String ob_timeline_name = req.getParameter("timelineName");
         String ob_title = req.getParameter("title");
+        String ob_scene = req.getParameter("scene");
         String ob_top = req.getParameter("top");
         String ob_left = req.getParameter("left");
         String ob_width = req.getParameter("width");
@@ -175,7 +177,7 @@ ob_ajax_timeline extends HttpServlet {
             logger.info("POST readDescriptor - id=" + event_id);
             event_descriptor descriptor =
                     new event_descriptor(event_id, null, start, null, null, null, null,
-                            null, null, null, data_path);
+                            null, null, null,null, data_path);
             Object json = descriptor.read(event_id);
             out.write(json.toString());
             out.flush();
@@ -190,8 +192,8 @@ ob_ajax_timeline extends HttpServlet {
             eventJson.add("endEvent:" + endEvent);
             eventJson.add("description:" + description);
             eventJson.add("icon:" + icon);
-            data.addEvents(eventJson);
-            Object json = data.getData(null);
+            data.addEvents(eventJson, ob_scene);
+            Object json = data.getData(null, ob_scene);
             out.write(json.toString());
             out.flush();
         }
@@ -201,7 +203,7 @@ ob_ajax_timeline extends HttpServlet {
                 ob_request.equals("addFilter") || ob_request.equals("deleteFilter") ||
                 ob_request.equals("saveFilter"))) {
             logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
-            Object json = data.updateFilter(ob_request, ob_timeline_name, ob_title, ob_filter_name,
+            Object json = data.updateFilter(ob_request, ob_timeline_name, ob_scene, ob_title, ob_filter_name,
                     ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height,
                     ob_camera, ob_sort_by, ob_filter);
             if (json != null) out.write(json.toString());

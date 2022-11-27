@@ -18,7 +18,7 @@ abstract class data_manager {
 
     abstract Object userAccess(String permissions, JSONArray cookies);
 
-    abstract Object getData(String filter);
+    abstract Object getData(String filter, String ob_scene);
 
     abstract boolean sendData(Object data);
 
@@ -28,26 +28,26 @@ abstract class data_manager {
 
     abstract JSONArray searchEvents(JSONArray events, String search);
 
-    abstract boolean addEvents(JSONArray events);
+    abstract boolean addEvents(JSONArray events, String ob_scene);
 
-    abstract boolean updateEvents(JSONArray events);
+    abstract boolean updateEvents(JSONArray events, String ob_scene);
 
-    abstract boolean removeEvents(JSONArray events);
+    abstract boolean removeEvents(JSONArray events, String ob_scene);
 
-    abstract Object addFilter(String ob_timeline_name, String ob_title, String ob_filter_name,
+    abstract Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_filter_name,
                               String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
                               String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter);
 
-    abstract Object updateFilter(String ob_action, String ob_timeline_name, String ob_title, String ob_filter_name,
-                                 String ob_backgroundColor, String ob_user, String ob_email, String ob_top,
-                                 String ob_left, String ob_width, String ob_height, String ob_camera,
+    abstract Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
+                                 String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
+                                 String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
                                  String ob_sort_by, String ob_filter);
 
-    abstract Object removeFilter(String ob_filter_name, String ob_timeline_name, String ob_user);
+    abstract Object removeFilter(String ob_filter_name, String ob_timeline_name, String ob_scene, String ob_user);
 
     abstract boolean removeAllFilter(String ob_timeline_name, String ob_user);
 
-    abstract boolean onDataChange() throws InterruptedException;
+    abstract boolean onDataChange(String ob_scene) throws InterruptedException;
 
     protected void log(Object msg, String err) {
         if (ob_debug)

@@ -25,9 +25,11 @@ public class event_descriptor {
     private String _priority;
     private String _tolerance;
     private String _type;
+    private String _platform;
 
     public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
-                            String title, String type, String status, String priority, String tolerance, String currentPathModel) {
+                            String title, String type, String status, String priority, String tolerance,
+                            String platform, String currentPathModel) {
         _event_id = String.valueOf(event_id);
         _original_start = original_start;
         _start = start;
@@ -38,6 +40,7 @@ public class event_descriptor {
         _priority = priority;
         _tolerance = tolerance;
         _type = type;
+        _platform = platform;
         if (currentPathModel != null)
             _currentPathModel = currentPathModel.replaceAll("\\\\", "/");
         _file = get_file();
@@ -95,14 +98,22 @@ public class event_descriptor {
             jsonObjectMerged += "\"id\":\"" + _event_id + "\",";
             jsonObjectMerged += "\"start\":\"" + _start + "\",";
             jsonObjectMerged += "\"end\":\"" + _end + "\",";
-            jsonObjectMerged += "\"original_start\":\"" + _original_start + "\",";
-            jsonObjectMerged += "\"original_end\":\"" + _original_end + "\",";
+            if (!_original_start.equals(""))
+                jsonObjectMerged += "\"original_start\":\"" + _original_start + "\",";
+            if (!_original_end.equals(""))
+                jsonObjectMerged += "\"original_end\":\"" + _original_end + "\",";
             jsonObjectMerged += "\"data\":{";
             jsonObjectMerged += "\"title\":\"" + _title + "\",";
-            jsonObjectMerged += "\"type\":\"" + _type + "\",";
-            jsonObjectMerged += "\"priority\":\"" + _priority + "\",";
-            jsonObjectMerged += "\"status\":\"" + _status + "\",";
-            jsonObjectMerged += "\"tolerance\":\"" + _tolerance + "\",";
+            if (!_platform.equals(""))
+                jsonObjectMerged += "\"type\":\"" + _platform + "\",";
+            if (!_type.equals(""))
+                jsonObjectMerged += "\"type\":\"" + _type + "\",";
+            if (!_priority.equals(""))
+                jsonObjectMerged += "\"priority\":\"" + _priority + "\",";
+            if (!_status.equals(""))
+                jsonObjectMerged += "\"status\":\"" + _status + "\",";
+            if (!_tolerance.equals(""))
+                jsonObjectMerged += "\"tolerance\":\"" + _tolerance + "\",";
             jsonObjectMerged += "\"description\":\"" + description + "\"";
             jsonObjectMerged += "}";
             jsonObjectMerged += "}]}";
