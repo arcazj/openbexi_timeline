@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9j beta
+    OpenBEXI Timeline 0.9.9k beta
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -89,28 +89,20 @@ class ResourceTracker {
 }
 
 function OB_TIMELINE() {
-    OB_TIMELINE.prototype.getTimeZone = function () {
-        this.timeZoneOffset = new Date().getTimezoneOffset();
-        this.timeZone = "";
-        if (this.params[0].date.includes("UTC"))
-            this.timeZone = "UTC";
-        if (this.params[0].timeZone === "UTC")
-            this.timeZone = this.params[0].timeZone;
-    };
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         let sync_time;
         try {
-            if (this.params[0].date !== undefined) {
-                if (this.params[0].date === "current_time" || this.params[0].date === "Date.now()") {
+            if (this.date !== undefined) {
+                if (this.date === "current_time" || this.date === "Date.now()") {
                     if (this.timeZone === "UTC")
                         sync_time = this.getUTCTime(Date.now());
                     else
                         sync_time = Date.now();
-                } else if (this.params[0].date.length === 4) {
-                    sync_time = this.getUTCFullYearTime(parseInt(this.params[0].date));
+                } else if (this.date.length === 4) {
+                    sync_time = this.getUTCFullYearTime(parseInt(this.date));
                 } else {
-                    sync_time = this.getUTCTime(Date.parse(this.params[0].date));
+                    sync_time = this.getUTCTime(Date.parse(this.date));
                 }
             } else {
                 console.log("get_synced_time(): timeline date not defined - set to default : current date");
@@ -141,13 +133,13 @@ function OB_TIMELINE() {
             if (ob_case === "new_view") {
                 this.ob_scene.sync_time = Date.parse(this.ob_markerDate.toString());
                 this.ob_scene[ob_scene_index].date = new Date(this.ob_scene.sync_time);
-                this.ob_scene[ob_scene_index].offset = this.ob_scene[ob_scene_index].ob_width;
+                this.ob_scene[ob_scene_index].offset = this.ob_scene[ob_scene_index].width;
                 this.set_bands(ob_scene_index);
                 this.update_bands_MinDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
                 this.update_bands_MaxDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
             } else if (ob_case === "new_sync") {
                 this.ob_set_scene(ob_scene_index);
-                this.ob_init(ob_scene_index);
+                this.ob_scene_init(ob_scene_index);
                 this.setGregorianUnitLengths(ob_scene_index);
                 this.ob_scene.sync_time = this.get_synced_time();
                 this.ob_scene[ob_scene_index].date = new Date(this.ob_scene.sync_time);
@@ -158,7 +150,7 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].maxDate = this.iniMaxDate;
             } else if (ob_case === "re_sync") {
                 this.ob_set_scene(ob_scene_index);
-                this.ob_init(ob_scene_index);
+                this.ob_scene_init(ob_scene_index);
                 this.setGregorianUnitLengths(ob_scene_index);
                 this.ob_scene.sync_time = this.get_synced_time();
                 this.ob_scene[ob_scene_index].date = new Date(this.ob_scene.sync_time);
@@ -191,34 +183,78 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_get_url_head = function () {
-        if (this.data === undefined)
-            this.data = this.params[0].data.replace("data_default_port",
-                this.data_default_port).replace("data_sse_port", this.data_sse_port);
         this.data_head = this.data.split("?");
-        if (this.params[0].data.match(/_sse/))
+        if (this.data.match(/_sse/))
             return this.data_head[0].replace(this.data_default_port, this.data_sse_port).split("?");
         else
             return this.data_head[0].replace(this.data_default_port, this.data_default_port).split("?");
     };
 
-    OB_TIMELINE.prototype.ob_init = function (ob_scene_index) {
+    OB_TIMELINE.prototype.getTimeZone = function () {
+        this.timeZoneOffset = new Date().getTimezoneOffset();
+        this.timeZone = "";
+        if (this.date.includes("UTC"))
+            this.timeZone = "UTC";
+        if (this.params[0].timeZone === "UTC")
+            this.timeZone = this.params[0].timeZone;
+    };
+
+    OB_TIMELINE.prototype.ob_init = function () {
         // Set all timeline parameters:
         if (this.ob_user_name === undefined)
             this.getLocalStorage();
         this.name = this.params[0].name;
-        this.ob_scene_index = ob_scene_index;
         this.title = this.params[0].title;
-        this.multiples = 45;
-        this.increment = 20;
+        this.date = this.params[0].date;
+        this.timeZone = this.params[0].timeZone;
         this.data_default_port = this.params[0].data_default_port;
         this.data_sse_port = this.params[0].data_sse_port;
-        /*this.data_head = this.params[0].data.replace("data_default_port",
-            this.data_default_port).replace("data_sse_port", this.data_sse_port).split("?");*/
         this.data = this.params[0].data.replace("data_default_port",
             this.data_default_port).replace("data_sse_port", this.data_sse_port);
-
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
+        // -- set time zone --
+        this.getTimeZone();
+        this.camera = this.params[0].camera;
+        this.descriptor = this.params[0].descriptor;
+        this.top = parseInt(this.params[0].top);
+        this.left = parseInt(this.params[0].left);
+        this.width = parseInt(this.params[0].width);
+        this.height = parseInt(this.params[0].height);
+        this.fontSize = this.params[0].fontSize;
+        this.backgroundColor = this.params[0].backgroundColor;
+        if (this.params[0].fontSize === undefined) {
+            this.fontSize = "12px";
+            this.fontSizeInt = "12";
+        } else {
+            try {
+                this.fontSizeInt = this.params[0].fontSize.replace("px", "");
+            } catch (e) {
+                this.fontSizeInt = this.params[0].fontSize;
+            }
+            this.fontSize = this.fontSizeInt + "px";
+        }
+        if (this.params[0].fontFamily === undefined) {
+            this.fontFamily = 'Arial';
+        } else {
+            this.fontFamily = this.params[0].fontFamily;
+        }
+        if (this.params[0].fontStyle === undefined) {
+            this.fontStyle = 'Normal';
+        } else {
+            this.fontStyle = this.params[0].fontStyle;
+        }
+        if (this.params[0].fontWeight === undefined) {
+            this.fontWeight = 'Normal';
+        } else {
+            this.fontWeight = this.params[0].fontWeight;
+        }
+    }
+    OB_TIMELINE.prototype.ob_scene_init = function (ob_scene_index) {
+        // Set all timeline scene parameters:
+        this.ob_scene[ob_scene_index].multiples = 45;
+        this.ob_scene[ob_scene_index].increment = 20;
+
         if (this.ob_scene[ob_scene_index].ob_filter_name === undefined)
             this.ob_scene[ob_scene_index].ob_filter_name = "ALL";
         if (this.ob_scene[ob_scene_index].ob_filter_value === undefined)
@@ -227,92 +263,89 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].ob_search_value = "";
         this.regex = "^(?=.*(?:--|--))(?!.*(?:--|--)).*$";
 
-        this.ob_camera_type = this.params[0].camera;
-        this.ob_pos_camera_y = this.ob_scene[ob_scene_index].ob_height / 2;
+        this.ob_scene[ob_scene_index].ob_camera_type = this.camera;
+        this.ob_scene[ob_scene_index].ob_pos_camera_y = this.ob_scene[ob_scene_index].ob_height / 2;
         if (this.ob_scene[ob_scene_index].ob_height > 2000) {
-            this.ob_pos_camera_x = -1500;
+            this.ob_scene[ob_scene_index].ob_pos_camera_x = -1500;
         } else if (this.ob_scene[ob_scene_index].ob_height > 1000) {
-            this.ob_pos_camera_x = -1000;
+            this.ob_scene[ob_scene_index].ob_pos_camera_x = -1000;
         } else {
-            this.ob_pos_camera_x = -100;
+            this.ob_scene[ob_scene_index].ob_pos_camera_x = -100;
         }
-        this.ob_pos_camera_z = this.ob_scene[ob_scene_index].ob_height / 2;
+        this.ob_scene[ob_scene_index].ob_pos_camera_z = this.ob_scene[ob_scene_index].ob_height / 2;
 
-        this.ob_far = 50000;
-        this.ob_near = 1;
-        this.ob_fov = 70;
-        this.ob_lookAt_x = 0;
-        this.ob_lookAt_y = this.ob_scene[ob_scene_index].ob_height / 2;
-        this.ob_lookAt_z = 0;
+        this.ob_scene[ob_scene_index].ob_far = 50000;
+        this.ob_scene[ob_scene_index].ob_near = 1;
+        this.ob_scene[ob_scene_index].ob_fov = 70;
+        this.ob_scene[ob_scene_index].ob_lookAt_x = 0;
+        this.ob_scene[ob_scene_index].ob_lookAt_y = this.ob_scene[ob_scene_index].ob_height / 2;
+        this.ob_scene[ob_scene_index].ob_lookAt_z = 0;
 
-        this.descriptor = this.params[0].descriptor;
-        this.center = "center";
-        this.font_align = "right";
-
-        // -- set time zone --
-        this.getTimeZone();
+        this.ob_scene[ob_scene_index].descriptor = this.descriptor;
+        this.ob_scene[ob_scene_index].center = "center";
+        this.ob_scene[ob_scene_index].font_align = "right";
 
         // -- set timeline top --
         try {
-            if (this.params[0].top !== undefined) {
-                this.top = parseInt(this.params[0].top);
+            if (this.top !== undefined) {
+                this.ob_scene[ob_scene_index].top = this.top;
             } else {
-                console.log("ob_init(): timeline top not defined - set to default : 0");
-                this.top = 0;
+                console.log("ob_scene_init(): timeline top not defined - set to default : 0");
+                this.ob_scene[ob_scene_index].top = 0;
             }
         } catch (err) {
-            console.log("ob_init(): Wrong timeline top - set to default : 0");
-            this.top = 0;
+            console.log("ob_scene_init(): Wrong timeline top - set to default : 0");
+            this.ob_scene[ob_scene_index].top = 0;
         }
 
         // -- set timeline height --
         try {
 
-            if (this.params[0].height !== undefined) {
-                this.ob_scene[ob_scene_index].ob_height = parseInt(this.params[0].height);
+            if (this.height !== undefined) {
+                this.ob_scene[ob_scene_index].ob_height = parseInt(this.height);
             } else {
-                console.log("ob_init(): timeline height not defined - set to default : 800");
+                console.log("ob_scene_init(): timeline height not defined - set to default : 800");
                 this.ob_scene[ob_scene_index].ob_height = 800;
             }
         } catch (err) {
-            console.log("ob_init(): Wrong timeline height - set to default : 800");
+            console.log("ob_scene_init(): Wrong timeline height - set to default : 800");
             this.ob_scene[ob_scene_index].ob_height = 800;
         }
 
         // -- set timeline width --
         try {
-            if (this.params[0].width !== undefined) {
-                this.ob_scene[ob_scene_index].ob_width = parseInt(this.params[0].width);
+            if (this.width !== undefined) {
+                this.ob_scene[ob_scene_index].width = this.width;
             } else {
-                console.log("ob_init(): timeline width not defined - set to default : 800");
-                this.ob_scene[ob_scene_index].ob_width = 800;
+                console.log("ob_scene_init(): timeline width not defined - set to default : 800");
+                this.ob_scene[ob_scene_index].width = 800;
             }
         } catch (err) {
-            console.log("ob_init(): Wrong timeline width - set to default : 800");
-            this.ob_scene[ob_scene_index].ob_width = 800;
+            console.log("ob_scene_init(): Wrong timeline width - set to default : 800");
+            this.ob_scene[ob_scene_index].width = 800;
         }
         // -- set timeline left --
         try {
-            if (this.params[0].left !== undefined) {
-                this.left = parseInt(this.params[0].left);
+            if (this.left !== undefined) {
+                this.ob_scene[ob_scene_index].left = this.left;
             } else {
-                console.log("ob_init(): timeline left not defined - set to default : 0");
-                this.left = 0;
+                console.log("ob_scene_init(): timeline left not defined - set to default : 0");
+                this.ob_scene[ob_scene_index].left = 0;
             }
         } catch (err) {
-            console.log("ob_init(): Wrong timeline width - set to default : 0");
-            this.left = 0;
+            console.log("ob_scene_init(): Wrong timeline width - set to default : 0");
+            this.ob_scene[ob_scene_index].left = 0;
         }
     };
 
     OB_TIMELINE.prototype.ob_apply_timeline_info = function (ob_scene_index) {
-        this.params[0].top = parseInt(document.getElementById(this.name + "_top").value);
-        this.params[0].left = parseInt(document.getElementById(this.name + "_left").value);
-        this.params[0].height = parseInt(document.getElementById(this.name + "_height").value);
-        this.params[0].width = parseInt(document.getElementById(this.name + "_width").value);
+        this.top = parseInt(document.getElementById(this.name + "_top").value);
+        this.left = parseInt(document.getElementById(this.name + "_left").value);
+        this.height = parseInt(document.getElementById(this.name + "_height").value);
+        this.width = parseInt(document.getElementById(this.name + "_width").value);
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+            this.ob_scene[ob_scene_index].ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_apply_timeline_sorting = function (ob_scene_index) {
         try {
@@ -326,27 +359,27 @@ function OB_TIMELINE() {
             }
             this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
                 this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-                this.ob_camera_type, null, false);
+                this.ob_scene[ob_scene_index].ob_camera_type, null, false);
         } catch (err) {
         }
     };
     OB_TIMELINE.prototype.ob_apply_orthographic_camera = function (ob_scene_index) {
-        this.ob_camera_type = "Orthographic";
+        this.ob_scene[ob_scene_index].ob_camera_type = "Orthographic";
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+            this.ob_scene[ob_scene_index].ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_apply_perspective_camera = function (ob_scene_index) {
-        this.ob_camera_type = "Perspective";
+        this.ob_scene[ob_scene_index].ob_camera_type = "Perspective";
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+            this.ob_scene[ob_scene_index].ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_cancel_setting = function (ob_scene_index) {
         this.ob_remove_setting();
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-            this.ob_camera_type, null, false);
+            this.ob_scene[ob_scene_index].ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_add_event = function (ob_scene_index) {
         let title = document.getElementById(this.name + "_addEvent").value;
@@ -490,8 +523,8 @@ function OB_TIMELINE() {
         let backgroundColor = "";
         if (this.backgroundColor !== undefined)
             backgroundColor = this.backgroundColor;
-        if (this.ob_camera_type === undefined)
-            this.ob_camera_type = "Orthographic";
+        if (this.ob_scene[ob_scene_index].ob_camera_type === undefined)
+            this.ob_scene[ob_scene_index].ob_camera_type = "Orthographic";
         let ob_filter_name = this.ob_get_filter_name(ob_scene_index, ob_filter_index);
         let ob_filter_value = this.ob_get_filter_value(ob_scene_index, ob_filter_index);
         let ob_sortBy;
@@ -518,11 +551,11 @@ function OB_TIMELINE() {
             "&backgroundColor=" + backgroundColor +
             "&userName=" + this.ob_user_name +
             "&email=" + this.ob_email_name +
-            "&top=" + this.top +
-            "&left=" + this.left +
-            "&width=" + this.params[0].width +
-            "&height=" + this.params[0].height +
-            "&camera=" + this.ob_camera_type +
+            "&top=" + this.ob_scene[ob_scene_index].top +
+            "&left=" + this.ob_scene[ob_scene_index].left +
+            "&width=" + this.ob_scene[ob_scene_index].width +
+            "&height=" + this.ob_scene[ob_scene_index].height +
+            "&camera=" + this.ob_scene[ob_scene_index].ob_camera_type +
             "&sortBy=" + ob_sortBy +
             "&filter=" + ob_filter_value;
         this.load_data(ob_scene_index);
@@ -720,11 +753,11 @@ function OB_TIMELINE() {
                 "<fieldset>\n" +
                 "<legend><span class='number'>1 - </span>Timeline Info</legend>\n" +
                 "<input type='label' disabled value='Top :'>\n" +
-                "<input type='number' id=" + this.name + "_top value='" + this.top + "'>\n" +
+                "<input type='number' id=" + this.name + "_top value='" + this.ob_scene[ob_scene_index].top + "'>\n" +
                 "<input type='label' disabled value='Left :'>\n" +
-                "<input type='number' id=" + this.name + "_left value='" + this.left + "'>\n" +
+                "<input type='number' id=" + this.name + "_left value='" + this.ob_scene[ob_scene_index].left + "'>\n" +
                 "<input type='label' disabled value='Width :'>\n" +
-                "<input type='number' id=" + this.name + "_width value='" + this.ob_scene[ob_scene_index].ob_width + "'>\n" +
+                "<input type='number' id=" + this.name + "_width value='" + this.ob_scene[ob_scene_index].width + "'>\n" +
                 "<input type='label' disabled value='Height :'>\n" +
                 "<input type='number' id=" + this.name + "_height value='" + this.ob_scene[ob_scene_index].ob_height + "'>\n" +
                 "</fieldset>\n" +
@@ -849,7 +882,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9j beta</legend>\n" +
+                "<legend> version 0.9.9k beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -878,10 +911,6 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_start_clock = function (ob_scene_index) {
-        /*if ((this.params[0].date !== "current_time" && this.params[0].date !== "Date.now()")) {
-            clearInterval(this.ob_interval_clock);
-            return;
-        }*/
         let that_clock = this;
         this.ob_sec_incr = 0;
         try {
@@ -950,11 +979,11 @@ function OB_TIMELINE() {
                     that3.data_head = that3.ob_get_url_head(that3.ob_scene[ob_scene_index]);
                     that3.update_scene(ob_scene_index, that3.header, that3.params, that3.ob_scene[ob_scene_index].bands,
                         that3.ob_scene[ob_scene_index].model, that3.ob_scene[ob_scene_index].sessions,
-                        that3.ob_camera_type, null, true);
+                        that3.ob_scene[ob_scene_index].ob_camera_type, null, true);
                 } else
                     that3.update_scene(ob_scene_index, that3.header, that3.params, that3.ob_scene[ob_scene_index].bands,
                         that3.ob_scene[ob_scene_index].model, that3.ob_scene[ob_scene_index].sessions,
-                        that3.ob_camera_type, null, false);
+                        that3.ob_scene[ob_scene_index].ob_camera_type, null, false);
             })
             this.ob_cal.onMonthChange(function (event, date) {
                 if (that3.ob_scene[ob_scene_index].ob_interval_move !== undefined)
@@ -967,11 +996,11 @@ function OB_TIMELINE() {
                     that3.data_head = that3.ob_get_url_head(that3.ob_scene[ob_scene_index]);
                     that3.update_scene(ob_scene_index, that3.header, that3.params, that3.ob_scene[ob_scene_index].bands,
                         that3.ob_scene[ob_scene_index].model, that3.ob_scene[ob_scene_index].sessions,
-                        that3.ob_camera_type, null, true);
+                        that3.ob_scene[ob_scene_index].ob_camera_type, null, true);
                 } else
                     that3.update_scene(ob_scene_index, that3.header, that3.params, that3.ob_scene[ob_scene_index].bands,
                         that3.ob_scene[ob_scene_index].model, that3.ob_scene[ob_scene_index].sessions,
-                        that3.ob_camera_type, null, false);
+                        that3.ob_scene[ob_scene_index].ob_camera_type, null, false);
             })
 
 
@@ -1082,7 +1111,7 @@ function OB_TIMELINE() {
                     parseInt(this.ob_timeline_header.style.height) + "px";
             else
                 div.style.height = window.innerHeight + "px";
-            if (this.descriptor === undefined) {
+            if (this.ob_scene[ob_scene_index].descriptor === undefined) {
                 if (descriptor.id === undefined) descriptor.id = "";
                 if (descriptor.end === undefined) descriptor.end = "";
                 let ob_descriptor_body = "";
@@ -1120,9 +1149,10 @@ function OB_TIMELINE() {
                 this.ob_timeline_right_panel.appendChild(div);
             } else {
                 // Build, eval and display the descriptor
-                this.descriptor = "this." + this.descriptor.replace(".js",
-                    "(descriptor)").replace("this.", "");
-                this.ob_timeline_right_panel.appendChild(eval(this.descriptor));
+                this.ob_scene[ob_scene_index].descriptor = "this." +
+                    this.ob_scene[ob_scene_index].descriptor.replace(".js",
+                        "(descriptor)").replace("this.", "");
+                this.ob_timeline_right_panel.appendChild(eval(this.ob_scene[ob_scene_index].descriptor));
             }
         }
     };
@@ -1242,7 +1272,7 @@ function OB_TIMELINE() {
                 that2.reset_synced_time("new_sync", ob_scene_index);
                 that2.update_scene(ob_scene_index, that2.header, that2.params, that2.ob_scene[ob_scene_index].bands,
                     that2.ob_scene[ob_scene_index].model, that2.ob_scene[ob_scene_index].sessions,
-                    that2.ob_camera_type, null, false);
+                    that2.ob_scene[ob_scene_index].ob_camera_type, null, false);
             };
             this.ob_sync.onmousemove = function () {
                 that2.moving = false;
@@ -1281,7 +1311,7 @@ function OB_TIMELINE() {
                 that2.ob_scene[ob_scene_index].ob_search_value = that2.ob_search_input.value;
                 that2.update_scene(ob_scene_index, that2.header, that2.params,
                     that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                    that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, true);
+                    that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type, null, true);
             };
             this.ob_search.onmousemove = function () {
                 that2.moving = false;
@@ -1331,7 +1361,8 @@ function OB_TIMELINE() {
                     that2.ob_visible_view = false;
                     that2.update_scene(ob_scene_index, that2.header, that2.params,
                         that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                        that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, false);
+                        that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
+                        null, false);
                 }
             }
             this.ob_no_view.onclick = function () {
@@ -1345,7 +1376,8 @@ function OB_TIMELINE() {
                     that2.ob_visible_view = true;
                     that2.update_scene(ob_scene_index, that2.header, that2.params,
                         that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                        that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, false);
+                        that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
+                        null, false);
                 }
             }
             this.ob_view.onmousemove = function () {
@@ -1369,13 +1401,13 @@ function OB_TIMELINE() {
                 that2.moving = false;
                 that2.ob_3d.style.zIndex = "9999";
                 clearInterval(that2.ob_scene[ob_scene_index].ob_interval_move);
-                if (that2.ob_camera_type === "Perspective") {
+                if (that2.ob_scene[ob_scene_index].ob_camera_type === "Perspective") {
                     get_ob_timeline(that2.name).ob_apply_orthographic_camera(ob_scene_index);
                     that2.ob_camera_type = "Orthographic";
                     that2.ob_3d.className = "ob_3d";
                 } else {
                     get_ob_timeline(that2.name).ob_apply_perspective_camera(ob_scene_index);
-                    that2.ob_camera_type = "Perspective";
+                    that2.ob_scene[ob_scene_index].ob_camera_type = "Perspective";
                     that2.ob_3d.className = "ob_2d";
                 }
             };
@@ -1438,7 +1470,8 @@ function OB_TIMELINE() {
                     that2.ob_scene[ob_scene_index].ob_search_value = that2.ob_search_input.value;
                     that2.update_scene(ob_scene_index, that2.header, that2.params,
                         that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                        that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, true);
+                        that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
+                        null, true);
                 }
             };
             this.ob_timeline_header.appendChild(this.ob_start);
@@ -1553,11 +1586,12 @@ function OB_TIMELINE() {
                 that2.ob_timeline_panel.style.width = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
                 that2.ob_timeline_panel_resizer.style.top = (that2.ob_timeline_panel_resizer.offsetTop - that2.pos2) + "px";
                 that2.ob_timeline_panel_resizer.style.left = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
-                that2.params[0].width = parseInt(that2.ob_timeline_panel.style.width);
-                that2.params[0].height = parseInt(that2.ob_timeline_panel.style.height);
+                that2.ob_scene[ob_scene_index].width = parseInt(that2.ob_timeline_panel.style.width);
+                that2.ob_scene[ob_scene_index].height = parseInt(that2.ob_timeline_panel.style.height);
                 that2.update_scene(ob_scene_index, that2.header, that2.params,
                     that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                    that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, false);
+                    that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
+                    null, false);
                 that2.pos1 = undefined;
             };
             this.ob_timeline_panel_resizer.onmouseenter = function () {
@@ -1573,11 +1607,12 @@ function OB_TIMELINE() {
                 that2.ob_timeline_panel.style.width = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
                 that2.ob_timeline_panel_resizer.style.top = (that2.ob_timeline_panel_resizer.offsetTop - that2.pos2) + "px";
                 that2.ob_timeline_panel_resizer.style.left = (that2.ob_timeline_panel_resizer.offsetLeft - that2.pos1) + "px";
-                that2.params[0].width = parseInt(that2.ob_timeline_panel.style.width);
-                that2.params[0].height = parseInt(that2.ob_timeline_panel.style.height);
+                that2.ob_scene[ob_scene_index].width = parseInt(that2.ob_timeline_panel.style.width);
+                that2.ob_scene[ob_scene_index].height = parseInt(that2.ob_timeline_panel.style.height);
                 that2.update_scene(ob_scene_index, that2.header, that2.params,
                     that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                    that2.ob_scene[ob_scene_index].sessions, that2.ob_camera_type, null, false);
+                    that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
+                    null, false);
             };
             // Set Header description if any otherwise keep default
             this.ob_createTimelineHeader(ob_scene_index);
@@ -1600,9 +1635,9 @@ function OB_TIMELINE() {
         this.ob_timeline_body_frame.style.width = "100%";
         this.ob_timeline_body_frame.style.top = this.ob_timeline_header.style.height;
         this.ob_timeline_body_frame.style.overflowY = "auto";
-        this.ob_timeline_panel.style.top = parseInt(this.top) + "px";
-        this.ob_timeline_panel.style.left = parseInt(this.left) + "px";
-        this.ob_timeline_panel.style.width = parseInt(this.ob_scene[ob_scene_index].ob_width) + "px";
+        this.ob_timeline_panel.style.top = parseInt(this.ob_scene[ob_scene_index].top) + "px";
+        this.ob_timeline_panel.style.left = parseInt(this.ob_scene[ob_scene_index].left) + "px";
+        this.ob_timeline_panel.style.width = parseInt(this.ob_scene[ob_scene_index].width) + "px";
         this.ob_timeline_panel.style.height = parseInt(this.ob_scene[ob_scene_index].ob_height) +
             parseInt(this.ob_timeline_header.style.height) + "px";
 
@@ -1616,7 +1651,7 @@ function OB_TIMELINE() {
 
         this.ob_timeline_right_panel.id = this.name + "_right";
         this.ob_timeline_right_panel.style.top = parseInt(this.ob_timeline_panel.style.top) + "px";
-        this.ob_timeline_right_panel.style.left = this.left + this.ob_scene[ob_scene_index].ob_width + "px";
+        this.ob_timeline_right_panel.style.left = this.ob_scene[ob_scene_index].left + this.ob_scene[ob_scene_index].width + "px";
         this.ob_timeline_right_panel.style.height = parseInt(this.ob_timeline_panel.style.height) + "px";
         this.ob_timeline_right_panel.style.visibility = "hidden";
         this.ob_timeline_panel_resizer.style.top = (this.ob_timeline_panel.offsetHeight - 8) + "px";
@@ -1873,19 +1908,19 @@ function OB_TIMELINE() {
         let ob_sync = false;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             this.ob_scene[ob_scene_index].bands[i].viewOffset =
-                -this.ob_scene[ob_scene_index].ob_width * (this.ob_scene[ob_scene_index].bands[i].multiples - 1) / 2;
+                -this.ob_scene[ob_scene_index].width * (this.ob_scene[ob_scene_index].bands[i].multiples - 1) / 2;
             if (this.center === undefined)
                 this.ob_scene[ob_scene_index].bands[i].x = 0;
             else {
                 if (this.center === "left")
-                    this.ob_scene[ob_scene_index].bands[i].x = -this.ob_scene[ob_scene_index].ob_width / 3;
+                    this.ob_scene[ob_scene_index].bands[i].x = -this.ob_scene[ob_scene_index].width / 3;
                 else if (this.center === "right")
-                    this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].ob_width / 3;
+                    this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].width / 3;
                 else
                     this.ob_scene[ob_scene_index].bands[i].x = 0;
             }
             this.ob_scene[ob_scene_index].bands[i].width =
-                this.ob_scene[ob_scene_index].ob_width * this.ob_scene[ob_scene_index].bands[i].multiples;
+                this.ob_scene[ob_scene_index].width * this.ob_scene[ob_scene_index].bands[i].multiples;
             if (i === this.ob_scene[ob_scene_index].bands.length - 1)
                 ob_sync = true;
             this.move_band(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
@@ -2012,9 +2047,9 @@ function OB_TIMELINE() {
     };
     OB_TIMELINE.prototype.set_bands_viewOffset = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.ob_scene[ob_scene_index].bands[i].minWidth = this.ob_scene[ob_scene_index].ob_width;
+            this.ob_scene[ob_scene_index].bands[i].minWidth = this.ob_scene[ob_scene_index].width;
             this.ob_scene[ob_scene_index].bands[i].width =
-                this.ob_scene[ob_scene_index].ob_width * this.ob_scene[ob_scene_index].bands[i].multiples;
+                this.ob_scene[ob_scene_index].width * this.ob_scene[ob_scene_index].bands[i].multiples;
             this.ob_scene[ob_scene_index].bands[i].minViewOffset = -this.ob_scene[ob_scene_index].bands[i].minWidth;
             this.ob_scene[ob_scene_index].bands[i].viewOffset = -this.ob_scene[ob_scene_index].bands[i].width / 2;
             this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].bands[i].viewOffset;
@@ -2175,16 +2210,16 @@ function OB_TIMELINE() {
                 offSet = parseInt(this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths) /
                     parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
                 if (ob_overview === true && i === this.ob_scene[ob_scene_index].bands.length - 2 &&
-                    this.params[0].height > this.ob_scene[ob_scene_index].ob_height) {
-                    this.ob_scene[ob_scene_index].bands[i].height += this.params[0].height -
+                    this.ob_scene[ob_scene_index].height > this.ob_scene[ob_scene_index].ob_height) {
+                    this.ob_scene[ob_scene_index].bands[i].height += this.ob_scene[ob_scene_index].height -
                         this.ob_scene[ob_scene_index].ob_height;
-                    this.ob_scene[ob_scene_index].ob_height = this.params[0].height;
+                    this.ob_scene[ob_scene_index].ob_height = this.ob_scene[ob_scene_index].height;
                 }
                 if (ob_overview === false && i === this.ob_scene[ob_scene_index].bands.length - 1 &&
-                    this.params[0].height > this.ob_scene[ob_scene_index].ob_height) {
-                    this.ob_scene[ob_scene_index].bands[i].height += this.params[0].height -
+                    this.ob_scene[ob_scene_index].height > this.ob_scene[ob_scene_index].ob_height) {
+                    this.ob_scene[ob_scene_index].bands[i].height += this.ob_scene[ob_scene_index].height -
                         this.ob_scene[ob_scene_index].ob_height;
-                    this.ob_scene[ob_scene_index].ob_height = this.params[0].height;
+                    this.ob_scene[ob_scene_index].ob_height = this.ob_scene[ob_scene_index].height;
                 }
             }
             if (this.ob_scene[ob_scene_index].bands[i].height !== undefined) {
@@ -2229,6 +2264,14 @@ function OB_TIMELINE() {
 
         }
     };
+    OB_TIMELINE.prototype.get_band_default_name = function (ob_scene_index) {
+        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                return this.ob_scene[ob_scene_index].bands[i].name;
+            }
+        }
+        return 0;
+    }
     OB_TIMELINE.prototype.get_band_default_index = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
@@ -2236,6 +2279,14 @@ function OB_TIMELINE() {
             }
         }
         return 0;
+    }
+    OB_TIMELINE.prototype.get_band_overview_name = function (ob_scene_index) {
+        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                return this.ob_scene[ob_scene_index].bands[i].name;
+            }
+        }
+        return null;
     }
     OB_TIMELINE.prototype.get_band_overview_index = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
@@ -2315,18 +2366,6 @@ function OB_TIMELINE() {
             if (this.ob_scene[ob_scene_index].bands[i].defaultEventSize === undefined)
                 this.ob_scene[ob_scene_index].bands[i].defaultEventSize = 5;
 
-            if (this.params[0].fontSize === undefined) {
-                this.fontSize = "12px";
-                this.fontSizeInt = "12";
-            } else {
-                this.fontSize = this.params[0].fontSize;
-                try {
-                    this.fontSizeInt = this.fontSize.replace("px", "");
-                } catch (e) {
-                    this.fontSizeInt = this.fontSize
-                }
-                this.fontSize = this.fontSizeInt + "px";
-            }
             if (this.ob_scene[ob_scene_index].bands[i].fontSize === undefined) {
                 this.ob_scene[ob_scene_index].bands[i].fontSize = this.fontSize;
                 this.ob_scene[ob_scene_index].bands[i].fontSizeInt = this.fontSizeInt;
@@ -2342,29 +2381,14 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[i].fontSizeInt + "px";
             }
 
-            if (this.params[0].fontFamily === undefined) {
-                this.fontFamily = 'Arial';
-            } else {
-                this.fontFamily = this.params[0].fontFamily;
-            }
             if (this.ob_scene[ob_scene_index].bands[i].fontFamily === undefined) {
                 this.ob_scene[ob_scene_index].bands[i].fontFamily = this.fontFamily;
             }
 
-            if (this.params[0].fontStyle === undefined) {
-                this.fontStyle = 'Normal';
-            } else {
-                this.fontStyle = this.params[0].fontStyle;
-            }
             if (this.ob_scene[ob_scene_index].bands[i].fontStyle === undefined) {
                 this.ob_scene[ob_scene_index].bands[i].fontStyle = this.fontStyle;
             }
 
-            if (this.params[0].fontWeight === undefined) {
-                this.fontWeight = 'Normal';
-            } else {
-                this.fontWeight = this.params[0].fontWeight;
-            }
             if (this.ob_scene[ob_scene_index].bands[i].fontWeight === undefined) {
                 this.ob_scene[ob_scene_index].bands[i].fontWeight = this.fontWeight;
             }
@@ -2389,10 +2413,8 @@ function OB_TIMELINE() {
             if (this.ob_scene[ob_scene_index].bands[i].color === undefined)
                 this.ob_scene[ob_scene_index].bands[i].color = 'white';
 
-            if (this.params[0].backgroundColor === undefined) {
+            if (this.backgroundColor === undefined) {
                 this.backgroundColor = this.ob_scene[ob_scene_index].bands[i].color;
-            } else {
-                this.backgroundColor = this.params[0].backgroundColor;
             }
             if (this.ob_scene[ob_scene_index].bands[i].backgroundColor === undefined) {
                 this.ob_scene[ob_scene_index].bands[i].backgroundColor = this.backgroundColor;
@@ -2417,8 +2439,8 @@ function OB_TIMELINE() {
                         parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / 4;
             }
             this.ob_scene[ob_scene_index].bands[i].multiples =
-                parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / this.multiples;
-            this.ob_scene[ob_scene_index].bands[i].trackIncrement = this.increment;
+                parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / this.ob_scene[ob_scene_index].multiples;
+            this.ob_scene[ob_scene_index].bands[i].trackIncrement = this.ob_scene[ob_scene_index].increment;
         }
         this.create_new_bands(ob_scene_index);
         this.set_bands_height(ob_scene_index);
@@ -2427,7 +2449,7 @@ function OB_TIMELINE() {
         this.set_bands_maxDate(ob_scene_index);
     };
     OB_TIMELINE.prototype.add_zone = function (ob_scene_index, band_number, zone_number, band_name, zone_name, text,
-                                               textColor, x, y, z, width, height, depth, color, texture) {
+                                               textColor, x, y, z, width, height, depth, color, texture, font_align) {
         if (isNaN(x)) x = 0;
         if (isNaN(y)) y = 0;
         if (isNaN(z)) z = 0;
@@ -2478,7 +2500,7 @@ function OB_TIMELINE() {
 
         if (!band_name.includes("overview"))
             this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, undefined,
-                24, "Normal", "Normal", textColor, 'Arial');
+                24, "Normal", "Normal", textColor, 'Arial', font_align);
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
@@ -2493,7 +2515,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_textBox = function (ob_scene_index, band_name, text, textColor, x, y, z, width, height,
-                                                  depth, color, texture) {
+                                                  depth, color, texture, font_align) {
         let ob_model_name = this.ob_scene[ob_scene_index].getObjectByName(band_name + "_" + text);
         if (ob_model_name !== undefined) return;
         if (isNaN(x)) x = 0;
@@ -2542,7 +2564,7 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
 
         this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, undefined,
-            24, "Normal", "Normal", textColor, 'Arial');
+            24, "Normal", "Normal", textColor, 'Arial', font_align);
 
         if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
             text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
@@ -2590,7 +2612,8 @@ function OB_TIMELINE() {
                     parseInt(this.ob_scene[ob_scene_index].bands[b].depth) + 1,
                     this.hex_Luminance(color, -.15),
                     undefined,
-                    this.hex_Luminance(color, -.15));
+                    this.hex_Luminance(color, -.15),
+                    this.ob_scene[ob_scene_index].font_align);
             }
         }
     };
@@ -2611,7 +2634,7 @@ function OB_TIMELINE() {
                 this.add_textBox(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                     this.ob_scene[ob_scene_index].bands[i].layout_name,
                     this.ob_scene[ob_scene_index].bands[i].textColor,
-                    -(this.ob_scene[ob_scene_index].ob_width / 2) +
+                    -(this.ob_scene[ob_scene_index].width / 2) +
                     (parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) *
                         parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) / 2),
                     this.ob_scene[ob_scene_index].bands[i].y,
@@ -2622,7 +2645,8 @@ function OB_TIMELINE() {
                     parseInt(this.ob_scene[ob_scene_index].bands[i].depth) + 1,
                     this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
                     undefined,
-                    this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15));
+                    this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
+                    this.ob_scene[ob_scene_index].font_align);
             }
         }
     };
@@ -2700,12 +2724,12 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_render = function (ob_scene_index) {
-        if (this.ob_scene_index !== ob_scene_index) return;
         //console.log("OB_TIMELINE.prototype.ob_render(ob_render_index=" + ob_scene_index + ")");
         this.ob_render_index = ob_scene_index;
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
     }
+
     OB_TIMELINE.prototype.get_backgroundColor = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
@@ -2748,11 +2772,11 @@ function OB_TIMELINE() {
             this.title = setting_and_filters.openbexi_timeline[0].title;
             this.user = setting_and_filters.openbexi_timeline[0].user.toLowerCase();
             this.email = setting_and_filters.openbexi_timeline[0].email.toLowerCase();
-            this.top = setting_and_filters.openbexi_timeline[0].top;
-            this.left = setting_and_filters.openbexi_timeline[0].left;
-            this.params[0].width = setting_and_filters.openbexi_timeline[0].width;
-            this.params[0].height = setting_and_filters.openbexi_timeline[0].height;
-            this.ob_camera_type = setting_and_filters.openbexi_timeline[0].camera;
+            this.ob_scene[ob_scene_index].top = setting_and_filters.openbexi_timeline[0].top;
+            this.ob_scene[ob_scene_index].left = setting_and_filters.openbexi_timeline[0].left;
+            this.ob_scene[ob_scene_index].width = setting_and_filters.openbexi_timeline[0].width;
+            this.ob_scene[ob_scene_index].height = setting_and_filters.openbexi_timeline[0].height;
+            this.ob_scene[ob_scene_index].ob_camera_type = setting_and_filters.openbexi_timeline[0].camera;
             if (this.ob_scene !== undefined)
                 this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = setting_and_filters.openbexi_timeline[0].sortBy;
             if (document.getElementById("ob_sort_by") !== null)
@@ -2810,8 +2834,8 @@ function OB_TIMELINE() {
         let ob_scene_update_required_with_no_reload = false
         // If user is moving a band, check when we need to load a new scene when we reach the boundary.
         if (band !== null) {
-            if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].ob_width ||
-                band.position.x < band.pos_x + this.ob_scene[ob_scene_index].ob_width)) {
+            if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].width ||
+                band.position.x < band.pos_x + this.ob_scene[ob_scene_index].width)) {
                 clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
                 this.reset_synced_time("new_view", ob_scene_index);
                 this.load_data(ob_scene_index);
@@ -2863,30 +2887,25 @@ function OB_TIMELINE() {
             let that_scene = this;
             clearTimeout(this.update_this_scene);
             this.update_this_scene = setTimeout(function () {
-                that_scene.update_all_timelines(header, params, bands, model, sessions, camera);
+                that_scene.update_all_timelines(ob_scene_index, header, params, bands, model, sessions, camera);
             }, 0);
         }
     }
 
-    OB_TIMELINE.prototype.update_all_timelines = function (header, params, bands, model, sessions, camera) {
+    OB_TIMELINE.prototype.update_all_timelines = function (ob_scene_index, header, params, bands, model, sessions, camera) {
         ob_timelines.forEach(function (ob_timeline) {
                 let startDate = new Date();
-                let ob_scene_index = sessions.scene;
                 if (ob_scene_index === undefined)
                     ob_scene_index = 0;
                 if (ob_timeline.name === params[0].name) {
-                    let current_camera = ob_timeline.ob_camera_type;
-                    //if (ob_timeline.ob_scene[ob_scene_index].ready === false)
                     ob_timeline.destroy_scene(ob_scene_index);
-                    ob_timeline.ob_scene_index = ob_scene_index;
-                    ob_timeline.ob_camera_type = camera;
                     ob_timeline.header = header;
                     ob_timeline.params = params;
                     ob_timeline.ob_scene[ob_scene_index].bands = bands;
                     ob_timeline.ob_scene[ob_scene_index].model = model;
                     ob_timeline.ob_scene[ob_scene_index].sessions = sessions;
                     ob_timeline.ob_set_scene(ob_scene_index);
-                    ob_timeline.ob_init(ob_scene_index);
+                    ob_timeline.ob_scene_init(ob_scene_index);
                     ob_timeline.set_bands(ob_scene_index);
                     ob_timeline.set_sessions(ob_scene_index);
                     ob_timeline.ob_set_body_menu(ob_scene_index);
@@ -2896,7 +2915,7 @@ function OB_TIMELINE() {
                     ob_timeline.add_line_current_time(ob_scene_index,
                         new Date(ob_timeline.get_current_time()), "rgb(243,23,51)");
                     ob_timeline.center_bands(ob_scene_index);
-                    ob_timeline.ob_camera_type = current_camera;
+                    ob_timeline.ob_scene[ob_scene_index].ob_camera_type = camera;
                     ob_timeline.ob_start_clock(ob_scene_index);
                     if (ob_timeline.ob_scene[ob_scene_index].show_calendar)
                         ob_timeline.ob_create_calendar(ob_scene_index,
@@ -2911,7 +2930,7 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_camera(ob_scene_index);
                 }
                 let endDate = new Date();
-                ob_timeline.ob_optimize_load_time(ob_scene_index, ob_timeline.multiples);
+                ob_timeline.ob_optimize_load_time(ob_scene_index, ob_timeline.ob_scene[ob_scene_index].multiples);
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
                     if (ob_timeline.ob_scene[ob_scene_index].sessions.events.length !== 1)
@@ -3051,7 +3070,8 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[i].fontStyle,
                     this.ob_scene[ob_scene_index].bands[i].fontWeight,
                     this.ob_scene[ob_scene_index].bands[i].dateColor,
-                    this.ob_scene[ob_scene_index].bands[i].fontFamily);
+                    this.ob_scene[ob_scene_index].bands[i].fontFamily,
+                    this.ob_scene[ob_scene_index].font_align);
 
                 //Create sub-segments if required
                 if (this.ob_scene[ob_scene_index].bands[i].subIntervalPixels !== "NONE") {
@@ -3459,9 +3479,9 @@ function OB_TIMELINE() {
                         this.ob_scene[ob_scene_index].bands[i].lastGreaterY +
                         this.ob_scene[ob_scene_index].bands[i].trackIncrement;
                 } else {
-                    this.ob_scene[ob_scene_index].bands[i].maxY = this.params[0].height / 2;
+                    this.ob_scene[ob_scene_index].bands[i].maxY = this.ob_scene[ob_scene_index].height / 2;
                     this.ob_scene[ob_scene_index].bands[i].minY = -this.ob_scene[ob_scene_index].bands[i].maxY;
-                    this.ob_scene[ob_scene_index].bands[i].lastGreaterY = this.params[0].height / 2;
+                    this.ob_scene[ob_scene_index].bands[i].lastGreaterY = this.ob_scene[ob_scene_index].height / 2;
                 }
             }
             this.set_bands_height(ob_scene_index);
@@ -3497,6 +3517,8 @@ function OB_TIMELINE() {
             return;
         if (color === undefined) {
             color = session.render.color;
+            if (color === undefined)
+                color = "#040404"
         }
         let ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
 
@@ -3589,14 +3611,14 @@ function OB_TIMELINE() {
                                         this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
                                             eventColor, undefined, backgroundColor, fontSizeInt, fontStyle, fontWeight,
-                                            textColor, fontFamily, false);
+                                            textColor, fontFamily, false, this.ob_scene[ob_scene_index].font_align);
                                     }
                                 } else {
                                     // If any events and no overview
                                     this.add_event(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], eventColor,
                                         image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
-                                        fontFamily, true);
+                                        fontFamily, true, this.ob_scene[ob_scene_index].font_align);
                                 }
                             } else {
                                 // If any sessions and overview
@@ -3608,14 +3630,14 @@ function OB_TIMELINE() {
                                         this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                             this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a],
                                             SessionColor, texture, undefined, backgroundColor, fontSizeInt, fontStyle,
-                                            fontWeight, textColor, fontFamily);
+                                            fontWeight, textColor, fontFamily, this.ob_scene[ob_scene_index].font_align);
                                     }
                                 } else {
                                     // If any sessions and no overview
                                     this.add_session(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
                                         this.ob_scene[ob_scene_index].bands[i].sessions[j].activities[a], SessionColor,
                                         texture, image, backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
-                                        fontFamily);
+                                        fontFamily, this.ob_scene[ob_scene_index].font_align);
                                 }
                             }
                         }
@@ -3710,13 +3732,20 @@ function OB_TIMELINE() {
 // WebGl OpenBexi library
     OB_TIMELINE.prototype.add_session = function (ob_scene_index, band_name, session, color, texture, image,
                                                   backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
-                                                  fontFamily) {
+                                                  fontFamily, font_align) {
+
+        let ob_height = session.height;
+        if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
+            image = "icon/ob_yellow_square.png";
+            ob_height = 4;
+        }
+
         if (image !== undefined) {
             let copy_session = Object.assign({}, session);
             copy_session.x_relative = copy_session.pixelOffSetStart - 8;
             copy_session.z = parseInt(session.z + 41);
             this.add_event(ob_scene_index, band_name, copy_session, color, image, backgroundColor, fontSizeInt,
-                fontStyle, fontWeight, textColor, fontFamily, false);
+                fontStyle, fontWeight, textColor, fontFamily, false, font_align);
         }
         let ob_material;
         if (texture !== undefined) {
@@ -3737,7 +3766,7 @@ function OB_TIMELINE() {
         } else
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
 
-        let ob_session = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width, session.height, 10)), ob_material));
+        let ob_session = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width, ob_height, 10)), ob_material));
         ob_session.position.set(session.x_relative, session.y, session.z);
         ob_session.pos_x = session.x_relative;
         ob_session.pos_y = session.y;
@@ -3747,7 +3776,7 @@ function OB_TIMELINE() {
         // Add text and tolerance
         if (!band_name.match(/overview_/)) {
             this.add_text_sprite(ob_scene_index, ob_session, session.data.title, session.textX, 0, 5, backgroundColor,
-                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, font_align);
             this.add_tolerance(ob_scene_index, ob_session, band_name, session, undefined);
         }
 
@@ -3767,14 +3796,22 @@ function OB_TIMELINE() {
     }
 
     OB_TIMELINE.prototype.add_event = function (ob_scene_index, band_name, session, color, image, backgroundColor,
-                                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, display_text) {
-        let geometry, material, ob_event;
-        let texture = this.load_texture(image);
+                                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, display_text,
+                                                font_align) {
+        let geometry, material, ob_event, texture;
+
+        if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "")
+            image = "icon/ob_yellow_square.png";
+
+        texture = this.load_texture(image);
         if (texture === undefined) {
             geometry = this.track[ob_scene_index](new THREE.SphereGeometry(session.size));
             material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
         } else {
-            geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(16, 16));
+            if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "")
+                geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(8, 8));
+            else
+                geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(16, 16));
             texture.minFilter = THREE.LinearFilter;
             material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
                 map: texture,
@@ -3783,6 +3820,7 @@ function OB_TIMELINE() {
                 opacity: 1
             }));
         }
+
         ob_event = this.track[ob_scene_index](new THREE.Mesh(geometry, material));
         ob_event.position.set(session.x_relative, session.y, session.z);
         ob_event.pos_x = session.x_relative;
@@ -3794,7 +3832,7 @@ function OB_TIMELINE() {
         // Add text and tolerance
         if (display_text === true) {
             this.add_text_sprite(ob_scene_index, ob_event, session.data.title, session.textX, 0, 5, backgroundColor,
-                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily);
+                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, font_align);
         }
 
         this.ob_scene[ob_scene_index].add(ob_event);
@@ -3858,12 +3896,12 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, backgroundColor,
-                                                      fontSize, fontStyle, fontWeight, color, fontFamily) {
+                                                      fontSize, fontStyle, fontWeight, color, fontFamily, font_align) {
         if (color === undefined) {
             color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
         }
         let ob_sprite = this.track[ob_scene_index](new THREE.TextSprite({
-            alignment: this.font_align,
+            alignment: font_align,
             backgroundColor: backgroundColor,
             color: color,
             fontFamily: fontFamily,
@@ -3876,7 +3914,7 @@ function OB_TIMELINE() {
                 text,
             ].join('\n'),
         }));
-        if (this.ob_camera_type === "Orthographic") {
+        if (this.ob_scene[ob_scene_index].ob_camera_type === "Orthographic") {
             ob_sprite.position.set(x, y, z);
             ob_sprite.pos_x = x;
             ob_sprite.pos_y = y;
@@ -3933,7 +3971,7 @@ function OB_TIMELINE() {
                 this.update_this_scene = setTimeout(function () {
                     that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
                         that.ob_scene[ob_scene_index].model, that.ob_scene[ob_scene_index].sessions,
-                        that.ob_camera_type, null, false);
+                        that.ob_scene[ob_scene_index].ob_camera_type, null, false);
                 }, 10);
             } catch (err) {
                 console.log("loadJSON - no file to load");
@@ -3993,10 +4031,20 @@ function OB_TIMELINE() {
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
                 that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
+            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_overview_/)) {
+                that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
+                that.ob_marker.style.visibility = "visible";
+                that.ob_time_marker.style.visibility = "visible";
+                return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
+            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "" && ob_obj.parent.name.match(/_overview_/)) {
+                that.move_band(ob_scene_index, ob_obj.parent.name, -ob_obj.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
+                that.ob_marker.style.visibility = "visible";
+                that.ob_time_marker.style.visibility = "visible";
+                return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 //that.move_session(ob_obj, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z);
                 that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
@@ -4076,7 +4124,8 @@ function OB_TIMELINE() {
                                 ob_obj.pos_z, true);
                             that.update_scene(ob_scene_index, that.header, that.params,
                                 that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, ob_obj, true);
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                ob_obj, true);
                         }
                     }
                 }
@@ -4108,7 +4157,8 @@ function OB_TIMELINE() {
                                 ob_obj.pos_z, true);
                             that.update_scene(ob_scene_index, that.header, that.params,
                                 that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, ob_obj, null, false);
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                ob_obj, null, false);
                         }
                     }
                 }
@@ -4198,50 +4248,49 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].ob_renderer.shadowMap.enabled = true;
         }
         this.ob_timeline_body.appendChild(this.ob_scene[ob_scene_index].ob_renderer.domElement);
-        this.ob_scene[ob_scene_index].ob_renderer.domElement.clientWidth = this.ob_scene[ob_scene_index].ob_width + "px";
+        this.ob_scene[ob_scene_index].ob_renderer.domElement.clientWidth = this.ob_scene[ob_scene_index].width + "px";
         this.ob_scene[ob_scene_index].ob_renderer.domElement.clientHeight = this.ob_scene[ob_scene_index].ob_height + "px";
-        this.ob_scene[ob_scene_index].ob_renderer.setSize(this.ob_scene[ob_scene_index].ob_width, this.ob_scene[ob_scene_index].ob_height);
+        this.ob_scene[ob_scene_index].ob_renderer.setSize(this.ob_scene[ob_scene_index].width, this.ob_scene[ob_scene_index].ob_height);
     };
 
     OB_TIMELINE.prototype.ob_set_camera = function (ob_scene_index) {
-        if (this.ob_camera_type === undefined) this.ob_camera_type = "Orthographic";
-        if (this.ob_camera_type === "Orthographic") {
-            this.ob_pos_orthographic_camera_x = 0;
-            this.ob_pos_orthographic_camera_y = 0;
-            this.ob_pos_orthographic_camera_z = this.ob_scene[ob_scene_index].ob_height;
+        if (this.ob_scene[ob_scene_index].ob_camera_type === undefined)
+            this.ob_scene[ob_scene_index].ob_camera_type = "Orthographic";
+        if (this.ob_scene[ob_scene_index].ob_camera_type === "Orthographic") {
+            let ob_pos_orthographic_camera_x = 0;
+            let ob_pos_orthographic_camera_y = 0;
+            let ob_pos_orthographic_camera_z = this.ob_scene[ob_scene_index].ob_height;
             this.ob_scene[ob_scene_index].ob_camera =
-                this.track[ob_scene_index](new THREE.OrthographicCamera(-this.ob_scene[ob_scene_index].ob_width / 2,
-                    this.ob_scene[ob_scene_index].ob_width / 2, this.ob_scene[ob_scene_index].ob_height, 0,
-                    -this.ob_scene[ob_scene_index].ob_width, this.ob_far));
-            this.ob_scene[ob_scene_index].ob_camera.position.set(this.ob_pos_orthographic_camera_x, this.ob_pos_orthographic_camera_y,
-                this.ob_pos_orthographic_camera_z);
+                this.track[ob_scene_index](new THREE.OrthographicCamera(-this.ob_scene[ob_scene_index].width / 2,
+                    this.ob_scene[ob_scene_index].width / 2, this.ob_scene[ob_scene_index].ob_height, 0,
+                    -this.ob_scene[ob_scene_index].width, this.ob_scene[ob_scene_index].ob_far));
+            this.ob_scene[ob_scene_index].ob_camera.position.set(ob_pos_orthographic_camera_x, ob_pos_orthographic_camera_y,
+                ob_pos_orthographic_camera_z);
             this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].ob_camera);
-            //this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].group);
-            //this.ob_scene[ob_scene_index].ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
         } else {
             this.ob_scene[ob_scene_index].ob_camera =
-                this.track[ob_scene_index](new THREE.PerspectiveCamera(this.ob_fov,
-                    this.ob_scene[ob_scene_index].ob_width / this.ob_scene[ob_scene_index].ob_height,
-                    this.ob_near, this.ob_far));
-            this.ob_scene[ob_scene_index].ob_camera.position.set(this.ob_pos_camera_x, this.ob_pos_camera_y, this.ob_pos_camera_z);
+                this.track[ob_scene_index](new THREE.PerspectiveCamera(this.ob_scene[ob_scene_index].ob_fov,
+                    this.ob_scene[ob_scene_index].width / this.ob_scene[ob_scene_index].ob_height,
+                    this.ob_scene[ob_scene_index].ob_near, this.ob_scene[ob_scene_index].ob_far));
+            this.ob_scene[ob_scene_index].ob_camera.position.set(this.ob_scene[ob_scene_index].ob_pos_camera_x,
+                this.ob_scene[ob_scene_index].ob_pos_camera_y, this.ob_scene[ob_scene_index].ob_pos_camera_z);
             this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].ob_camera);
-            this.ob_scene[ob_scene_index].ob_camera.lookAt(this.ob_lookAt_x, this.ob_lookAt_y, this.ob_lookAt_z);
+            this.ob_scene[ob_scene_index].ob_camera.lookAt(this.ob_scene[ob_scene_index].ob_lookAt_x,
+                this.ob_scene[ob_scene_index].ob_lookAt_y, this.ob_scene[ob_scene_index].ob_lookAt_z);
             this.ob_scene[ob_scene_index].add(this.track[ob_scene_index](new THREE.AmbientLight(0xf0f0f0)));
             let light = this.track[ob_scene_index](new THREE.SpotLight(0xffffff, 1.5));
             light.position.set(0, 1500, 200);
             light.castShadow = true;
-            //light.shadow = this.track[ob_scene_index](new THREE.LightShadow(new THREE.PerspectiveCamera(this.ob_fov, 1, 200, 2000)));
             light.shadow.bias = -0.000222;
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
             this.ob_scene[ob_scene_index].add(light);
-            //this.ob_scene[ob_scene_index].add(this.ob_scene[ob_scene_index].group);
         }
         // Set all listeners
         this.ob_setListeners(ob_scene_index);
         //requestAnimationFrame(this.animate);
         this.ob_render(ob_scene_index);
-        //console.log("ob_set_camera() - camera:" + this.ob_camera_type);
+        //console.log("ob_set_camera() - camera:" + this.ob_scene[ob_scene_index].ob_camera_type);
     };
 
     OB_TIMELINE.prototype.animate = function () {
@@ -4389,8 +4438,9 @@ function OB_TIMELINE() {
         let that_scene = this;
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_all_timelines(that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions,
+                that_scene.ob_scene[ob_scene_index].ob_camera_type);
         }, 0);
     };
     OB_TIMELINE.prototype.runUnitTestsHours = function (ob_scene_index) {
@@ -4516,7 +4566,8 @@ function OB_TIMELINE() {
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
             that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions,
+                that_scene.ob_scene[ob_scene_index].ob_camera_type);
         }, 0);
         console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
     };
@@ -4527,12 +4578,14 @@ function OB_TIMELINE() {
         let that_scene = this;
         clearTimeout(this.update_this_scene);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_all_timelines(that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions,
+                that_scene.ob_scene[ob_scene_index].ob_camera_type);
         }, 0);
         this.update_this_scene = setTimeout(function () {
-            that_scene.update_all_timelines(that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions, that_scene.ob_camera_type);
+            that_scene.update_all_timelines(ob_scene_index, that_scene.header, that_scene.params, that_scene.ob_scene[ob_scene_index].bands,
+                that_scene.ob_scene[ob_scene_index].model, that_scene.ob_scene[ob_scene_index].sessions,
+                that_scene.ob_scene[ob_scene_index].ob_camera_type);
         }, 0);
     };
     OB_TIMELINE.prototype.ob_getDataType = function (ob_scene_index, json) {
@@ -4544,10 +4597,10 @@ function OB_TIMELINE() {
     }
     OB_TIMELINE.prototype.ob_optimize_load_time = function (ob_scene_index, multiples) {
         if (multiples === undefined)
-            this.multiples = 90;
+            this.ob_scene[ob_scene_index].multiples = 90;
         else
-            this.multiples = multiples;
-        return this.multiples === 480;
+            this.ob_scene[ob_scene_index].multiples = multiples;
+        return this.ob_scene[ob_scene_index].multiples === 480;
     }
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
         if (this.ob_scene !== undefined && this.ob_scene[ob_scene_index].ob_interval_move !== undefined)
@@ -4556,7 +4609,7 @@ function OB_TIMELINE() {
         if (this.data === undefined) {
             this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
                 this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-                this.ob_camera_type, null, false);
+                this.ob_scene[ob_scene_index].ob_camera_type, null, false);
             return;
         }
 
@@ -4635,7 +4688,8 @@ function OB_TIMELINE() {
                                 "&userName=" + that.ob_user_name;
                             that.update_scene(ob_scene_index, that.header, that.params,
                                 that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, null, true);
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                null, true);
                         } catch (err) {
                             console.log('POST - cannot save setting_and_filters ...');
                         }
@@ -4649,9 +4703,12 @@ function OB_TIMELINE() {
                         }
                     } else {
                         that.ob_scene[ob_scene_index].sessions = eval('(' + (e.data) + ')');
+                        if (that.ob_scene[ob_scene_index].sessions.scene !== undefined)
+                            ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         that.update_scene(ob_scene_index, that.header, that.params,
                             that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, null, false);
+                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                            null, false);
                     }
                     //eventSource.close();
                 };
@@ -4727,7 +4784,8 @@ function OB_TIMELINE() {
                             that.method = "GET";
                             that.update_scene(ob_scene_index, that.header, that.params,
                                 that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, null, true);
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                null, true);
                         } catch (err) {
                             console.log('POST - cannot save setting_and_filters ...');
                         }
@@ -4749,9 +4807,12 @@ function OB_TIMELINE() {
                         }
                     } else {
                         that.ob_scene[ob_scene_index].sessions = json;
+                        if (that.ob_scene[ob_scene_index].sessions.scene !== undefined)
+                            ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         that.update_scene(ob_scene_index, that.header, that.params,
                             that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions, that.ob_camera_type, null, false);
+                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                            null, false);
                     }
                 }).catch(err => {
                     console.log('Error message:', err.statusText)
@@ -4767,7 +4828,7 @@ function OB_TIMELINE() {
     };
     window.addEventListener('resize', function () {
         ob_timelines.forEach(function (ob_timeline) {
-            ob_timeline.ob_init(ob_timeline.ob_render_index);
+            ob_timeline.ob_scene_init(ob_timeline.ob_render_index);
         });
     }, false);
 
@@ -4796,7 +4857,7 @@ function OB_TIMELINE() {
 
 function ob_load_timeline(ob_timeline_instance) {
     ob_timelines.push(ob_timeline_instance);
-    ob_timeline_instance.getLocalStorage();
+    ob_timeline_instance.ob_init();
     ob_timeline_instance.ob_scene_index = 0;
     ob_timeline_instance.first_sync = undefined;
     ob_timeline_instance.update_scene(ob_timeline_instance.ob_scene_index, null, ob_timeline_instance.params,

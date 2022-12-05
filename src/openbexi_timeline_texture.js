@@ -29,6 +29,7 @@ ob_texture.set("icon/ob_crontab.png", new THREE.TextureLoader().load("icon/ob_cr
 ob_texture.set("icon/ob_clock.png", new THREE.TextureLoader().load("icon/ob_clock.png"));
 ob_texture.set("icon/ob_info2.png", new THREE.TextureLoader().load("icon/ob_info2.png"));
 ob_texture.set("icon/ob_delete.png", new THREE.TextureLoader().load("icon/ob_delete.png"));
+ob_texture.set("icon/ob_yellow_ring.png", new THREE.TextureLoader().load("icon/ob_yellow_ring.png"));
 
 
 // Satellite/Communication texture
