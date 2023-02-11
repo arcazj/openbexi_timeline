@@ -337,7 +337,7 @@ public class json_files_manager extends data_manager {
 
             File[] file_list = new File(buildFile).listFiles();
 
-            if (file_list != null) {
+            if (file_list != null && file_list.length > 0) {
                 for (File file : file_list) {
                     if (file.exists() && file.isFile() && file.getName().contains(".json")) {
                         checksum += this.MD5Hash(file.getCanonicalPath());
@@ -401,7 +401,7 @@ public class json_files_manager extends data_manager {
             };
             File[] file_list = new File(buildFile).listFiles(filter);
 
-            if (file_list != null) {
+            if (file_list != null && file_list.length > 0) {
                 for (File file : file_list) {
                     if (file.exists() && file.isFile() && file.getName().contains(".json")) {
                         files.put(file, MD5Hash(file.toString()));
