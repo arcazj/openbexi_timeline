@@ -490,7 +490,7 @@ public class event_generator {
             ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
             long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
             Date date = new Date(todayMidnight);
-            long dateL = date.getTime();
+            long dateL = date.getTime() ;
             long enddateL = date.getTime() + 3600 * 12 * 1000;
 
             while (dateL < enddateL) {
