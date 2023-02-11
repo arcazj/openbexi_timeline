@@ -341,9 +341,10 @@ public class json_files_manager extends data_manager {
                 for (File file : file_list) {
                     if (file.exists() && file.isFile() && file.getName().contains(".json")) {
                         checksum += this.MD5Hash(file.getCanonicalPath());
-                    }
-                    if (file.exists() && file.isDirectory()) {
-                        this.getFiles(_currentStartDate, _currentEndDate, file);
+                    } else {
+                        if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                            this.getFiles(_currentStartDate, _currentEndDate, file);
+                        }
                     }
                 }
             }
@@ -405,9 +406,10 @@ public class json_files_manager extends data_manager {
                     if (file.exists() && file.isFile() && file.getName().contains(".json")) {
                         files.put(file, MD5Hash(file.toString()));
                         //log(file_list[f], "info");
-                    }
-                    if (file.exists() && file.isDirectory()) {
-                        this.getFiles(startDate, endDate, file);
+                    } else {
+                        if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                            this.getFiles(startDate, endDate, file);
+                        }
                     }
                 }
             }

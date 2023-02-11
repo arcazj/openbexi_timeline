@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9k beta
+    OpenBEXI Timeline 0.9.9l beta
 
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
@@ -204,7 +204,6 @@ function OB_TIMELINE() {
         if (this.ob_user_name === undefined)
             this.getLocalStorage();
         this.name = this.params[0].name;
-        this.title = this.params[0].title;
         this.date = this.params[0].date;
         this.timeZone = this.params[0].timeZone;
         this.data_default_port = this.params[0].data_default_port;
@@ -213,6 +212,8 @@ function OB_TIMELINE() {
             this.data_default_port).replace("data_sse_port", this.data_sse_port);
         if (this.params[0].title !== undefined)
             this.title = this.params[0].title;
+        else
+            this.title = "";
         // -- set time zone --
         this.getTimeZone();
         this.camera = this.params[0].camera;
@@ -882,7 +883,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9k beta</legend>\n" +
+                "<legend> version 0.9.9l beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -917,15 +918,12 @@ function OB_TIMELINE() {
             clearInterval(this.ob_interval_clock);
             this.ob_interval_clock = setInterval(function () {
                 that_clock.ob_sec_incr++;
+                let ob_current_date = new Date(that_clock.get_current_time());
+                that_clock.update_time_marker(ob_current_date);
                 if (that_clock.ob_sec_incr === 10) {
                     that_clock.ob_sec_incr = 0;
-                    that_clock.get_current_time();
                     that_clock.center_bands(ob_scene_index);
                 }
-                /*console.log("ob_start_clock - ob_sec_incr++=" + that_clock.ob_sec_incr +
-                    " - ob_interval_clock=" reset_synced_time+ that_clock.ob_interval_clock +
-                    " - currentTime=" + new Date(that_clock.get_current_time()).toString().substring(0, 24) +
-                    " - ob_render_index/ob_scene_index=" + ob_scene_index + "/" + ob_scene_index);*/
             }, 1000);
         } catch (e) {
         }
@@ -1894,7 +1892,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.pixelOffSetToDate = function (ob_scene_index, pixels, gregorianUnitLengths, intervalPixels) {
         let totalGregorianUnitLengths = this.ob_scene.sync_time +
             (pixels * (gregorianUnitLengths / intervalPixels));
-        return new Date(totalGregorianUnitLengths)
+        return new Date(totalGregorianUnitLengths);
     };
 
 // Bands creation and manipulation
@@ -1909,16 +1907,15 @@ function OB_TIMELINE() {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             this.ob_scene[ob_scene_index].bands[i].viewOffset =
                 -this.ob_scene[ob_scene_index].width * (this.ob_scene[ob_scene_index].bands[i].multiples - 1) / 2;
-            if (this.center === undefined)
+            if (this.ob_scene[ob_scene_index].center === "center")
                 this.ob_scene[ob_scene_index].bands[i].x = 0;
-            else {
-                if (this.center === "left")
-                    this.ob_scene[ob_scene_index].bands[i].x = -this.ob_scene[ob_scene_index].width / 3;
-                else if (this.center === "right")
-                    this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].width / 3;
-                else
-                    this.ob_scene[ob_scene_index].bands[i].x = 0;
-            }
+            else if (this.ob_scene[ob_scene_index].center === "left")
+                this.ob_scene[ob_scene_index].bands[i].x = -this.ob_scene[ob_scene_index].width / 3;
+            else if (this.ob_scene[ob_scene_index].center === "right")
+                this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].width / 3;
+            else
+                this.ob_scene[ob_scene_index].bands[i].x = 0;
+
             this.ob_scene[ob_scene_index].bands[i].width =
                 this.ob_scene[ob_scene_index].width * this.ob_scene[ob_scene_index].bands[i].multiples;
             if (i === this.ob_scene[ob_scene_index].bands.length - 1)
@@ -2769,7 +2766,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.set_user_setting_and_filters = function (ob_scene_index, setting_and_filters) {
         if (setting_and_filters.openbexi_timeline !== undefined) {
             this.name = setting_and_filters.openbexi_timeline[0].name;
-            this.title = setting_and_filters.openbexi_timeline[0].title;
+            //this.title = setting_and_filters.openbexi_timeline[0].title;
             this.user = setting_and_filters.openbexi_timeline[0].user.toLowerCase();
             this.email = setting_and_filters.openbexi_timeline[0].email.toLowerCase();
             this.ob_scene[ob_scene_index].top = setting_and_filters.openbexi_timeline[0].top;
@@ -2946,6 +2943,33 @@ function OB_TIMELINE() {
         return null;
     };
 
+    OB_TIMELINE.prototype.update_time_marker = function (ob_date) {
+        if (ob_date !== undefined)
+            this.ob_markerDate = ob_date;
+        if (this.ob_marker !== undefined) {
+            this.ob_marker.style.visibility = "visible";
+            this.ob_marker.style.zIndex = "99999";
+            this.ob_marker.style.top = parseInt(this.ob_timeline_header.style.height) - 14 + "px";
+            this.ob_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) -
+                parseInt(this.ob_marker.style.width) / 2 + "px";
+        }
+        if (this.ob_time_marker.innerText !== undefined) {
+            this.ob_time_marker.style.visibility = "visible";
+            this.ob_time_marker.style.zIndex = "99999";
+            this.ob_time_marker.style.top = "0px";
+            this.ob_time_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) - 200 + "px";
+            if (this.timeZone === "UTC") {
+                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25) +
+                    " - UTC";
+            } else {
+                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25);
+            }
+            if (this.ob_cal !== undefined) {
+                this.ob_cal.goto(this.ob_markerDate);
+                this.ob_cal.set(this.ob_markerDate);
+            }
+        }
+    }
     OB_TIMELINE.prototype.sync_bands = function (ob_scene_index, ob_band, x) {
         if (ob_band === undefined) return;
         let ob_band2;
@@ -2980,34 +3004,13 @@ function OB_TIMELINE() {
                     ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
             }
         }
-        if (this.ob_marker !== undefined) {
-            this.ob_marker.style.visibility = "visible";
-            this.ob_marker.style.zIndex = "99999";
-            this.ob_marker.style.top = parseInt(this.ob_timeline_header.style.height) - 14 + "px";
-            this.ob_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) -
-                parseInt(this.ob_marker.style.width) / 2 + "px";
-        }
-        if (this.ob_time_marker.innerText !== undefined) {
-            this.ob_time_marker.style.visibility = "visible";
-            this.ob_time_marker.style.zIndex = "99999";
-            this.ob_time_marker.style.top = "0px";
-            this.ob_time_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) - 200 + "px";
-            if (this.timeZone === "UTC") {
-                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25) +
-                    " - UTC";
-            } else {
-                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25);
-            }
-            if (this.ob_cal !== undefined) {
-                this.ob_cal.goto(this.ob_markerDate);
-                this.ob_cal.set(this.ob_markerDate);
-            }
-        }
+
+        this.update_time_marker();
+
     };
     OB_TIMELINE.prototype.move_band = function (ob_scene_index, ob_band_name, x, y, z, ob_sync) {
         if (isNaN(x)) return;
-        if (ob_band_name.includes("zone"))
-            console.log("OB_TIMELINE.moveBand(" + ob_band_name + "," + x + "," + y + "," + z + ")");
+
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(ob_band_name);
         if (ob_band === undefined) return;
         ob_band.position.set(x, y, z);
@@ -4597,7 +4600,7 @@ function OB_TIMELINE() {
     }
     OB_TIMELINE.prototype.ob_optimize_load_time = function (ob_scene_index, multiples) {
         if (multiples === undefined)
-            this.ob_scene[ob_scene_index].multiples = 90;
+            this.ob_scene[ob_scene_index].multiples = 45;
         else
             this.ob_scene[ob_scene_index].multiples = multiples;
         return this.ob_scene[ob_scene_index].multiples === 480;
