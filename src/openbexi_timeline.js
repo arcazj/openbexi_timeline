@@ -222,18 +222,18 @@ function OB_TIMELINE() {
         this.left = parseInt(this.params[0].left);
         this.width = parseInt(this.params[0].width);
         this.height = parseInt(this.params[0].height);
-        this.fontSize = this.params[0].fontSize;
         this.backgroundColor = this.params[0].backgroundColor;
-        if (this.params[0].fontSize === undefined) {
-            this.fontSize = "12px";
-            this.fontSizeInt = "12";
-        } else {
+        this.fontSize = this.params[0].fontSize;
+        if (this.fontSize !== undefined && !isNaN(this.fontSize)) {
             try {
                 this.fontSizeInt = this.params[0].fontSize.replace("px", "");
             } catch (e) {
                 this.fontSizeInt = this.params[0].fontSize;
             }
             this.fontSize = this.fontSizeInt + "px";
+        } else {
+            this.fontSize = "12px";
+            this.fontSizeInt = "12";
         }
         if (this.params[0].fontFamily === undefined) {
             this.fontFamily = 'Arial';
@@ -288,11 +288,12 @@ function OB_TIMELINE() {
 
         // -- set timeline top --
         try {
-            if (this.top !== undefined) {
+            if (this.top !== undefined && !isNaN(this.top)) {
                 this.ob_scene[ob_scene_index].top = this.top;
             } else {
                 console.log("ob_scene_init(): timeline top not defined - set to default : 0");
-                this.ob_scene[ob_scene_index].top = 0;
+                this.top = 0;
+                this.ob_scene[ob_scene_index].top = this.top;
             }
         } catch (err) {
             console.log("ob_scene_init(): Wrong timeline top - set to default : 0");
@@ -302,11 +303,12 @@ function OB_TIMELINE() {
         // -- set timeline height --
         try {
 
-            if (this.height !== undefined) {
+            if (this.height !== undefined && !isNaN(this.height)) {
                 this.ob_scene[ob_scene_index].ob_height = parseInt(this.height);
             } else {
                 console.log("ob_scene_init(): timeline height not defined - set to default : 800");
-                this.ob_scene[ob_scene_index].ob_height = 800;
+                this.height = 800;
+                this.ob_scene[ob_scene_index].ob_height = this.height;
             }
         } catch (err) {
             console.log("ob_scene_init(): Wrong timeline height - set to default : 800");
@@ -315,11 +317,12 @@ function OB_TIMELINE() {
 
         // -- set timeline width --
         try {
-            if (this.width !== undefined) {
+            if (this.width !== undefined && !isNaN(this.width)) {
                 this.ob_scene[ob_scene_index].width = this.width;
             } else {
                 console.log("ob_scene_init(): timeline width not defined - set to default : 800");
-                this.ob_scene[ob_scene_index].width = 800;
+                this.width = 1350;
+                this.ob_scene[ob_scene_index].width = this.width;
             }
         } catch (err) {
             console.log("ob_scene_init(): Wrong timeline width - set to default : 800");
@@ -327,11 +330,12 @@ function OB_TIMELINE() {
         }
         // -- set timeline left --
         try {
-            if (this.left !== undefined) {
+            if (this.left !== undefined && !isNaN(this.left)) {
                 this.ob_scene[ob_scene_index].left = this.left;
             } else {
                 console.log("ob_scene_init(): timeline left not defined - set to default : 0");
-                this.ob_scene[ob_scene_index].left = 0;
+                this.left = 0;
+                this.ob_scene[ob_scene_index].left = this.left;
             }
         } catch (err) {
             console.log("ob_scene_init(): Wrong timeline width - set to default : 0");
@@ -2437,6 +2441,7 @@ function OB_TIMELINE() {
             }
             this.ob_scene[ob_scene_index].bands[i].multiples =
                 parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / this.ob_scene[ob_scene_index].multiples;
+            this.ob_scene[ob_scene_index].bands[i].multiples = this.ob_scene[ob_scene_index].multiples;
             this.ob_scene[ob_scene_index].bands[i].trackIncrement = this.ob_scene[ob_scene_index].increment;
         }
         this.create_new_bands(ob_scene_index);
@@ -2831,8 +2836,12 @@ function OB_TIMELINE() {
         let ob_scene_update_required_with_no_reload = false
         // If user is moving a band, check when we need to load a new scene when we reach the boundary.
         if (band !== null) {
-            if ((band.pos_x > -band.position.x - this.ob_scene[ob_scene_index].width ||
-                band.position.x < band.pos_x + this.ob_scene[ob_scene_index].width)) {
+            let x = band.position.x;
+            if (band.name.match(/overview_/) && band.position.x_with_no_scale !== undefined)
+                x = band.position.x_with_no_scale;
+            console.log("-->" + band.pos_x + "|" + x + "|" + this.ob_scene[ob_scene_index].width);
+            if ((band.pos_x > -x - this.ob_scene[ob_scene_index].width ||
+                x < band.pos_x + this.ob_scene[ob_scene_index].width)) {
                 clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
                 this.reset_synced_time("new_view", ob_scene_index);
                 this.load_data(ob_scene_index);
@@ -3000,8 +3009,10 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[i].intervalPixels;
                 //Start syncing
                 ob_band2 = this.ob_scene[ob_scene_index].getObjectByName(this.ob_scene[ob_scene_index].bands[i].name);
-                if (ob_band2 !== undefined)
+                if (ob_band2 !== undefined) {
+                    ob_band.position.x_with_no_scale = ob_band2.position.x;
                     ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
+                }
             }
         }
 
@@ -4038,7 +4049,7 @@ function OB_TIMELINE() {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
-                return;
+                //return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
