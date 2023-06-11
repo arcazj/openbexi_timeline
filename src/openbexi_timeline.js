@@ -1,8 +1,7 @@
 /* This notice must be untouched at all times.
 
-Copyright (c) 2022 arcazj All rights reserved.
-    OpenBEXI Timeline 0.9.9l beta
-
+Copyright (c) 2023 arcazj All rights reserved.
+    OpenBEXI Timeline version 0.9.9m beta
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
@@ -887,7 +886,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9l beta</legend>\n" +
+                "<legend> version 0.9.9m beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1107,19 +1106,14 @@ function OB_TIMELINE() {
             let div = document.createElement("div");
             div.id = this.name + "_descriptor";
             div.className = "ob_descriptor";
-            if (window.innerHeight > parseInt(this.ob_scene[ob_scene_index].ob_height) +
-                parseInt(this.ob_timeline_header.style.height))
-                div.style.height = parseInt(this.ob_scene[ob_scene_index].ob_height) +
-                    parseInt(this.ob_timeline_header.style.height) + "px";
-            else
-                div.style.height = window.innerHeight + "px";
+            div.style.height = window.innerHeight + "px";
             if (this.ob_scene[ob_scene_index].descriptor === undefined) {
                 if (descriptor.id === undefined) descriptor.id = "";
                 if (descriptor.end === undefined) descriptor.end = "";
                 let ob_descriptor_body = "";
                 for (let [key, value] of Object.entries(descriptor.data)) {
-                    if (key !== "sortByValue" && key !== "description" && key !== "analyze" && key !== "title"
-                        && value !== "NA" && value !== "?" && value !== undefined)
+                    if (key !== "sortByValue" && key !== "description" && key !== "analyze" && key !== "title" &&
+                        value.trim() !== "" && value !== "NA" && value !== "?" && value !== undefined)
                         ob_descriptor_body += "<tr><td class=ob_descriptor_td>" + key + ":</td><td>" + value +
                             "</td></tr>";
                 }
@@ -2839,7 +2833,7 @@ function OB_TIMELINE() {
             let x = band.position.x;
             if (band.name.match(/overview_/) && band.position.x_with_no_scale !== undefined)
                 x = band.position.x_with_no_scale;
-            console.log("-->" + band.pos_x + "|" + x + "|" + this.ob_scene[ob_scene_index].width);
+            //console.log("-->" + band.pos_x + "|" + x + "|" + this.ob_scene[ob_scene_index].width);
             if ((band.pos_x > -x - this.ob_scene[ob_scene_index].width ||
                 x < band.pos_x + this.ob_scene[ob_scene_index].width)) {
                 clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
@@ -3899,10 +3893,17 @@ function OB_TIMELINE() {
             this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.45,
                 this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
                 this.ob_scene[ob_scene_index].bands[i].heightMax, this.ob_scene[ob_scene_index].bands[i].color, false);
+            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.90,
+                this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
+                this.ob_scene[ob_scene_index].bands[i].heightMax, this.ob_scene[ob_scene_index].bands[i].color, false);
             this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x,
                 -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
                 this.ob_scene[ob_scene_index].bands[i].heightMax, color, false);
             this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.45,
+                -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
+                this.ob_scene[ob_scene_index].bands[i].heightMax,
+                this.ob_scene[ob_scene_index].bands[i].color, false);
+            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.90,
                 -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
                 this.ob_scene[ob_scene_index].bands[i].heightMax,
                 this.ob_scene[ob_scene_index].bands[i].color, false);
@@ -3916,7 +3917,7 @@ function OB_TIMELINE() {
         }
         let ob_sprite = this.track[ob_scene_index](new THREE.TextSprite({
             alignment: font_align,
-            backgroundColor: backgroundColor,
+            //backgroundColor: backgroundColor,
             color: color,
             fontFamily: fontFamily,
             fontSize: parseInt(fontSize),
