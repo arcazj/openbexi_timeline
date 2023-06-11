@@ -10,8 +10,8 @@ COPY THREE.TextSprite THREE.TextSprite
 COPY THREE.TextTexture THREE.TextTexture
 
 COPY tomcat tomcat
-COPY openbexi_timeline_secure.html openbexi_timeline_secure.html
-COPY openbexi_timeline_SSE.html openbexi_timeline_SSE.html
+COPY openbexi_timeline_test_secure.html openbexi_timeline_secure.html
+COPY openbexi_timeline_test_SSE.html openbexi_timeline_SSE.html
 COPY tests tests
 EXPOSE 8444
 EXPOSE 8446
