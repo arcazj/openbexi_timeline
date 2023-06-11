@@ -1,5 +1,7 @@
-package com.openbexi.timeline.data_browser;
+package com.openbexi.timeline.tests;
 
+import com.openbexi.timeline.data_browser.data_configuration;
+import com.openbexi.timeline.data_browser.db_mongo_manager;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
