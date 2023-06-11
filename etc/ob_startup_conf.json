@@ -1,0 +1,14 @@
+{
+  "startup configuration": [
+    {
+      "-type": "json file",
+      "-data_path": "/data/",
+      "-data_model": "/data/yyyy/mm/dd",
+      "-connector": "secure_sse:8441|secure:8442",
+      "-filter": "",
+      "-filter_include": "",
+      "-filter_exclude": "",
+      "-event_converter_class": ""
+    }
+  ]
+}
