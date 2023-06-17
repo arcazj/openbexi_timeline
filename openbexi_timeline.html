@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
     <title>Openbexi_timeline</title>
+    <meta name="Description" content="Timeline data-analysis webgl javascript three.js">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
     <link href="css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
     <link href="css/ob_descriptor.css" rel="stylesheet" type="text/css">
@@ -25,23 +28,27 @@
         ob_timeline1 = new OB_TIMELINE();
         ob_timeline1.params = [{
             name: "ob_timeline_2",
-            title: "GNS report",
-            //date: "May 18 16:26:00 UTC 2020",
+            title: "Timeline report",
+            // date: "Feb 11 20:00:00 UTC 2023",
             date: "current_time",
             timeZone: "UTC",
             top: 0,
-            filter: "|RNG", //Exclude RNG
+            //filter: "|system:RNG", //Exclude RNG
             left: 0,
-            height: 400,
-            fontSize: "12",
+            height: 600,
+            fontSize: 12,
             //width: window.innerWidth,
             width: 1350,
-            //data: "http://localhost:8080/openbexi_timeline/sessions?startDate=test&endDate=test"
-            data: "http://localhost:8080/openbexi_timeline/sessions?startDate=current_time&endDate="
+            data_default_port: 8442,
+            data_sse_port: 8441,
+            data: "https://localhost:data_default_port/openbexi_timeline/sessions?startDate=current_time&endDate="
+            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=Jul 02 00:00:00 UTC 2022&endDate=Jul 04 00:00:00 UTC 2022"
+            //data: "https://localhost:8446/openbexi_timeline_sse/sessions?startDate=current_time&endDate="
+            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
         }];
         ob_timeline1.bands = [{
             name: "ob_band_1",
-            height: "100%",
+            height: "75%",
             color: "#a1d9ff",
             intervalPixels: "1000",
             subIntervalPixels: "AUTO",
@@ -60,10 +67,10 @@
         },
             {
                 name: "ob_overview_band_2",
-                height: "20%",
-                color: "lightgrey",
-                intervalPixels: 400,
-                intervalUnit: "MONTH",
+                height: "25%",
+                color: "#8ac7f6",
+                intervalPixels: 1000,
+                intervalUnit: "DAY",
                 dateFormat: "yyyy mmm dd",
                 SessionColor: "#a110ff",
                 eventColor: "#238448",
@@ -78,11 +85,6 @@
 <div id="ob_content"></div>
 <script id="template" type="notjs">
 	<div class="ob_description">$</div>
-
-
-
-
-
 </script>
 </body>
 </html>
