@@ -11,45 +11,17 @@
       "top": "0",
       "left": "0",
       "width": "1350",
-      "height": "600",
+      "height": "undefined",
       "camera": "Orthographic",
       "backgroundColor": "#a1d9ff",
       "sortBy": "NONE",
       "filters": [
         {
-          "name": "Exclude_nominal_RNG",
+          "name": "ALL",
           "backgroundColor": "#a1d9ff",
-          "filter_value": "|system:RNG+status:FINISHED;description:(90% used);system:CRON;system:SCRIPT;description:attribute MonitorProgram not set",
+          "filter_value": "",
           "sortBy": "NONE",
           "current": "yes"
-        },
-        {
-          "backgroundColor": "#a1d9ff",
-          "current": "no",
-          "filter_value": "",
-          "name": "ALL",
-          "sortBy": "NONE"
-        },
-        {
-          "backgroundColor": "#a1d9ff",
-          "current": "no",
-          "filter_value": "system:TEMPO",
-          "name": "TEMPO",
-          "sortBy": "NONE"
-        },
-        {
-          "backgroundColor": "#8ac7f6",
-          "current": "no",
-          "filter_value": "STARTED",
-          "name": "Only_STARTED",
-          "sortBy": "NONE"
-        },
-        {
-          "backgroundColor": "#a1d9ff",
-          "current": "no",
-          "filter_value": "|FINISHED",
-          "name": "Remove_FINISHED",
-          "sortBy": "NONE"
         }
       ]
     }
