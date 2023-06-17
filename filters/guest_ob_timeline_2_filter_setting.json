@@ -2,4 +2,4 @@
   "dateTimeFormat": "iso8601",
   "scene": "0",
   "openbexi_timeline": [{
-  "name": "ob_timeline_2",  "title1": "Timeline report",  "user": "guest",  "email": "",  "start": "current_time",  "top": "0",  "left": "0",  "width": "1350",  "height": "undefined",  "camera": "Orthographic",  "backgroundColor": "#a1d9ff",  "sortBy": "NONE",  "filters":[{  "name":"ALL",  "backgroundColor":"#a1d9ff",  "filter_value":"",  "sortBy":"NONE",  "current":"yes"}]}]}
+  "name": "ob_timeline_2",  "title1": "Timeline report",  "user": "guest",  "email": "",  "start": "current_time",  "top": "0",  "left": "0",  "width": "1350",  "height": "undefined",  "camera": "Orthographic",  "backgroundColor": "#a1d9ff",  "sortBy": "NONE",  "filters":[{  "name":"descriptor",  "backgroundColor":"#a1d9ff",  "filter_value":"read_descriptor",  "sortBy":"NONE",  "current":"yes"},{"backgroundColor":"#a1d9ff","current":"no","filter_value":"","name":"ALL","sortBy":"NONE"}]}]}
