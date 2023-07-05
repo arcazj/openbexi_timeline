@@ -3126,17 +3126,25 @@ function OB_TIMELINE() {
                 (session.original_x <= currentSession.original_x &&
                     session.original_x + session.total_width >= currentSession.original_x + currentSession.total_width);
 
-            if (session.y === undefined)
-                session.y =this.ob_scene[ob_scene_index].bands[i].track;
-            if (currentSession.y === undefined)
-                currentSession.y = this.ob_scene[ob_scene_index].bands[i].track;
+            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+                if (session.y === undefined)
+                    session.y = this.ob_scene[ob_scene_index].bands[i].track;
+                if (currentSession.y === undefined)
+                    currentSession.y = this.ob_scene[ob_scene_index].bands[i].track;
 
-            let sessionBottomY = session.y + session.height;
-            let currentSessionBottomY = currentSession.y + currentSession.height;
-            let isOverlapY =
-                (currentSession.y >= sessionBottomY) || (currentSessionBottomY >= session.y);
+                let sessionBottomY = session.y + session.height;
+                let currentSessionBottomY = currentSession.y + currentSession.height;
+                let isOverlapY =
+                    (currentSession.y >= sessionBottomY) || (currentSessionBottomY >= session.y);
 
-            if (isOverlap || isOverlapY) {
+                if (isOverlap || isOverlapY) {
+                    if (isOverlap) {
+                        for (let a = 0; a < currentSession.activities.length; a++) {
+                            ob_busy_tracks.push(currentSession.activities[a].y);
+                        }
+                    }
+                }
+            } else if (isOverlap) {
                 for (let a = 0; a < currentSession.activities.length; a++) {
                     ob_busy_tracks.push(currentSession.activities[a].y);
                 }
