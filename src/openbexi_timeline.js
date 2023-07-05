@@ -3116,7 +3116,7 @@ function OB_TIMELINE() {
         // Check overlapping with the current session
         for (let l = 0; l < j; l++) {
             let currentSession = sessions[l];
-            let isOverlap =
+            let isOverlapX =
                 (session.original_x >= currentSession.original_x &&
                     session.original_x + session.total_width <= currentSession.original_x + currentSession.total_width) ||
                 (session.original_x + session.total_width >= currentSession.original_x &&
@@ -3126,7 +3126,7 @@ function OB_TIMELINE() {
                 (session.original_x <= currentSession.original_x &&
                     session.original_x + session.total_width >= currentSession.original_x + currentSession.total_width);
 
-            if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+            if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
                 if (session.y === undefined)
                     session.y = this.ob_scene[ob_scene_index].bands[i].track;
                 if (currentSession.y === undefined)
@@ -3135,16 +3135,14 @@ function OB_TIMELINE() {
                 let sessionBottomY = session.y + session.height;
                 let currentSessionBottomY = currentSession.y + currentSession.height;
                 let isOverlapY =
-                    (currentSession.y >= sessionBottomY) || (currentSessionBottomY >= session.y);
+                    (currentSession.y <= sessionBottomY) || (currentSessionBottomY => session.y);
 
-                if (isOverlap || isOverlapY) {
-                    if (isOverlap) {
-                        for (let a = 0; a < currentSession.activities.length; a++) {
-                            ob_busy_tracks.push(currentSession.activities[a].y);
-                        }
+                if (isOverlapX && isOverlapY) {
+                    for (let a = 0; a < currentSession.activities.length; a++) {
+                        ob_busy_tracks.push(currentSession.activities[a].y);
                     }
                 }
-            } else if (isOverlap) {
+            } else if (isOverlapX) {
                 for (let a = 0; a < currentSession.activities.length; a++) {
                     ob_busy_tracks.push(currentSession.activities[a].y);
                 }
