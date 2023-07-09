@@ -3059,11 +3059,15 @@ function OB_TIMELINE() {
         }
         //console.log("create_segments_and_dates done at:" + Date() + " - " + new Date().getMilliseconds());
     };
+
     OB_TIMELINE.prototype.get_first_free_tracks = function (ob_scene_index, ob_busy_tracks, session, i) {
         let ob_current_track = this.ob_scene[ob_scene_index].bands[i].maxY -
             this.ob_scene[ob_scene_index].bands[i].fontSizeInt -
             this.ob_scene[ob_scene_index].bands[i].trackIncrement;
 
+        let ff=0;
+        if (session.activities[0].id === "40da77f7-f10d-40c8-aca3-c34bc95aec6a")
+            ff =1;
         if (ob_busy_tracks.length === 0) {
             return ob_current_track;
         } else {
@@ -3077,7 +3081,8 @@ function OB_TIMELINE() {
                             return ob_current_track;
                         }
                         if (t !== 0 && ob_count_track > session.activities.length) {
-                            return ob_current_track + this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            return ob_current_track -
+                                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                         }
                         if (ob_count_track > session.activities.length) {
                             return ob_current_track;
@@ -3091,7 +3096,8 @@ function OB_TIMELINE() {
                             return ob_current_track;
                         }
                         if (ob_count_track > session.activities.length) {
-                            ob_current_track = ob_busy_tracks[t] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            ob_current_track = ob_busy_tracks[t] -
+                                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                             return ob_current_track;
                         }
                     }
@@ -3127,19 +3133,21 @@ function OB_TIMELINE() {
                     session.original_x + session.total_width >= currentSession.original_x + currentSession.total_width);
 
             if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                if (session.y === undefined)
-                    session.y = this.ob_scene[ob_scene_index].bands[i].track;
-                if (currentSession.y === undefined)
-                    currentSession.y = this.ob_scene[ob_scene_index].bands[i].track;
+                if (isOverlapX) {
+                    if (session.y === undefined)
+                        session.y = this.ob_scene[ob_scene_index].bands[i].track;
+                    if (currentSession.y === undefined)
+                        currentSession.y = this.ob_scene[ob_scene_index].bands[i].track;
 
-                let sessionBottomY = session.y + session.height;
-                let currentSessionBottomY = currentSession.y + currentSession.height;
-                let isOverlapY =
-                    (currentSession.y <= sessionBottomY) || (currentSessionBottomY => session.y);
+                    let currentSessionBottomY = currentSession.y + currentSession.height;
+                    let sessionBottomY = session.y + session.height;
+                    let isOverlapY =
+                        (currentSession.y <= sessionBottomY) || (currentSessionBottomY >= session.y);
 
-                if (isOverlapX && isOverlapY) {
-                    for (let a = 0; a < currentSession.activities.length; a++) {
-                        ob_busy_tracks.push(currentSession.activities[a].y);
+                    if (isOverlapY) {
+                        for (let a = 0; a < currentSession.activities.length; a++) {
+                            ob_busy_tracks.push(currentSession.activities[a].y);
+                        }
                     }
                 }
             } else if (isOverlapX) {
