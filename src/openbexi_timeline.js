@@ -826,9 +826,11 @@ function OB_TIMELINE() {
         this.ob_remove_login();
         this.ob_read_filter(ob_scene_index, 0);
     };
+
     OB_TIMELINE.prototype.ob_cancel_user = function () {
         this.ob_remove_login();
     };
+
     OB_TIMELINE.prototype.ob_login = function (ob_scene_index) {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
@@ -870,6 +872,7 @@ function OB_TIMELINE() {
         } catch (err) {
         }
     };
+
     OB_TIMELINE.prototype.ob_remove_login = function () {
         try {
             this.ob_timeline_right_panel.style.visibility = "hidden";
@@ -877,6 +880,7 @@ function OB_TIMELINE() {
         } catch (err) {
         }
     };
+
     OB_TIMELINE.prototype.ob_create_help = function (ob_scene_index) {
         this.ob_remove_descriptor();
         this.ob_remove_calendar();
@@ -1077,6 +1081,7 @@ function OB_TIMELINE() {
             "&userName=" + this.ob_user_name;
         this.load_data(ob_scene_index);
     };
+
     OB_TIMELINE.prototype.ob_open_descriptor = function (ob_scene_index, data) {
 
         this.ob_remove_help();
@@ -1674,6 +1679,7 @@ function OB_TIMELINE() {
         if (this.ob_no_view !== undefined)
             this.ob_no_view.style.left = (this.ob_timeline_header.offsetWidth - 150) + "px";
     };
+
     OB_TIMELINE.prototype.setGregorianUnitLengths = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "MILLISECOND    ")
@@ -1710,23 +1716,27 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
         return ob_date + (this.timeZoneOffset * 60000);
     };
+
     OB_TIMELINE.prototype.getUTCFullYearTime = function (ob_date) {
         return new Date(0).setUTCFullYear(ob_date);
     };
+
     OB_TIMELINE.prototype.getHour = function (totalGregorianUnitLengths) {
         let hh = new Date(totalGregorianUnitLengths).getHours();
         if (String(hh).length === 1)
             return "0" + hh;
         else
             return hh;
-    }
+    };
+
     OB_TIMELINE.prototype.getMinute = function (totalGregorianUnitLengths) {
         let mm = new Date(totalGregorianUnitLengths).getMinutes();
         if (String(mm).length === 1)
             return "0" + mm;
         else
             return mm;
-    }
+    };
+
     OB_TIMELINE.prototype.getDay = function (totalGregorianUnitLengths, format) {
         if (format === "ddd") {
             if (new Date(totalGregorianUnitLengths).getDay() === 0)
@@ -1747,35 +1757,18 @@ function OB_TIMELINE() {
             return String(new Date(totalGregorianUnitLengths).getDate());
     };
     OB_TIMELINE.prototype.getMonth = function (totalGregorianUnitLengths, format) {
+        const monthIndex = new Date(totalGregorianUnitLengths).getMonth();
         if (format === "mmm") {
-            if (new Date(totalGregorianUnitLengths).getMonth() === 0)
-                return "Jan";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 1)
-                return "Feb";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 2)
-                return "Mar";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 3)
-                return "Apr";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 4)
-                return "May";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 5)
-                return "Jun";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 6)
-                return "Jul";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 7)
-                return "Aug";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 8)
-                return "Sep";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 9)
-                return "Oct";
-            else if (new Date(totalGregorianUnitLengths).getMonth() === 10)
-                return "Nov";
-            else
-                return "Dec";
+            const monthNames = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+            return monthNames[monthIndex];
         } else {
-            return String(new Date(totalGregorianUnitLengths).getMonth() + 1);
+            return String(monthIndex + 1);
         }
-    }
+    };
+
     OB_TIMELINE.prototype.convertDate = function (totalGregorianUnitLengths, dateFormat) {
         let ob_date_separator = " ";
         if (dateFormat.includes("/")) ob_date_separator = "/";
@@ -1874,44 +1867,56 @@ function OB_TIMELINE() {
         return (Date.parse(date) - this.ob_scene.sync_time) / (gregorianUnitLengths / intervalPixels);
     };
 
-    OB_TIMELINE.prototype.pixelOffSetToDateText = function (ob_scene_index, pixels, gregorianUnitLengths,
-                                                            intervalPixels, intervalUnit, dateFormat) {
-        let totalGregorianUnitLengths = this.ob_scene.sync_time +
-            (pixels * (gregorianUnitLengths / intervalPixels));
-        if (dateFormat !== "DEFAULT")
+    OB_TIMELINE.prototype.pixelOffSetToDateText = function (
+        ob_scene_index,
+        pixels,
+        gregorianUnitLengths,
+        intervalPixels,
+        intervalUnit,
+        dateFormat
+    ) {
+        const totalGregorianUnitLengths =
+            this.ob_scene.sync_time + pixels * (gregorianUnitLengths / intervalPixels);
+
+        if (dateFormat !== "DEFAULT") {
             return this.convertDate(totalGregorianUnitLengths, dateFormat);
-        if (intervalUnit === "CENTURY")
-            return String(new Date(totalGregorianUnitLengths).getFullYear() * 100);
-        else if (intervalUnit === "DECADE")
-            return String(new Date(totalGregorianUnitLengths).getFullYear() * 10);
-        else if (intervalUnit === "YEAR")
-            return String(new Date(totalGregorianUnitLengths).getFullYear());
-        else if (intervalUnit === "MONTH")
-            return this.convertDate(totalGregorianUnitLengths, "MM");
-        else if (intervalUnit === "DAY")
-            return String(new Date(totalGregorianUnitLengths).getDate());
-        else if (intervalUnit === "HOUR")
-            return String(new Date(totalGregorianUnitLengths).getHours());
-        else if (intervalUnit === "MINUTE")
-            return String(new Date(totalGregorianUnitLengths).getMinutes());
-        else if (intervalUnit === "SECOND")
-            return String(new Date(totalGregorianUnitLengths).getSeconds());
-        else
-            return String(new Date(totalGregorianUnitLengths));
+        }
+
+        switch (intervalUnit) {
+            case "CENTURY":
+                return String(new Date(totalGregorianUnitLengths).getFullYear() * 100);
+            case "DECADE":
+                return String(new Date(totalGregorianUnitLengths).getFullYear() * 10);
+            case "YEAR":
+                return String(new Date(totalGregorianUnitLengths).getFullYear());
+            case "MONTH":
+                return this.convertDate(totalGregorianUnitLengths, "MM");
+            case "DAY":
+                return String(new Date(totalGregorianUnitLengths).getDate());
+            case "HOUR":
+                return String(new Date(totalGregorianUnitLengths).getHours());
+            case "MINUTE":
+                return String(new Date(totalGregorianUnitLengths).getMinutes());
+            case "SECOND":
+                return String(new Date(totalGregorianUnitLengths).getSeconds());
+            default:
+                return String(new Date(totalGregorianUnitLengths));
+        }
     };
+
     OB_TIMELINE.prototype.pixelOffSetToDate = function (ob_scene_index, pixels, gregorianUnitLengths, intervalPixels) {
         let totalGregorianUnitLengths = this.ob_scene.sync_time +
             (pixels * (gregorianUnitLengths / intervalPixels));
         return new Date(totalGregorianUnitLengths);
     };
 
-// Bands creation and manipulation
     OB_TIMELINE.prototype.get_band = function (ob_scene_index, name) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].name === name)
                 return this.ob_scene[ob_scene_index].bands[i];
         }
     };
+
     OB_TIMELINE.prototype.center_bands = function (ob_scene_index) {
         let ob_sync = false;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
@@ -1935,6 +1940,7 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].bands[i].z, ob_sync);
         }
     };
+
     OB_TIMELINE.prototype.update_bands_MinDate = function (ob_scene_index, date) {
         this.ob_scene[ob_scene_index].minDateL = 0;
         this.iniMinDateL = 0;
@@ -1972,6 +1978,7 @@ function OB_TIMELINE() {
             }
         }
     };
+
     OB_TIMELINE.prototype.update_bands_MaxDate = function (ob_scene_index, date) {
         this.ob_scene[ob_scene_index].maxDateL = 0;
         this.iniMaxDateL = 0;
@@ -2026,6 +2033,7 @@ function OB_TIMELINE() {
             }
         }
     };
+
     OB_TIMELINE.prototype.set_bands_maxDate = function (ob_scene_index) {
         this.ob_scene[ob_scene_index].maxDateL = 0;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
@@ -2052,6 +2060,7 @@ function OB_TIMELINE() {
             }
         }
     };
+
     OB_TIMELINE.prototype.set_bands_viewOffset = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             this.ob_scene[ob_scene_index].bands[i].minWidth = this.ob_scene[ob_scene_index].width;
@@ -2062,6 +2071,7 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].bands[i].viewOffset;
         }
     };
+
     OB_TIMELINE.prototype.update_timeline_model = function (
         ob_scene_index,
         band,
@@ -2103,7 +2113,6 @@ function OB_TIMELINE() {
 
         this.ob_scene[ob_scene_index].bands.original_length = this.ob_scene[ob_scene_index].bands.length;
     };
-
 
     OB_TIMELINE.prototype.create_new_bands = function (ob_scene_index) {
         let ob_layouts = [];
@@ -2254,7 +2263,8 @@ function OB_TIMELINE() {
             }
         }
         return 0;
-    }
+    };
+
     OB_TIMELINE.prototype.get_band_overview_index = function (ob_scene_index) {
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             if (this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
@@ -2262,7 +2272,7 @@ function OB_TIMELINE() {
             }
         }
         return null;
-    }
+    };
 
     OB_TIMELINE.prototype.get_overview_track_increment = function (offSet, offSetOverview, ob_scene_index) {
         let ob_overview_track_increment;
@@ -2315,110 +2325,79 @@ function OB_TIMELINE() {
             ob_default_overview = JSON.parse(ob_default_overview);
             this.ob_scene[ob_scene_index].bands.push(ob_default_overview);
         }
-    }
-
+    };
     OB_TIMELINE.prototype.set_bands = function (ob_scene_index) {
-        //If no overview defined, add a default one
+        // If no overview defined, add a default one
         if (this.ob_visible_view) {
             this.add_band_overview(ob_scene_index);
         } else {
             this.remove_band_overview(ob_scene_index);
         }
+
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            if (this.ob_scene[ob_scene_index].bands[i].textColor === undefined)
-                this.ob_scene[ob_scene_index].bands[i].textColor = "#000000";
-            if (this.ob_scene[ob_scene_index].bands[i].dateColor === undefined)
-                this.ob_scene[ob_scene_index].bands[i].dateColor = "#000000";
-            if (this.ob_scene[ob_scene_index].bands[i].SessionColor === undefined)
-                this.ob_scene[ob_scene_index].bands[i].SessionColor = "#000000";
-            if (this.ob_scene[ob_scene_index].bands[i].eventColor === undefined)
-                this.ob_scene[ob_scene_index].bands[i].eventColor = "#000000";
-            if (this.ob_scene[ob_scene_index].bands[i].texture === undefined)
-                this.ob_scene[ob_scene_index].bands[i].texture = undefined;
-            if (this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture === undefined)
-                this.ob_scene[ob_scene_index].bands[i].defaultSessionTexture = undefined;
-            if (this.ob_scene[ob_scene_index].bands[i].sessionHeight === undefined)
-                this.ob_scene[ob_scene_index].bands[i].sessionHeight = 10;
-            if (this.ob_scene[ob_scene_index].bands[i].defaultEventSize === undefined)
-                this.ob_scene[ob_scene_index].bands[i].defaultEventSize = 5;
+            const band = this.ob_scene[ob_scene_index].bands[i];
 
-            if (this.ob_scene[ob_scene_index].bands[i].fontSize === undefined) {
-                this.ob_scene[ob_scene_index].bands[i].fontSize = this.fontSize;
-                this.ob_scene[ob_scene_index].bands[i].fontSizeInt = this.fontSizeInt;
-            } else {
-                try {
-                    this.ob_scene[ob_scene_index].bands[i].fontSizeInt =
-                        this.ob_scene[ob_scene_index].bands[i].fontSize.replace("px", "");
-                } catch (e) {
-                    this.ob_scene[ob_scene_index].bands[i].fontSizeInt =
-                        this.ob_scene[ob_scene_index].bands[i].fontSize
-                }
-                this.ob_scene[ob_scene_index].bands[i].fontSize =
-                    this.ob_scene[ob_scene_index].bands[i].fontSizeInt + "px";
+            band.textColor = band.textColor || "#000000";
+            band.dateColor = band.dateColor || "#000000";
+            band.SessionColor = band.SessionColor || "#000000";
+            band.eventColor = band.eventColor || "#000000";
+            band.texture = band.texture || undefined;
+            band.defaultSessionTexture = band.defaultSessionTexture || undefined;
+            band.sessionHeight = band.sessionHeight || 10;
+            band.defaultEventSize = band.defaultEventSize || 5;
+
+            band.fontSize = band.fontSize || this.fontSize;
+            band.fontSizeInt = parseInt(band.fontSize) || this.fontSizeInt;
+
+            if (isNaN(band.fontSizeInt)) {
+                band.fontSizeInt = this.fontSize;
             }
 
-            if (this.ob_scene[ob_scene_index].bands[i].fontFamily === undefined) {
-                this.ob_scene[ob_scene_index].bands[i].fontFamily = this.fontFamily;
-            }
+            band.fontSize = band.fontSizeInt + "px";
 
-            if (this.ob_scene[ob_scene_index].bands[i].fontStyle === undefined) {
-                this.ob_scene[ob_scene_index].bands[i].fontStyle = this.fontStyle;
-            }
+            band.fontFamily = band.fontFamily || this.fontFamily;
+            band.fontStyle = band.fontStyle || this.fontStyle;
+            band.fontWeight = band.fontWeight || this.fontWeight;
 
-            if (this.ob_scene[ob_scene_index].bands[i].fontWeight === undefined) {
-                this.ob_scene[ob_scene_index].bands[i].fontWeight = this.fontWeight;
-            }
+            band.x = band.x !== undefined ? parseInt(band.x) : -10000;
+            band.z = band.z !== undefined ? parseInt(band.z) : 0;
 
-            if (this.ob_scene[ob_scene_index].bands[i].x === undefined)
-                this.ob_scene[ob_scene_index].bands[i].x = -10000;
-            else
-                this.ob_scene[ob_scene_index].bands[i].x = parseInt(this.ob_scene[ob_scene_index].bands[i].x);
+            band.width = 100000;
 
-            if (this.ob_scene[ob_scene_index].bands[i].z === undefined)
-                this.ob_scene[ob_scene_index].bands[i].z = 0;
-            else
-                this.ob_scene[ob_scene_index].bands[i].z = parseInt(this.ob_scene[ob_scene_index].bands[i].z);
+            band.depth = band.depth !== undefined ? parseInt(band.depth) : 0;
 
-            this.ob_scene[ob_scene_index].bands[i].width = 100000;
-
-            if (this.ob_scene[ob_scene_index].bands[i].depth === undefined)
-                this.ob_scene[ob_scene_index].bands[i].depth = 0;
-            else
-                this.ob_scene[ob_scene_index].bands[i].depth = parseInt(this.ob_scene[ob_scene_index].bands[i].depth);
-
-            if (this.ob_scene[ob_scene_index].bands[i].color === undefined)
-                this.ob_scene[ob_scene_index].bands[i].color = 'white';
+            band.color = band.color || "white";
 
             if (this.backgroundColor === undefined) {
-                this.backgroundColor = this.ob_scene[ob_scene_index].bands[i].color;
-            }
-            if (this.ob_scene[ob_scene_index].bands[i].backgroundColor === undefined) {
-                this.ob_scene[ob_scene_index].bands[i].backgroundColor = this.backgroundColor;
+                this.backgroundColor = band.color;
             }
 
-            if (this.ob_scene[ob_scene_index].bands[i].intervalPixels === undefined)
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels = "200";
+            band.backgroundColor = band.backgroundColor || this.backgroundColor;
 
-            if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === undefined)
-                this.ob_scene[ob_scene_index].bands[i].intervalUnit = "MINUTE";
+            band.intervalPixels = band.intervalPixels || "200";
+            band.intervalUnit = band.intervalUnit || "MINUTE";
+            band.dateFormat = band.dateFormat || "DEFAULT";
 
-            if (this.ob_scene[ob_scene_index].bands[i].dateFormat === undefined)
-                this.ob_scene[ob_scene_index].bands[i].dateFormat = "DEFAULT"
-
-            if (this.ob_scene[ob_scene_index].bands[i].subIntervalPixels ===
-                undefined || this.ob_scene[ob_scene_index].bands[i].subIntervalPixels === "NONE")
-                this.ob_scene[ob_scene_index].bands[i].subIntervalPixels = "NONE";
-            else {
-                if (this.ob_scene[ob_scene_index].bands[i].intervalUnit ===
-                    "HOUR" && parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) >= 60)
-                    this.ob_scene[ob_scene_index].bands[i].subIntervalPixels =
-                        parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / 4;
+            if (
+                band.subIntervalPixels === undefined ||
+                band.subIntervalPixels === "NONE"
+            ) {
+                band.subIntervalPixels = "NONE";
+            } else {
+                if (
+                    band.intervalUnit === "HOUR" &&
+                    parseInt(band.intervalPixels) >= 60
+                ) {
+                    band.subIntervalPixels = parseInt(band.intervalPixels) / 4;
+                }
             }
-            this.ob_scene[ob_scene_index].bands[i].multiples =
-                parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels) / this.ob_scene[ob_scene_index].multiples;
-            this.ob_scene[ob_scene_index].bands[i].multiples = this.ob_scene[ob_scene_index].multiples;
-            this.ob_scene[ob_scene_index].bands[i].trackIncrement = this.ob_scene[ob_scene_index].increment;
+
+            band.multiples =
+                parseInt(band.intervalPixels) / this.ob_scene[ob_scene_index].multiples;
+            band.multiples = this.ob_scene[ob_scene_index].multiples;
+            band.trackIncrement = this.ob_scene[ob_scene_index].increment;
         }
+
         this.create_new_bands(ob_scene_index);
         this.set_bands_height(ob_scene_index);
         this.set_bands_viewOffset(ob_scene_index);
@@ -2428,15 +2407,13 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.add_zone = function (ob_scene_index, band_number, zone_number, band_name, zone_name, text,
                                                textColor, x, y, z, width, height, depth, color, texture, font_align) {
-        if (isNaN(x)) x = 0;
-        if (isNaN(y)) y = 0;
-        if (isNaN(z)) z = 0;
-        if (isNaN(width)) width = 0;
-        if (isNaN(height)) height = 0;
-        if (depth === undefined) depth = 1;
-        if (color === undefined) {
-            color = this.hex_Luminance(color, -.15);
-        }
+        x = isNaN(x) ? 0 : x;
+        y = isNaN(y) ? 0 : y;
+        z = isNaN(z) ? 0 : z;
+        width = isNaN(width) ? 0 : width;
+        height = isNaN(height) ? 0 : height;
+        depth = depth === undefined ? 1 : depth;
+        color = this.hex_Luminance(color, -0.15) || color;
 
         let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(width, height, depth));
         let ob_material;
@@ -2462,6 +2439,7 @@ function OB_TIMELINE() {
         } else {
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
         }
+
         let ob_zone = this.track[ob_scene_index](new THREE.Mesh(ob_box, ob_material));
         ob_zone.name = "zone_" + zone_name;
         ob_zone.text = text;
@@ -2476,20 +2454,21 @@ function OB_TIMELINE() {
 
         this.ob_scene[ob_scene_index].objects.push(ob_zone);
 
-        if (!band_name.includes("overview"))
+        if (!band_name.includes("overview")) {
             this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, undefined,
                 24, "Normal", "Normal", textColor, 'Arial', font_align);
+        }
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
-            //this.ob_scene[ob_scene_index].group.add(ob_zone);
             ob_band.add(ob_zone);
-            //ob_band.attach(ob_zone);
         }
 
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_zone(" + band_name + "," +
-            text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
-            color + "," + texture + ")");
+        if (ob_debug_ADD_WEBGL_OBJECT) {
+            console.log("OB_TIMELINE.add_zone(" + band_name + "," +
+                text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
+                color + "," + texture + ")");
+        }
     };
 
     OB_TIMELINE.prototype.add_textBox = function (ob_scene_index, band_name, text, textColor, x, y, z, width, height,
@@ -2706,7 +2685,7 @@ function OB_TIMELINE() {
         this.ob_render_index = ob_scene_index;
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
-    }
+    };
 
     OB_TIMELINE.prototype.get_backgroundColor = function () {
         if (this.ob_filters !== undefined) {
@@ -2719,7 +2698,8 @@ function OB_TIMELINE() {
                 }
             }
         }
-    }
+    };
+
     OB_TIMELINE.prototype.get_current_filter_value = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
@@ -2731,7 +2711,8 @@ function OB_TIMELINE() {
                 }
             }
         }
-    }
+    };
+
     OB_TIMELINE.prototype.get_current_sortBy = function () {
         if (this.ob_filters !== undefined) {
             for (let i = 0; i < this.ob_filters.length; i++) {
@@ -2743,7 +2724,8 @@ function OB_TIMELINE() {
                 }
             }
         }
-    }
+    };
+
     OB_TIMELINE.prototype.set_user_setting_and_filters = function (ob_scene_index, setting_and_filters) {
         if (setting_and_filters.openbexi_timeline !== undefined) {
             this.name = setting_and_filters.openbexi_timeline[0].name;
@@ -2774,7 +2756,7 @@ function OB_TIMELINE() {
             } else
                 this.ob_scene[ob_scene_index].ob_filter_value = "";
         }
-    }
+    };
 
     OB_TIMELINE.prototype.update_scene = function (
         ob_scene_index,
@@ -2927,7 +2909,8 @@ function OB_TIMELINE() {
                 this.ob_cal.set(this.ob_markerDate);
             }
         }
-    }
+    };
+
     OB_TIMELINE.prototype.sync_bands = function (ob_scene_index, ob_band, x) {
         if (ob_band === undefined) return;
         let ob_band2;
@@ -2968,6 +2951,7 @@ function OB_TIMELINE() {
         this.update_time_marker();
 
     };
+
     OB_TIMELINE.prototype.move_band = function (ob_scene_index, ob_band_name, x, y, z, ob_sync) {
         if (isNaN(x)) return;
 
@@ -3107,7 +3091,7 @@ function OB_TIMELINE() {
             }
         }
         return ob_busy_tracks[ob_busy_tracks.length - 1] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-    }
+    };
 
     OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
         let ob_busy_tracks = [];
@@ -3192,7 +3176,7 @@ function OB_TIMELINE() {
             return ob_w;
         }
         return ob_w;
-    }
+    };
 
     OB_TIMELINE.prototype.getSessionTotalWidth = function (activities) {
         let ob_w = 0;
@@ -3254,7 +3238,6 @@ function OB_TIMELINE() {
         return parseInt(ob_x);
     };
 
-
     OB_TIMELINE.prototype.getSession_originalX = function (activities) {
         let ob_x = activities[0].original_x;
 
@@ -3275,7 +3258,6 @@ function OB_TIMELINE() {
 
         return parseInt(ob_x);
     };
-
 
     OB_TIMELINE.prototype.init_activities = function (ob_scene_index, band_index, session_index) {
         let z = 5;
@@ -3383,7 +3365,6 @@ function OB_TIMELINE() {
         }
     };
 
-
     OB_TIMELINE.prototype.init_sessions = function (ob_scene_index, band_index) {
         let layout;
         let sortByValue;
@@ -3419,7 +3400,7 @@ function OB_TIMELINE() {
                 this.build_model(ob_scene_index, session.data);
             }
         }
-    }
+    };
 
     OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
         let y = 0;
@@ -3499,7 +3480,8 @@ function OB_TIMELINE() {
                     "|").replace(",", "|").replace(";", "|"));
         }
         return this.regex;
-    }
+    };
+
     OB_TIMELINE.prototype.add_tolerance = function (ob_scene_index, ob_object, band_name, session, color) {
         let tolerance = 0;
         let width = parseInt(session.width);
@@ -3543,6 +3525,7 @@ function OB_TIMELINE() {
             console.log("OB_TIMELINE.add_tolerance(" +
                 ob_object + "," + "," + x + "," + y + "," + z + "," + color + ")");
     };
+
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
         if (ob_scene_index === undefined) ob_scene_index = 0;
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
@@ -3631,25 +3614,39 @@ function OB_TIMELINE() {
                 }
             }
         }
-    }
+    };
 
-    OB_TIMELINE.prototype.add_sessionsBox = function (ob_scene_index, band_name, session, color, texture, luminance, opacity) {
+    OB_TIMELINE.prototype.add_sessionsBox = function (
+        ob_scene_index,
+        band_name,
+        session,
+        color,
+        texture,
+        luminance,
+        opacity
+    ) {
         let ob_box_activities = this.ob_scene[ob_scene_index].getObjectByName(band_name + "_sessionBox_" + session.id);
-        if (ob_box_activities !== undefined)
+        if (ob_box_activities !== undefined) {
             return;
+        }
 
-        if (luminance === undefined)
+        if (luminance === undefined) {
             luminance = -0.15;
-        if (opacity === undefined)
+        }
+        if (opacity === undefined) {
             opacity = 0.35;
+        }
         if (color === undefined) {
-            if (session.render.color !== undefined)
+            if (session.render.color !== undefined) {
                 color = this.hex_Luminance(session.render.color, luminance);
-        } else
+            }
+        } else {
             color = this.hex_Luminance(color, luminance);
+        }
 
         let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(session.width, session.height, 1));
         let ob_material;
+
         if (texture !== undefined) {
             let loader = this.track[ob_scene_index](new THREE.CubeTextureLoader());
             loader.setCrossOrigin("");
@@ -3671,7 +3668,8 @@ function OB_TIMELINE() {
             ob_box.computeVertexNormals();
         } else {
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
-                color: color, transparent: true,
+                color: color,
+                transparent: true,
                 opacity: opacity
             }));
         }
@@ -3689,16 +3687,41 @@ function OB_TIMELINE() {
             ob_band.add(ob_box_activities);
         }
 
-
-        if (ob_debug_ADD_SESSION_WEBGL_OBJECT) console.log("OB_TIMELINE.add_sessionsBox(" + band_name + "," +
-            session.start, "," + session.end + "---" + session.data.title + ",length=" +
-            session.activities.length + "," + session.activities[0].start + session.activities[0].data.description + ")");
+        if (ob_debug_ADD_SESSION_WEBGL_OBJECT) {
+            console.log(
+                "OB_TIMELINE.add_sessionsBox(" +
+                band_name +
+                "," +
+                session.start +
+                "," +
+                session.end +
+                "---" +
+                session.data.title +
+                ",length=" +
+                session.activities.length +
+                "," +
+                session.activities[0].start +
+                session.activities[0].data.description +
+                ")"
+            );
+        }
     };
 
-// WebGl OpenBexi library
-    OB_TIMELINE.prototype.add_session = function (ob_scene_index, band_name, session, color, texture, image,
-                                                  backgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, font_align) {
-
+    OB_TIMELINE.prototype.add_session = function (
+        ob_scene_index,
+        band_name,
+        session,
+        color,
+        texture,
+        image,
+        backgroundColor,
+        fontSizeInt,
+        fontStyle,
+        fontWeight,
+        textColor,
+        fontFamily,
+        font_align
+    ) {
         let ob_height = session.height;
 
         if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
@@ -3710,8 +3733,21 @@ function OB_TIMELINE() {
             let copy_session = {...session};
             copy_session.x_relative = copy_session.pixelOffSetStart - 8;
             copy_session.z = parseInt(session.z + 41);
-            this.add_event(ob_scene_index, band_name, copy_session, color, image, backgroundColor, fontSizeInt,
-                fontStyle, fontWeight, textColor, fontFamily, false, font_align);
+            this.add_event(
+                ob_scene_index,
+                band_name,
+                copy_session,
+                color,
+                image,
+                backgroundColor,
+                fontSizeInt,
+                fontStyle,
+                fontWeight,
+                textColor,
+                fontFamily,
+                false,
+                font_align
+            );
         }
 
         let ob_material;
@@ -3735,7 +3771,12 @@ function OB_TIMELINE() {
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
         }
 
-        let ob_session = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(session.width, ob_height, 10)), ob_material));
+        let ob_session = this.track[ob_scene_index](
+            new THREE.Mesh(
+                this.track[ob_scene_index](new THREE.BoxGeometry(session.width, ob_height, 10)),
+                ob_material
+            )
+        );
         ob_session.position.set(session.x_relative, session.y, session.z);
         ob_session.pos_x = session.x_relative;
         ob_session.pos_y = session.y;
@@ -3744,8 +3785,21 @@ function OB_TIMELINE() {
 
         // Add text and tolerance
         if (!band_name.match(/overview_/)) {
-            this.add_text_sprite(ob_scene_index, ob_session, session.data.title, session.textX, 0, 5, backgroundColor,
-                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, font_align);
+            this.add_text_sprite(
+                ob_scene_index,
+                ob_session,
+                session.data.title,
+                session.textX,
+                0,
+                5,
+                backgroundColor,
+                fontSizeInt,
+                fontStyle,
+                fontWeight,
+                textColor,
+                fontFamily,
+                font_align
+            );
             this.add_tolerance(ob_scene_index, ob_session, band_name, session, undefined);
         }
 
@@ -3761,11 +3815,10 @@ function OB_TIMELINE() {
         return ob_session;
     };
 
-
     OB_TIMELINE.prototype.load_texture = function (image) {
         if (image === undefined || ob_texture === undefined) return undefined;
         return ob_texture.get(image);
-    }
+    };
 
     OB_TIMELINE.prototype.add_event = function (
         ob_scene_index,
@@ -3855,14 +3908,9 @@ function OB_TIMELINE() {
         return ob_event;
     };
 
-
     OB_TIMELINE.prototype.add_segment = function (ob_scene_index, band_name, x, y, z, size, color, dashed) {
-        if (color === undefined) {
-            color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
-        }
-        let points = [];
-        points.push(new THREE.Vector3(x, y, z));
-        points.push(new THREE.Vector3(x, y - size, z));
+        color = color || new THREE.Color("rgb(114, 171, 173)");
+        let points = [new THREE.Vector3(x, y, z), new THREE.Vector3(x, y - size, z)];
         let geometry = this.track[ob_scene_index](new THREE.BufferGeometry().setFromPoints(points));
         let material = this.track[ob_scene_index](new THREE.LineDashedMaterial({
             color: color,
@@ -3871,53 +3919,46 @@ function OB_TIMELINE() {
             gapSize: 4,
         }));
         let segment = this.track[ob_scene_index](new THREE.LineSegments(geometry, material));
-        if (dashed) segment.computeLineDistances();
+        if (dashed) {
+            segment.computeLineDistances();
+        }
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(segment);
         }
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_segment(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+        if (ob_debug_ADD_WEBGL_OBJECT) {
+            console.log("OB_TIMELINE.add_segment(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+        }
     };
 
     OB_TIMELINE.prototype.add_line_current_time = function (ob_scene_index, date, color) {
-        if (color === undefined) {
-            color = this.track[ob_scene_index](new THREE.Color("rgb(243,23,51)"));
-        }
+        color = color || this.track[ob_scene_index](new THREE.Color("rgb(243,23,51)"));
 
         let ob_x;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             ob_x = this.dateToPixelOffSet(ob_scene_index, date,
                 this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
                 this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            if (ob_x.isNaN) return;
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x,
-                this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax, color, false);
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.45,
-                this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax, this.ob_scene[ob_scene_index].bands[i].color, false);
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.90,
-                this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax, this.ob_scene[ob_scene_index].bands[i].color, false);
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x,
-                -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax, color, false);
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.45,
-                -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax,
-                this.ob_scene[ob_scene_index].bands[i].color, false);
-            this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name, ob_x + 0.90,
-                -this.ob_scene[ob_scene_index].bands[i].height / 2, 20,
-                this.ob_scene[ob_scene_index].bands[i].heightMax,
-                this.ob_scene[ob_scene_index].bands[i].color, false);
+            if (isNaN(ob_x)) return;
+
+            const band = this.ob_scene[ob_scene_index].bands[i];
+            const halfHeight = band.height / 2;
+            const heightMax = band.heightMax;
+            const bandColor = band.color;
+
+            this.add_segment(ob_scene_index, band.name, ob_x, halfHeight, 20, heightMax, color, false);
+            this.add_segment(ob_scene_index, band.name, ob_x + 0.45, halfHeight, 20, heightMax, bandColor, false);
+            this.add_segment(ob_scene_index, band.name, ob_x + 0.90, halfHeight, 20, heightMax, bandColor, false);
+            this.add_segment(ob_scene_index, band.name, ob_x, -halfHeight, 20, heightMax, color, false);
+            this.add_segment(ob_scene_index, band.name, ob_x + 0.45, -halfHeight, 20, heightMax, bandColor, false);
+            this.add_segment(ob_scene_index, band.name, ob_x + 0.90, -halfHeight, 20, heightMax, bandColor, false);
         }
     };
 
     OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, backgroundColor,
                                                       fontSize, fontStyle, fontWeight, color, fontFamily, font_align) {
-        if (color === undefined) {
-            color = this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
-        }
+        color = color || this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
+
         let ob_sprite = this.track[ob_scene_index](new THREE.TextSprite({
             alignment: font_align,
             //backgroundColor: backgroundColor,
@@ -3932,22 +3973,25 @@ function OB_TIMELINE() {
                 text,
             ].join('\n'),
         }));
-        if (this.ob_scene[ob_scene_index].ob_camera_type === "Orthographic") {
-            ob_sprite.position.set(x, y, z);
-            ob_sprite.pos_x = x;
-            ob_sprite.pos_y = y;
-            ob_sprite.pos_z = z;
-        } else {
-            ob_sprite.position.set(x - 32, y, text.toString().length * 3.2);
-            ob_sprite.pos_x = x - 32;
-            ob_sprite.pos_y = y;
-            ob_sprite.pos_z = text.toString().length * 3.2;
+
+        let ob_x = x;
+        if (this.ob_scene[ob_scene_index].ob_camera_type !== "Orthographic") {
+            ob_x -= 32;
+            z = text.toString().length * 3.2;
         }
+
+        ob_sprite.position.set(ob_x, y, z);
+        ob_sprite.pos_x = ob_x;
+        ob_sprite.pos_y = y;
+        ob_sprite.pos_z = z;
 
         if (ob_object !== undefined) {
             ob_object.add(ob_sprite);
         }
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.TextSprite(" + ob_object + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+
+        if (ob_debug_ADD_WEBGL_OBJECT) {
+            console.log("OB_TIMELINE.TextSprite(" + ob_object + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+        }
     };
 
     OB_TIMELINE.prototype.build_model = function (ob_scene_index, sessions) {
@@ -3972,7 +4016,8 @@ function OB_TIMELINE() {
         } catch (err) {
             this.ob_scene[ob_scene_index].model = undefined;
         }
-    }
+    };
+
     OB_TIMELINE.prototype.loadJSON = function (ob_scene_index) {
         if (this.data === undefined) return;
         let that = this;
@@ -4412,7 +4457,6 @@ function OB_TIMELINE() {
 
         // console.log("ob_set_camera() - camera:" + scene.ob_camera_type);
     };
-
 
     OB_TIMELINE.prototype.runUnitTestsMinutes = function (ob_scene_index) {
         let sessions = {
@@ -4970,6 +5014,7 @@ function OB_TIMELINE() {
             //ob_timeline.ob_timeline_header.style.top = "0px";
         });
     };
+
     window.addEventListener('resize', function () {
         ob_timelines.forEach(function (ob_timeline) {
             ob_timeline.ob_scene_init(ob_timeline.ob_render_index);
@@ -4998,9 +5043,7 @@ function OB_TIMELINE() {
             localStorage.email = JSON.stringify({name: ""});
         }
     };
-
 }
-
 
 function ob_load_timeline(ob_timeline_instance) {
     ob_timelines.push(ob_timeline_instance);
