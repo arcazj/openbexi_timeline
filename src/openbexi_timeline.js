@@ -3065,9 +3065,6 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].bands[i].fontSizeInt -
             this.ob_scene[ob_scene_index].bands[i].trackIncrement;
 
-        let ff=0;
-        if (session.activities[0].id === "40da77f7-f10d-40c8-aca3-c34bc95aec6a")
-            ff =1;
         if (ob_busy_tracks.length === 0) {
             return ob_current_track;
         } else {
