@@ -3166,8 +3166,7 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].bands[i].trackIncrement;
         }
         return ob_first_free_track;
-    }
-
+    };
 
     OB_TIMELINE.prototype.getTextWidth = function (text, font) {
         // re-use canvas object for better performance
@@ -3176,11 +3175,11 @@ function OB_TIMELINE() {
             let context = canvas.getContext("2d");
             context.font = font;
             let metrics = context.measureText(text);
-            return metrics.width;
+            return metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
         } catch (e) {
             return 0;
         }
-    }
+    };
 
     OB_TIMELINE.prototype.getSessionWidth = function (activities) {
         let ob_w = activities[0].width;
