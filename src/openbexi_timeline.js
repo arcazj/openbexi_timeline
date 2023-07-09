@@ -3073,7 +3073,7 @@ function OB_TIMELINE() {
                 try {
                     if (ob_current_track > ob_busy_tracks[t]) {
                         ob_count_track = Math.abs((ob_current_track - ob_busy_tracks[t])) /
-                            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                         if (isNaN(ob_count_track)) {
                             return ob_current_track;
                         }
@@ -3089,7 +3089,7 @@ function OB_TIMELINE() {
                             this.ob_scene[ob_scene_index].bands[i].trackIncrement;
                         if (isNaN(ob_count_track)) {
                             ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                             return ob_current_track;
                         }
                         if (ob_count_track > session.activities.length) {
@@ -3106,7 +3106,8 @@ function OB_TIMELINE() {
                 }
             }
         }
-        return ob_busy_tracks[ob_busy_tracks.length - 1] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        return ob_busy_tracks[ob_busy_tracks.length - 1] -
+            (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
     }
 
     OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
@@ -3166,7 +3167,8 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].bands[i].trackIncrement;
         }
         return ob_first_free_track;
-    };
+    }
+
 
     OB_TIMELINE.prototype.getTextWidth = function (text, font) {
         // re-use canvas object for better performance
@@ -3175,11 +3177,11 @@ function OB_TIMELINE() {
             let context = canvas.getContext("2d");
             context.font = font;
             let metrics = context.measureText(text);
-            return metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+            return metrics.width;
         } catch (e) {
             return 0;
         }
-    };
+    }
 
     OB_TIMELINE.prototype.getSessionWidth = function (activities) {
         let ob_w = activities[0].width;
