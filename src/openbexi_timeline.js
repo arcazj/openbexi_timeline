@@ -3082,7 +3082,7 @@ function OB_TIMELINE() {
                             return ob_current_track;
                         }
                     }
-                    ob_current_track -= this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                    ob_current_track -=  (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                 } catch (e) {
                     ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
                         this.ob_scene[ob_scene_index].bands[i].trackIncrement;
@@ -3090,7 +3090,8 @@ function OB_TIMELINE() {
                 }
             }
         }
-        return ob_busy_tracks[ob_busy_tracks.length - 1] - this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        return ob_busy_tracks[ob_busy_tracks.length - 1] -
+            (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
     };
 
     OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
@@ -3113,29 +3114,13 @@ function OB_TIMELINE() {
                 (session.original_x <= currentSession.original_x &&
                     session.original_x + session.total_width >= currentSession.original_x + currentSession.total_width);
 
-            if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
-                if (isOverlapX) {
-                    if (session.y === undefined)
-                        session.y = this.ob_scene[ob_scene_index].bands[i].track;
-                    if (currentSession.y === undefined)
-                        currentSession.y = this.ob_scene[ob_scene_index].bands[i].track;
-
-                    let currentSessionBottomY = currentSession.y + currentSession.height;
-                    let sessionBottomY = session.y + session.height;
-                    let isOverlapY =
-                        (currentSession.y <= sessionBottomY) || (currentSessionBottomY >= session.y);
-
-                    if (isOverlapY) {
-                        for (let a = 0; a < currentSession.activities.length; a++) {
-                            ob_busy_tracks.push(currentSession.activities[a].y);
-                        }
-                    }
-                }
-            } else if (isOverlapX) {
+            //if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
+            if (isOverlapX) {
                 for (let a = 0; a < currentSession.activities.length; a++) {
                     ob_busy_tracks.push(currentSession.activities[a].y);
                 }
             }
+            //}
         }
 
         ob_busy_tracks.sort((a, b) => b - a);
