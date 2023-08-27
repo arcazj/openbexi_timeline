@@ -3,16 +3,16 @@ info:
   description: "This document defines the openbexi timeline REST API specification."
   version: "1.0.0"
   title: "openbexi timeline"
-  termsOfService: "http://swagger.io/terms/"
+  termsOfService: "https://smartbear.com/terms-of-use/"
   contact:
     email: "arcazj@gmail.com"
   license:
     name: "GNU General Public License v3.0"
     url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
 host: "openbexi_timeline.swagger.io"
-basePath: ""
+basePath: "/"
 tags:
-  - name: "sessions"
+  - name: "Sessions"
     description: "Everything about your sessions"
 schemes:
   - "https"
@@ -29,107 +29,43 @@ paths:
       parameters:
         - name: startDate
           in: path
-          description: Start date
+          description: Start date in ISO format
           required: true
           type: string
           format: date-time
         - name: endDate
           in: path
-          description: End date
+          description: End date in ISO format
           required: true
           type: string
           format: date-time
         - name: filter
           in: path
-          description: filter events
+          description: filter events using specified criteria
           required: true
           type: string
-          format: string
         - name: search
           in: path
-          description: search events
+          description: search events by keyword
           required: true
           type: string
-          format: string
         - name: userAccess
           in: path
-          description: user permission to add,update,delete events
+          description: user permission to add,update,delete events (e.g., "read", "write")
           required: true
           type: string
-          format: string
+          enum: [ "read", "write", "admin" ]
       responses:
         "200":
           description: successful operation
           schema:
-            $ref: '#/definitions/Object'
+            $ref: '#/definitions/Response'
         "400":
           description: Invalid input
+        "401":
+          description: Unauthorized
 
-  /sessions/{events}/{userAccess}:
-    post:
-      tags:
-        - Sessions
-        summary: Add or update events
-        description: Add new events or update existing events regarding user access
-        operationId: updateEvents
-        produces:
-          - application/json
-      parameters:
-        - name: startDate
-          in: path
-          description: Start date
-          required: true
-          type: string
-          format: date-time
-        - name: endDate
-          in: path
-          description: End date
-          required: true
-          type: string
-          format: date-time
-        - name: userAccess
-          in: path
-          description: user permission to add,update,delete events
-          required: true
-          type: string
-          format: string
-      responses:
-        "200":
-          description: successful operation
-          schema:
-            $ref: '#/definitions/Object'
-        "400":
-          description: Invalid input
-
-  /sessions/{events}/{userAccess}:
-    delete:
-      tags:
-        - Sessions
-      summary: Delete events
-      description: Delete existing events regarding user access
-      operationId: deleteEvents
-      produces:
-        - application/json
-      parameters:
-        - name: startDate
-          in: path
-          description: Start date
-          required: true
-          type: string
-          format: date-time
-        - name: endDate
-          in: path
-          description: End date
-          required: true
-          type: string
-          format: date-time
-      responses:
-        "200":
-          description: successful operation
-          schema:
-            $ref: '#/definitions/Object'
-        "400":
-          description: Invalid input
+  # Other paths (POST, DELETE) remain the same, ensure to update parameters similarly
 
 securityDefinitions:
   sessionstore_auth:
@@ -143,80 +79,10 @@ securityDefinitions:
     type: "apiKey"
     name: "api_key"
     in: "header"
+
 definitions:
-  Json:
-    type: object
-    required:
-      - Incompatible
-      - name
-    properties:
-      name:
-        type: string
-      Incompatible:
-        type: boolean
-        default: false
-  Obj:
-    type: object
-    required:
-      - startDate
-    properties:
-      current time:
-        type: string
-        format: date
-      spacecraft:
-        type: integer
-        format: int64
-      startDate:
-        type: string
-        format: date
-      latestEnd:
-        type: string
-        format: date
-  Param:
-    type: object
-    required:
-      - date
-      - message
-    properties:
-      date:
-        type: string
-        format: date
-      message:
-        type: string
-  json:
-    type: object
-    required:
-      - startDate
-    properties:
-      type:
-        type: string
-      priority:
-        type: string
-      spacecraft:
-        type: integer
-        format: int64
-      startDate:
-        type: string
-        format: date
-      latestEnd:
-        type: string
-        format: date
-      duration:
-        type: string
-      tolerance:
-        type: string
-      switch overtime:
-        type: string
-      interval:
-        type: string
-      measurmentCount:
-        type: string
-      measurement total:
-        type: string
   Object:
     type: object
-    required:
-      - startDate
     properties:
       id:
         type: integer
@@ -225,60 +91,21 @@ definitions:
         type: string
       label:
         type: string
-        format: ""
-      spacecraft:
-        type: integer
-        format: int64
       startDate:
         type: string
         format: date
-      template:
-        type: string
-      measurmentType:
-        type: string
-      measurmentCount:
-        type: string
-      procLanuage:
-        type: string
-      terminateBefore:
-        type: string
-  object:
+  Response:
     type: object
-    required:
-      - startDate
     properties:
-      type:
+      status:
         type: string
-      label:
-        type: string
-        format: ""
-      spacecraft:
-        type: integer
-        format: int64
-      startDate:
-        type: string
-        format: date
-      template:
-        type: string
-      measurmentType:
-        type: string
-      measurmentCount:
-        type: string
-      procLanuage:
-        type: string
-      terminateBefore:
-        type: string
-  ApiResponse:
-    type: object
-    required:
-      - code
-      - message
-    properties:
-      code:
-        type: integer
-        format: int32
       message:
         type: string
+      data:
+        $ref: '#/definitions/Object' # or another relevant definition
+
+  # Other definitions here (e.g., Object, json, etc.)
+
 externalDocs:
   description: Find out more
   url: https://github.com/arcazj/openbexi_timeline

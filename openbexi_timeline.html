@@ -39,9 +39,10 @@
             fontSize: 12,
             //width: window.innerWidth,
             width: 1350,
-            data_default_port: 8442,
-            data_sse_port: 8441,
-            data: "https://localhost:data_default_port/openbexi_timeline/sessions?startDate=current_time&endDate="
+            //data_default_port: 8442,
+            //data_sse_port: 8441,
+            data: "https://"+window.location.hostname+":"+window.location.port+"/openbexi_timeline/sessions?startDate=current_time&endDate="
+            //data: "https://localhost:data_default_port/openbexi_timeline/sessions?startDate=current_time&endDate="
             //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=Jul 02 00:00:00 UTC 2022&endDate=Jul 04 00:00:00 UTC 2022"
             //data: "https://localhost:8446/openbexi_timeline_sse/sessions?startDate=current_time&endDate="
             //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
@@ -88,3 +89,4 @@
 </script>
 </body>
 </html>
+
