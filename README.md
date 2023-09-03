@@ -2,24 +2,22 @@
 openbexi_timeline is a fully customizable user interface and a data-driven interactive gantt timeline for visualizing temporal data.
 
 # Docker image
-Run openbexi timeline from a Docker container platform:
+OpenBEXI_Timeline Docker Deployment To run OpenBEXI_Timeline, leverage the Docker container platform by pulling the image from the following Docker Hub repository: OpenBEXI_Timeline Docker Repository.
 https://hub.docker.com/repository/docker/arcazj/openbexi_timeline
 
 Open a Edge, Firefox or Chrome browser and run one of the following URLs:
-https://localhost:8445/openbexi_timeline_secure.html 
+https://localhost:8442/openbexi_timeline.html 
 or 
-https://localhost:8443/openbexi_timeline_SSE.html
+https://localhost:8441/openbexi_timeline_sse.html
 
-# Getting started with a simple OpenBexi Timeline 
-Here are a few easy steps to create a openbexi simple timeline. 
-Two bands are created, A monthly upper band and an yearly lower band. The lower band acts as a zoomed-out overview for the upper band and become a lot denser:
+# Quick Start Guide for OpenBEXI_Timeline 
+Follow these straightforward steps to set up a basic OpenBEXI Timeline. The configuration includes two bands: a monthly upper band and a yearly lower band. The lower band serves as a zoomed-out overview of the upper band and appears more condensed:
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_example.PNG" />
 
 ## header:
-Openbexi timeline works with tree.js, using WebGL to create all objects and materials to build a timeline. 
-jsCalendar, a simple javascript calendar has been included to browse events and sessions in the timeline.
+OpenBEXI Timeline employs tree.js and utilizes WebGL for the creation of all objects and materials in the timeline. It also includes jsCalendar, a simplistic JavaScript calendar, to facilitate event and session browsing within the timeline.
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_header.PNG" />
 
@@ -31,11 +29,8 @@ jsCalendar, a simple javascript calendar has been included to browse events and 
 
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration_body.PNG" />
 
-# Contributing and supporting
-Support this project and become a contributor.
-The purpose of this repository is to continue to evolve the Openbexi Timeline core, making it faster, fixing bugs and adding more features. 
+# Contribution & Support
+We invite you to support this project by becoming a contributor. The aim of this repository is to continually refine OpenBEXI Timeline, enhancing its performance, resolving bugs, and incorporating additional features. 
 
-# Copyright and license
-openbexi_timeline is licensed under the GNU General Public License v3.0.
-
-Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights.
+# Copyright and Licensing
+Copyright and Licensing OpenBEXI_Timeline is licensed under the widely-used Apache License, Version 2.0. This license permits free use, modification, and distribution of the software, as long as the original copyright and license notices are retained. Contributors also explicitly grant patent rights under this license.
