@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2023 arcazj All rights reserved.
-    OpenBEXI Timeline version 0.9.p beta
+    OpenBEXI Timeline version 0.9.q beta
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
@@ -900,7 +900,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9p beta</legend>\n" +
+                "<legend> version 0.9.9q beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2200,9 +2200,9 @@ function OB_TIMELINE() {
             if (band.height !== undefined) {
                 if (band.name.match(/overview_/)) {
                     try {
-                        if (band.height.match(/%/) !== null) {
+                        if (typeof band.height === 'string' && band.height.match(/%/) !== null) {
                             band.height = (this.ob_scene[ob_scene_index].ob_height * parseInt(band.height)) / 100;
-                        } else if (band.height.match(/px/) !== null) {
+                        } else if (typeof band.height === 'string' && band.height.match(/px/) !== null) {
                             band.height = parseInt(band.height);
                         } else {
                             band.height = Math.abs(band.maxY) + Math.abs(band.minY);
@@ -2210,7 +2210,6 @@ function OB_TIMELINE() {
                     } catch (err) {
                         console.error(err);
                     }
-
                     new_timeline_height += band.height;
                 } else {
                     band.height = Math.abs(band.maxY) + Math.abs(band.minY);
@@ -3070,7 +3069,7 @@ function OB_TIMELINE() {
                         }
                     } else {
                         ob_count_track = Math.abs((ob_busy_tracks[t] - ob_busy_tracks[t + 1])) /
-                            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+                            this.ob_scene[ob_scene_index].bands[i].trackIncrement - session.activities.length;
                         if (isNaN(ob_count_track)) {
                             ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
                                 this.ob_scene[ob_scene_index].bands[i].trackIncrement;
@@ -3082,7 +3081,7 @@ function OB_TIMELINE() {
                             return ob_current_track;
                         }
                     }
-                    ob_current_track -=  (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
+                    ob_current_track -= (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
                 } catch (e) {
                     ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
                         this.ob_scene[ob_scene_index].bands[i].trackIncrement;
@@ -3114,13 +3113,11 @@ function OB_TIMELINE() {
                 (session.original_x <= currentSession.original_x &&
                     session.original_x + session.total_width >= currentSession.original_x + currentSession.total_width);
 
-            //if (!this.ob_scene[ob_scene_index].bands[i].name.match(/overview_/)) {
             if (isOverlapX) {
                 for (let a = 0; a < currentSession.activities.length; a++) {
                     ob_busy_tracks.push(currentSession.activities[a].y);
                 }
             }
-            //}
         }
 
         ob_busy_tracks.sort((a, b) => b - a);
@@ -3137,14 +3134,14 @@ function OB_TIMELINE() {
         return ob_first_free_track;
     };
 
-    OB_TIMELINE.prototype.getTextWidth = function (text, font) {
+    OB_TIMELINE.prototype.getTextWidth = function (text, font, margin) {
         // re-use canvas object for better performance
         try {
             let canvas = this.getTextWidth.canvas || (this.getTextWidth.canvas = document.createElement("canvas"));
             let context = canvas.getContext("2d");
             context.font = font;
             let metrics = context.measureText(text);
-            return metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+            return metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft + margin;
         } catch (e) {
             return 0;
         }
@@ -3249,6 +3246,7 @@ function OB_TIMELINE() {
         let h = 0;
         let w = 0;
         let textX = 0;
+        let textWidth = 0;
         let pixelOffSetStart = 0;
         let pixelOffSetEnd = 0;
         let original_pixelOffSetStart = 0;
@@ -3307,19 +3305,16 @@ function OB_TIMELINE() {
 
                 if (isNaN(parseInt(pixelOffSetEnd))) {
                     h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
-                    w = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize;
-                    textX = this.getTextWidth(data.title,
-                        this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
-                        this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
-                    textX = h * 2 + textX / 2;
+                    w = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
                 } else {
                     h = this.ob_scene[ob_scene_index].bands[band_index].sessionHeight;
                     w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
-                    textX = this.getTextWidth(data.title,
-                        this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
-                        this.ob_scene[ob_scene_index].bands[band_index].fontFamily);
-                    textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textX / 2;
                 }
+
+                textWidth = this.getTextWidth(data.title,
+                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily, 0);
+                textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textWidth / 2;
 
                 if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
                     h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize /
@@ -3339,9 +3334,7 @@ function OB_TIMELINE() {
                 activity.pixelOffSetStart = parseInt(pixelOffSetStart);
                 activity.pixelOffSetEnd = parseInt(pixelOffSetEnd);
                 activity.textX = parseInt(textX);
-
-                // IMPORTANT: Provide more space and balance to display sessions/events based on title length by multiplying textX by 2.1
-                activity.total_width = w + (activity.textX * 2.1) + add_tolerance;
+                activity.total_width = w + textWidth + add_tolerance;
 
                 if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
                     activity.total_width *= ob_coef_overview;
@@ -3418,7 +3411,7 @@ function OB_TIMELINE() {
                     session.x = this.getSessionX(session.activities, session.width);
                     session.original_x = this.getSession_originalX(session.activities);
                     session.z = z;
-                    session.height = band.trackIncrement * session.activities.length - band.trackIncrement / 2;
+                    session.height = (band.trackIncrement * session.activities.length);
 
                     y = this.get_room_for_session(ob_scene_index, band.sessions, session, i, j);
 
