@@ -2200,9 +2200,9 @@ function OB_TIMELINE() {
             if (band.height !== undefined) {
                 if (band.name.match(/overview_/)) {
                     try {
-                        if (typeof band.height === 'string' && band.height.match(/%/) !== null) {
+                        if (band.height.match(/%/) !== null) {
                             band.height = (this.ob_scene[ob_scene_index].ob_height * parseInt(band.height)) / 100;
-                        } else if (typeof band.height === 'string' && band.height.match(/px/) !== null) {
+                        } else if (band.height.match(/px/) !== null) {
                             band.height = parseInt(band.height);
                         } else {
                             band.height = Math.abs(band.maxY) + Math.abs(band.minY);
@@ -2210,6 +2210,7 @@ function OB_TIMELINE() {
                     } catch (err) {
                         console.error(err);
                     }
+
                     new_timeline_height += band.height;
                 } else {
                     band.height = Math.abs(band.maxY) + Math.abs(band.minY);
@@ -4867,10 +4868,11 @@ function OB_TIMELINE() {
                         if (that.ob_scene[ob_scene_index].sessions.scene !== undefined) {
                             ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         }
-                        that.update_scene(ob_scene_index, that.header, that.params,
-                            that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
-                            null, false);
+                        if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
+                            that.update_scene(ob_scene_index, that.header, that.params,
+                                that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                null, false);
                     }
                 };
 
@@ -4974,10 +4976,11 @@ function OB_TIMELINE() {
                         if (that.ob_scene[ob_scene_index].sessions.scene !== undefined) {
                             ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         }
-                        that.update_scene(ob_scene_index, that.header, that.params,
-                            that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
-                            null, false);
+                        if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
+                            that.update_scene(ob_scene_index, that.header, that.params,
+                                that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
+                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                                null, false);
                     }
                 }).catch(err => {
                     console.log('Error message:', err.statusText);
