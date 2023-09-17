@@ -23,6 +23,55 @@ public class json_files_manager extends data_manager {
                 configuration);
     }
 
+    public static JSONArray sortByDate(JSONArray jsonArray) {
+        jsonArray.sort(new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                try {
+                    String dateString1 = (String) ((JSONObject) o1).get("start");
+                    String dateString2 = (String) ((JSONObject) o2).get("start");
+
+                    SimpleDateFormat sdf1 = new SimpleDateFormat("MMM dd HH:mm:ss yyyy");
+                    SimpleDateFormat sdf2 = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US);
+                    sdf2.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+                    Date date1;
+                    Date date2;
+
+                    try {
+                        date1 = sdf1.parse(dateString1);
+                    } catch (Exception e1) {
+                        // If parsing using the first format fails, try the second format
+                        try {
+                            date1 = sdf2.parse(dateString1);
+                        } catch (java.text.ParseException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    try {
+                        date2 = sdf1.parse(dateString2);
+                    } catch (Exception e2) {
+                        // If parsing using the first format fails, try the second format
+                        try {
+                            date2 = sdf2.parse(dateString2);
+                        } catch (java.text.ParseException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    return date1.compareTo(date2);
+                } catch (Exception e) {
+                    // Handle parsing exceptions if needed
+                    e.printStackTrace();
+                    return 0;
+                }
+            }
+        });
+
+        return jsonArray; // Return the sorted JSONArray
+    }
+
     @Override
     Object login(String url, JSONArray cookies) {
         return null;
@@ -83,6 +132,13 @@ public class json_files_manager extends data_manager {
             }
         }
         String jsonObjectMerged_end = "}";
+
+        // Sort all_obj by date
+        /*try {
+            all_obj = sortByDate(all_obj);
+        } catch (Exception e) {
+            return getDummyJson("no data_manager found");
+        }*/
 
         try {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
