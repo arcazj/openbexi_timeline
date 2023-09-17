@@ -3096,7 +3096,6 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
         let ob_busy_tracks = [];
-
         this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].maxY -
             this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
         this.ob_scene[ob_scene_index].bands[i].track -= this.ob_scene[ob_scene_index].bands[i].trackIncrement;
@@ -3162,23 +3161,37 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.getSessionTotalWidth = function (activities) {
-        let ob_w = 0;
+        // Initialize min_x and max_x with positive and negative infinity, respectively
+        let min_x = Infinity;
+        let max_x = -Infinity;
 
         try {
-            if (activities.length > 0) {
-                ob_w = activities[0].total_width;
-                for (let i = 1; i < activities.length; i++) {
-                    if (activities[i].total_width > ob_w) {
-                        ob_w = activities[i].total_width;
-                    }
+            for (let i = 0; i < activities.length; i++) {
+                const activity = activities[i];
+                // Calculate the rightmost x coordinate of the current activity
+                const right_x = activity.x + activity.total_width;
+
+                // Update min_x if the current activity's x coordinate is smaller
+                if (activity.x < min_x) {
+                    min_x = activity.x;
+                }
+
+                // Update max_x if the right_x is larger
+                if (right_x > max_x) {
+                    max_x = right_x;
                 }
             }
         } catch (e) {
             // Handle exceptions here if needed
-            console.error(e);
+            // console.error(e);
+            if (activities.length > 0) {
+                return activities[0].total_width;
+            }
+            return 0; // Return 0 if the activities array is empty
         }
 
-        return ob_w;
+        // Calculate and return the total width
+        return max_x - min_x;
     };
 
 
@@ -3212,6 +3225,27 @@ function OB_TIMELINE() {
                     ob_x = activities[i].x;
                 }
             }
+        } catch (e) {
+            console.error(e);
+            return parseInt(ob_x);
+        }
+
+        return parseInt(ob_x);
+    };
+
+    OB_TIMELINE.prototype.getSessionX_Relative = function (activities, total_w) {
+        let ob_x = activities[0].x;
+
+        if (activities.length < 2) {
+            return ob_x;
+        }
+
+        try {
+            for (let i = 1; i < activities.length; i++) {
+                if (activities[i].x < ob_x) {
+                    ob_x = activities[i].x;
+                }
+            }
             ob_x += total_w / 2;
         } catch (e) {
             console.error(e);
@@ -3220,6 +3254,7 @@ function OB_TIMELINE() {
 
         return parseInt(ob_x);
     };
+
 
     OB_TIMELINE.prototype.getSession_originalX = function (activities) {
         let ob_x = activities[0].original_x;
@@ -3270,7 +3305,6 @@ function OB_TIMELINE() {
                 if (data.title === undefined) {
                     data.title = "";
                 }
-
                 pixelOffSetStart = this.dateToPixelOffSet(ob_scene_index, activity.start,
                     this.ob_scene[ob_scene_index].bands[band_index].gregorianUnitLengths,
                     this.ob_scene[ob_scene_index].bands[band_index].intervalPixels);
@@ -3300,8 +3334,12 @@ function OB_TIMELINE() {
 
                 let add_tolerance = 0;
 
-                if (activity.data.tolerance !== undefined && activity.end !== "") {
+                if (activity.data.tolerance !== undefined && activity.end !== "" && activity.data.tolerance >= 0) {
                     add_tolerance = parseInt(activity.data.tolerance);
+                }
+                let add_image = 0;
+                if (activity.render.image !== undefined && activity.render.image !== "") {
+                    add_image = 32;
                 }
 
                 if (isNaN(parseInt(pixelOffSetEnd))) {
@@ -3327,7 +3365,10 @@ function OB_TIMELINE() {
 
                 activity.x = parseInt(pixelOffSetStart);
                 activity.x_relative = parseInt(pixelOffSetStart) + w / 2;
-                activity.original_x = this.getSession_originalX(activities);
+                if (activity.data.tolerance === undefined)
+                    activity.original_x = activity.x;
+                else
+                    activity.original_x = activity.original_x = this.getSession_originalX(activities);
                 activity.width = w;
                 activity.height = h;
                 activity.size = h;
@@ -3335,7 +3376,7 @@ function OB_TIMELINE() {
                 activity.pixelOffSetStart = parseInt(pixelOffSetStart);
                 activity.pixelOffSetEnd = parseInt(pixelOffSetEnd);
                 activity.textX = parseInt(textX);
-                activity.total_width = w + textWidth + add_tolerance;
+                activity.total_width = add_image + w + textWidth + add_tolerance;
 
                 if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
                     activity.total_width *= ob_coef_overview;
@@ -3409,8 +3450,13 @@ function OB_TIMELINE() {
                     const session = band.sessions[j];
                     session.width = this.getSessionWidth(session.activities);
                     session.total_width = this.getSessionTotalWidth(session.activities);
+                    session.x_relative = this.getSessionX_Relative(session.activities, session.width);
                     session.x = this.getSessionX(session.activities, session.width);
-                    session.original_x = this.getSession_originalX(session.activities);
+                    if (session.data !== undefined)
+                        if (session.data.tolerance === undefined)
+                            session.original_x = session.x;
+                        else
+                            session.original_x = this.getSession_originalX(session.activities);
                     session.z = z;
                     session.height = (band.trackIncrement * session.activities.length);
 
@@ -3422,7 +3468,6 @@ function OB_TIMELINE() {
                     }
 
                     session.y = this.getSessionY(session.activities, session.height);
-
                     if (y > band.lastGreaterY) {
                         band.lastGreaterY = y;
                     }
@@ -3656,10 +3701,10 @@ function OB_TIMELINE() {
         ob_box_activities = this.track[ob_scene_index](new THREE.Mesh(ob_box, ob_material));
         ob_box_activities.name = band_name + "_" + session.id;
         ob_box_activities.sortBy = "true";
-        ob_box_activities.pos_x = session.x;
+        ob_box_activities.pos_x = session.x_relative;
         ob_box_activities.pos_y = session.y;
         ob_box_activities.pos_z = 1;
-        ob_box_activities.position.set(session.x, session.y, 1);
+        ob_box_activities.position.set(session.x_relative, session.y, 1);
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
@@ -3788,7 +3833,7 @@ function OB_TIMELINE() {
         }
 
         if (ob_debug_ADD_SESSION_WEBGL_OBJECT) {
-            console.log(`OB_TIMELINE.Session(${band_name},${session.x},${session.y},${session.z},${session.width},${session.height},${session.color})`);
+            console.log(`OB_TIMELINE.Session(${band_name},${session.x_relative},${session.y},${session.z},${session.width},${session.height},${session.color})`);
         }
 
         return ob_session;
