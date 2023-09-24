@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2023 arcazj All rights reserved.
-    OpenBEXI Timeline version 0.9.q beta
+    OpenBEXI Timeline version 0.9.9.r beta
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
@@ -40,12 +40,6 @@ http://localhost:63342/openbexi_GNS_timeline/tests/openbexi_timeline_test_WS_exa
 data: "wss://localhost:8444/openbexi_timeline_ws/sessions?startDate=test&endDate=test"
 */
 
-ob_debug_room = false;
-ob_debug_ADD_WEBGL_OBJECT = false;
-ob_debug_ADD_SESSION_WEBGL_OBJECT = false;
-ob_debug_ADD_EVENT_WEBGL_OBJECT = false;
-ob_debug_MOVE_WEBGL_OBJECT = false;
-ob_debug_REMOVE_WEBGL_OBJECT = false;
 const ob_MAX_SCENES = 3;
 const ob_timelines = [];
 
@@ -108,7 +102,6 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.get_current_time = function () {
         return this.timeZone === "UTC" ? this.getUTCTime(Date.now()) : Date.now();
     };
-
 
     OB_TIMELINE.prototype.reset_synced_time = function (ob_case, ob_scene_index) {
         clearInterval(this.ob_interval_clock);
@@ -900,7 +893,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9q beta</legend>\n" +
+                "<legend> version 0.9.9.r beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1256,8 +1249,8 @@ function OB_TIMELINE() {
             this.ob_calendar.style.width = 32 + "px";
             this.ob_calendar.onclick = function () {
                 that2.moving = false;
-                if (that2.ob_scene[ob_scene_index].show_calendar === undefined)
-                    that2.ob_scene[ob_scene_index].show_calendar = true;
+                //if (that2.ob_scene[ob_scene_index].show_calendar === undefined)
+                that2.ob_scene[ob_scene_index].show_calendar = true;
                 if (that2.ob_scene[ob_scene_index].show_calendar === true) {
                     that2.ob_create_calendar(ob_scene_index, that2.ob_markerDate);
                     that2.ob_scene[ob_scene_index].show_calendar = false;
@@ -1681,37 +1674,30 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.setGregorianUnitLengths = function (ob_scene_index) {
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "MILLISECOND    ")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "SECOND")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "MINUTE")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "HOUR")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "DAY")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "WEEK")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 7;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "MONTH")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 31;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "YEAR")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 365;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "DECADE")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 365 * 10;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "CENTURY")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 365 * 100;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "MILLENNIUM     ")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60 * 24 * 365 * 1000;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "EPOCH")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = -1;
-            else if (this.ob_scene[ob_scene_index].bands[i].intervalUnit === "ERA")
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = -2;
-            else
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths = 1000 * 60 * 60;
-        }
+        const unitLengths = {
+            "MILLISECOND": 1,
+            "SECOND": 1000,
+            "MINUTE": 1000 * 60,
+            "HOUR": 1000 * 60 * 60,
+            "DAY": 1000 * 60 * 60 * 24,
+            "WEEK": 1000 * 60 * 60 * 24 * 7,
+            "MONTH": 1000 * 60 * 60 * 24 * 31,
+            "YEAR": 1000 * 60 * 60 * 24 * 365,
+            "DECADE": 1000 * 60 * 60 * 24 * 365 * 10,
+            "CENTURY": 1000 * 60 * 60 * 24 * 365 * 100,
+            "MILLENNIUM": 1000 * 60 * 60 * 24 * 365 * 1000,
+            "EPOCH": -1,
+            "ERA": -2
+        };
+
+        const bands = this.ob_scene[ob_scene_index].bands;
+
+        bands.forEach(band => {
+            const trimmedUnit = band.intervalUnit.trim();
+            band.gregorianUnitLengths = unitLengths[trimmedUnit] || 1000 * 60 * 60;
+        });
     };
+
 
     OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
         return ob_date + (this.timeZoneOffset * 60000);
@@ -1919,25 +1905,33 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.center_bands = function (ob_scene_index) {
         let ob_sync = false;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.ob_scene[ob_scene_index].bands[i].viewOffset =
-                -this.ob_scene[ob_scene_index].width * (this.ob_scene[ob_scene_index].bands[i].multiples - 1) / 2;
-            if (this.ob_scene[ob_scene_index].center === "center")
-                this.ob_scene[ob_scene_index].bands[i].x = 0;
-            else if (this.ob_scene[ob_scene_index].center === "left")
-                this.ob_scene[ob_scene_index].bands[i].x = -this.ob_scene[ob_scene_index].width / 3;
-            else if (this.ob_scene[ob_scene_index].center === "right")
-                this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].width / 3;
-            else
-                this.ob_scene[ob_scene_index].bands[i].x = 0;
+        const scene = this.ob_scene[ob_scene_index];
+        const {bands, width, center} = scene;
 
-            this.ob_scene[ob_scene_index].bands[i].width =
-                this.ob_scene[ob_scene_index].width * this.ob_scene[ob_scene_index].bands[i].multiples;
-            if (i === this.ob_scene[ob_scene_index].bands.length - 1)
+        for (let i = 0; i < bands.length; i++) {
+            const band = bands[i];
+            band.viewOffset = -width * (band.multiples - 1) / 2;
+            band.width = width * band.multiples;
+
+            switch (center) {
+                case 'center':
+                    band.x = 0;
+                    break;
+                case 'left':
+                    band.x = -width / 3;
+                    break;
+                case 'right':
+                    band.x = width / 3;
+                    break;
+                default:
+                    band.x = 0;
+            }
+
+            if (i === bands.length - 1) {
                 ob_sync = true;
-            this.move_band(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                this.ob_scene[ob_scene_index].bands[i].x, this.ob_scene[ob_scene_index].bands[i].y,
-                this.ob_scene[ob_scene_index].bands[i].z, ob_sync);
+            }
+
+            this.move_band(ob_scene_index, band.name, band.x, band.y, band.z, ob_sync);
         }
     };
 
@@ -1980,25 +1974,26 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.update_bands_MaxDate = function (ob_scene_index, date) {
-        this.ob_scene[ob_scene_index].maxDateL = 0;
+        const currentScene = this.ob_scene[ob_scene_index];
+        currentScene.maxDateL = 0;
         this.iniMaxDateL = 0;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
+        for (let i = 0; i < currentScene.bands.length; i++) {
             let pixelOffSet = this.dateToPixelOffSet(ob_scene_index, date,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].maxDate =
-                this.pixelOffSetToDate(ob_scene_index, -this.ob_scene[ob_scene_index].bands[i].viewOffset +
-                    pixelOffSet, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].iniMaxDate =
-                this.pixelOffSetToDate(ob_scene_index, -this.ob_scene[ob_scene_index].bands[i].minViewOffset +
-                    pixelOffSet, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].iniMaxDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].iniMaxDate).setMinutes(0));
-            this.ob_scene[ob_scene_index].bands[i].iniMaxDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].iniMaxDate).setSeconds(0));
-            let iniMaxDateL = new Date(this.ob_scene[ob_scene_index].bands[i].iniMaxDate).getTime();
+                currentScene.bands[i].gregorianUnitLengths,
+                currentScene.bands[i].intervalPixels);
+            currentScene.bands[i].maxDate =
+                this.pixelOffSetToDate(ob_scene_index, -currentScene.bands[i].viewOffset +
+                    pixelOffSet, currentScene.bands[i].gregorianUnitLengths,
+                    currentScene.bands[i].intervalPixels);
+            currentScene.bands[i].iniMaxDate =
+                this.pixelOffSetToDate(ob_scene_index, -currentScene.bands[i].minViewOffset +
+                    pixelOffSet, currentScene.bands[i].gregorianUnitLengths,
+                    currentScene.bands[i].intervalPixels);
+            currentScene.bands[i].iniMaxDate =
+                new Date(new Date(currentScene.bands[0].iniMaxDate).setMinutes(0));
+            currentScene.bands[i].iniMaxDate =
+                new Date(new Date(currentScene.bands[0].iniMaxDate).setSeconds(0));
+            let iniMaxDateL = new Date(currentScene.bands[i].iniMaxDate).getTime();
             if (iniMaxDateL > this.iniMaxDateL) {
                 this.iniMaxDateL = iniMaxDateL;
                 this.iniMaxDate = new Date(this.iniMaxDateL).toString().substring(0, 24) + " UTC";
@@ -2007,68 +2002,71 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.set_bands_minDate = function (ob_scene_index) {
+        const currentScene = this.ob_scene[ob_scene_index];
         this.ob_scene[ob_scene_index].minDateL = 0;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.ob_scene[ob_scene_index].bands[i].minDate = this.pixelOffSetToDate(ob_scene_index,
-                this.ob_scene[ob_scene_index].bands[i].viewOffset,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+        for (let i = 0; i < currentScene.bands.length; i++) {
+            currentScene.bands[i].minDate = this.pixelOffSetToDate(ob_scene_index,
+                currentScene.bands[i].viewOffset,
+                currentScene.bands[i].gregorianUnitLengths,
+                currentScene.bands[i].intervalPixels);
             // Round hour to 0
-            this.ob_scene[ob_scene_index].bands[i].minDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].minDate).setMinutes(0));
-            this.ob_scene[ob_scene_index].bands[i].minDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].minDate).setSeconds(0));
-            let minDateL = new Date(this.ob_scene[ob_scene_index].bands[i].minDate).getTime();
-            if (minDateL > this.ob_scene[ob_scene_index].minDateL) {
-                this.ob_scene[ob_scene_index].minDateL = minDateL;
-                this.ob_scene[ob_scene_index].minDate =
-                    new Date(this.ob_scene[ob_scene_index].minDateL).toString().substring(0, 24) + " UTC";
+            currentScene.bands[i].minDate =
+                new Date(new Date(currentScene.bands[0].minDate).setMinutes(0));
+            currentScene.bands[i].minDate =
+                new Date(new Date(currentScene.bands[0].minDate).setSeconds(0));
+            let minDateL = new Date(currentScene.bands[i].minDate).getTime();
+            if (minDateL > currentScene.minDateL) {
+                currentScene.minDateL = minDateL;
+                currentScene.minDate =
+                    new Date(currentScene.minDateL).toString().substring(0, 24) + " UTC";
             }
             if (this.get_band_overview_index(ob_scene_index) === i) {
-                this.ob_scene[ob_scene_index].overviewMinDate = this.ob_scene[ob_scene_index].bands[i].minDate;
-                this.ob_scene[ob_scene_index].overviewMinDateL = minDateL;
+                currentScene.overviewMinDate = currentScene.bands[i].minDate;
+                currentScene.overviewMinDateL = minDateL;
             } else {
-                this.ob_scene[ob_scene_index].minDate = this.ob_scene[ob_scene_index].bands[i].minDate;
-                this.ob_scene[ob_scene_index].minDateL = minDateL;
+                currentScene.minDate = currentScene.bands[i].minDate;
+                currentScene.minDateL = minDateL;
             }
         }
     };
 
     OB_TIMELINE.prototype.set_bands_maxDate = function (ob_scene_index) {
-        this.ob_scene[ob_scene_index].maxDateL = 0;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.ob_scene[ob_scene_index].bands[i].maxDate = this.pixelOffSetToDate(ob_scene_index,
-                -this.ob_scene[ob_scene_index].bands[i].viewOffset,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].maxDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].maxDate).setMinutes(0));
-            this.ob_scene[ob_scene_index].bands[i].maxDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].maxDate).setSeconds(0));
-            let maxDateL = new Date(this.ob_scene[ob_scene_index].bands[i].maxDate).getTime();
-            if (maxDateL > this.ob_scene[ob_scene_index].maxDateL) {
-                this.ob_scene[ob_scene_index].maxDateL = maxDateL;
-                this.ob_scene[ob_scene_index].maxDate =
-                    new Date(this.ob_scene[ob_scene_index].maxDateL).toString().substring(0, 24) + " UTC";
+        const currentScene = this.ob_scene[ob_scene_index];
+        currentScene.maxDateL = 0;
+        for (let i = 0; i < currentScene.bands.length; i++) {
+            currentScene.bands[i].maxDate = this.pixelOffSetToDate(ob_scene_index,
+                -currentScene.bands[i].viewOffset,
+                currentScene.bands[i].gregorianUnitLengths,
+                currentScene.bands[i].intervalPixels);
+            currentScene.bands[i].maxDate =
+                new Date(new Date(currentScene.bands[0].maxDate).setMinutes(0));
+            currentScene.bands[i].maxDate =
+                new Date(new Date(currentScene.bands[0].maxDate).setSeconds(0));
+            let maxDateL = new Date(currentScene.bands[i].maxDate).getTime();
+            if (maxDateL > currentScene.maxDateL) {
+                currentScene.maxDateL = maxDateL;
+                currentScene.maxDate =
+                    new Date(currentScene.maxDateL).toString().substring(0, 24) + " UTC";
             }
             if (this.get_band_overview_index(ob_scene_index) === i) {
-                this.ob_scene[ob_scene_index].overviewMaxDate = this.ob_scene[ob_scene_index].bands[i].maxDate;
-                this.ob_scene[ob_scene_index].overviewMaxDateL = maxDateL;
+                currentScene.overviewMaxDate = currentScene.bands[i].maxDate;
+                currentScene.overviewMaxDateL = maxDateL;
             } else {
-                this.ob_scene[ob_scene_index].maxDate = this.ob_scene[ob_scene_index].bands[i].maxDate;
-                this.ob_scene[ob_scene_index].maxDateL = maxDateL;
+                currentScene.maxDate = currentScene.bands[i].maxDate;
+                currentScene.maxDateL = maxDateL;
             }
         }
     };
 
     OB_TIMELINE.prototype.set_bands_viewOffset = function (ob_scene_index) {
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.ob_scene[ob_scene_index].bands[i].minWidth = this.ob_scene[ob_scene_index].width;
-            this.ob_scene[ob_scene_index].bands[i].width =
-                this.ob_scene[ob_scene_index].width * this.ob_scene[ob_scene_index].bands[i].multiples;
-            this.ob_scene[ob_scene_index].bands[i].minViewOffset = -this.ob_scene[ob_scene_index].bands[i].minWidth;
-            this.ob_scene[ob_scene_index].bands[i].viewOffset = -this.ob_scene[ob_scene_index].bands[i].width / 2;
-            this.ob_scene[ob_scene_index].bands[i].x = this.ob_scene[ob_scene_index].bands[i].viewOffset;
+        const currentScene = this.ob_scene[ob_scene_index];
+        for (let i = 0; i < currentScene.bands.length; i++) {
+            currentScene.bands[i].minWidth = currentScene.width;
+            currentScene.bands[i].width =
+                currentScene.width * currentScene.bands[i].multiples;
+            currentScene.bands[i].minViewOffset = -currentScene.bands[i].minWidth;
+            currentScene.bands[i].viewOffset = -currentScene.bands[i].width / 2;
+            currentScene.bands[i].x = currentScene.bands[i].viewOffset;
         }
     };
 
@@ -2115,69 +2113,64 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.create_new_bands = function (ob_scene_index) {
-        let ob_layouts = [];
+        const ob_layouts = new Set();
         let max_name_length = 0;
+        const {bands, sessions} = this.ob_scene[ob_scene_index];
+        const events = sessions?.events || [];
 
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            const band = this.ob_scene[ob_scene_index].bands[i];
+        bands.forEach((band, i) => {
+            if (!band.model) {
+                Object.assign(band, {
+                    layouts: ["NONE"],
+                    layout_name: "NONE",
+                    model: [{sortBy: "NONE"}]
+                });
+            }
 
-            if (band.model === undefined) {
-                band.layouts = ["NONE"];
-                band.layout_name = "NONE";
-                band.model = [{sortBy: "NONE"}];
-            } else {
-                for (let j = 0; j < 1; j++) {
-                    const model = band.model[j];
+            const model = band.model[0] || {sortBy: "NONE"};
 
-                    if (model.sortBy === undefined) {
-                        model.sortBy = "NONE";
-                    }
+            if (i === 0) {
+                events.forEach((event, k) => {
+                    if (event.id && !event.zone) {
+                        try {
+                            let sortByValue = eval(`sessions.events[k].data.${model.sortBy}`);
 
-                    if (i === 0) {
-                        const events = this.ob_scene[ob_scene_index].sessions?.events || [];
-
-                        for (let k = 0; k < events.length; k++) {
-                            const event = events[k];
-
-                            if (event.id !== undefined && event.zone === undefined) {
-                                try {
-                                    let sortByValue = eval(`this.ob_scene[ob_scene_index].sessions.events[k].data.${model.sortBy}`);
-
-                                    if (!isNaN(sortByValue)) {
-                                        sortByValue = `${model.sortBy} ${sortByValue}`;
-                                    }
-
-                                    event.data.sortByValue = sortByValue;
-
-                                    if (!ob_layouts.includes(sortByValue)) {
-                                        ob_layouts.push(sortByValue);
-                                    }
-
-                                    if (ob_layouts[0]?.length > max_name_length) {
-                                        max_name_length = ob_layouts[0].length + 1;
-                                    }
-                                } catch (error) {
-                                    //console.error(error);
-                                }
+                            if (!isNaN(sortByValue)) {
+                                sortByValue = `${model.sortBy} ${sortByValue}`;
                             }
+
+                            event.data.sortByValue = sortByValue;
+
+                            if (sortByValue && !ob_layouts.has(sortByValue)) {
+                                ob_layouts.add(sortByValue);
+                            }
+
+                            const firstLayoutLength = [...ob_layouts][0]?.length || 0;
+                            if (firstLayoutLength > max_name_length) {
+                                max_name_length = firstLayoutLength + 1;
+                            }
+                        } catch (error) {
+                            //console.error(error);
                         }
                     }
-
-                    const alternateColor = model.alternateColor?.toString();
-
-                    this.update_timeline_model(
-                        ob_scene_index,
-                        band,
-                        model.sortBy.toString(),
-                        band.color,
-                        alternateColor,
-                        ob_layouts,
-                        max_name_length
-                    );
-                }
+                });
             }
-        }
+
+            const alternateColorStr = model.alternateColor?.toString() || "";
+            const sortByStr = model.sortBy.toString();
+
+            this.update_timeline_model(
+                ob_scene_index,
+                band,
+                sortByStr,
+                band.color,
+                alternateColorStr,
+                [...ob_layouts],
+                max_name_length
+            );
+        });
     };
+
 
     OB_TIMELINE.prototype.set_bands_height = function (ob_scene_index) {
         let new_timeline_height = 0;
@@ -2208,7 +2201,8 @@ function OB_TIMELINE() {
                             band.height = Math.abs(band.maxY) + Math.abs(band.minY);
                         }
                     } catch (err) {
-                        console.error(err);
+                        //band.height = Math.abs(band.maxY) + Math.abs(band.minY);
+                        //console.error(err);
                     }
 
                     new_timeline_height += band.height;
@@ -2227,8 +2221,13 @@ function OB_TIMELINE() {
             }
 
             if (this.ob_scene[ob_scene_index].bands.length === 1 && i === this.ob_scene[ob_scene_index].bands.length - 1 && this.ob_scene[ob_scene_index].ob_height > new_timeline_height) {
+                if (isNaN(new_timeline_height))
+                    new_timeline_height = 0;
                 band.height += this.ob_scene[ob_scene_index].ob_height - new_timeline_height;
             }
+
+            if (isNaN(band.height))
+                band.height = 0
 
             if (band.height !== undefined) {
                 band.y = this.ob_scene[ob_scene_index].ob_height - pos - band.height / 2;
@@ -2463,12 +2462,6 @@ function OB_TIMELINE() {
         if (ob_band !== undefined) {
             ob_band.add(ob_zone);
         }
-
-        if (ob_debug_ADD_WEBGL_OBJECT) {
-            console.log("OB_TIMELINE.add_zone(" + band_name + "," +
-                text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
-                color + "," + texture + ")");
-        }
     };
 
     OB_TIMELINE.prototype.add_textBox = function (ob_scene_index, band_name, text, textColor, x, y, z, width, height,
@@ -2523,28 +2516,37 @@ function OB_TIMELINE() {
         this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, undefined,
             24, "Normal", "Normal", textColor, 'Arial', font_align);
 
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_textBox(" + band_name + "," +
-            text + "," + textColor + "," + x + "," + y + "," + z + "," + width + "," + height + "," + depth + "," +
-            color + "," + texture + ")");
     };
 
-    OB_TIMELINE.prototype.hex_Luminance = function (hex, lum) {
-        // validate hex string
-        hex = String(hex).replace(/[^0-9a-f]/gi, '');
-        if (hex.length < 6) {
-            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    OB_TIMELINE.prototype.hex_Luminance = function (hex, lum = 0) {
+        function validateHex(hex) {
+            return String(hex).replace(/[^0-9a-f]/gi, '');
         }
-        lum = lum || 0;
 
-        // convert to decimal and change luminosity
-        let rgb = "#", c, i;
-        for (i = 0; i < 3; i++) {
-            c = parseInt(hex.substr(i * 2, 2), 16);
-            c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-            rgb += ("00" + c).substr(c.length);
+        function extendShortHex(hex) {
+            if (hex.length < 6) {
+                return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            return hex;
         }
+
+        function adjustLuminance(colorComponent, lum) {
+            const adjusted = Math.round(Math.min(Math.max(0, colorComponent + (colorComponent * lum)), 255));
+            return adjusted.toString(16).padStart(2, '0');
+        }
+
+        hex = validateHex(hex);
+        hex = extendShortHex(hex);
+
+        let rgb = "#";
+        for (let i = 0; i < 3; i++) {
+            const colorComponent = parseInt(hex.substr(i * 2, 2), 16);
+            rgb += adjustLuminance(colorComponent, lum);
+        }
+
         return rgb;
-    }
+    };
+
 
     OB_TIMELINE.prototype.create_zones = function (ob_scene_index) {
         for (let b = 0; b < this.ob_scene[ob_scene_index].bands.length; b++) {
@@ -2576,36 +2578,37 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.create_bands = function (ob_scene_index, ob_set_bands) {
-        if (ob_set_bands === true) this.set_bands(ob_scene_index);
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            this.add_band(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                this.ob_scene[ob_scene_index].bands[i].x,
-                this.ob_scene[ob_scene_index].bands[i].y,
-                this.ob_scene[ob_scene_index].bands[i].z,
-                this.ob_scene[ob_scene_index].bands[i].width,
-                this.ob_scene[ob_scene_index].bands[i].heightMax,
-                this.ob_scene[ob_scene_index].bands[i].depth,
-                this.ob_scene[ob_scene_index].bands[i].color,
-                this.ob_scene[ob_scene_index].bands[i].texture);
-            if (this.ob_scene[ob_scene_index].bands[i].layout_name !== "NONE") {
-                this.add_textBox(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                    this.ob_scene[ob_scene_index].bands[i].layout_name,
-                    this.ob_scene[ob_scene_index].bands[i].textColor,
-                    -(this.ob_scene[ob_scene_index].width / 2) +
-                    (parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) *
-                        parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) / 2),
-                    this.ob_scene[ob_scene_index].bands[i].y,
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].z) + 50,
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].layouts.max_name_length) *
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].fontSizeInt) * 2.2,
-                    this.ob_scene[ob_scene_index].bands[i].heightMax,
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].depth) + 1,
-                    this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
-                    undefined,
-                    this.hex_Luminance(this.ob_scene[ob_scene_index].bands[i].color, -.15),
-                    this.ob_scene[ob_scene_index].font_align);
-            }
+        if (ob_set_bands) {
+            this.set_bands(ob_scene_index);
         }
+
+        const currentScene = this.ob_scene[ob_scene_index];
+        const bands = currentScene.bands;
+
+        bands.forEach(band => {
+            this.add_band(
+                ob_scene_index, band.name, band.x, band.y, band.z,
+                band.width, band.heightMax, band.depth, band.color, band.texture
+            );
+
+            if (band.layout_name !== "NONE") {
+                const adjustedX = -(currentScene.width / 2) +
+                    (parseInt(band.layouts.max_name_length) *
+                        parseInt(band.layouts.max_name_length) / 2);
+                const adjustedZ = parseInt(band.z) + 50;
+                const adjustedDepth = parseInt(band.depth) + 1;
+                const adjustedWidth = parseInt(band.layouts.max_name_length) *
+                    parseInt(band.fontSizeInt) * 2.2;
+                const luminanceColor = this.hex_Luminance(band.color, -.15);
+
+                this.add_textBox(
+                    ob_scene_index, band.name, band.layout_name, band.textColor,
+                    adjustedX, band.y, adjustedZ, adjustedWidth,
+                    band.heightMax, adjustedDepth, luminanceColor,
+                    undefined, luminanceColor, currentScene.font_align
+                );
+            }
+        });
     };
 
     OB_TIMELINE.prototype.add_band = function (ob_scene_index, band_name, x, y, z, width, height, depth, color,
@@ -2660,8 +2663,7 @@ function OB_TIMELINE() {
         //this.ob_scene[ob_scene_index].group.add(ob_band);
         this.ob_scene[ob_scene_index].add(ob_band);
         this.ob_scene[ob_scene_index].objects.push(ob_band);
-        if (ob_debug_ADD_WEBGL_OBJECT) console.log("OB_TIMELINE.add_band(" + band_name + "," + x + "," + y + "," + z +
-            "," + width + "," + height + "," + depth + "," + color + "," + texture + ")");
+
     };
 
     OB_TIMELINE.prototype.destroy_scene = function (ob_scene_index) {
@@ -2912,45 +2914,51 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.sync_bands = function (ob_scene_index, ob_band, x) {
-        if (ob_band === undefined) return;
-        let ob_band2;
-        let scale1;
-        let scale2;
-        let ob_incrementPixelOffSet2;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            if (ob_band.name === this.ob_scene[ob_scene_index].bands[i].name) {
-                this.ob_markerDate = this.pixelOffSetToDate(ob_scene_index, -x,
-                    this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                this.ob_scene[ob_scene_index].bands[i].x = x;
-                scale1 = this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths /
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels;
+        if (!ob_band) return;
+
+        const currentScene = this.ob_scene[ob_scene_index];
+        const bands = currentScene.bands;
+        let scale1, scale2, matchingBand;
+
+        // Find the band that matches the given ob_band and update its properties
+        for (let i = 0, len = bands.length; i < len; i++) {
+            if (bands[i].name === ob_band.name) {
+                matchingBand = bands[i];
                 break;
             }
         }
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            if (ob_band.name !== this.ob_scene[ob_scene_index].bands[i].name) {
-                this.ob_markerDate2 =
-                    this.pixelOffSetToDate(ob_scene_index, x,
-                        this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                        this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                ob_incrementPixelOffSet2 = this.dateToPixelOffSet(ob_scene_index, this.ob_markerDate2,
-                    this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-                scale2 = this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths /
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels;
-                //Start syncing
-                ob_band2 = this.ob_scene[ob_scene_index].getObjectByName(this.ob_scene[ob_scene_index].bands[i].name);
-                if (ob_band2 !== undefined) {
+
+        if (matchingBand) {
+            this.ob_markerDate = this.pixelOffSetToDate(
+                ob_scene_index, -x, matchingBand.gregorianUnitLengths, matchingBand.intervalPixels
+            );
+            matchingBand.x = x;
+            scale1 = matchingBand.gregorianUnitLengths / matchingBand.intervalPixels;
+        }
+
+        // Update other bands based on the matching band
+        for (let i = 0, len = bands.length; i < len; i++) {
+            const band = bands[i];
+            if (band.name !== ob_band.name) {
+                const markerDate2 = this.pixelOffSetToDate(
+                    ob_scene_index, x, band.gregorianUnitLengths, band.intervalPixels
+                );
+                const incrementPixelOffSet2 = this.dateToPixelOffSet(
+                    ob_scene_index, markerDate2, band.gregorianUnitLengths, band.intervalPixels
+                );
+                scale2 = band.gregorianUnitLengths / band.intervalPixels;
+
+                const ob_band2 = currentScene.getObjectByName(band.name);
+                if (ob_band2) {
                     ob_band.position.x_with_no_scale = ob_band2.position.x;
-                    ob_band2.position.x = ob_incrementPixelOffSet2 / (scale2 / scale1);
+                    ob_band2.position.x = incrementPixelOffSet2 / (scale2 / scale1);
                 }
             }
         }
 
         this.update_time_marker();
-
     };
+
 
     OB_TIMELINE.prototype.move_band = function (ob_scene_index, ob_band_name, x, y, z, ob_sync) {
         if (isNaN(x)) return;
@@ -2961,144 +2969,109 @@ function OB_TIMELINE() {
         if (ob_sync)
             this.sync_bands(ob_scene_index, ob_band, x, y, z);
 
-        if (ob_debug_MOVE_WEBGL_OBJECT) console.log("OB_TIMELINE.moveBand(" + ob_band_name + "," + x + "," + y + "," + z + ")");
-        //console.log("OB_TIMELINE.moveBand(" + ob_band_name + "," + x + "," + y + "," + z + ")");
     };
 
     OB_TIMELINE.prototype.create_segments_and_dates = function (ob_scene_index) {
-        //console.log("create_segments_and_dates start at:" + Date() + " - " + new Date().getMilliseconds());
-        let text, textX, textY, maxPixelOffSet, incrementPixelOffSet, incrementSubPixelOffSet;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            let ob_band = this.ob_scene[ob_scene_index].getObjectByName(this.ob_scene[ob_scene_index].bands[i].name);
+        const scene = this.ob_scene[ob_scene_index];
+        for (const band of scene.bands) {
+            const ob_band = scene.getObjectByName(band.name);
+            let incrementPixelOffSet = this.dateToPixelOffSet(ob_scene_index, band.minDate, band.gregorianUnitLengths, band.intervalPixels);
+            let maxPixelOffSet = this.dateToPixelOffSet(ob_scene_index, band.maxDate, band.gregorianUnitLengths, band.intervalPixels);
 
-            incrementPixelOffSet = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].minDate,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            maxPixelOffSet = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].maxDate,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-
-            while (parseInt(incrementPixelOffSet) < parseInt(maxPixelOffSet) +
-            parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels)) {
-
-                //Create segments
-                this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                    incrementPixelOffSet, this.ob_scene[ob_scene_index].bands[i].heightMax -
-                    (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5,
-                    this.ob_scene[ob_scene_index].bands[i].heightMax, "black", false);
-                // Trick: Add an extra segment to make the thinnest segment
-                this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                    incrementPixelOffSet + 0.15, this.ob_scene[ob_scene_index].bands[i].heightMax -
-                    (this.ob_scene[ob_scene_index].bands[i].heightMax / 2), 5,
-                    this.ob_scene[ob_scene_index].bands[i].heightMax,
-                    this.ob_scene[ob_scene_index].bands[i].color, false);
-
-                //Create date texts
-                text = this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet,
-                    this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels,
-                    this.ob_scene[ob_scene_index].bands[i].intervalUnit,
-                    this.ob_scene[ob_scene_index].bands[i].dateFormat);
-                textX = incrementPixelOffSet - (this.ob_scene[ob_scene_index].bands[i].fontSizeInt / 2) + 6;
-                if (this.ob_scene[ob_scene_index].bands[i].intervalUnitPos === "TOP")
-                    textY = (this.ob_scene[ob_scene_index].bands[i].heightMax -
-                            (this.ob_scene[ob_scene_index].bands[i].heightMax / 2)) -
-                        this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
-                else if (this.ob_scene[ob_scene_index].bands[i].intervalUnitPos === "BOTTOM")
-                    textY = (-parseInt(this.ob_scene[ob_scene_index].bands[i].heightMax) / 2) +
-                        this.ob_scene[ob_scene_index].bands[i].fontSizeInt / 2;
-                else
-                    textY = (-parseInt(this.ob_scene[ob_scene_index].bands[i].heightMax) / 2) +
-                        this.ob_scene[ob_scene_index].bands[i].fontSizeInt / 2;
-
-                //this.add_text_CSS2D(ob_band, text, textX, textY, 5,this.ob_scene[ob_scene_index].bands[i].fontSizeInt, this.ob_scene[ob_scene_index].bands[i].dateColor);
-                this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, undefined,
-                    this.ob_scene[ob_scene_index].bands[i].fontSizeInt,
-                    this.ob_scene[ob_scene_index].bands[i].fontStyle,
-                    this.ob_scene[ob_scene_index].bands[i].fontWeight,
-                    this.ob_scene[ob_scene_index].bands[i].dateColor,
-                    this.ob_scene[ob_scene_index].bands[i].fontFamily,
-                    this.ob_scene[ob_scene_index].font_align);
-
-                //Create sub-segments if required
-                if (this.ob_scene[ob_scene_index].bands[i].subIntervalPixels !== "NONE") {
-                    incrementSubPixelOffSet = parseInt(this.ob_scene[ob_scene_index].bands[i].subIntervalPixels);
-                    while (parseInt(incrementPixelOffSet) + incrementSubPixelOffSet < parseInt(incrementPixelOffSet) +
-                    parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels)) {
-                        this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                            incrementPixelOffSet + incrementSubPixelOffSet,
-                            this.ob_scene[ob_scene_index].bands[i].heightMax - (this.ob_scene[ob_scene_index].bands[i].heightMax / 2),
-                            5, this.ob_scene[ob_scene_index].bands[i].heightMax, "black", true);
-                        // Trick: Add an extra segment to make the thinnest segment
-                        this.add_segment(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].name,
-                            incrementPixelOffSet + incrementSubPixelOffSet + 0.20,
-                            this.ob_scene[ob_scene_index].bands[i].heightMax - (this.ob_scene[ob_scene_index].bands[i].heightMax / 2),
-                            5, this.ob_scene[ob_scene_index].bands[i].heightMax,
-                            this.ob_scene[ob_scene_index].bands[i].color, true);
-                        incrementSubPixelOffSet += parseInt(this.ob_scene[ob_scene_index].bands[i].subIntervalPixels);
-                    }
+            while (parseInt(incrementPixelOffSet) < parseInt(maxPixelOffSet) + parseInt(band.intervalPixels)) {
+                this.createSegment(ob_scene_index, band, incrementPixelOffSet);
+                this.createDateText(ob_scene_index, ob_band, band, incrementPixelOffSet);
+                if (band.subIntervalPixels !== "NONE") {
+                    this.createSubSegments(ob_scene_index, band, incrementPixelOffSet);
                 }
-                incrementPixelOffSet = parseInt(incrementPixelOffSet) + parseInt(this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+                incrementPixelOffSet = parseInt(incrementPixelOffSet) + parseInt(band.intervalPixels);
             }
         }
-        //console.log("create_segments_and_dates done at:" + Date() + " - " + new Date().getMilliseconds());
+    };
+
+    OB_TIMELINE.prototype.createSegment = function (ob_scene_index, band, incrementPixelOffSet) {
+        const heightMaxHalf = band.heightMax / 2;
+        this.add_segment(ob_scene_index, band.name, incrementPixelOffSet, heightMaxHalf, 5, band.heightMax, "black", false);
+        this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + 0.15, heightMaxHalf, 5, band.heightMax, band.color, false);
+    };
+
+    OB_TIMELINE.prototype.createDateText = function (ob_scene_index, ob_band, band, incrementPixelOffSet) {
+        const text = this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet, band.gregorianUnitLengths, band.intervalPixels, band.intervalUnit, band.dateFormat);
+        const textX = incrementPixelOffSet - (band.fontSizeInt / 2) + 6;
+        const textY = this.calculateTextYPosition(band);
+        this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, undefined, band.fontSizeInt, band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily, this.ob_scene[ob_scene_index].font_align);
+    };
+
+    OB_TIMELINE.prototype.calculateTextYPosition = function (band) {
+        const heightMaxHalf = band.heightMax / 2;
+        if (band.intervalUnitPos === "TOP") {
+            return heightMaxHalf - band.fontSizeInt;
+        }
+        return -parseInt(band.heightMax) / 2 + band.fontSizeInt / 2;
+    };
+
+    OB_TIMELINE.prototype.createSubSegments = function (ob_scene_index, band, incrementPixelOffSet) {
+        let incrementSubPixelOffSet = parseInt(band.subIntervalPixels);
+        const heightMaxHalf = band.heightMax / 2;
+        while (parseInt(incrementPixelOffSet) + incrementSubPixelOffSet < parseInt(incrementPixelOffSet) + parseInt(band.intervalPixels)) {
+            this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + incrementSubPixelOffSet, heightMaxHalf, 5, band.heightMax, "black", true);
+            this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + incrementSubPixelOffSet + 0.20, heightMaxHalf, 5, band.heightMax, band.color, true);
+            incrementSubPixelOffSet += parseInt(band.subIntervalPixels);
+        }
     };
 
     OB_TIMELINE.prototype.get_first_free_tracks = function (ob_scene_index, ob_busy_tracks, session, i) {
-        let ob_current_track = this.ob_scene[ob_scene_index].bands[i].maxY -
-            this.ob_scene[ob_scene_index].bands[i].fontSizeInt -
-            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        const band = this.ob_scene[ob_scene_index].bands[i];
+        const trackIncrement = band.trackIncrement;
+        const activitiesLength = session.activities.length;
+        let ob_current_track = band.maxY - band.fontSizeInt - trackIncrement;
 
         if (ob_busy_tracks.length === 0) {
             return ob_current_track;
-        } else {
-            for (let t = 0; t < ob_busy_tracks.length; t++) {
+        }
+
+        for (let t = 0; t < ob_busy_tracks.length; t++) {
+            try {
                 let ob_count_track;
-                try {
-                    if (ob_current_track > ob_busy_tracks[t]) {
-                        ob_count_track = Math.abs((ob_current_track - ob_busy_tracks[t])) /
-                            this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                        if (isNaN(ob_count_track)) {
-                            return ob_current_track;
-                        }
-                        if (t !== 0 && ob_count_track > session.activities.length) {
-                            return ob_current_track -
-                                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
-                        }
-                        if (ob_count_track > session.activities.length) {
-                            return ob_current_track;
-                        }
-                    } else {
-                        ob_count_track = Math.abs((ob_busy_tracks[t] - ob_busy_tracks[t + 1])) /
-                            this.ob_scene[ob_scene_index].bands[i].trackIncrement - session.activities.length;
-                        if (isNaN(ob_count_track)) {
-                            ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
-                                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                            return ob_current_track;
-                        }
-                        if (ob_count_track > session.activities.length) {
-                            ob_current_track = ob_busy_tracks[t] -
-                                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
-                            return ob_current_track;
-                        }
+                const busyTrack = ob_busy_tracks[t];
+                if (ob_current_track > busyTrack) {
+                    ob_count_track = Math.abs(ob_current_track - busyTrack) / trackIncrement;
+                    if (isNaN(ob_count_track)) {
+                        return ob_current_track;
                     }
-                    ob_current_track -= (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
-                } catch (e) {
-                    ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] -
-                        this.ob_scene[ob_scene_index].bands[i].trackIncrement;
-                    return ob_current_track;
+                    if (t !== 0 && ob_count_track > activitiesLength) {
+                        return ob_current_track - (activitiesLength * trackIncrement);
+                    }
+                    if (ob_count_track > activitiesLength) {
+                        return ob_current_track;
+                    }
+                } else {
+                    const nextBusyTrack = ob_busy_tracks[t + 1];
+                    ob_count_track = Math.abs(busyTrack - nextBusyTrack) / trackIncrement - activitiesLength;
+                    if (isNaN(ob_count_track)) {
+                        ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] - trackIncrement;
+                        return ob_current_track;
+                    }
+                    if (ob_count_track > activitiesLength) {
+                        return busyTrack - (activitiesLength * trackIncrement);
+                    }
                 }
+                ob_current_track -= (activitiesLength * trackIncrement);
+            } catch (e) {
+                ob_current_track = ob_busy_tracks[ob_busy_tracks.length - 1] - trackIncrement;
+                return ob_current_track;
             }
         }
-        return ob_busy_tracks[ob_busy_tracks.length - 1] -
-            (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement);
+        return ob_busy_tracks[ob_busy_tracks.length - 1] - (activitiesLength * trackIncrement);
     };
+
 
     OB_TIMELINE.prototype.get_room_for_session = function (ob_scene_index, sessions, session, i, j) {
         let ob_busy_tracks = [];
-        this.ob_scene[ob_scene_index].bands[i].track = this.ob_scene[ob_scene_index].bands[i].maxY -
-            this.ob_scene[ob_scene_index].bands[i].fontSizeInt;
-        this.ob_scene[ob_scene_index].bands[i].track -= this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+        const band = this.ob_scene[ob_scene_index].bands[i];
+
+        band.track = band.maxY - band.fontSizeInt;
+        band.track -= band.trackIncrement;
 
         // Check overlapping with the current session
         for (let l = 0; l < j; l++) {
@@ -3124,12 +3097,12 @@ function OB_TIMELINE() {
 
         // Adjust minY to make enough room for the current session
         let ob_first_free_track = this.get_first_free_tracks(ob_scene_index, ob_busy_tracks, session, i);
-        if (ob_first_free_track <= this.ob_scene[ob_scene_index].bands[i].minY +
-            this.ob_scene[ob_scene_index].bands[i].trackIncrement) {
+        if (ob_first_free_track <= band.minY +
+            band.trackIncrement) {
             this.ob_scene[ob_scene_index].bands.updated = true;
-            this.ob_scene[ob_scene_index].bands[i].minY = ob_first_free_track -
-                (session.activities.length * this.ob_scene[ob_scene_index].bands[i].trackIncrement) -
-                this.ob_scene[ob_scene_index].bands[i].trackIncrement;
+            band.minY = ob_first_free_track -
+                (session.activities.length * band.trackIncrement) -
+                band.trackIncrement;
         }
         return ob_first_free_track;
     };
@@ -3148,49 +3121,61 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.getSessionWidth = function (activities) {
-        let ob_w = activities[0].width;
-        try {
-            //return the larger activity width.
-            for (let i = 1; i < activities.length; i++) {
-                if (activities[i].width > ob_w) ob_w = activities[i].width;
-            }
-        } catch (e) {
-            return ob_w;
+        // Early return if the activities array is empty
+        if (activities.length === 0) {
+            return 0;
         }
-        return ob_w;
-    };
 
-    OB_TIMELINE.prototype.getSessionTotalWidth = function (activities) {
         // Initialize min_x and max_x with positive and negative infinity, respectively
         let min_x = Infinity;
         let max_x = -Infinity;
 
+        // Use try-catch for error handling
         try {
-            for (let i = 0; i < activities.length; i++) {
+            // Use a traditional for loop for better performance
+            const len = activities.length;
+            for (let i = 0; i < len; i++) {
                 const activity = activities[i];
                 // Calculate the rightmost x coordinate of the current activity
-                const right_x = activity.x + activity.total_width;
+                const right_x = activity.x + activity.width;
 
-                // Update min_x if the current activity's x coordinate is smaller
-                if (activity.x < min_x) {
-                    min_x = activity.x;
-                }
-
-                // Update max_x if the right_x is larger
-                if (right_x > max_x) {
-                    max_x = right_x;
-                }
+                // Update min_x and max_x
+                min_x = Math.min(min_x, activity.x);
+                max_x = Math.max(max_x, right_x);
             }
         } catch (e) {
             // Handle exceptions here if needed
-            // console.error(e);
-            if (activities.length > 0) {
-                return activities[0].total_width;
-            }
-            return 0; // Return 0 if the activities array is empty
+            console.error("An error occurred:", e);
+            return activities[0].width;
         }
 
-        // Calculate and return the total width
+        // Calculate and return the session width
+        return max_x - min_x;
+    };
+
+    OB_TIMELINE.prototype.getSessionTotalWidth = function (activities) {
+        const len = activities.length;
+        if (len === 0) {
+            return 0;
+        }
+
+        let min_x = Infinity;
+        let max_x = -Infinity;
+
+        try {
+            let activity, right_x;
+            for (let i = 0; i < len; ++i) {
+                activity = activities[i];
+                right_x = activity.x + activity.total_width;
+
+                if (right_x > max_x) max_x = right_x;
+                if (activity.x < min_x) min_x = activity.x;
+            }
+        } catch (e) {
+            console.error("An error occurred:", e);
+            return activities[0].total_width;
+        }
+
         return max_x - min_x;
     };
 
@@ -3278,6 +3263,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.init_activities = function (ob_scene_index, band_index, session_index) {
+        let y = 0;
         let z = 5;
         let h = 0;
         let w = 0;
@@ -3372,6 +3358,7 @@ function OB_TIMELINE() {
                 activity.width = w;
                 activity.height = h;
                 activity.size = h;
+                activity.y = y;
                 activity.z = z;
                 activity.pixelOffSetStart = parseInt(pixelOffSetStart);
                 activity.pixelOffSetEnd = parseInt(pixelOffSetEnd);
@@ -3423,7 +3410,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
-        let y = 0;
+        let y = this.ob_scene[ob_scene_index].ob_height / 2;
         let z = 5;
         this.ob_scene[ob_scene_index].bands.updated = false;
 
@@ -3457,6 +3444,7 @@ function OB_TIMELINE() {
                             session.original_x = session.x;
                         else
                             session.original_x = this.getSession_originalX(session.activities);
+                    session.y = y;
                     session.z = z;
                     session.height = (band.trackIncrement * session.activities.length);
 
@@ -3545,9 +3533,6 @@ function OB_TIMELINE() {
             ob_band.add(ob_tolerance);
         }
 
-        if (ob_debug_ADD_WEBGL_OBJECT)
-            console.log("OB_TIMELINE.add_tolerance(" +
-                ob_object + "," + "," + x + "," + y + "," + z + "," + color + ")");
     };
 
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
@@ -3646,88 +3631,73 @@ function OB_TIMELINE() {
         session,
         color,
         texture,
-        luminance,
-        opacity
+        luminance = -0.15,
+        opacity = 0.35
     ) {
-        let ob_box_activities = this.ob_scene[ob_scene_index].getObjectByName(band_name + "_sessionBox_" + session.id);
-        if (ob_box_activities !== undefined) {
+        const scene = this.ob_scene[ob_scene_index];
+        const track = this.track[ob_scene_index];
+        const boxName = `${band_name}_sessionBox_${session.id}`;
+
+        if (scene.getObjectByName(boxName)) {
             return;
         }
 
-        if (luminance === undefined) {
-            luminance = -0.15;
-        }
-        if (opacity === undefined) {
-            opacity = 0.35;
-        }
-        if (color === undefined) {
-            if (session.render.color !== undefined) {
-                color = this.hex_Luminance(session.render.color, luminance);
-            }
-        } else {
+        color = color || session.render?.color;
+        if (color) {
             color = this.hex_Luminance(color, luminance);
         }
 
-        let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(session.width, session.height, 1));
+        const ob_box = track(new THREE.BoxGeometry(session.width, session.height, 1));
         let ob_material;
 
-        if (texture !== undefined) {
-            let loader = this.track[ob_scene_index](new THREE.CubeTextureLoader());
-            loader.setCrossOrigin("");
-            loader.setPath('three.js/examples/textures/cube/pisa/');
-            let textureCube = loader.load([
-                'px.png', 'nx.png',
-                'py.png', 'ny.png',
-                'pz.png', 'nz.png'
-            ]);
-            let ob_dirLight = this.track[ob_scene_index](new THREE.DirectionalLight(0xffffff));
-            ob_dirLight.position.set(10, 10, 10);
-            this.ob_scene[ob_scene_index].add(ob_dirLight);
-            this.ob_scene[ob_scene_index].add(this.track[ob_scene_index](new THREE.AmbientLight(0x404040)));
-            ob_material = this.track[ob_scene_index](new THREE.MeshStandardMaterial({
-                envMap: textureCube,
-                roughness: 0.5,
-                metalness: 1
-            }));
-            ob_box.computeVertexNormals();
+        if (texture) {
+            ob_material = this.createTextureMaterial(track, scene, texture);
         } else {
-            ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
-                color: color,
+            ob_material = track(new THREE.MeshBasicMaterial({
+                color,
                 transparent: true,
-                opacity: opacity
+                opacity
             }));
         }
 
-        ob_box_activities = this.track[ob_scene_index](new THREE.Mesh(ob_box, ob_material));
-        ob_box_activities.name = band_name + "_" + session.id;
-        ob_box_activities.sortBy = "true";
-        ob_box_activities.pos_x = session.x_relative;
-        ob_box_activities.pos_y = session.y;
-        ob_box_activities.pos_z = 1;
-        ob_box_activities.position.set(session.x_relative, session.y, 1);
+        const ob_box_activities = track(new THREE.Mesh(ob_box, ob_material));
+        this.setBoxProperties(ob_box_activities, session, band_name, scene);
 
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.add(ob_box_activities);
-        }
+    };
 
-        if (ob_debug_ADD_SESSION_WEBGL_OBJECT) {
-            console.log(
-                "OB_TIMELINE.add_sessionsBox(" +
-                band_name +
-                "," +
-                session.start +
-                "," +
-                session.end +
-                "---" +
-                session.data.title +
-                ",length=" +
-                session.activities.length +
-                "," +
-                session.activities[0].start +
-                session.activities[0].data.description +
-                ")"
-            );
+    OB_TIMELINE.prototype.createTextureMaterial = function (track, scene, texture) {
+        const loader = track(new THREE.CubeTextureLoader());
+        loader.setCrossOrigin("");
+        loader.setPath('three.js/examples/textures/cube/pisa/');
+        const textureCube = loader.load([
+            'px.png', 'nx.png',
+            'py.png', 'ny.png',
+            'pz.png', 'nz.png'
+        ]);
+
+        const ob_dirLight = track(new THREE.DirectionalLight(0xffffff));
+        ob_dirLight.position.set(10, 10, 10);
+        scene.add(ob_dirLight);
+        scene.add(track(new THREE.AmbientLight(0x404040)));
+
+        return track(new THREE.MeshStandardMaterial({
+            envMap: textureCube,
+            roughness: 0.5,
+            metalness: 1
+        }));
+    };
+
+    OB_TIMELINE.prototype.setBoxProperties = function (box, session, band_name, scene) {
+        box.name = `${band_name}_${session.id}`;
+        box.sortBy = "true";
+        box.pos_x = session.x_relative;
+        box.pos_y = session.y;
+        box.pos_z = 1;
+        box.position.set(session.x_relative, session.y, 1);
+
+        const ob_band = scene.getObjectByName(band_name);
+        if (ob_band) {
+            ob_band.add(box);
         }
     };
 
@@ -3832,10 +3802,6 @@ function OB_TIMELINE() {
             ob_band.add(ob_session);
         }
 
-        if (ob_debug_ADD_SESSION_WEBGL_OBJECT) {
-            console.log(`OB_TIMELINE.Session(${band_name},${session.x_relative},${session.y},${session.z},${session.width},${session.height},${session.color})`);
-        }
-
         return ob_session;
     };
 
@@ -3923,37 +3889,58 @@ function OB_TIMELINE() {
             ob_band.add(ob_event);
         }
 
-        if (ob_debug_ADD_EVENT_WEBGL_OBJECT) {
-            console.log(
-                `OB_TIMELINE.ob_addEvent(${band_name},${session.x_relative},${session.y},${session.z},${session.size},${color})`
-            );
-        }
-
         return ob_event;
     };
 
     OB_TIMELINE.prototype.add_segment = function (ob_scene_index, band_name, x, y, z, size, color, dashed) {
-        color = color || new THREE.Color("rgb(114, 171, 173)");
-        let points = [new THREE.Vector3(x, y, z), new THREE.Vector3(x, y - size, z)];
-        let geometry = this.track[ob_scene_index](new THREE.BufferGeometry().setFromPoints(points));
-        let material = this.track[ob_scene_index](new THREE.LineDashedMaterial({
-            color: color,
-            linewidth: 1,
-            dashSize: 2,
-            gapSize: 4,
-        }));
-        let segment = this.track[ob_scene_index](new THREE.LineSegments(geometry, material));
-        if (dashed) {
-            segment.computeLineDistances();
-        }
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
-        if (ob_band !== undefined) {
-            ob_band.add(segment);
-        }
-        if (ob_debug_ADD_WEBGL_OBJECT) {
-            console.log("OB_TIMELINE.add_segment(" + band_name + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
+        try {
+            // Validate inputs to prevent unexpected behavior
+            if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(size)) {
+                //console.error("Invalid coordinates or size provided.");
+                return;
+            }
+
+            color = color || new THREE.Color("rgb(114, 171, 173)");
+
+            const points = [
+                new THREE.Vector3(x, y, z),
+                new THREE.Vector3(x, y - size, z)
+            ];
+
+            const geometry = this.track[ob_scene_index](new THREE.BufferGeometry().setFromPoints(points));
+
+            // Explicitly compute the bounding sphere
+            geometry.computeBoundingSphere();
+
+            // Check for invalid geometry
+            if (geometry.boundingSphere && isNaN(geometry.boundingSphere.radius)) {
+                console.error("Invalid geometry created. Bounding sphere radius is NaN.");
+                return;
+            }
+
+            const material = this.track[ob_scene_index](new THREE.LineDashedMaterial({
+                color: color,
+                linewidth: 1,
+                dashSize: 2,
+                gapSize: 4,
+            }));
+
+            const segment = this.track[ob_scene_index](new THREE.LineSegments(geometry, material));
+
+            if (dashed) {
+                segment.computeLineDistances();
+            }
+
+            const ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
+            if (ob_band !== undefined) {
+                ob_band.add(segment);
+            }
+
+        } catch (e) {
+            console.error("An error occurred in add_segment:", e);
         }
     };
+
 
     OB_TIMELINE.prototype.add_line_current_time = function (ob_scene_index, date, color) {
         color = color || this.track[ob_scene_index](new THREE.Color("rgb(243,23,51)"));
@@ -4012,10 +3999,6 @@ function OB_TIMELINE() {
         if (ob_object !== undefined) {
             ob_object.add(ob_sprite);
         }
-
-        if (ob_debug_ADD_WEBGL_OBJECT) {
-            console.log("OB_TIMELINE.TextSprite(" + ob_object + "," + text + "," + x + "," + y + "," + z + "," + size + "," + color + ")");
-        }
     };
 
     OB_TIMELINE.prototype.build_model = function (ob_scene_index, sessions) {
@@ -4068,56 +4051,52 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.ob_setListeners = function (ob_scene_index) {
         let that = this;
+        let ob_scene = this.ob_scene[ob_scene_index];
 
-        this.ob_scene[ob_scene_index].dragControls = this.track[ob_scene_index](
+        ob_scene.dragControls = this.track[ob_scene_index](
             new THREE.DragControls(
-                this.ob_scene[ob_scene_index].objects,
-                this.ob_scene[ob_scene_index].ob_camera,
-                this.ob_scene[ob_scene_index].ob_renderer.domElement
+                ob_scene.objects,
+                ob_scene.ob_camera,
+                ob_scene.ob_renderer.domElement
             )
         );
 
-        this.ob_scene[ob_scene_index].dragControls.addEventListener('dragstart', function (e) {
-            clearInterval(that.ob_interval_clock);
-            clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+        ob_scene.dragControls.addEventListener('dragstart', onDragStart);
+        ob_scene.dragControls.addEventListener('dragend', onDragEnd);
+        ob_scene.dragControls.addEventListener('drag', onDrag);
 
-            let ob_obj = that.ob_scene[ob_scene_index].getObjectById(e.object.id);
+        function onDragStart(e) {
+            clearInterval(that.ob_interval_clock);
+            clearInterval(ob_scene.ob_interval_move);
+
+            let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
 
-            if (ob_obj.position !== undefined)
-                ob_obj.dragstart_source = ob_obj.position.x;
-            else
-                ob_obj.dragstart_source = 0;
+            ob_obj.dragstart_source = ob_obj.position.x || 0;
 
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
-                if (ob_obj.parent.position !== undefined)
-                    ob_obj.parent.dragstart_source = ob_obj.parent.position.x;
-                else
-                    ob_obj.parent.dragstart_source = 0;
-                that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
+                let parent = ob_obj.parent;
+                parent.dragstart_source = parent.position.x || 0;
+                that.move_band(ob_scene_index, parent.name, parent.position.x, parent.pos_y, parent.pos_z, true);
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, false);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                if (ob_obj.parent.position !== undefined)
-                    ob_obj.parent.dragstart_source = ob_obj.parent.position.x;
-                else
-                    ob_obj.parent.dragstart_source = 0;
+                let parent = ob_obj.parent;
+                parent.dragstart_source = parent.position.x || 0;
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
 
             that.ob_render(ob_scene_index);
+        }
 
-            if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragstart: " + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
-        });
-
-        this.ob_scene[ob_scene_index].dragControls.addEventListener('dragend', function (e) {
-            let ob_obj = that.ob_scene[ob_scene_index].getObjectById(e.object.id);
+        function onDragEnd(e) {
+            let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
 
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
@@ -4146,11 +4125,10 @@ function OB_TIMELINE() {
             }
 
             that.ob_render(ob_scene_index);
-            if (ob_debug_MOVE_WEBGL_OBJECT) console.log("dragend: " + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
 
-            that.ob_scene[ob_scene_index].date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
-            that.ob_scene[ob_scene_index].date_cal = that.ob_markerDate;
-            that.ob_scene[ob_scene_index].show_calendar = true;
+            ob_scene.date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
+            ob_scene.date_cal = that.ob_markerDate;
+            ob_scene.show_calendar = true;
 
             if (ob_obj.name.match(/zone_/) || ((ob_obj.type.match(/Mesh/) && ob_obj.name === ""))) {
                 ob_obj.parent.ob_source = ob_obj.parent.position.x;
@@ -4163,27 +4141,27 @@ function OB_TIMELINE() {
             }
 
             if (that.data && (that.data.match(/^(http?):\/\//) || that.data.match(/^(https?):\/\//))) {
-                that.data_head = that.ob_get_url_head(that.ob_scene[ob_scene_index]);
-                clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
-                that.ob_scene[ob_scene_index].ob_interval_move = setInterval(ob_move, 5);
+                that.data_head = that.ob_get_url_head(ob_scene);
+                clearInterval(ob_scene.ob_interval_move);
+                ob_scene.ob_interval_move = setInterval(ob_move, 5);
             } else {
-                clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
-                that.ob_scene[ob_scene_index].ob_interval_move = setInterval(ob_move2, 5);
+                clearInterval(ob_scene.ob_interval_move);
+                ob_scene.ob_interval_move = setInterval(ob_move2, 5);
             }
 
             function ob_move() {
-                if (that.ob_scene[ob_scene_index].ob_interval_move === undefined) return;
+                if (ob_scene.ob_interval_move === undefined) return;
 
                 if (ob_obj.name.match(/zone_/) || ((ob_obj.type.match(/Mesh/) && ob_obj.name === ""))) {
                     if (ob_obj.dragstart_source >= ob_obj.parent.ob_source - 5 && ob_obj.dragstart_source <= ob_obj.parent.ob_source + 1) {
-                        clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                        clearInterval(ob_scene.ob_interval_move);
                     } else {
                         if (ob_obj.parent.ob_speed > 0)
                             ob_obj.parent.ob_speed = ob_obj.parent.ob_speed - 0.0025;
                         else
                             ob_obj.parent.ob_speed = ob_obj.parent.ob_speed + 0.0025;
                         if (Math.round(ob_obj.ob_speed) === 0)
-                            clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                            clearInterval(ob_scene.ob_interval_move);
 
                         if (ob_obj.dragstart_source <= ob_obj.parent.ob_source)
                             ob_obj.parent.ob_drag_end_source = ob_obj.parent.ob_drag_end_source - ob_obj.parent.ob_speed;
@@ -4202,24 +4180,24 @@ function OB_TIMELINE() {
                             ob_scene_index,
                             that.header,
                             that.params,
-                            that.ob_scene[ob_scene_index].bands,
-                            that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions,
-                            that.ob_camera_type,
+                            ob_scene.bands,
+                            ob_scene.model,
+                            ob_scene.sessions,
+                            ob_scene.ob_camera_type,
                             ob_obj.parent,
                             true
                         );
                     }
                 } else {
                     if (ob_obj.dragstart_source >= ob_obj.ob_source - 5 && ob_obj.dragstart_source <= ob_obj.ob_source + 1) {
-                        clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                        clearInterval(ob_scene.ob_interval_move);
                     } else {
                         if (ob_obj.ob_speed > 0)
                             ob_obj.ob_speed = ob_obj.ob_speed - 0.0025;
                         else
                             ob_obj.ob_speed = ob_obj.ob_speed + 0.0025;
                         if (Math.round(ob_obj.ob_speed) === 0)
-                            clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                            clearInterval(ob_scene.ob_interval_move);
 
                         if (ob_obj.dragstart_source <= ob_obj.ob_source)
                             ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
@@ -4238,10 +4216,10 @@ function OB_TIMELINE() {
                             ob_scene_index,
                             that.header,
                             that.params,
-                            that.ob_scene[ob_scene_index].bands,
-                            that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions,
-                            that.ob_scene[ob_scene_index].ob_camera_type,
+                            ob_scene.bands,
+                            ob_scene.model,
+                            ob_scene.sessions,
+                            ob_scene.ob_camera_type,
                             ob_obj,
                             true
                         );
@@ -4250,17 +4228,17 @@ function OB_TIMELINE() {
             }
 
             function ob_move2() {
-                if (that.ob_scene[ob_scene_index].ob_interval_move === undefined) return;
+                if (ob_scene.ob_interval_move === undefined) return;
 
                 if (ob_obj.dragstart_source >= ob_obj.ob_source - 5 && ob_obj.dragstart_source <= ob_obj.ob_source + 1) {
-                    clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                    clearInterval(ob_scene.ob_interval_move);
                 } else {
                     if (ob_obj.ob_speed > 0)
                         ob_obj.ob_speed = ob_obj.ob_speed - 0.0025;
                     else
                         ob_obj.ob_speed = ob_obj.ob_speed + 0.0025;
                     if (Math.round(ob_obj.ob_speed) === 0)
-                        clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
+                        clearInterval(ob_scene.ob_interval_move);
 
                     if (ob_obj.dragstart_source <= ob_obj.ob_source)
                         ob_obj.ob_drag_end_source = ob_obj.ob_drag_end_source - ob_obj.ob_speed;
@@ -4275,10 +4253,10 @@ function OB_TIMELINE() {
                             ob_scene_index,
                             that.header,
                             that.params,
-                            that.ob_scene[ob_scene_index].bands,
-                            that.ob_scene[ob_scene_index].model,
-                            that.ob_scene[ob_scene_index].sessions,
-                            that.ob_scene[ob_scene_index].ob_camera_type,
+                            ob_scene.bands,
+                            ob_scene.model,
+                            ob_scene.sessions,
+                            ob_scene.ob_camera_type,
                             ob_obj,
                             null,
                             false
@@ -4288,16 +4266,16 @@ function OB_TIMELINE() {
             }
 
             if (ob_obj.name.match(/zone_/) || ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
-                clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
-                that.ob_scene[ob_scene_index].ob_interval_move = setInterval(ob_move, 5);
+                clearInterval(ob_scene.ob_interval_move);
+                ob_scene.ob_interval_move = setInterval(ob_move, 5);
             } else {
-                clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
-                that.ob_scene[ob_scene_index].ob_interval_move = setInterval(ob_move2, 5);
+                clearInterval(ob_scene.ob_interval_move);
+                ob_scene.ob_interval_move = setInterval(ob_move2, 5);
             }
-        });
+        }
 
-        this.ob_scene[ob_scene_index].dragControls.addEventListener('drag', function (e) {
-            let ob_obj = that.ob_scene[ob_scene_index].getObjectById(e.object.id);
+        function onDrag(e) {
+            let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
@@ -4312,8 +4290,8 @@ function OB_TIMELINE() {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
             that.ob_render(ob_scene_index);
-            if (ob_debug_MOVE_WEBGL_OBJECT) console.log("drag :" + that.name + " - " + ob_obj.type + " - " + ob_obj.name);
-        });
+        }
+
 
         function moveZone(ob_obj) {
             let ob_step = ob_obj.dragstart_source - ob_obj.position.x;
@@ -4809,14 +4787,16 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
-        if (this.ob_scene !== undefined && this.ob_scene[ob_scene_index].ob_interval_move !== undefined) {
-            clearInterval(this.ob_scene[ob_scene_index].ob_interval_move);
+        const ob_scene = this.ob_scene[ob_scene_index];
+
+        if (this.ob_scene !== undefined && ob_scene.ob_interval_move !== undefined) {
+            clearInterval(ob_scene.ob_interval_move);
         }
 
         if (!this.data) {
-            this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
-                this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
-                this.ob_scene[ob_scene_index].ob_camera_type, null, false);
+            this.update_scene(ob_scene_index, this.header, this.params, ob_scene.bands,
+                ob_scene.model, ob_scene.sessions,
+                ob_scene.ob_camera_type, null, false);
             return;
         }
 
@@ -4833,23 +4813,23 @@ function OB_TIMELINE() {
             this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (!this.data.includes(".json") && !this.data.includes("UTC")) {
             this.data = this.ob_get_url_head(ob_scene_index) +
-                "?startDate=" + this.ob_scene[ob_scene_index].minDate +
-                "&endDate=" + this.ob_scene[ob_scene_index].maxDate +
+                "?startDate=" + ob_scene.minDate +
+                "&endDate=" + ob_scene.maxDate +
                 "&scene=" + ob_scene_index +
-                "&filterName=" + this.ob_scene[ob_scene_index].ob_filter_name +
-                "&filter=" + this.ob_scene[ob_scene_index].ob_filter_value +
-                "&search=" + this.ob_scene[ob_scene_index].ob_search_value +
+                "&filterName=" + ob_scene.ob_filter_name +
+                "&filter=" + ob_scene.ob_filter_value +
+                "&search=" + ob_scene.ob_search_value +
                 "&timelineName=" + this.name +
                 "&userName=" + this.ob_user_name;
             this.method = "GET";
         } else {
             this.data = this.ob_get_url_head(ob_scene_index) +
-                "?startDate=" + this.ob_scene[ob_scene_index].minDate +
-                "&endDate=" + this.ob_scene[ob_scene_index].maxDate +
+                "?startDate=" + ob_scene.minDate +
+                "&endDate=" + ob_scene.maxDate +
                 "&scene=" + ob_scene_index +
-                "&filterName=" + this.ob_scene[ob_scene_index].ob_filter_name +
-                "&filter=" + this.ob_scene[ob_scene_index].ob_filter_value +
-                "&search=" + this.ob_scene[ob_scene_index].ob_search_value +
+                "&filterName=" + ob_scene.ob_filter_name +
+                "&filter=" + ob_scene.ob_filter_value +
+                "&search=" + ob_scene.ob_search_value +
                 "&timelineName=" + this.name +
                 "&userName=" + this.ob_user_name;
             this.method = "GET";
