@@ -15,7 +15,6 @@
 
     <!-- Comment three.js below iof you want your application to run in local mode-->
     <script src="three.js/build/three.min.js" type="application/javascript"></script>
-
     <script src="THREE.TextTexture/index.js" type="application/javascript"></script>
     <script src="THREE.TextSprite/index.js" type="application/javascript"></script>
     <script src="src/openbexi_timeline.js" type="application/javascript"></script>
@@ -33,19 +32,14 @@
             date: "current_time",
             timeZone: "UTC",
             top: 0,
-            //filter: "|system:RNG", //Exclude RNG
             left: 0,
             height: 800,
             fontSize: 12,
             //width: window.innerWidth,
             width: 1350,
-            //data_default_port: 8442,
-            //data_sse_port: 8441,
-            data: "https://"+window.location.hostname+":"+window.location.port+"/openbexi_timeline/sessions?startDate=current_time&endDate="
-            //data: "https://localhost:data_default_port/openbexi_timeline/sessions?startDate=current_time&endDate="
-            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=Jul 02 00:00:00 UTC 2022&endDate=Jul 04 00:00:00 UTC 2022"
-            //data: "https://localhost:8446/openbexi_timeline_sse/sessions?startDate=current_time&endDate="
-            //data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
+            data_default_port: 8442,
+            data_sse_port: 8441,
+            data: ""
         }];
         ob_timeline1.bands = [{
             name: "ob_band_1",
@@ -77,16 +71,25 @@
                 eventColor: "#238448",
                 dateColor: "#f31733",
             }]
+
+        // Set the data attribute based on the port
+        const currentPort = window.location.port;
+        const data_default_port = ob_timeline1.params[0].data_default_port;
+        const data_sse_port = ob_timeline1.params[0].data_sse_port;
+        if (currentPort == data_default_port) {
+            ob_timeline1.params[0].data = "https://" + window.location.hostname + ":" + currentPort + "/openbexi_timeline/sessions?startDate=current_time&endDate=";
+        } else if (currentPort == data_sse_port) {
+            ob_timeline1.params[0].title = "Timeline report real time";
+            ob_timeline1.params[0].data = "https://" + window.location.hostname + ":" + currentPort + "/openbexi_timeline_sse/sessions?startDate=current_time&endDate=";
+        }
+
     </script>
-
 </head>
-
 <body onload="ob_load_timeline(ob_timeline1);">
 <canvas id="ob_timeline_canvas" ondrop="ob_drop_data(event);" ondragover="ob_dragHandler(event);"></canvas>
 <div id="ob_content"></div>
 <script id="template" type="notjs">
-	<div class="ob_description">$</div>
+    <div class="ob_description">$</div>
 </script>
 </body>
 </html>
-
