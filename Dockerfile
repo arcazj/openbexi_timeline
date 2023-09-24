@@ -5,7 +5,7 @@ FROM openjdk:17
 WORKDIR /
 
 # Copy the essential static files that are less likely to change frequently
-COPY openbexi_timeline.html openbexi_timeline_sse.html ./
+COPY openbexi_timeline.html ./
 COPY src src
 COPY css css
 COPY jsCalendar-master jsCalendar-master
