@@ -6,6 +6,7 @@ ob_texture.set("icon/ob_info.png", new THREE.TextureLoader().load("icon/ob_info.
 ob_texture.set("icon/ob_start.png", new THREE.TextureLoader().load("icon/ob_start.png"));
 ob_texture.set("icon/ob_stop.png", new THREE.TextureLoader().load("icon/ob_stop.png"));
 ob_texture.set("icon/ob_check_failed.png", new THREE.TextureLoader().load("icon/ob_check_failed.png"));
+ob_texture.set("icon/ob_check_aborted.png", new THREE.TextureLoader().load("icon/ob_check_aborted.png"));
 ob_texture.set("icon/ob_check_ok.png", new THREE.TextureLoader().load("icon/ob_check_ok.png"));
 ob_texture.set("icon/ob_check_warning.png", new THREE.TextureLoader().load("icon/ob_check_warning.png"));
 ob_texture.set("icon/ob_phone.png", new THREE.TextureLoader().load("icon/ob_phone.png"));
