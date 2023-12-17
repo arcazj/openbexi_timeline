@@ -11,14 +11,10 @@
 
 ::-webkit-scrollbar-thumb {
     border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
-    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
-    background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.5); /* Modern syntax, -webkit prefix is not necessary */
+    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Standard linear gradient */
 }
+
 div.ob_descriptor {
     height: 100%;
     width: 30%;
@@ -28,16 +24,11 @@ div.ob_descriptor {
 div.ob_descriptor_head {
     height: 40px;
     border-radius: 15px 15px 0 0;
-    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
-    background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
+    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%);
     color: #040404;
     text-align: center;
-    font-family: Arial, Times, Serif;
-    font-size: large;
+    font-family: Arial, sans-serif; /* Consistent sans-serif font family */
+    font-size: 18px; /* More precise font size */
 }
 
 table.ob_descriptor_table {
@@ -55,7 +46,7 @@ table.ob_descriptor_table td {
     border-width: 1px;
     padding: 4px;
     border-color: #666666;
-    font-family: Arial, Times, Serif;
+    font-family: Arial, sans-serif; /* Consistent sans-serif font family */
 }
 
 tr.ob_descriptor_tr {

@@ -1,8 +1,7 @@
-
 .ob_label {
     color: #000000;
     font-size: 12px;
-    font-family: "Times New Roman", Times, serif;
+    font-family: Arial, sans-serif; /* Modern, web-safe font */
 }
 
 #ob_timeline_canvas {
@@ -15,51 +14,40 @@
 .ob_timeline_panel {
     position: absolute;
     border: 1px solid #cccccc;
-    border-radius: 15px 15px 0 0;
+    border-radius: 15px; /* Consistent border-radius */
 }
 
 .ob_timeline_panel_resizer {
     position: absolute;
-    border: 0px solid #1767f3;
     padding: 10px;
     width: 20px;
     height: 20px;
     z-index: 999;
-    border-radius: 2px 2px 2px 2px;
+    border-radius: 2px; /* Consistent border-radius */
 }
 
 .ob_timeline_right_panel {
     position: fixed;
     overflow-y: auto;
-    border-radius: 15px 15px 0 0;
+    border-radius: 15px; /* Consistent border-radius */
     border: 1px solid #cccccc;
 }
 
-.ob_timeline_body {
-}
-
-/* The container */
 .ob_filter_checkbox_container {
     display: block;
     position: relative;
-    padding-top: 30px;
     padding-left: 35px;
     margin-bottom: 12px;
     cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    user-select: none; /* Standard property without vendor prefixes */
 }
 
-/* Hide the browser's default radio button */
 .ob_filter_checkbox_container input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
 }
 
-/* Create a custom radio button */
 .ob_filter_span_checkmark {
     position: absolute;
     top: 0;
@@ -70,6 +58,29 @@
     border-radius: 50%;
 }
 
+.ob_filter_checkbox_container:hover input ~ .ob_filter_span_checkmark {
+    background-color: #ccc;
+}
+
+.ob_filter_checkbox_container input:checked ~ .ob_filter_span_checkmark {
+    background: linear-gradient(to bottom, #d3d8df 0%, #b4bac0 36%, #6c8a9c 100%);
+}
+
+.ob_filter_span_checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.ob_filter_checkbox_container input:checked ~ .ob_filter_span_checkmark:after {
+    display: block;
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
 /* On mouse-over, add a grey background color */
 .ob_filter_checkbox_container:hover input ~ .ob_filter_span_checkmark {
     background-color: #ccc;
@@ -77,12 +88,7 @@
 
 /* When the radio button is checked, add a blue background */
 .ob_filter_checkbox_container input:checked ~ .ob_filter_span_checkmark {
-    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
-    background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
+    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Standard linear gradient */
 }
 
 /* Create the indicator (the dot/circle - hidden when not checked) */
@@ -125,7 +131,7 @@
 
 .ob_filter_add {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_add.png");
     cursor: pointer;
     padding-left: 8px;
@@ -133,7 +139,7 @@
 
 .ob_filter_save:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -142,7 +148,7 @@
 
 .ob_filter_save {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_save.png");
     cursor: pointer;
     padding-left: 8px;
@@ -150,7 +156,7 @@
 
 .ob_filter_save:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -159,7 +165,7 @@
 
 .ob_filter_help {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_help.png");
     cursor: pointer;
     padding-left: 8px;
@@ -167,7 +173,7 @@
 
 .ob_filter_help:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -176,7 +182,7 @@
 
 .ob_filter_delete {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_delete.png");
     cursor: pointer;
     padding-left: 8px;
@@ -184,7 +190,7 @@
 
 .ob_filter_delete:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -193,7 +199,7 @@
 
 .ob_filter_edit {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_edit.png");
     cursor: pointer;
     padding-left: 8px;
@@ -201,7 +207,7 @@
 
 .ob_filter_edit:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -330,18 +336,13 @@
 .ob_time_marker {
     position: absolute;
     border-radius: 15px 15px 0 0;
-    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
-    background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
+    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Standard syntax */
     color: #000000;
     text-align: center;
     width: 500px;
-    font-family: Times, serif;
-
+    font-family: Arial, sans-serif; /* Updated font family */
 }
+
 
 .ob_2d {
     position: absolute;
@@ -450,10 +451,7 @@
     border-radius: 15px 15px 0 0;
     /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
     background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
     color: #040404;
     text-align: center;
     font-family: "Times New Roman", Times, serif;
@@ -596,14 +594,9 @@
 .ob_form1 input[type="submit"],
 .ob_form1 input[type="button"] {
     position: relative;
-    padding: 1px 1px 1px 1px;
-    border-radius: 15px 15px 15px 15px;
-    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#d3d8df+0,b4bac0+36,6c8a9c+100 */
-    background: rgb(211, 216, 223); /* Old browsers */
-    background: -moz-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#d3d8df', endColorstr='#6c8a9c', GradientType=0); /* IE6-9 */
+    padding: 1px; /* Simplified padding */
+    border-radius: 15px; /* Simplified border-radius */
+    background: linear-gradient(to bottom, rgba(211, 216, 223, 1) 0%, rgba(180, 186, 192, 1) 36%, rgba(108, 138, 156, 1) 100%); /* Modern gradient syntax */
     color: #040404;
     font-size: 18px;
     text-align: center;

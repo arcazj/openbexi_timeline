@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
 Copyright (c) 2023 arcazj All rights reserved.
-    OpenBEXI Timeline version 0.9.9.r beta
+    OpenBEXI Timeline version 0.9.9.s beta
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
@@ -705,7 +705,7 @@ function OB_TIMELINE() {
                 "</fieldset>\n" +
                 "<fieldset>" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_sorting(" + ob_scene_index + ");\" value='Apply' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Close' />\n" +
                 "</fieldset>\n" +
                 "<legend><span class='number'>2 - </span>Timeline Filtering " + ob_filtering + "</legend>\n" +
                 "<fieldset>\n" +
@@ -769,7 +769,7 @@ function OB_TIMELINE() {
                 "<input type='number' id=" + this.name + "_height value='" + this.ob_scene[ob_scene_index].ob_height + "'>\n" +
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info(" + ob_scene_index + ");\" value='Apply Timeline Info' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Close' />\n" +
                 "<fieldset>\n" +
                 "<legend><span class='number'>2 - </span>Timeline Camera Info</legend>\n" +
                 "</fieldset>\n" +
@@ -853,7 +853,7 @@ function OB_TIMELINE() {
                 "<fieldset>\n" +
                 "<br>" + "<br>" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_save_user(" + ob_scene_index + ");\" value='Save user data' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Close' />\n" +
                 "<fieldset>\n" +
                 "</form>\n" +
                 "<fieldset>\n" +
@@ -893,14 +893,14 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9.r beta</legend>\n" +
+                "<legend> version 0.9.9.s beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
                 "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0 50px'>" +
                 "<br>" + "<br>" +
                 "<form>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Close' />\n" +
                 "<fieldset>\n" +
                 "</form>\n" +
                 "<fieldset>\n" +
@@ -1040,7 +1040,7 @@ function OB_TIMELINE() {
                 "</fieldset>\n" +
                 "<br>" +
                 "<input type='button' onclick=\"get_ob_timeline('" + this.name + "').ob_add_event(" + ob_scene_index + ");\" value='Add' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline('" + this.name + "').ob_cancel_setting(" + ob_scene_index + ");\" value='Cancel' />\n" +
+                "<input type='button' onclick=\"get_ob_timeline('" + this.name + "').ob_cancel_setting(" + ob_scene_index + ");\" value='Close' />\n" +
                 "<fieldset>\n" +
                 "</form>\n" +
                 "<div class='ob_gui_iframe_container2' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
@@ -1537,8 +1537,6 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_set_body_menu = function (ob_scene_index) {
         // If timeline header already define, do not rebuild
         let that2 = this;
-        //this.ob_canvas = document.getElementById("ob_timeline_canvas");
-        //Set timeline
         this.ob_timeline_panel = document.getElementById(this.name + "_panel");
         if (this.ob_timeline_panel === null || this.ob_timeline_panel === undefined) {
             this.ob_timeline_panel = document.createElement("div");
@@ -3972,7 +3970,6 @@ function OB_TIMELINE() {
 
         let ob_sprite = this.track[ob_scene_index](new THREE.TextSprite({
             alignment: font_align,
-            //backgroundColor: backgroundColor,
             color: color,
             fontFamily: fontFamily,
             fontSize: parseInt(fontSize),
@@ -5049,14 +5046,64 @@ function OB_TIMELINE() {
             localStorage.email = JSON.stringify({name: ""});
         }
     };
+
+    OB_TIMELINE.prototype.loadModel = function (model) {
+        let this_new_timeline = this;
+        fetch(model)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(async data => {
+                // Validate data before applying
+                if (!data.params || !data.bands) {
+                    throw new Error('Invalid data structure');
+                }
+
+                this_new_timeline.params = data.params;
+                this_new_timeline.bands = data.bands;
+
+                // Modularized URL update function
+                this.params[0].title = "Timeline report real-time";
+                this.params[0].data = await this_new_timeline.updateURL();
+                if (this.params[0].data.includes("sse"))
+                    this.params[0].title = "Timeline report";
+
+                // Rest of the initialization
+                this_new_timeline.initializeTimeline();
+            })
+            .catch(error => {
+                console.error('Error loading the JSON file:', error);
+                // Implement user-friendly error handling
+            });
+    };
+
+    OB_TIMELINE.prototype.updateURL = async function () {
+        const currentPort = parseInt(window.location.port, 10);
+        let url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline_sse/sessions?startDate=current_time&endDate=`;
+        try {
+            const response = await fetch(url); // Use 'url' here instead of 'this.params[0].data'
+            if (!response.ok) {
+                url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline/sessions?startDate=current_time&endDate=`;
+            }
+        } catch (error) {
+            console.error('An error occurred while fetching the URL:', error);
+        }
+        return url;
+    };
+
+    OB_TIMELINE.prototype.initializeTimeline = function () {
+        // Initialization logic here
+        this.ob_init();
+        this.ob_scene_index = 0;
+        this.first_sync = undefined;
+        this.update_scene(this.ob_scene_index, null, this.params,
+            this.bands, this.model, this.sessions, null, null,
+            false);
+        ob_timelines.push(this);
+        // Any other setup needed
+    };
 }
 
-function ob_load_timeline(ob_timeline_instance) {
-    ob_timelines.push(ob_timeline_instance);
-    ob_timeline_instance.ob_init();
-    ob_timeline_instance.ob_scene_index = 0;
-    ob_timeline_instance.first_sync = undefined;
-    ob_timeline_instance.update_scene(ob_timeline_instance.ob_scene_index, null, ob_timeline_instance.params,
-        ob_timeline_instance.bands, ob_timeline_instance.model, ob_timeline_instance.sessions, null, null,
-        false);
-}

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CiFilterState">
     <option name="selectedSeverities">
@@ -75,6 +76,7 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
+    <option name="workspaceImportForciblyTurnedOn" value="true" />
   </component>
   <component name="PWA">
     <option name="enabled" value="true" />
