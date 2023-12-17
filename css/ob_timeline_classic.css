@@ -123,7 +123,7 @@
 
 .ob_filter_add {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_add.png");
     cursor: pointer;
     padding-left: 8px;
@@ -131,7 +131,7 @@
 
 .ob_filter_save:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -140,7 +140,7 @@
 
 .ob_filter_save {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_save.png");
     cursor: pointer;
     padding-left: 8px;
@@ -148,7 +148,7 @@
 
 .ob_filter_save:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -157,7 +157,7 @@
 
 .ob_filter_help {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_help.png");
     cursor: pointer;
     padding-left: 8px;
@@ -165,7 +165,7 @@
 
 .ob_filter_help:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -174,7 +174,7 @@
 
 .ob_filter_delete {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_delete.png");
     cursor: pointer;
     padding-left: 8px;
@@ -182,7 +182,7 @@
 
 .ob_filter_delete:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);
@@ -191,7 +191,7 @@
 
 .ob_filter_edit {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     content: url("../icon/ob_edit.png");
     cursor: pointer;
     padding-left: 8px;
@@ -199,7 +199,7 @@
 
 .ob_filter_edit:active {
     width: 32px;
-    heigth: 32px;
+    height: 32px;
     border-radius: 5px;
     border: 1px solid #f3f3ed;
     background-color: rgb(211, 216, 223);

@@ -5,91 +5,36 @@
     <title>Openbexi_timeline</title>
     <meta name="Description" content="Timeline data-analysis webgl javascript three.js">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
-    <link href="css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
-    <link href="css/ob_descriptor.css" rel="stylesheet" type="text/css">
-
-    <!-- Uncomment three.js below iof you want your application to run in local mode
-    <script src="https://threejs.org/build/three.min.js"></script>
-     -->
-
-    <!-- Comment three.js below iof you want your application to run in local mode-->
-    <script src="three.js/build/three.min.js" type="application/javascript"></script>
-    <script src="THREE.TextTexture/index.js" type="application/javascript"></script>
-    <script src="THREE.TextSprite/index.js" type="application/javascript"></script>
-    <script src="src/openbexi_timeline.js" type="application/javascript"></script>
-    <script src="src/openbexi_timeline_texture.js" type="application/javascript"></script>
-    <script src="jsCalendar-master/source/jsCalendar.js" type="application/javascript"></script>
-
-    <script src="three.js/examples/js/controls/DragControls.js" type="application/javascript"></script>
-
-    <script>
-        ob_timeline1 = new OB_TIMELINE();
-        ob_timeline1.params = [{
-            name: "ob_timeline_2",
-            title: "Timeline report",
-            // date: "Feb 11 20:00:00 UTC 2023",
-            date: "current_time",
-            timeZone: "UTC",
-            top: 0,
-            left: 0,
-            height: 800,
-            fontSize: 12,
-            //width: window.innerWidth,
-            width: 1350,
-            data_default_port: 8442,
-            data_sse_port: 8441,
-            data: ""
-        }];
-        ob_timeline1.bands = [{
-            name: "ob_band_1",
-            height: "75%",
-            color: "#a1d9ff",
-            intervalPixels: "1000",
-            subIntervalPixels: "AUTO",
-            intervalUnitPos: "TOP",
-            intervalUnit: "HOUR",
-            dateFormat: "MM/dd-hh:mm",
-            dateColor: "#000001",
-            textColor: "#040404",
-            SessionColor: "#f8feff",
-            eventColor: "#0f91f9",
-            defaultEventSize: 5,
-            model: [{
-                sortBy: "NONE",
-                alternateColor: "#9ac1db",
-            }]
-        },
-            {
-                name: "ob_overview_band_2",
-                height: "25%",
-                color: "#8ac7f6",
-                intervalPixels: 1000,
-                intervalUnit: "DAY",
-                dateFormat: "yyyy mmm dd",
-                SessionColor: "#a110ff",
-                eventColor: "#238448",
-                dateColor: "#f31733",
-            }]
-
-        // Set the data attribute based on the port
-        const currentPort = window.location.port;
-        const data_default_port = ob_timeline1.params[0].data_default_port;
-        const data_sse_port = ob_timeline1.params[0].data_sse_port;
-        if (currentPort == data_default_port) {
-            ob_timeline1.params[0].data = "https://" + window.location.hostname + ":" + currentPort + "/openbexi_timeline/sessions?startDate=current_time&endDate=";
-        } else if (currentPort == data_sse_port) {
-            ob_timeline1.params[0].title = "Timeline report real time";
-            ob_timeline1.params[0].data = "https://" + window.location.hostname + ":" + currentPort + "/openbexi_timeline_sse/sessions?startDate=current_time&endDate=";
-        }
-
-    </script>
+    <link href="./css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
+    <link href="./css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
+    <link href="./css/ob_descriptor.css" rel="stylesheet" type="text/css">
 </head>
-<body onload="ob_load_timeline(ob_timeline1);">
-<canvas id="ob_timeline_canvas" ondrop="ob_drop_data(event);" ondragover="ob_dragHandler(event);"></canvas>
+
+<body>
 <div id="ob_content"></div>
 <script id="template" type="notjs">
     <div class="ob_description">$</div>
 </script>
+
+<script src="./three/build/three.min.js" type="application/javascript"></script>
+<!-- Load additional Three.js controls and utilities -->
+<script src="./three/examples/js/controls/DragControls.js" type="application/javascript"></script>
+<script src="./three.text-texture/index.js" type="application/javascript"></script>
+<script src="./three.text-sprite/index.js" type="application/javascript"></script>
+
+<!-- Load other required scripts -->
+<script src="./src/openbexi_timeline.js" type="application/javascript"></script>
+<script src="./src/openbexi_timeline_texture.js" type="application/javascript"></script>
+<script src="./simple-jscalendar/source/jsCalendar.js" type="application/javascript"></script>
+
+
+<script>
+    window.onload = function() {
+        // Initialize the timeline
+        let ob_timeline = new OB_TIMELINE();
+        ob_timeline.loadModel("models/regular_timeline.json");
+    };
+</script>
+
 </body>
 </html>
