@@ -1,0 +1,52 @@
+{
+  "params": [
+    {
+      "name": "ob_timeline_2",
+      "title": "Timeline report",
+      "date": "current_time",
+      "timeZone": "UTC",
+      "top": 0,
+      "left": 0,
+      "height": 800,
+      "fontSize": 12,
+      "width": 1350,
+      "data_default_port": 8442,
+      "data_sse_port": 8441,
+      "data": ""
+    }
+  ],
+  "bands": [
+    {
+      "name": "ob_band_1",
+      "height": "75%",
+      "color": "#a1d9ff",
+      "intervalPixels": "1000",
+      "subIntervalPixels": "AUTO",
+      "intervalUnitPos": "TOP",
+      "intervalUnit": "HOUR",
+      "dateFormat": "MM/dd-hh:mm",
+      "dateColor": "#000001",
+      "textColor": "#040404",
+      "SessionColor": "#f8feff",
+      "eventColor": "#0f91f9",
+      "defaultEventSize": 5,
+      "model": [
+        {
+          "sortBy": "NONE",
+          "alternateColor": "#9ac1db"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band_2",
+      "height": "25%",
+      "color": "#8ac7f6",
+      "intervalPixels": 1000,
+      "intervalUnit": "DAY",
+      "dateFormat": "yyyy mmm dd",
+      "SessionColor": "#a110ff",
+      "eventColor": "#238448",
+      "dateColor": "#f31733"
+    }
+  ]
+}
