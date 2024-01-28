@@ -89,6 +89,19 @@ public class openbexi_timeline implements Runnable {
         }
         System.out.println("Argument : " + args[0]+" "+args[1]);
 
+        // use http://localhost:9010/ to get metrics
+        // add VM options: -javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml
+        // Include the JMX Exporter for Grafana
+        System.setProperty("com.sun.management.jmxremote", "true");
+        System.setProperty("com.sun.management.jmxremote.port", "9010"); // Choose an appropriate port
+        System.setProperty("com.sun.management.jmxremote.authenticate", "false");
+        System.setProperty("com.sun.management.jmxremote.ssl", "false");
+        // Path to the JMX Exporter jar and its config file
+        String jmxExporterJarPath = "lib/jmx_prometheus_javaagent-0.19.0.jar";
+        String jmxConfigPath = "yaml/tomcat.yml";
+        System.setProperty("javaagent", jmxExporterJarPath + "=" + jmxConfigPath);
+
+
         for (int i = 0; i < connectors.length; i++) {
             String port = connectors[i].split(":")[1];
             if (connectors[i].split(":")[0].equals("secure_ws")) {
