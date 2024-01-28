@@ -1,7 +1,7 @@
 /* This notice must be untouched at all times.
 
-Copyright (c) 2023 arcazj All rights reserved.
-    OpenBEXI Timeline version 0.9.9.s beta
+Copyright (c) 2024 arcazj All rights reserved.
+    OpenBEXI Timeline version 0.9.9.t beta
 The latest version is available at https://github.com/arcazj/openbexi_timeline.
 
     This program is free software; you can redistribute it and/or
@@ -893,7 +893,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9.s beta</legend>\n" +
+                "<legend> version 0.9.9.t beta</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -3318,7 +3318,10 @@ function OB_TIMELINE() {
 
                 let add_tolerance = 0;
 
-                if (activity.data.tolerance !== undefined && activity.end !== "" && activity.data.tolerance >= 0) {
+                if (activity.data.tolerance !== undefined &&
+                    activity.data.tolerance !== "" &&
+                    activity.end !== "" &&
+                    activity.data.tolerance >= 0) {
                     add_tolerance = parseInt(activity.data.tolerance);
                 }
                 let add_image = 0;
@@ -3493,44 +3496,46 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_tolerance = function (ob_scene_index, ob_object, band_name, session, color) {
-        let tolerance = 0;
-        let width = parseInt(session.width);
-        if (session.data.tolerance !== undefined) {
-            tolerance = parseInt(session.data.tolerance);
-            if (tolerance < 1)
-                return;
-        } else
-            return;
-        if (color === undefined) {
-            color = session.render.color;
-            if (color === undefined)
-                color = "#040404"
-        }
-        let ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
+        const width = parseInt(session.width);
 
-        let ob_tolerance =
+        // Validate tolerance
+        const toleranceValue = session.data.tolerance;
+        if (toleranceValue === undefined || toleranceValue === "") {
+            return;
+        }
+        const tolerance = parseInt(toleranceValue);
+        if (tolerance < 1) {
+            return;
+        }
+
+        // Set color
+        color = color || session.render.color || "#040404";
+
+        const ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
+
+        const ob_tolerance =
             this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.BoxGeometry(width +
                 tolerance, 1, 10)), ob_material));
         ob_tolerance.position.set(session.original_x + (width + tolerance) / 2,
             session.y - session.height / 2, session.z + 1);
-        let ob_original_circle;
-        ob_original_circle =
-            this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)),
-                ob_material));
-        ob_original_circle.position.set(-(width + tolerance) / 2, 0, session.z);
-        ob_tolerance.add(ob_original_circle);
 
-        let ob_circle;
-        ob_circle = this.track[ob_scene_index](new THREE.Mesh(this.track[ob_scene_index](new THREE.SphereGeometry(2)),
-            ob_material));
-        ob_circle.position.set((width + tolerance) / 2, 0, session.z);
-        ob_tolerance.add(ob_circle);
+        // Function to create circle
+        const createCircle = (positionX) => {
+            const circle = this.track[ob_scene_index](new THREE.Mesh(
+                this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
+            circle.position.set(positionX, 0, session.z);
+            ob_tolerance.add(circle);
+        };
 
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
+        // Create circles at the ends of the tolerance band
+        createCircle(-(width + tolerance) / 2);
+        createCircle((width + tolerance) / 2);
+
+        // Add tolerance to the band if it exists
+        const ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_tolerance);
         }
-
     };
 
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
