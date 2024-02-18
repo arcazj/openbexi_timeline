@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@seregpie/three.text-sprite": "^3.2.0",
-    "three": "^0.159.0"
+    "simple-jscalendar": "^1.4.5",
+    "three": "^0.161.0",
+    "three-spritetext": "^1.8.2"
   }
 }

@@ -1,49 +1,34 @@
-/* This notice must be untouched at all times.
+/**
+ * This notice must be untouched at all times.
+ *
+ * Copyright (c) 2024 arcazj All rights reserved.
+ *     OpenBEXI Timeline version 1.0
+ * The latest version is available at https://github.com/arcazj/openbexi_timeline.
+ *
+ *     This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 1 and 2
+ * of the License, or (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ * as long with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 
-Copyright (c) 2024 arcazj All rights reserved.
-    OpenBEXI Timeline version 0.9.9.t beta
-The latest version is available at https://github.com/arcazj/openbexi_timeline.
-
-    This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 1 and 2
-of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-as long with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-/*
-tests Ajax no_secure
-http://localhost:8080/openbexi_timeline.html
-data: "http://localhost:8080/openbexi_timeline/sessions?startDate=curent_time&endDate="
-data: "http://localhost:8080/openbexi_timeline/sessions?startDate=test&endDate=test"
-
-tests Ajax secure
-https://localhost:8445/openbexi_timeline.html
-data: "https://localhost:8445/openbexi_timeline/sessions?startDate=test&endDate=test"
-
-tests SSE
-Important server setting: ctx = tomcat.addContext("/", new File(".").getAbsolutePath());
-https://localhost:63342/openbexi_GNS_timeline/tests/openbexi_timeline_test_SSE_example.html
-https://localhost:8443/tests/openbexi_timeline_test_SSE_example.html
-data: "https://localhost:8443/openbexi_timeline_sse/sessions?startDate=test&endDate=test"
-
-tests WS
-Important server setting: ctx =tomcat.addWebapp("/", ".");
-http://localhost:63342/openbexi_GNS_timeline/tests/openbexi_timeline_test_WS_example.html
-data: "wss://localhost:8444/openbexi_timeline_ws/sessions?startDate=test&endDate=test"
-*/
+import * as THREE from 'three';
+import {DragControls} from 'drag_controls';
+import SpriteText from "three-spritetext";
 
 const ob_MAX_SCENES = 3;
 const ob_timelines = [];
 
-function get_ob_timeline(ob_timeline_name) {
+
+window.get_ob_timeline = function (ob_timeline_name) {
     for (let i = 0; ob_timelines.length; i++) {
         if (ob_timelines[i].name === ob_timeline_name)
             return ob_timelines[i];
@@ -83,6 +68,52 @@ class ResourceTracker {
 }
 
 function OB_TIMELINE() {
+
+    const ob_texture = new Map();
+
+    // global texture
+    ob_texture.set("icon/ob_error.png", new THREE.TextureLoader().load("icon/ob_error.png"));
+    ob_texture.set("icon/ob_warning.png", new THREE.TextureLoader().load("icon/ob_warning.png"));
+    ob_texture.set("icon/ob_info.png", new THREE.TextureLoader().load("icon/ob_info.png"));
+    ob_texture.set("icon/ob_start.png", new THREE.TextureLoader().load("icon/ob_start.png"));
+    ob_texture.set("icon/ob_stop.png", new THREE.TextureLoader().load("icon/ob_stop.png"));
+    ob_texture.set("icon/ob_check_failed.png", new THREE.TextureLoader().load("icon/ob_check_failed.png"));
+    ob_texture.set("icon/ob_check_aborted.png", new THREE.TextureLoader().load("icon/ob_check_aborted.png"));
+    ob_texture.set("icon/ob_check_ok.png", new THREE.TextureLoader().load("icon/ob_check_ok.png"));
+    ob_texture.set("icon/ob_check_warning.png", new THREE.TextureLoader().load("icon/ob_check_warning.png"));
+    ob_texture.set("icon/ob_phone.png", new THREE.TextureLoader().load("icon/ob_phone.png"));
+    ob_texture.set("icon/ob_bug.png", new THREE.TextureLoader().load("icon/ob_bug.png"));
+    ob_texture.set("icon/ob_lost_connection.png", new THREE.TextureLoader().load("icon/ob_lost_connection.png"));
+    ob_texture.set("icon/ob_swap.png", new THREE.TextureLoader().load("icon/ob_swap.png"));
+    ob_texture.set("icon/ob_gate_open.png", new THREE.TextureLoader().load("icon/ob_gate_open.png"));
+    ob_texture.set("icon/ob_gate_close.png", new THREE.TextureLoader().load("icon/ob_gate_close.png"));
+    ob_texture.set("icon/ob_red_flag.png", new THREE.TextureLoader().load("icon/ob_red_flag.png"));
+    ob_texture.set("icon/ob_green_flag.png", new THREE.TextureLoader().load("icon/ob_green_flag.png"));
+    ob_texture.set("icon/ob_yellow_flag.png", new THREE.TextureLoader().load("icon/ob_yellow_flag.png"));
+    ob_texture.set("icon/ob_orange_flag.png", new THREE.TextureLoader().load("icon/ob_orange_flag.png"));
+    ob_texture.set("icon/ob_yellow_square.png", new THREE.TextureLoader().load("icon/ob_yellow_square.png"));
+    ob_texture.set("icon/ob_orange_square.png", new THREE.TextureLoader().load("icon/ob_orange_square.png"));
+    ob_texture.set("icon/ob_red_square.png", new THREE.TextureLoader().load("icon/ob_red_square.png"));
+    ob_texture.set("icon/ob_purple_square.png", new THREE.TextureLoader().load("icon/ob_purple_square.png"));
+    ob_texture.set("icon/ob_green_square.png", new THREE.TextureLoader().load("icon/ob_green_square.png"));
+    ob_texture.set("icon/ob_blue_square.png", new THREE.TextureLoader().load("icon/ob_blue_square.png"));
+    ob_texture.set("icon/ob_script.png", new THREE.TextureLoader().load("icon/ob_script.png"));
+    ob_texture.set("icon/ob_crontab.png", new THREE.TextureLoader().load("icon/ob_crontab.png"));
+    ob_texture.set("icon/ob_clock.png", new THREE.TextureLoader().load("icon/ob_clock.png"));
+    ob_texture.set("icon/ob_info2.png", new THREE.TextureLoader().load("icon/ob_info2.png"));
+    ob_texture.set("icon/ob_delete.png", new THREE.TextureLoader().load("icon/ob_delete.png"));
+    ob_texture.set("icon/ob_yellow_ring.png", new THREE.TextureLoader().load("icon/ob_yellow_ring.png"));
+
+
+    // Satellite/Communication texture
+    ob_texture.set("icon/ob_connect.png", new THREE.TextureLoader().load("icon/ob_connect.png"));
+    ob_texture.set("icon/ob_no_connect.png", new THREE.TextureLoader().load("icon/ob_no_connect.png"));
+    ob_texture.set("icon/ob_satellite.png", new THREE.TextureLoader().load("icon/ob_satellite.png"));
+    ob_texture.set("icon/ob_no_satellite.png", new THREE.TextureLoader().load("icon/ob_no_satellite.png"));
+    ob_texture.set("icon/ob_no_tlm_red.png", new THREE.TextureLoader().load("icon/ob_no_tlm_red.png"));
+    ob_texture.set("icon/ob_tlm_red.png", new THREE.TextureLoader().load("icon/ob_tlm_red.png"));
+    ob_texture.set("icon/ob_tlm_green.png", new THREE.TextureLoader().load("icon/ob_tlm_green.png"));
+    ob_texture.set("icon/ob_tlm_orange.png", new THREE.TextureLoader().load("icon/ob_tlm_orange.png"));
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         try {
@@ -163,7 +194,7 @@ function OB_TIMELINE() {
         if (this.data.match(/_sse/))
             return this.data_head[0].replace(this.data_default_port, this.data_sse_port).split("?");
         else
-            return this.data_head[0].replace(this.data_default_port, this.data_default_port).split("?");
+            return this.data_head[0].replace("63342", this.data_default_port).split("?");
     };
 
     OB_TIMELINE.prototype.getTimeZone = function () {
@@ -893,18 +924,18 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 0.9.9.t beta</legend>\n" +
+                "<legend> version 1.0</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
                 "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0 50px'>" +
                 "<br>" + "<br>" +
                 "<form>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_user(" + ob_scene_index + ");\" value='Close' />\n" +
-                "<fieldset>\n" +
-                "</form>\n" +
-                "<fieldset>\n" +
-                "</div>";
+                "<input type='button' onclick=\"get_ob_timeline('" + this.name + "').ob_cancel_user(" + ob_scene_index + ");\" value='Close' />\n"
+            "<fieldset>\n" +
+            "</form>\n" +
+            "<fieldset>\n" +
+            "</div>";
 
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
@@ -2788,11 +2819,7 @@ function OB_TIMELINE() {
                 this.first_sync = true;
                 this.reset_synced_time("new_sync", ob_scene_index);
                 this.runEmptyTimeline(ob_scene_index);
-                if (this.data === "unit_tests_minutes") {
-                    this.runUnitTestsMinutes(ob_scene_index);
-                } else if (this.data === "unit_tests_hours") {
-                    this.runUnitTestsHours(ob_scene_index);
-                } else if (this.data && this.data.match(/^(https|http?):\/\//)) {
+                if (this.data && this.data.match(/^(https|http?):\/\//)) {
                     this.ob_read_filter(ob_scene_index, 0);
                 } else if (this.data.includes("readDescriptor")) {
                     if (sessions.events.data !== undefined) {
@@ -3106,17 +3133,30 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.getTextWidth = function (text, font, margin) {
-        // re-use canvas object for better performance
+        const cacheKey = `${text}-${font}`;
+        this.measureCache = this.measureCache || {};
+
+        // Check if we have this measurement in the cache
+        if (this.measureCache[cacheKey]) {
+            return this.measureCache[cacheKey] + margin;
+        }
+
         try {
             let canvas = this.getTextWidth.canvas || (this.getTextWidth.canvas = document.createElement("canvas"));
             let context = canvas.getContext("2d");
             context.font = font;
             let metrics = context.measureText(text);
-            return metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft + margin;
+            const width = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+
+            // Cache this measurement for future use
+            this.measureCache[cacheKey] = width;
+
+            return width + margin;
         } catch (e) {
             return 0;
         }
     };
+
 
     OB_TIMELINE.prototype.getSessionWidth = function (activities) {
         // Early return if the activities array is empty
@@ -3195,7 +3235,7 @@ function OB_TIMELINE() {
         return parseInt(ob_y);
     };
 
-    OB_TIMELINE.prototype.getSessionX = function (activities, total_w) {
+    OB_TIMELINE.prototype.getSessionX = function (activities) {
         let ob_x = activities[0].x;
 
         if (activities.length < 2) {
@@ -3265,7 +3305,6 @@ function OB_TIMELINE() {
         let z = 5;
         let h = 0;
         let w = 0;
-        let textX = 0;
         let textWidth = 0;
         let pixelOffSetStart = 0;
         let pixelOffSetEnd = 0;
@@ -3337,11 +3376,6 @@ function OB_TIMELINE() {
                     w = parseInt(pixelOffSetEnd) - parseInt(pixelOffSetStart);
                 }
 
-                textWidth = this.getTextWidth(data.title,
-                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
-                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily, 0);
-                textX = (w / 2) + this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize + textWidth / 2;
-
                 if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
                     h = this.ob_scene[ob_scene_index].bands[band_index].defaultEventSize /
                         this.ob_scene[ob_scene_index].bands[band_index].trackIncrement;
@@ -3363,7 +3397,11 @@ function OB_TIMELINE() {
                 activity.z = z;
                 activity.pixelOffSetStart = parseInt(pixelOffSetStart);
                 activity.pixelOffSetEnd = parseInt(pixelOffSetEnd);
-                activity.textX = parseInt(textX);
+                textWidth = this.getTextWidth(data.title,
+                    this.ob_scene[ob_scene_index].bands[band_index].fontSize + " " +
+                    this.ob_scene[ob_scene_index].bands[band_index].fontFamily, 10);
+                activity.textX = (w + textWidth) / 2;
+                ;
                 activity.total_width = add_image + w + textWidth + add_tolerance;
 
                 if (this.ob_scene[ob_scene_index].bands[band_index].name.match(/overview_/)) {
@@ -3439,7 +3477,7 @@ function OB_TIMELINE() {
                     session.width = this.getSessionWidth(session.activities);
                     session.total_width = this.getSessionTotalWidth(session.activities);
                     session.x_relative = this.getSessionX_Relative(session.activities, session.width);
-                    session.x = this.getSessionX(session.activities, session.width);
+                    session.x = this.getSessionX(session.activities);
                     if (session.data !== undefined)
                         if (session.data.tolerance === undefined)
                             session.original_x = session.x;
@@ -3788,7 +3826,7 @@ function OB_TIMELINE() {
                 session.data.title,
                 session.textX,
                 0,
-                5,
+                session.z,
                 backgroundColor,
                 fontSizeInt,
                 fontStyle,
@@ -3972,20 +4010,18 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, backgroundColor,
                                                       fontSize, fontStyle, fontWeight, color, fontFamily, font_align) {
         color = color || this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
-
-        let ob_sprite = this.track[ob_scene_index](new THREE.TextSprite({
-            alignment: font_align,
-            color: color,
-            fontFamily: fontFamily,
-            fontSize: parseInt(fontSize),
-            fontStyle: fontStyle,
-            fontVariant: 'normal',
-            padding: 0.15,
-            fontWeight: fontWeight,
-            text: [
-                text,
-            ].join('\n'),
-        }));
+        let ob_sprite = this.track[ob_scene_index](new SpriteText(text, 10));
+        ob_sprite.color = color;
+        ob_sprite.fontFamily = fontFamily;
+        ob_sprite.textHeight = parseInt(fontSize);
+        ob_sprite.fontSize = parseInt(fontSize);
+        ob_sprite.fontStyle = fontStyle;
+        ob_sprite.padding = 0.1;
+        ob_sprite.borderWidth = 0;
+        ob_sprite.fontWeight = fontWeight;
+        ob_sprite.borderRadius = 0;
+        if (backgroundColor !== undefined)
+            ob_sprite.backgroundColor = backgroundColor;
 
         let ob_x = x;
         if (this.ob_scene[ob_scene_index].ob_camera_type !== "Orthographic") {
@@ -4056,7 +4092,7 @@ function OB_TIMELINE() {
         let ob_scene = this.ob_scene[ob_scene_index];
 
         ob_scene.dragControls = this.track[ob_scene_index](
-            new THREE.DragControls(
+            new DragControls(
                 ob_scene.objects,
                 ob_scene.ob_camera,
                 ob_scene.ob_renderer.domElement
@@ -4462,297 +4498,6 @@ function OB_TIMELINE() {
         // console.log("ob_set_camera() - camera:" + scene.ob_camera_type);
     };
 
-    OB_TIMELINE.prototype.runUnitTestsMinutes = function (ob_scene_index) {
-        let sessions = {
-            dateTimeFormat: 'iso8601',
-            scene: '0',
-            events: []
-        };
-
-        for (let i = 0; i < 200; i++) {
-            let ob_start, ob_end, ob_type, ob_title, ob_status;
-
-            if (i === 0) {
-                ob_start = new Date(Date.now() + 320000);
-                ob_end = new Date(Date.now() + 420000);
-                ob_type = "type2";
-                ob_title = "session_plus" + i;
-            } else if (i === 2 || i === 78) {
-                ob_start = new Date(Date.now() + 520000);
-                ob_end = new Date(Date.now() + 705000);
-                ob_type = "type1";
-                ob_title = "session_plus" + i;
-            } else if (i === 1 || i === 3) {
-                ob_start = new Date(Date.now());
-                ob_end = "";
-                ob_title = "event___" + i;
-            } else if (i === 4) {
-                ob_type = "type3";
-                ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + 100000);
-                ob_title = "session_current_time_" + i;
-            } else if (i === 8) {
-                ob_type = "type3";
-                ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + 1000000);
-                ob_title = "session_current_time_" + i;
-            } else if (i === 6 || i === 19) {
-                ob_type = "type2";
-                ob_start = new Date(Date.now() - 15000);
-                ob_end = new Date(Date.now() - 10000);
-            } else if (i === 7 || i === 27) {
-                ob_type = "type2";
-                ob_start = new Date(Date.now() - 155000);
-                ob_end = new Date(Date.now() - 35000);
-                ob_title = "s" + i;
-            } else if (i === 10) {
-                ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + (10 * 310000));
-            } else if (i === 8 || i === 9) {
-                ob_start = new Date(Date.now() - 590000);
-                ob_end = new Date(Date.now() - 300000);
-                ob_type = "type2";
-                ob_title = "s" + i;
-            } else if (i === 14) {
-                ob_start = new Date(Date.now() - 590000);
-                ob_end = new Date(Date.now() - 300000);
-                ob_type = "type3";
-                ob_title = "session" + i;
-            } else if (i === 15) {
-                ob_start = new Date(Date.now() - 590000);
-                ob_end = new Date(Date.now() - 3000000);
-                ob_type = "type2";
-                ob_title = "1234567890123456789012345678901234567890_" + i;
-            } else if (i === 20 || i === 21 || i === 22) {
-                ob_start = new Date(Date.now() - 410000);
-                ob_end = new Date(Date.now() - 400000);
-                ob_title = "session_plusplus" + i;
-            } else if (i === 27 || i === 31 || i === 32) {
-                ob_start = new Date(Date.now() - 520000);
-                ob_end = new Date(Date.now() - 515000);
-                ob_type = "type2";
-            } else if (i === 18) {
-                ob_start = new Date(Date.now() + i * 5000);
-                ob_end = "";
-                ob_title = "event_" + i;
-            } else if (i === 17 || i === 26 || i === 112 || i === 132 || i === 355) {
-                ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + (10 * 310000));
-                ob_type = "type3";
-                ob_status = "ABORTED";
-            } else if (i === 33 || i === 71 || i === 100 || i === 102 || i === 355) {
-                ob_start = new Date(Date.now() + 310000);
-                ob_end = new Date(Date.now() + (2 * 310000));
-                ob_type = "type1";
-                ob_title = "Session______________________________________" + i;
-            } else if (i === 69) {
-                ob_start = new Date(Date.now() + (30000));
-                ob_end = new Date(Date.now() + (110000));
-                ob_title = "Session++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + i;
-            } else if (i === 44 || i === 57 || i === 61 || i === 89 || i === 190 || i === 342 || i === 482) {
-                ob_start = new Date(Date.now() + i * 5000);
-                ob_end = "";
-                ob_type = "type2";
-                ob_title = "event_plusplusplusplusplusplus" + i;
-            } else if (i > 100 && i < 110) {
-                ob_type = "type3" + i;
-            } else if (i > 200 && i < 210) {
-                ob_type = "type2" + i;
-            } else if (i > 300 && i < 310) {
-                ob_type = "type1" + i;
-            } else if (i % 2 === 0 && i < 400) {
-                ob_start = new Date(Date.now() + i * 5000);
-                ob_end = new Date(Date.now() + i * 5100);
-                ob_title = "session__" + i;
-                ob_status = "FINISHED";
-            } else if (i > 400) {
-                if (i % 2 === 0) {
-                    ob_start = new Date(Date.now() - i * 3000);
-                    ob_end = new Date(Date.now() - i * 2800);
-                    ob_title = "sessionPast" + i;
-                } else {
-                    ob_start = new Date(Date.now() - i * 2950);
-                    ob_end = "";
-                    ob_title = "eventPast" + i;
-                }
-            } else {
-                ob_start = new Date(Date.now() + i * 5000);
-                ob_end = "";
-                ob_title = "event_" + i;
-                ob_status = "RUNNING";
-            }
-
-            sessions.events.push({
-                id: i,
-                start: ob_start.toISOString(),
-                end: ob_end !== "" ? ob_end.toISOString() : "",
-                render: {},
-                data: {
-                    title: ob_title,
-                    type: ob_type,
-                    status: ob_status,
-                    duration: true,
-                    priority: "10",
-                    tolerance: "5",
-                    description: "UnitTestsMinutes"
-                }
-            });
-        }
-
-        this.ob_scene[ob_scene_index].sessions = sessions;
-        let that_scene = this;
-        clearTimeout(this.update_this_scene);
-        this.update_this_scene = setTimeout(function () {
-            that_scene.update_all_timelines(
-                ob_scene_index,
-                that_scene.header,
-                that_scene.params,
-                that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model,
-                that_scene.ob_scene[ob_scene_index].sessions,
-                that_scene.ob_scene[ob_scene_index].ob_camera_type
-            );
-        }, 0);
-    };
-
-    OB_TIMELINE.prototype.runUnitTestsHours = function (ob_scene_index) {
-        console.log("start runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
-        let sessions = {
-            dateTimeFormat: 'iso8601',
-            scene: '0',
-            events: []
-        };
-
-        for (let i = 0; i < 50; i++) {
-            let ob_start, ob_end, ob_type, ob_title, ob_status;
-
-            if (i === 0 || i === 11) {
-                ob_start = new Date(Date.now());
-                ob_end = new Date(Date.now() + 1015000);
-                ob_type = "type2";
-                ob_title = "session SESSION T0";
-            } else if (i === 4 || i === 8 || i === 12 || i === 14 || i === 41 || i === 71 || i === 79) {
-                ob_start = new Date(Date.now() + i * 600000);
-                ob_end = new Date(Date.now() + i * 700000);
-                ob_type = "type4";
-                ob_title = "session_SESSION_long_long_LONG_long_long_long_long long_long_LONG_long_long_long_long" + i;
-                ob_status = "FINISHED";
-            } else if (i === 3 || i === 9 || i === 18 || i === 59 || i === 53 || i === 43 || i === 29 || i === 33 ||
-                i === 89 || i === 83 || i === 61 || i === 47) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type3";
-                ob_title = "session" + i;
-            } else if (i % 17 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type4";
-                ob_title = "s" + i;
-            } else if (i % 16 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type1";
-                ob_title = "s" + i;
-            } else if (i % 11 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type2";
-                ob_title = "s" + i;
-            } else if (i % 10 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type3";
-                ob_title = "s" + i;
-                ob_status = "RUNNING";
-            } else if (i % 7 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type1";
-                ob_title = "s" + i;
-            } else if (i % 5 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = "";
-                ob_type = "type2";
-                ob_title = "s" + i;
-                ob_status = "ABORTED";
-            } else if (i % 3 === 0) {
-                ob_start = new Date(Date.now() + i * 50000);
-                ob_end = new Date(Date.now() + i * 65000);
-                ob_type = "type1";
-                ob_title = "session_long_long_LONG_long_long_long_long_LONG_long_long_long_long" + i;
-            } else if (i % 9 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type1";
-                ob_title = "session" + i;
-            } else if (i % 6 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type2";
-                ob_title = "session" + i;
-            } else if (i % 11 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type3";
-                ob_title = "session" + i;
-            } else if (i % 4 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type4";
-                ob_title = "session" + i;
-            } else if (i % 3 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type2";
-                ob_title = "session" + i;
-                ob_status = "FAILED";
-            } else if (i % 2 === 0) {
-                ob_start = new Date(Date.now() + i * 300000);
-                ob_end = new Date(Date.now() + i * 650000);
-                ob_type = "type2";
-                ob_title = "session" + i;
-            } else {
-                ob_start = new Date(Date.now() + i * 650000);
-                ob_end = "";
-                ob_title = "event_" + i;
-                ob_type = "type1";
-            }
-
-            sessions.events.push({
-                id: i,
-                start: ob_start.toISOString(),
-                end: ob_end !== "" ? ob_end.toISOString() : "",
-                render: {},
-                data: {
-                    title: ob_title,
-                    type: ob_type,
-                    status: ob_status,
-                    duration: true,
-                    priority: "10",
-                    tolerance: "5",
-                    description: "UnitTestsHours"
-                }
-            });
-        }
-
-        this.ob_scene[ob_scene_index].sessions = sessions;
-        let that_scene = this;
-        clearTimeout(this.update_this_scene);
-        this.update_this_scene = setTimeout(function () {
-            that_scene.update_all_timelines(
-                ob_scene_index,
-                that_scene.header,
-                that_scene.params,
-                that_scene.ob_scene[ob_scene_index].bands,
-                that_scene.ob_scene[ob_scene_index].model,
-                that_scene.ob_scene[ob_scene_index].sessions,
-                that_scene.ob_scene[ob_scene_index].ob_camera_type
-            );
-        }, 0);
-
-        console.log("Stop runUnitTestsHours at:" + Date() + " - " + new Date().getMilliseconds());
-    };
-
     OB_TIMELINE.prototype.runEmptyTimeline = function (ob_scene_index) {
         let sessions = "{'dateTimeFormat': 'iso8601','scene': '0','events' : [{}]}";
         this.ob_scene[ob_scene_index].sessions = eval('(' + (sessions) + ')');
@@ -5087,14 +4832,15 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.updateURL = async function () {
         const currentPort = parseInt(window.location.port, 10);
-        let url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline_sse/sessions?startDate=current_time&endDate=`;
+        let url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline/sessions?startDate=current_time&endDate=`;
         try {
             const response = await fetch(url); // Use 'url' here instead of 'this.params[0].data'
             if (!response.ok) {
-                url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline/sessions?startDate=current_time&endDate=`;
+                url = `https://${window.location.hostname}:${currentPort}/openbexi_timeline_sse/sessions?startDate=current_time&endDate=`;
             }
         } catch (error) {
-            console.error('An error occurred while fetching the URL:', error);
+            console.error('An error occurred while fetching the URL:' + url, error);
+            console.error('Swap to the URL:' + url);
         }
         return url;
     };
@@ -5111,4 +4857,9 @@ function OB_TIMELINE() {
         // Any other setup needed
     };
 }
+
+// Export the OB_TIMELINE constructor function
+export {OB_TIMELINE};
+
+
 

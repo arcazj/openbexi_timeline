@@ -2,38 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Openbexi_timeline</title>
-    <meta name="Description" content="Timeline data-analysis webgl javascript three.js">
+    <title>Openbexi Timeline</title>
+    <meta name="description" content="Timeline data-analysis webgl javascript three.js">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="./css/ob_timeline_modern.css" rel="stylesheet" type="text/css">
-    <link href="./css/ob_jsCalendar.css" rel="stylesheet" type="text/css">
-    <link href="./css/ob_descriptor.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="./css/ob_timeline_modern.css">
+    <link rel="stylesheet" href="./css/ob_jsCalendar.css">
+    <link rel="stylesheet" href="./css/ob_descriptor.css">
 </head>
+
+<script src="./node_modules/simple-jscalendar/source/jsCalendar.min.js" crossorigin="anonymous"></script>
 
 <body>
 <div id="ob_content"></div>
+
+<!-- Template for description -->
 <script id="template" type="notjs">
     <div class="ob_description">$</div>
 </script>
 
-<script src="./three/build/three.min.js" type="application/javascript"></script>
-<!-- Load additional Three.js controls and utilities -->
-<script src="./three/examples/js/controls/DragControls.js" type="application/javascript"></script>
-<script src="./three.text-texture/index.js" type="application/javascript"></script>
-<script src="./three.text-sprite/index.js" type="application/javascript"></script>
+<!-- Import map for module paths -->
+<script type="importmap">
+    {
+        "imports": {
+            "three": "./node_modules/three/build/three.module.min.js",
+            "drag_controls": "./node_modules/three/examples/jsm/controls/DragControls.js",
+            "three-spritetext": "./node_modules/three-spritetext/dist/three-spritetext.mjs"
+        }
+    }
+</script>
 
-<!-- Load other required scripts -->
-<script src="./src/openbexi_timeline.js" type="application/javascript"></script>
-<script src="./src/openbexi_timeline_texture.js" type="application/javascript"></script>
-<script src="./simple-jscalendar/source/jsCalendar.js" type="application/javascript"></script>
+<script type="module">
+    import {OB_TIMELINE} from './src/openbexi_timeline.js';
 
-<script>
-    window.onload = function() {
-        // Initialize the timeline
-        let ob_timeline = new OB_TIMELINE();
-        // Load model
-        ob_timeline.loadModel("models/regular_timeline.json");
-    };
+    // Initialize the timeline
+    const ob_timeline = new OB_TIMELINE();
+
+    // Load model
+    ob_timeline.loadModel("models/regular_timeline.json");
+
 </script>
 
 </body>
