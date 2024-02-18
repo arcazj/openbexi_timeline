@@ -166,6 +166,7 @@ public class openbexi_timeline implements Runnable {
         httpsConnector.setProperty("sslProtocol", "TLS");
         httpsConnector.setProperty("SSLEnabled", "true");
 
+
         Context ob_timeline_context = null;
 
         if (mode == ob_mode.no_secure) {
@@ -232,6 +233,13 @@ public class openbexi_timeline implements Runnable {
         }
         if (_data_conf != null && ob_timeline_context != null)
             ob_timeline_context.addParameter("data_conf", _data_conf);
+
+        // Add MIME type mapping for JavaScript files
+        ob_timeline_context.addMimeMapping("js", "application/javascript");
+        // Add MIME type mapping for JSON files
+        ob_timeline_context.addMimeMapping("json", "application/json");
+        // Add MIME type mapping for MJS files
+        ob_timeline_context.addMimeMapping("mjs", "application/javascript");
 
         tomcat.start();
 
