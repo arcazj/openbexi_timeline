@@ -16,4 +16,4 @@
 Join us in enhancing OpenBEXI Timeline by contributing towards feature development, performance optimization, bug fixes, and more. Your involvement helps us continuously improve and expand the project's capabilities.
 
 ## Copyright and Licensing
-OpenBEXI_Timeline is available under the Apache License, Version 2.0, allowing free usage, modification, and distribution while retaining the original copyright and license notices. Contributors are also ensured patent rights under this license, promoting an open and collaborative development environment.
+OpenBEXI_Timeline is available under the GNU License.
