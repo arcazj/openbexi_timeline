@@ -1,6 +1,7 @@
 package com.openbexi.timeline.server;
 
 import com.openbexi.timeline.data_browser.data_configuration;
+import com.openbexi.timeline.data_browser.data_sources;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
 import org.apache.catalina.Context;
@@ -34,17 +35,11 @@ public class openbexi_timeline implements Runnable {
     private final ob_mode _ob_mode;
     private final Logger _logger = Logger.getLogger("");
     private final String _data_conf;
-    private final String _data_path;
-    private final String _filter_include;
-    private final String _filter_exclude;
     private final String _port;
 
-    openbexi_timeline(ob_mode mode, String data_conf, String data_path, String filter_include, String filter_exclude, String port) {
+    openbexi_timeline(ob_mode mode, String data_conf, String port) {
         _ob_mode = mode;
         _data_conf = data_conf;
-        _data_path = data_path;
-        _filter_include = filter_include;
-        _filter_exclude = filter_exclude;
         _port = port;
     }
 
@@ -58,9 +53,6 @@ public class openbexi_timeline implements Runnable {
         String connector = "";
         String[] connectors = new String[0];
         String data_conf = "";
-        String data_model = "";
-        String filter_include = "";
-        String filter_exclude = "";
 
         if (args.length != 2) {
             System.err.println("openBEXI Timeline not started because of bad usage:");
@@ -76,18 +68,15 @@ public class openbexi_timeline implements Runnable {
                     System.err.println("Argument " + args[0] + " " + "-conf <file does not exist> ");
                     System.exit(1);
                 }
-                data_configuration configuration = new data_configuration(data_conf);
-                data_model = configuration.getDataModel(0);
-                connectors = configuration.getConnector(0).split("\\|");
-                filter_include = configuration.getFilterInclude(0);
-                filter_exclude = configuration.getFilterExclude(0);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                data_sources source = new data_sources();
+                source.readYaml(file_configuration.getAbsolutePath());
+                String jsonOutput = source.dataSourcesToJson();
+                connectors = source.getConnectors(jsonOutput).split("\\|");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
-        System.out.println("Argument : " + args[0]+" "+args[1]);
+        System.out.println("Argument : " + args[0] + " " + args[1]);
 
         // use http://localhost:9010/ to get metrics
         // add VM options: -javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml
@@ -105,19 +94,19 @@ public class openbexi_timeline implements Runnable {
         for (int i = 0; i < connectors.length; i++) {
             String port = connectors[i].split(":")[1];
             if (connectors[i].split(":")[0].equals("secure_ws")) {
-                openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_conf, data_model, filter_include, filter_exclude, port);
+                openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_conf, port);
                 webServer_timeline_wss.run();
             }
             if (connectors[i].split(":")[0].equals("no_secure")) {
-                openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_conf, data_model, filter_include, filter_exclude, port);
+                openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_conf, port);
                 webServer_timeline_no_secure.run();
             }
             if (connectors[i].split(":")[0].equals("secure")) {
-                openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_conf, data_model, filter_include, filter_exclude, port);
+                openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_conf, port);
                 webServer_timeline_secure.run();
             }
             if (connectors[i].split(":")[0].equals("secure_sse")) {
-                openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_conf, data_model, filter_include, filter_exclude, port);
+                openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_conf, port);
                 webServer_timeline_sse.run();
             }
         }
@@ -165,7 +154,6 @@ public class openbexi_timeline implements Runnable {
         httpsConnector.setProperty("clientAuth", "false");
         httpsConnector.setProperty("sslProtocol", "TLS");
         httpsConnector.setProperty("SSLEnabled", "true");
-
 
         Context ob_timeline_context = null;
 

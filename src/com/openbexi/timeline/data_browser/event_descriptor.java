@@ -23,12 +23,12 @@ public class event_descriptor {
     private final String _tolerance;
     private final String _type;
     private final String _platform;
-    private data_configuration _data_configuration;
+    private JSONObject _data_configuration_node;
     private Object _data;
 
     public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
                             String title, String type, String status, String priority, String tolerance,
-                            String platform, data_configuration data_configuration) {
+                            String platform, JSONObject data_configuration) {
         _event_id = String.valueOf(event_id);
         _original_start = original_start;
         _start = start;
@@ -41,7 +41,7 @@ public class event_descriptor {
         _type = type;
         _platform = platform;
         if (data_configuration != null)
-            _data_configuration = data_configuration;
+            _data_configuration_node = data_configuration;
         _file = get_file();
     }
 
@@ -61,7 +61,8 @@ public class event_descriptor {
         String monthS = month.format(new Date(_start));
         String dayS = day.format(new Date(_start));
 
-        String buildFile = _data_configuration.getDataModel(0).replace(".json", "");
+        String buildFile = (String) _data_configuration_node.get("data_model");
+        buildFile=buildFile.replace(".json", "");
         buildFile = buildFile.replace("/yyyy", "/" + yearS);
         buildFile = buildFile.replace("/mm", "/" + monthS);
         buildFile = buildFile.replace("/dd", "/" + dayS);

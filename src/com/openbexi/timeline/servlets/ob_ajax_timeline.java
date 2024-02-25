@@ -116,7 +116,7 @@ ob_ajax_timeline extends HttpServlet {
 
             Object json = null;
             String connector_type = _data_configuration.getType(0);
-            if (connector_type.equals("json file")) {
+            if (connector_type.equals("json_file")) {
                 json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
                         ob_filter, null, null, null, _data_configuration);
                 json = data.getData(data.get_filter(), ob_scene);
@@ -196,7 +196,7 @@ ob_ajax_timeline extends HttpServlet {
             logger.info("POST readDescriptor - id=" + event_id);
             event_descriptor descriptor =
                     new event_descriptor(event_id, null, start, null, null, null, null,
-                            null, null, null, null, _data_configuration);
+                            null, null, null, null, _data_configuration.getConfiguration(0));
             Object json = descriptor.read(event_id);
             out.write(json.toString());
             out.flush();
@@ -212,7 +212,7 @@ ob_ajax_timeline extends HttpServlet {
             eventJson.add("endEvent:" + endEvent);
             eventJson.add("description:" + description);
             eventJson.add("icon:" + icon);
-            if (connector_type.equals("json file")) {
+            if (connector_type.equals("json_file")) {
                 json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
                         ob_filter, null, null, null, _data_configuration);
                 data.addEvents(eventJson, ob_scene);
@@ -234,7 +234,7 @@ ob_ajax_timeline extends HttpServlet {
                 ob_request.equals("saveFilter"))) {
             logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
             Object json = null;
-            if (connector_type.equals("json file")) {
+            if (connector_type.equals("json_file")) {
                 json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
                         ob_filter, null, null, null, _data_configuration);
                 json = data.updateFilter(ob_request, ob_timeline_name, ob_scene, ob_title, ob_filter_name,

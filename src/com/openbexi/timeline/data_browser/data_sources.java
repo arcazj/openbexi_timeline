@@ -7,15 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-
-import java.util.HashMap;
+import java.util.*;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-
 class DataSourceConfig {
     private List<DataSourceConfig> data_sources;
     private String namespace;
@@ -164,11 +163,13 @@ public class data_sources {
         ObjectMapper mapper = new ObjectMapper();
         try {
             // Convert the JSON string back to List<DataSourceConfig>
-            data_sources = mapper.readValue(json, new TypeReference<List<DataSourceConfig>>(){});
+            data_sources = mapper.readValue(json, new TypeReference<List<DataSourceConfig>>() {
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     // Method to convert data_sources to JSON
     public String dataSourcesToJson() {
         ObjectMapper mapper = new ObjectMapper();
@@ -180,6 +181,18 @@ public class data_sources {
             return null;
         }
     }
+
+    public String dataSourcesToJson(String startup_configuration) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // Convert the data sources list to JSON string
+            return "{" + startup_configuration + mapper.writeValueAsString(data_sources) + "}";
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void readYaml(String filePath) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
@@ -207,6 +220,32 @@ public class data_sources {
         }
     }
 
+    public String getConnectors(String jsonData) {
+        Set<String> uniqueConnectors = new HashSet<>();
+        try {
+            JSONParser parser = new JSONParser();
+            JSONArray jsonArray = (JSONArray) parser.parse(jsonData);
+
+            for (Object obj : jsonArray) {
+                JSONObject jsonObject = (JSONObject) obj;
+                String connector = (String) jsonObject.get("connector");
+                if (connector != null && !connector.isEmpty()) {
+                    String[] connectors = connector.split("\\|");
+                    for (String conn : connectors) {
+                        uniqueConnectors.add(conn.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error processing JSON data";
+        }
+
+        StringJoiner joiner = new StringJoiner("|");
+        uniqueConnectors.forEach(joiner::add);
+        return joiner.toString();
+    }
+
     // Getter for data_sources
     public List<DataSourceConfig> getdata_sources() {
         return data_sources;
@@ -214,10 +253,17 @@ public class data_sources {
 
     public static void main(String[] args) {
         data_sources data_sources = new data_sources();
-        data_sources.readYaml("yaml/sources_default.yml");
+        data_sources.readYaml("yaml/sources_default_test.yml");
         String jsonOutput = data_sources.dataSourcesToJson();
         data_sources.jsonToDataSources(jsonOutput);
-        data_sources.saveYaml("yaml/sources_default.yml");
-        System.out.println(jsonOutput.toString());
+        data_sources.saveYaml("yaml/sources_default_test.yml");
+
+        // Get all connectors
+        String connectors = data_sources.getConnectors(jsonOutput);
+        System.out.println("connectors="+connectors);
+
+        // Get startup configuration json
+        jsonOutput =data_sources.dataSourcesToJson("\"startup configuration\":");
+        System.out.println(jsonOutput);
     }
 }
