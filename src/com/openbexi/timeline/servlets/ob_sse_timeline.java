@@ -104,7 +104,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 eventJson.add("endEvent:" + endEvent);
                 eventJson.add("description:" + description);
                 eventJson.add("icon:" + icon);
-                if (_data_configuration.getType(0).equals("json file")) {
+                if (_data_configuration.getType(0).equals("json_file")) {
                     json_files_manager json_files_manager = new json_files_manager(startDate, endDate, ob_search,
                             ob_filter, "GET", resp,
                             session, _data_configuration);
@@ -126,7 +126,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 if (resp != null) {
                     try {
                         event_descriptor descriptor = new event_descriptor(event_id, null, start, null, null, null, null,
-                                null, null, null, null, _data_configuration);
+                                null, null, null, null, _data_configuration.getConfiguration(0));
                         Object json = descriptor.read(event_id);
 
                         PrintWriter respWriter = resp.getWriter();
@@ -161,7 +161,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                     try {
                         logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
                         Object json = null;
-                        if (_data_configuration.getType(0).equals("json file")) {
+                        if (_data_configuration.getType(0).equals("json_file")) {
                             json_files_manager json_files_manager = new json_files_manager(startDate, endDate, ob_search,
                                     ob_filter, "GET", resp,
                                     session, _data_configuration);
@@ -205,7 +205,7 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
             // Start a json_files_watcher loop to check if any new events are coming.
             // If any the json_files_watcher will update the openBexi Timeline client again.
-            if (_data_configuration.getType(0).equals("json file")) {
+            if (_data_configuration.getType(0).equals("json_file")) {
                 json_files_manager json_files_manager = new json_files_manager(startDate, endDate, ob_search,
                         ob_filter, "GET", resp,
                         session, _data_configuration);

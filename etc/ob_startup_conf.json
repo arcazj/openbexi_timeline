@@ -1,14 +1,391 @@
 {
   "startup configuration": [
     {
-      "-type": "json file",
-      "-data_path": "/data/",
-      "-data_model": "/data/yyyy/mm/dd",
-      "-connector": "secure_sse:8441|secure:8442",
-      "-filter": "",
-      "-filter_include": "",
-      "-filter_exclude": "",
-      "-event_converter_class": ""
+      "namespace": "TEST_SOURCE1",
+      "type": "json_file",
+      "enable": true,
+      "permission": "",
+      "converter2events_class": "buildin",
+      "url": null,
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": "/data/",
+      "data_model": "/data/yyyy/mm/dd",
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8441|secure:8442",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "TEST_SOURCE1",
+      "type": "json_file",
+      "enable": false,
+      "permission": "<required_permission_for_access>",
+      "converter2events_class": "<ConverterToEventsClassName>",
+      "url": null,
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": "/test/",
+      "data_model": "/test/yyyy/mm/dd",
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8441|secure:8442",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_mongoDb>",
+      "type": "mongoDb",
+      "enable": false,
+      "permission": "<required_permission_for_access>",
+      "converter2events_class": "<ConverterToEventsClassName>",
+      "url": "<mongodb_connection_string>",
+      "database": "<database_name>",
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "collection": "<collection_name>",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_kafka>",
+      "type": "kafka",
+      "enable": false,
+      "permission": "<required_permission_for_access>",
+      "converter2events_class": "<ConverterToEventsClassName>",
+      "url": "<kafka_connection_string>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "partitions": {
+        "ms": "<partition_time_in_ms>"
+      },
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "security": {
+        "protocol": "<security_protocol>",
+        "sasl_mechanism": "<sasl_mechanism>"
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "topicName": "<topic_name>",
+      "producer": {
+        "name": "<producer_name>",
+        "group": "<producer_group>"
+      },
+      "compression": {
+        "type": "<compression_type>"
+      },
+      "version": "<kafka_version>",
+      "render": {
+        "color": "#00b300"
+      },
+      "retention": {
+        "ms": "<retention_time_in_ms>"
+      },
+      "consumer": {
+        "name": "<consumer_name>",
+        "group": "<consumer_group>"
+      }
+    },
+    {
+      "namespace": "<namespace_for_mqtt>",
+      "type": "mqtt",
+      "enable": false,
+      "permission": "<required_permission_for_access>",
+      "converter2events_class": "<ConverterToEventsClassName>",
+      "url": "<mqtt_broker_url>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "clientID": "<mqtt_client_id>",
+      "qos": "<quality_of_service_level>",
+      "connector": "secure_sse:8443|secure:8445",
+      "topicName": "<mqtt_topic_name>",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_elasticsearch>",
+      "type": "elasticsearch",
+      "enable": false,
+      "permission": "<required_permission_for_access>",
+      "converter2events_class": "<ConverterToEventsClassName>",
+      "url": "<elasticsearch_url>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "index": "<index_name>",
+      "render": {
+        "color": "#00b300"
+      },
+      "document_type": "<document_type_if_needed>"
+    },
+    {
+      "namespace": "<namespace_for_postgresql>",
+      "type": "postgresql",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<connection_string>",
+      "database": "<database_name>",
+      "user": "<username>",
+      "password": "<password>",
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null
+    },
+    {
+      "namespace": "<namespace_for_cassandra>",
+      "type": "cassandra",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<connection_string>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "keyspace": "<keyspace_name>",
+      "connector": "secure_sse:8443|secure:8445",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_hdfs>",
+      "type": "hdfs",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<hdfs_url>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "directory": "<directory_path>",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_rest_api>",
+      "type": "rest_api",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<api_endpoint_url>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "headers": {
+        "Authorization": "Bearer <token>"
+      },
+      "method": "GET",
+      "connector": "secure_sse:8443|secure:8445",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_apache_pulsar>",
+      "type": "apache_pulsar",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<pulsar_connection_string>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "topicName": "<topic_name>",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_snowflake>",
+      "type": "snowflake",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<snowflake_url>",
+      "database": "<database_name>",
+      "user": "<username>",
+      "password": "<password>",
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "schema": "<schema_name>",
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_aws_iot_core>",
+      "type": "aws_iot_core",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": null,
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "endpoint": "<aws_iot_endpoint>",
+      "connector": "secure_sse:8443|secure:8445",
+      "thingName": "<thing_name>",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_azure_event_hubs>",
+      "type": "azure_event_hubs",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": null,
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "connectionString": "<connection_string>",
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "eventHubName": "<event_hub_name>",
+      "render": {
+        "color": "#00b300"
+      },
+      "namespaceName": "<namespace_name>"
+    },
+    {
+      "namespace": "<namespace_for_neo4j>",
+      "type": "neo4j",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<neo4j_connection_string>",
+      "database": null,
+      "user": "<username>",
+      "password": "<password>",
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "connector": "secure_sse:8443|secure:8445",
+      "render": {
+        "color": "#00b300"
+      }
+    },
+    {
+      "namespace": "<namespace_for_solr>",
+      "type": "solr",
+      "enable": false,
+      "permission": null,
+      "converter2events_class": null,
+      "url": "<solr_url>",
+      "database": null,
+      "user": null,
+      "password": null,
+      "dataSources": null,
+      "data_path": null,
+      "data_model": null,
+      "filter": {
+        "include": "",
+        "exclude": ""
+      },
+      "core": "<solr_core_name>",
+      "connector": "secure_sse:8443|secure:8445",
+      "render": {
+        "color": "#00b300"
+      }
     }
   ]
 }

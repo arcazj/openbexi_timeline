@@ -2,25 +2,26 @@ package com.openbexi.timeline;
 
 import com.openbexi.timeline.data_browser.data_configuration;
 import com.openbexi.timeline.data_browser.event_descriptor;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.Random;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 
 public class event_generator {
     private final Date _date;
+    private JSONObject _data_configuration_node;
 
     public Date get_date() {
         return _date;
     }
 
-    event_generator(Date date) {
+    event_generator(Date date, JSONObject data_configuration_node) {
+        _data_configuration_node = data_configuration_node;
         _date = date;
     }
 
@@ -228,14 +229,6 @@ public class event_generator {
         if (!outputs.getParentFile().exists())
             outputs.getParentFile().mkdirs();
 
-        data_configuration data_configuration;
-        try {
-            data_configuration = new data_configuration("etc/ob_startup_conf.json");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
             for (int j = 0; j < 350; j++) {
@@ -397,7 +390,7 @@ public class event_generator {
                                 priority,
                                 tolerance,
                                 platform,
-                                data_configuration);
+                                _data_configuration_node);
                         event_descriptor.write(description + "_read_descriptor_in_file");
                         file.write("\"description\":\"" + "" + "\",");
                     } else
@@ -460,7 +453,7 @@ public class event_generator {
                                         priority,
                                         tolerance,
                                         platform,
-                                        data_configuration);
+                                        _data_configuration_node);
                                 event_descriptor.write(description + "_read_descriptor_in_file");
                                 file.write("\"description\":\"" + "" + "\",");
                             } else
@@ -492,30 +485,42 @@ public class event_generator {
     }
 
     public static void main(String... args) throws IOException {
+        data_configuration data_configuration;
+        List<String> models;
+        try {
+            data_configuration = new data_configuration("yaml/sources_startup.yml");
+            models = data_configuration.getDataModels();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
-        for (int i = 0; i < 1; i++) {
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
-            long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
-            Date date = new Date(todayMidnight);
-            long dateL = date.getTime();
-            long enddateL = date.getTime() + 3600 * 12 * 1000;
+        for (int d = 0; d <= data_configuration.getConfiguration().size(); d++) {
+            JSONObject configNode = (JSONObject) ((JSONArray) data_configuration.getConfiguration().get("startup configuration")).get(d);
+            for (int i = 0; i < 1; i++) {
+                TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+                ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
+                long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
+                Date date = new Date(todayMidnight);
+                long dateL = date.getTime();
+                long enddateL = date.getTime() + 3600 * 12 * 1000;
 
-            while (dateL < enddateL) {
-                date = new Date(dateL);
-                String year = new SimpleDateFormat("yyyy").format(date);
-                String month = new SimpleDateFormat("MM").format(date);
-                String day = new SimpleDateFormat("dd").format(date);
-                File file = new File("/data/" +
-                        year + "/" + month + "/" + day + "/" + "events.json");
-                event_generator events = new event_generator(date);
-                events.generate_simple(file);
-                dateL = dateL + 3600 * 24 * 1000;
-            }
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                while (dateL < enddateL) {
+                    date = new Date(dateL);
+                    String year = new SimpleDateFormat("yyyy").format(date);
+                    String month = new SimpleDateFormat("MM").format(date);
+                    String day = new SimpleDateFormat("dd").format(date);
+                    String data_model = (String) configNode.get("data_model");
+                    data_model = data_model.replace("yyyy",year).replace("mm",month).replace("dd",day);
+                    File file = new File(data_model+ "/events.json");
+                    event_generator events = new event_generator(date, configNode);
+                    events.generate_simple(file);
+                    dateL = dateL + 3600 * 24 * 1000;
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
