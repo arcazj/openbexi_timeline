@@ -421,9 +421,8 @@ public class event_generator {
                                 title = "Events_" + j + "_" + a;
                             else
                                 title = "Session_" + j + "_" + a;
-                            if (nb_act > 1) {
+                            if (nb_act > 1)
                                 title = "Activity_" + j + "_" + a;
-                            }
                             des = getRandomNumberUsingNextInt(0, 2);
                             if (des == 0)
                                 file.write("\"title\":\"" + title + "_read_descriptor" + "\",");
