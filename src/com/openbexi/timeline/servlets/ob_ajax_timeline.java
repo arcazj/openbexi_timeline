@@ -15,6 +15,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -51,6 +52,9 @@ ob_ajax_timeline extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        String ob_request = req.getParameter("ob_request");
+        HttpSession session = req.getSession();
+        resp.setCharacterEncoding("UTF-8");
         // Read parameters
         String ob_user = req.getParameter("userName");
         String ob_scene = req.getParameter("scene");
@@ -118,12 +122,12 @@ ob_ajax_timeline extends HttpServlet {
             String connector_type = _data_configuration.getType(0);
             if (connector_type.equals("json_file")) {
                 json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
+                        ob_filter, null, null, session, _data_configuration);
                 json = data.getData(data.get_filter(), ob_scene);
             }
             if (connector_type.equals("mongoDb")) {
                 db_mongo_manager data = new db_mongo_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
+                        ob_filter, null, null, session, _data_configuration);
                 json = data.getData(data.get_filter(), ob_scene);
             }
             out.write(json.toString());
