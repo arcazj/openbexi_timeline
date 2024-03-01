@@ -15,7 +15,7 @@ import java.util.*;
  * A class that provides a framework for reading a data configuration file in JSON format and accessing its properties.
  */
 public class data_configuration {
-    private JSONObject configuration;
+    JSONObject configuration;
 
     public data_configuration(JSONObject configuration) {
         this.configuration = configuration;
