@@ -41,7 +41,7 @@ public class db_elasticsearch_manager extends data_manager {
         }
 
         // Print the document
-        System.out.println(response.getSourceAsString());
+        //System.out.println(response.getSourceAsString());
 
         // Close the client
         try {
