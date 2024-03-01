@@ -5,7 +5,7 @@ import com.openbexi.timeline.data_browser.db_mongo_manager;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Date;
