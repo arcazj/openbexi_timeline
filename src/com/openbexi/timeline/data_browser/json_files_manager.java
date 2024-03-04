@@ -16,11 +16,9 @@ import java.util.regex.Pattern;
 
 public class json_files_manager extends data_manager {
 
-    public json_files_manager(String currentStartDate, String currentEndDate, String search,
-                              String filter, String action_type, HttpServletResponse response, HttpSession session,
-                              data_configuration configuration) {
-        super(currentStartDate, currentEndDate, search, filter, action_type, response, session,
-                configuration);
+    public json_files_manager(HttpServletResponse response,
+                              HttpSession session, data_configuration configuration) {
+        super(response, session, configuration);
     }
 
     public static JSONArray sortByDate(JSONArray jsonArray) {

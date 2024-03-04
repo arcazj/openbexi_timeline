@@ -19,9 +19,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Logger;
 
 @WebServlet("/openbexi_timeline/sessions")
@@ -52,16 +50,14 @@ ob_ajax_timeline extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String ob_request = req.getParameter("ob_request");
+        _data_configuration.setConfiguration(req);
         HttpSession session = req.getSession();
         resp.setCharacterEncoding("UTF-8");
-        // Read parameters
-        String ob_user = req.getParameter("userName");
         String ob_scene = req.getParameter("scene");
-        String ob_timeline_name = req.getParameter("timelineName");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
         String ob_filter = _data_configuration.getFilter(0);
+        String ob_search = req.getParameter("search");
         if (ob_filter != null)
             ob_filter = ob_filter.replaceAll("_PIPE_", "|")
                     .replaceAll("_PARR_", "\\)")
@@ -70,41 +66,17 @@ ob_ajax_timeline extends HttpServlet {
                     .replaceAll("_PLUS_", "+");
         else
             ob_filter = "";
-        String filter_include = _data_configuration.getFilterInclude(0);
-        String filter_exclude = _data_configuration.getFilterExclude(0);
-        String ob_search = req.getParameter("search");
 
-        Logger logger = Logger.getLogger("");
+        // Common handler instantiation
+        ob_handle_http_requests handler = new ob_handle_http_requests(req, resp, _data_configuration);
 
-        PrintWriter out = resp.getWriter();
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-        resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-        resp.addHeader("Accept-Encoding", "gzip, compress, br");
-        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
+        // Assuming ob_handle_header should be called for any valid ob_request
+        handler.ob_handle_header(req, resp);
 
-        // If simple test requested
         if (startDate == null || startDate.equals("test")) {
-            try {
-                String result = "";
-                Enumeration<String> names = req.getHeaderNames();
-                while (names.hasMoreElements()) {
-                    String name = names.nextElement();
-                    result += name + ":" + req.getHeader(name) + "; ";
-                }
-                logger.info(result);
-
-                test_timeline tests = new test_timeline();
-                String simpleJson = tests.getSimpleJsonData();
-                out.write(simpleJson);
-                out.flush();
-
-            } catch (Exception e) {
-                logger.severe(e.getMessage());
-            }
-        } else {
+            handler.ob_handle_test_requests(req,resp);
+        }else {
+            PrintWriter out = resp.getWriter();
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
             try {
@@ -121,8 +93,7 @@ ob_ajax_timeline extends HttpServlet {
             Object json = null;
             String connector_type = _data_configuration.getType(0);
             if (connector_type.equals("json_file")) {
-                json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, session, _data_configuration);
+                json_files_manager data = new json_files_manager(null, session, _data_configuration);
                 json = data.getData(data.get_filter(), ob_scene);
             }
             if (connector_type.equals("mongoDb")) {
@@ -147,114 +118,39 @@ ob_ajax_timeline extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         // Read parameters
+        _data_configuration.setConfiguration(req);
         String ob_request = req.getParameter("ob_request");
-        String startEvent = req.getParameter("startEvent");
-        String endEvent = req.getParameter("endEvent");
-        String description = req.getParameter("description");
-        String icon = req.getParameter("icon");
-        String startDate = req.getParameter("startDate");
-        String endDate = req.getParameter("endDate");
-        String data_path = _data_configuration.getDataPath(0);
-
-        String ob_filter_name = req.getParameter("filterName");
-        String ob_timeline_name = req.getParameter("timelineName");
-        String ob_title = req.getParameter("title");
-        String ob_scene = req.getParameter("scene");
-        String ob_top = req.getParameter("top");
-        String ob_left = req.getParameter("left");
-        String ob_width = req.getParameter("width");
-        String ob_height = req.getParameter("height");
-        String ob_camera = req.getParameter("camera");
-        String ob_sort_by = req.getParameter("sortBy");
-        String ob_user = req.getParameter("userName");
-        String ob_backgroundColor = req.getParameter("backgroundColor");
-        if (ob_backgroundColor != null)
-            ob_backgroundColor = ob_backgroundColor.replace("@", "#");
-        String ob_email = req.getParameter("email");
-        String ob_filter = req.getParameter("filter");
-        if (ob_filter != null)
-            ob_filter = ob_filter.replaceAll("_PIPE_", "|")
-                    .replaceAll("_PARR_", ")")
-                    .replaceAll("_PARL_", "(")
-                    .replaceAll("_PERC_", "%")
-                    .replaceAll("_PLUS_", "+");
-        String ob_search = req.getParameter("search");
-        String connector_type = _data_configuration.getType(0);
-
         Logger logger = Logger.getLogger("");
 
-        PrintWriter out = resp.getWriter();
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-        resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-        resp.addHeader("Accept-Encoding", "gzip, compress, br");
+        // Common handler instantiation
+        ob_handle_http_requests handler = new ob_handle_http_requests(req, resp, _data_configuration);
 
-        // Read descriptor for a given event or sesson/activity.
-        if (ob_request != null && ob_request.equals("readDescriptor")) {
-            String event_id = req.getParameter("event_id");
-            String start = req.getParameter("start");
-            logger.info("POST readDescriptor - id=" + event_id);
-            event_descriptor descriptor =
-                    new event_descriptor(event_id, null, start, null, null, null, null,
-                            null, null, null, null, _data_configuration.getConfiguration(0));
-            Object json = descriptor.read(event_id);
-            out.write(json.toString());
-            out.flush();
+        // Assuming ob_handle_header should be called for any valid ob_request
+        handler.ob_handle_header(req, resp);
+
+        switch (ob_request) {
+            case "readDescriptor":
+                handler.ob_handle_descriptor_request(req, resp, _data_configuration);
+                break;
+            case "addEvent":
+                handler.ob_handle_addEvent_request(req, resp, _data_configuration);
+                break;
+            case "updateFilter":
+            case "readFilters":
+            case "addFilter":
+            case "deleteFilter":
+            case "saveFilter":
+                handler.ob_handle_filter_request(req, resp, _data_configuration);
+                break;
+            default:
+                // Handle unknown or null ob_request
+                if (ob_request != null) {
+                    logger.warning("Unhandled request type: " + ob_request);
+                }
+                break;
         }
 
-        // Add event in timeline
-        if (ob_request != null && ob_request.equals("addEvent")) {
-            logger.info("POST addEvent - startDate=" + startDate + " - endDate=" + endDate);
-            Object json = null;
-            JSONArray eventJson = new JSONArray();
-            eventJson.add("title:" + ob_title);
-            eventJson.add("startEvent:" + startEvent);
-            eventJson.add("endEvent:" + endEvent);
-            eventJson.add("description:" + description);
-            eventJson.add("icon:" + icon);
-            if (connector_type.equals("json_file")) {
-                json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
-                data.addEvents(eventJson, ob_scene);
-                json = ((json_files_manager) data).getData(null, ob_scene);
-            }
-            if (connector_type.equals("mongoDb")) {
-                db_mongo_manager data = new db_mongo_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
-                data.addEvents(eventJson, ob_scene);
-                json = data.getData(null, ob_scene);
-            }
-            out.write(json.toString());
-            out.flush();
-        }
-
-        // update filter in timeline
-        if (ob_request != null && (ob_request.equals("updateFilter") || ob_request.equals("readFilters") ||
-                ob_request.equals("addFilter") || ob_request.equals("deleteFilter") ||
-                ob_request.equals("saveFilter"))) {
-            logger.info("POST " + ob_request + " - ob_filter_name=" + ob_filter_name + " - ob_user=" + ob_user);
-            Object json = null;
-            if (connector_type.equals("json_file")) {
-                json_files_manager data = new json_files_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
-                json = data.updateFilter(ob_request, ob_timeline_name, ob_scene, ob_title, ob_filter_name,
-                        ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height,
-                        ob_camera, ob_sort_by, ob_filter);
-            }
-            if (connector_type.equals("mongoDb")) {
-                db_mongo_manager data = new db_mongo_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, null, _data_configuration);
-                json = data.updateFilter(ob_request, ob_timeline_name, ob_scene, ob_title, ob_filter_name,
-                        ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height,
-                        ob_camera, ob_sort_by, ob_filter);
-            }
-            if (json != null) out.write(json.toString());
-            out.flush();
-        }
     }
 
     @Override

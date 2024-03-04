@@ -37,25 +37,27 @@ abstract class data_manager {
     public long _currentStartDateL;
     public long _currentEndDateL;
     public String _dataPath;
+    public String _action_type;
     public String _currentPathModel;
-    public data_configuration _conf;
+    public data_configuration _data_configuration;
     public String _checksum = "*";
     private String _dateE;
     private TimerTask task;
-    public data_manager(String currentStartDate, String currentEndDate, String search,
-                        String filter, String action_type, HttpServletResponse response, HttpSession session,
-                        data_configuration configuration) {
+    public data_manager(HttpServletResponse response, HttpSession session, data_configuration configuration) {
         super();
 
-        _conf =configuration;
+        _data_configuration =configuration;
+        String startDate =  (String) _data_configuration.getConfiguration().get("startDate");
+        String endDate =  (String) _data_configuration.getConfiguration().get("endDate");
 
-        if (currentStartDate != null) {
-            _currentStartDate = currentStartDate.replaceAll("'", "");
-            _currentEndDate = currentEndDate.replaceAll("'", "");
+        if (startDate != null) {
+            _currentStartDate = startDate.replaceAll("'", "");
+            _currentEndDate = endDate.replaceAll("'", "");
         }
         _dataPath =  configuration.getDataPath(0).replaceAll("\\\\", "/");
         _currentPathModel = configuration.getDataModel(0).replaceAll("\\\\", "/");
 
+        String filter =(String) _data_configuration.getConfiguration().get("filter");
         if (filter != null) {
             String[] filter_items = filter.split("\\|");
             if (filter_items.length == 0) {
@@ -72,12 +74,12 @@ abstract class data_manager {
             _include = "";
             _exclude = "";
         }
+
         String _filter_value = get_filter();
-        _search = search;
-        String _action_type = action_type;
+        _search = (String) _data_configuration.getConfiguration().get("search");
+        _action_type = (String) _data_configuration.getConfiguration().get("request");;
         _response = response;
         _session = session;
-        _action_type = action_type;
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));

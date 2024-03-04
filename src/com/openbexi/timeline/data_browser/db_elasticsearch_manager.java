@@ -13,11 +13,9 @@ import org.json.simple.JSONArray;
 import java.io.IOException;
 
 public class db_elasticsearch_manager extends data_manager {
-    public db_elasticsearch_manager(String currentStartDate, String currentEndDate,
-                                    String search, String filter, String action_type, HttpServletResponse response,
+    public db_elasticsearch_manager( HttpServletResponse response,
                                     HttpSession session, data_configuration configuration) {
-        super(currentStartDate, currentEndDate, search, filter, action_type, response,
-                session, configuration);
+        super(response,session,configuration);
     }
 
     @Override
