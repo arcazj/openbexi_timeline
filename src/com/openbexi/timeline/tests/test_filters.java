@@ -14,7 +14,7 @@ public class test_filters {
 
     public void set_data_configuration() {
         try {
-            this._data_configuration = new data_configuration("etc/ob_startup_conf.json");
+            this._data_configuration = new data_configuration("yaml/sources_startup.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseException e) {
@@ -28,8 +28,12 @@ public class test_filters {
      */
     public void test_case1() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "", "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
         data.removeAllFilter("ob_timeline_2", "test");
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0",
                 "Timeline report", "My_filter1", "#a1d9ff", "test",
@@ -47,9 +51,12 @@ public class test_filters {
      */
     public void test_case2() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE",
-                "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter1", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -65,8 +72,12 @@ public class test_filters {
      */
     public void test_case3() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "", "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter2", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -82,9 +93,12 @@ public class test_filters {
      */
     public void test_case4() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1;system:system2;system:system3|system:system3+type:type0",
-                "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1;system:system2;system:system3|system:system3+type:type0");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter2", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "system",
@@ -100,8 +114,12 @@ public class test_filters {
      */
     public void test_case5() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3", "", null, null,
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null,
                 _data_configuration);
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter3", "#a1d9ff", "test", "test@mail.com",
@@ -118,9 +136,12 @@ public class test_filters {
      */
     public void test_case6() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3", "", null,
-                null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("updateFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter4", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -136,9 +157,12 @@ public class test_filters {
      */
     public void test_case7() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3", "", null,
-                null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("deleteFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter1", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -154,9 +178,12 @@ public class test_filters {
      */
     public void test_case8() {
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3", "", null,
-                null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("deleteFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter3", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -170,9 +197,12 @@ public class test_filters {
     public void test_case9() {
         this.set_data_configuration();
         // delete the second filter which is at the end of the list
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3;SCHEDULE|system:system1",
-                "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3;SCHEDULE|system:system1");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager( null, null, _data_configuration);
         Object json = data.updateFilter("deleteFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter4", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",
@@ -186,9 +216,12 @@ public class test_filters {
     public void test_case10() {
         this.set_data_configuration();
         // delete the last filter
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:systemA;system:system1;system:system3;", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:systemA;system:system1;system:system3;");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
         Object json = data.updateFilter("deleteFilter", "ob_timeline_2", "0", "Timeline report",
                 "My_filter2", "#a1d9ff", "test", "test@mail.com",
                 "0", "0", "1350", "600", "Orthographic", "NONE",

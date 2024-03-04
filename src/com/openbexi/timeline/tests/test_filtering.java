@@ -16,7 +16,7 @@ public class test_filtering {
 
     public void set_data_configuration() {
         try {
-            this._data_configuration = new data_configuration("etc/ob_startup_conf.json");
+            this._data_configuration = new data_configuration("yaml/sources_startup.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseException e) {
@@ -51,9 +51,12 @@ public class test_filtering {
     public void test_case1() {
         // test include events with only status:STARTED
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "status:STARTED", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "status:STARTED");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
@@ -69,9 +72,12 @@ public class test_filtering {
     public void test_case1a() {
         // test exclude events with only status:SCHEDULE
         this.set_data_configuration();
-        json_files_manager data = new json_files_manager(null, null, null,
-                "|status:SCHEDULE", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "|status:SCHEDULE");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
@@ -87,9 +93,12 @@ public class test_filtering {
     public void test_case1b() {
         this.set_data_configuration();
         // test include events with status:STARTED and exclude type:type2
-        json_files_manager data = new json_files_manager(null, null, null,
-                "status:STARTED|type:type2", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "status:STARTED|type:type2");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
@@ -105,9 +114,12 @@ public class test_filtering {
     public void test_case2() {
         this.set_data_configuration();
         // test include events with system:system1+tolerance:7+priority:0
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1+tolerance:7+priority:0", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1+tolerance:7+priority:0");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -124,9 +136,12 @@ public class test_filtering {
     public void test_case2a() {
         this.set_data_configuration();
         // test include events with system:system1+tolerance:7+priority:0 and exclude status:STARTED
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1+tolerance:7+priority:0|status:STARTED", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1+tolerance:7+priority:0|status:STARTED");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -143,9 +158,12 @@ public class test_filtering {
     public void test_case2b() {
         this.set_data_configuration();
         // test include events with system:system1+tolerance:7+priority:0 and exclude status:STARTED;type:type1+type:type2
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1+tolerance:7+priority:0|status:STARTED;type:type1;type:type2", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1+tolerance:7+priority:0|status:STARTED;type:type1;type:type2");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -163,9 +181,12 @@ public class test_filtering {
     public void test_case3() {
         this.set_data_configuration();
         // test include events with system:system1;system:system7
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1;system:system7", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1;system:system7");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -182,9 +203,12 @@ public class test_filtering {
     public void test_case4() {
         this.set_data_configuration();
         // test exclude events with only system:system1;system:system7+type:type1+tolerance:2;tolerance:6
-        json_files_manager data = new json_files_manager(null, null, null,
-                "|system:system1;system:system7+type:type1+tolerance:2;tolerance:6", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "|system:system1;system:system7+type:type1+tolerance:2;tolerance:6");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -201,9 +225,12 @@ public class test_filtering {
     public void test_case5() {
         this.set_data_configuration();
         // test include events with system:system3;system:system0 and exclude only system:system1;system:system7+type:type1+tolerance:2;tolerance:6
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system0;system:system1;system:system7|system:system1;system:system7+type:type1+tolerance:2;tolerance:6", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system0;system:system1;system:system7|system:system1;system:system7+type:type1+tolerance:2;tolerance:6");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -221,9 +248,12 @@ public class test_filtering {
     public void test_case7() {
         this.set_data_configuration();
         // test include events with system:system4+priority:1;system:system5+priority:0 and exclude system:system3+status:SCHEDULE
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system4+priority:1;system:system5+priority:0;system:system3+priority:0|system:system3+status:SCHEDULE", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system4+priority:1;system:system5+priority:0;system:system3+priority:0|system:system3+status:SCHEDULE");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -240,9 +270,12 @@ public class test_filtering {
     public void test_case7a() {
         this.set_data_configuration();
         // test exclude events with system:system4+priority:1;system:system5+priority:0
-        json_files_manager data = new json_files_manager(null, null, null,
-                "|system:system4+priority:1;system:system5+priority:0", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "|system:system4+priority:1;system:system5+priority:0");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -259,9 +292,12 @@ public class test_filtering {
     public void test_case7b() {
         this.set_data_configuration();
         // test exclude events with system:system4+priority:1;system:system5+priority:0
-        json_files_manager data = new json_files_manager(null, null, null,
-                "system:system1;system:system2;system:system3|system:system3+type:type0", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "system:system1;system:system2;system:system3|system:system3+type:type0");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -278,8 +314,12 @@ public class test_filtering {
     public void test_case8() {
         this.set_data_configuration();
         // test include events with comments containing "description8 __1__  --0--"
-        json_files_manager data = new json_files_manager(null, null, null,
-                "description:description8 __1__  --0--", "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "description:description8 __1__  --0--");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -296,8 +336,12 @@ public class test_filtering {
     public void test_case8a() {
         this.set_data_configuration();
         // test exclude events with comments containing "description8 __1__  --0--"
-        json_files_manager data = new json_files_manager(null, null, null,
-                "|description:description8 __1__  --0--", "", null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "|description:description8 __1__  --0--");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -314,9 +358,12 @@ public class test_filtering {
     public void test_case8b() {
         this.set_data_configuration();
         // test include events with status:STARTED ou comments containing "description3 __1__  --3--"
-        json_files_manager data = new json_files_manager(null, null, null,
-                "status:STARTED;description:description3 __1__  --3--", "", null,
-                null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "status:STARTED;description:description3 __1__  --3--");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -333,9 +380,12 @@ public class test_filtering {
     public void test_case8c() {
         this.set_data_configuration();
         // test include events with status:STARTED and comments containing "description3 __1__  --3--"
-        json_files_manager data = new json_files_manager(null, null, null,
-                "status:STARTED+description:description3 __1__  --3--", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "status:STARTED+description:description3 __1__  --3--");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));
@@ -352,9 +402,12 @@ public class test_filtering {
     public void test_case8d() {
         this.set_data_configuration();
         // test exclude events with status:STARTED and comments containing "description3 __1__  --3--"
-        json_files_manager data = new json_files_manager(null, null, null,
-                "|status:STARTED+description:description3 __1__  --3--", "",
-                null, null, _data_configuration);
+        _data_configuration.getConfiguration().put("startDate", null);
+        _data_configuration.getConfiguration().put("endDate", null);
+        _data_configuration.getConfiguration().put("search", null);
+        _data_configuration.getConfiguration().put("filter", "|status:STARTED+description:description3 __1__  --3--");
+        _data_configuration.getConfiguration().put("request", "");
+        json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject = (JSONObject) read_events(new File("tests/events.json"));

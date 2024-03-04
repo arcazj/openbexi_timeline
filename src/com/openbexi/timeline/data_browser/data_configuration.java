@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
@@ -44,7 +45,43 @@ public class data_configuration {
         return configuration;
     }
 
-    public void setConfiguration(JSONObject configuration) {
+    public void setConfiguration(HttpServletRequest req) {
+        getConfiguration().put("userName", req.getParameter("userName"));
+        getConfiguration().put("request", req.getParameter("ob_request"));
+        getConfiguration().put("scene", req.getParameter("scene"));
+        getConfiguration().put("startDate", req.getParameter("startDate"));
+        getConfiguration().put("endDate", req.getParameter("endDate"));
+        getConfiguration().put("search", req.getParameter("search"));
+        String ob_filter = req.getParameter("filter");
+        if (ob_filter != null)
+            ob_filter = ob_filter.replaceAll("_PIPE_", "|")
+                    .replaceAll("_PARR_", "\\)")
+                    .replaceAll("_PARL_", "\\(")
+                    .replaceAll("_PERC_", "\\%")
+                    .replaceAll("_PLUS_", "+");
+        else
+            ob_filter = "";
+        getConfiguration().put("filter", ob_filter);
+        getConfiguration().put("timelineName", req.getParameter("timelineName"));
+        getConfiguration().put("startEvent", req.getParameter("startEvent"));
+        getConfiguration().put("endEvent", req.getParameter("endEvent"));
+        getConfiguration().put("description", req.getParameter("description"));
+        getConfiguration().put("icon", req.getParameter("icon"));
+        getConfiguration().put("filterName", req.getParameter("filterName"));
+        getConfiguration().put("title", req.getParameter("title"));
+        getConfiguration().put("top", req.getParameter("top"));
+        getConfiguration().put("left", req.getParameter("left"));
+        getConfiguration().put("width", req.getParameter("width"));
+        getConfiguration().put("height", req.getParameter("height"));
+        getConfiguration().put("camera", req.getParameter("camera"));
+        getConfiguration().put("sortBy", req.getParameter("sortBy"));
+        getConfiguration().put("userName", req.getParameter("userName"));
+        String ob_backgroundColor = req.getParameter("backgroundColor");
+        if (ob_backgroundColor != null)
+            ob_backgroundColor = ob_backgroundColor.replace("@", "#");
+        getConfiguration().put("backgroundColor", ob_backgroundColor);
+        getConfiguration().put("email", req.getParameter("email"));
+        getConfiguration().put("method", req.getMethod());
         this.configuration = configuration;
     }
 
