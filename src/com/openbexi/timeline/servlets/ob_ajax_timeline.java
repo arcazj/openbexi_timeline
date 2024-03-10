@@ -15,11 +15,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.logging.Logger;
 
 @WebServlet("/openbexi_timeline/sessions")
@@ -47,25 +43,11 @@ ob_ajax_timeline extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 
         _data_configuration.setConfiguration(req);
-        HttpSession session = req.getSession();
         resp.setCharacterEncoding("UTF-8");
-        String ob_scene = req.getParameter("scene");
         String startDate = req.getParameter("startDate");
-        String endDate = req.getParameter("endDate");
-        String ob_filter = _data_configuration.getFilter(0);
-        String ob_search = req.getParameter("search");
-        if (ob_filter != null)
-            ob_filter = ob_filter.replaceAll("_PIPE_", "|")
-                    .replaceAll("_PARR_", "\\)")
-                    .replaceAll("_PARL_", "\\(")
-                    .replaceAll("_PERC_", "\\%")
-                    .replaceAll("_PLUS_", "+");
-        else
-            ob_filter = "";
 
         // Common handler instantiation
         ob_handle_http_requests handler = new ob_handle_http_requests(req, resp, _data_configuration);
@@ -73,37 +55,10 @@ ob_ajax_timeline extends HttpServlet {
         // Assuming ob_handle_header should be called for any valid ob_request
         handler.ob_handle_header(req, resp);
 
-        if (startDate == null || startDate.equals("test")) {
-            handler.ob_handle_test_requests(req,resp);
-        }else {
-            PrintWriter out = resp.getWriter();
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
-            try {
-                simpleDateFormat.format(new Date(startDate));
-            } catch (Exception e) {
-                startDate = simpleDateFormat.format(new Date());
-            }
-            try {
-                simpleDateFormat.format(new Date(endDate));
-            } catch (Exception e) {
-                endDate = startDate;
-            }
-
-            Object json = null;
-            String connector_type = _data_configuration.getType(0);
-            if (connector_type.equals("json_file")) {
-                json_files_manager data = new json_files_manager(null, session, _data_configuration);
-                json = data.getData(data.get_filter(), ob_scene);
-            }
-            if (connector_type.equals("mongoDb")) {
-                db_mongo_manager data = new db_mongo_manager(startDate, endDate, ob_search,
-                        ob_filter, null, null, session, _data_configuration);
-                json = data.getData(data.get_filter(), ob_scene);
-            }
-            out.write(json.toString());
-            out.flush();
-        }
+        if (startDate == null || startDate.equals("test"))
+            handler.ob_handle_test_requests(req, resp);
+        else
+            handler.ob_handle_default_request(req, resp, _data_configuration);
     }
 
     @Override

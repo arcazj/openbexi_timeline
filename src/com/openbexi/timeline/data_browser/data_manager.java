@@ -11,6 +11,8 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -43,21 +45,22 @@ abstract class data_manager {
     public String _checksum = "*";
     private String _dateE;
     private TimerTask task;
+
     public data_manager(HttpServletResponse response, HttpSession session, data_configuration configuration) {
         super();
 
-        _data_configuration =configuration;
-        String startDate =  (String) _data_configuration.getConfiguration().get("startDate");
-        String endDate =  (String) _data_configuration.getConfiguration().get("endDate");
+        _data_configuration = configuration;
+        String startDate = (String) _data_configuration.getConfiguration().get("startDate");
+        String endDate = (String) _data_configuration.getConfiguration().get("endDate");
 
         if (startDate != null) {
             _currentStartDate = startDate.replaceAll("'", "");
             _currentEndDate = endDate.replaceAll("'", "");
         }
-        _dataPath =  configuration.getDataPath(0).replaceAll("\\\\", "/");
+        _dataPath = configuration.getDataPath(0).replaceAll("\\\\", "/");
         _currentPathModel = configuration.getDataModel(0).replaceAll("\\\\", "/");
 
-        String filter =(String) _data_configuration.getConfiguration().get("filter");
+        String filter = (String) _data_configuration.getConfiguration().get("filter");
         if (filter != null) {
             String[] filter_items = filter.split("\\|");
             if (filter_items.length == 0) {
@@ -75,9 +78,8 @@ abstract class data_manager {
             _exclude = "";
         }
 
-        String _filter_value = get_filter();
         _search = (String) _data_configuration.getConfiguration().get("search");
-        _action_type = (String) _data_configuration.getConfiguration().get("request");;
+        _action_type = (String) _data_configuration.getConfiguration().get("request");
         _response = response;
         _session = session;
 
@@ -157,6 +159,7 @@ abstract class data_manager {
     abstract boolean updateEvents(JSONArray events, String ob_scene);
 
     abstract boolean removeEvents(JSONArray events, String ob_scene);
+
     private JSONArray sortFilter(JSONArray filter_array, String ob_filter_name) {
         JSONObject obj = null;
         for (int f = 0; f < filter_array.size(); f++) {
@@ -171,10 +174,11 @@ abstract class data_manager {
             filter_array.add(0, obj);
         return filter_array;
     }
+
     public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
-                                 String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
-                                 String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
-                                 String ob_sort_by, String ob_filter){
+                               String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
+                               String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
+                               String ob_sort_by, String ob_filter) {
         JSONParser parser = new JSONParser();
         Object filters;
         StringBuilder jsonObjectMerged = null;
@@ -183,7 +187,7 @@ abstract class data_manager {
         if (!buildFile.exists())
             buildFile.getParentFile().mkdirs();
 
-        JSONArray openbexi_timeline;
+        JSONArray openbexi_timeline = null;
         JSONArray filter_array = null;
         JSONArray filter_array2;
         boolean no_filter_found = true;
@@ -199,12 +203,15 @@ abstract class data_manager {
                 Reader reader = new FileReader(outputs);
                 try {
                     filters = parser.parse(reader);
+                    jsonObject = (JSONObject) filters;
+                    openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
+                    ((JSONObject) openbexi_timeline.get(0)).put("sources", _data_configuration.getConfiguration().get("startup configuration"));
+
                     if (ob_action.equals("readFilters")) {
                         reader.close();
                         return filters;
                     }
-                    jsonObject = (JSONObject) filters;
-                    openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
+
                     filter_array2 = (JSONArray) ((JSONObject) openbexi_timeline.get(0)).get("filters");
                     filter_array = sortFilter(filter_array2, ob_filter_name);
                 } catch (Exception e) {
@@ -233,6 +240,10 @@ abstract class data_manager {
                     "  \"camera\": \"" + ob_camera + "\"," +
                     "  \"backgroundColor\": \"" + ob_backgroundColor + "\"," +
                     "  \"sortBy\": \"" + ob_sort_by + "\",");
+
+            jsonObjectMerged.append("  \"sources\":");
+            jsonObjectMerged.append( _data_configuration.getConfiguration().get("startup configuration"));
+            jsonObjectMerged.append("  ,");
 
             jsonObjectMerged.append("  \"filters\":[");
 
@@ -310,8 +321,14 @@ abstract class data_manager {
         }
 
         try (FileWriter file = new FileWriter(outputs)) {
-            file.write(jsonObjectMerged.toString());
-            file.flush();
+            if (ob_user.equals("guest")) {
+                File source = new File("filters/default_filter_setting.json");
+                if (Files.exists(Path.of(source.getAbsolutePath())))
+                    Files.copy(source.toPath(), outputs.toPath());
+            } else {
+                file.write(jsonObjectMerged.toString());
+                file.flush();
+            }
         } catch (IOException e) {
             log(e, "Exception");
         }

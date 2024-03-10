@@ -22,8 +22,6 @@ import java.util.logging.Logger;
 @WebListener
 public class ob_sse_timeline extends HttpServlet implements HttpSessionListener {
 
-    test_timeline tests = null;
-    int id = 0;
     private data_configuration _data_configuration;
 
     public ob_sse_timeline() {
@@ -45,25 +43,12 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        HttpSession session = req.getSession();
         resp.setCharacterEncoding("UTF-8");
-
         // Read parameters
         _data_configuration.setConfiguration(req);
         String ob_request = req.getParameter("ob_request");
-        String ob_scene = req.getParameter("scene");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
-        String ob_filter_name = req.getParameter("filterName");
-        String ob_user = req.getParameter("userName");
-        String ob_filter = req.getParameter("filter");
-        if (ob_filter != null)
-            ob_filter = ob_filter.replaceAll("_PIPE_", "|")
-                    .replaceAll("_PARR_", ")")
-                    .replaceAll("_PARL_", "(")
-                    .replaceAll("_PERC_", "%")
-                    .replaceAll("_PLUS_", "+");
-        String ob_search = req.getParameter("search");
 
         Logger logger = Logger.getLogger("");
         logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
@@ -87,28 +72,14 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
                 case "addFilter":
                 case "deleteFilter":
                 case "saveFilter":
-                      handler.ob_handle_filter_request(req, resp, _data_configuration);
+                    handler.ob_handle_filter_request(req, resp, _data_configuration);
                     return;
                 default:
                     break;
             }
         }
 
-        // Start a json_files_watcher loop to check if any new events are coming.
-        // If any the json_files_watcher will update the openBexi Timeline client again.
-        if (_data_configuration.getType(0).equals("json_file")) {
-            json_files_manager json_files_manager = new json_files_manager(resp,
-                    session, _data_configuration);
-            json_files_watcher json_files_watcher = new json_files_watcher(json_files_manager, ob_scene);
-            json_files_watcher.run();
-        }
-        if (_data_configuration.getType(0).equals("mongoDb")) {
-            db_mongo_manager db_mongo_manager = new db_mongo_manager(startDate, endDate, ob_search,
-                    ob_filter, "GET", resp,
-                    session, _data_configuration);
-            db_mongo_watcher db_mongo_watcher = new db_mongo_watcher(db_mongo_manager, ob_scene);
-            db_mongo_watcher.run();
-        }
+        handler.ob_handle_default_request(req, resp, _data_configuration);
     }
 
 
