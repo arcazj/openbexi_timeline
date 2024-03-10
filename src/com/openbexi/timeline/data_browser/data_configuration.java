@@ -82,7 +82,6 @@ public class data_configuration {
         getConfiguration().put("backgroundColor", ob_backgroundColor);
         getConfiguration().put("email", req.getParameter("email"));
         getConfiguration().put("method", req.getMethod());
-        this.configuration = configuration;
     }
 
     public JSONObject getConfiguration(int index) {
@@ -99,17 +98,6 @@ public class data_configuration {
         return (String) configNode.get("type");
     }
 
-    public String getFilter(int index) {
-        JSONObject configNode = (JSONObject) ((JSONArray) configuration.get("startup configuration")).get(index);
-        JSONObject filter = (JSONObject) configNode.get("filter");
-        if (filter == null) return "";
-        String include = (String) filter.get("include");
-        String exclude = (String) filter.get("exclude");
-        if (include.equals("") && exclude.equals("")) return "";
-        if (!include.equals("") && exclude.equals("")) return include;
-        if (include.equals("") && !exclude.equals("")) return exclude;
-        return include + "|" + exclude;
-    }
 
     public String getDataPath(int index) {
         JSONObject configNode = (JSONObject) ((JSONArray) configuration.get("startup configuration")).get(index);

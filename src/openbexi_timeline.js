@@ -2483,8 +2483,8 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].objects.push(ob_zone);
 
         if (!band_name.includes("overview")) {
-            this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, undefined,
-                24, "Normal", "Normal", textColor, 'Arial', font_align);
+            this.add_text_sprite(ob_scene_index, ob_zone, text, 50, 0, 10, false,
+                24, "normal", "normal", textColor, 'Arial');
         }
 
         let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
@@ -2542,8 +2542,8 @@ function OB_TIMELINE() {
         this.ob_scene[ob_scene_index].add(ob_model_name);
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
 
-        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, undefined,
-            24, "Normal", "Normal", textColor, 'Arial', font_align);
+        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, false,
+            24, "normal", "normal", textColor, 'Arial');
 
     };
 
@@ -3024,7 +3024,8 @@ function OB_TIMELINE() {
         const text = this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet, band.gregorianUnitLengths, band.intervalPixels, band.intervalUnit, band.dateFormat);
         const textX = incrementPixelOffSet - (band.fontSizeInt / 2) + 6;
         const textY = this.calculateTextYPosition(band);
-        this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, undefined, band.fontSizeInt, band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily, this.ob_scene[ob_scene_index].font_align);
+        this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, false, band.fontSizeInt,
+            band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily);
     };
 
     OB_TIMELINE.prototype.calculateTextYPosition = function (band) {
@@ -3832,8 +3833,7 @@ function OB_TIMELINE() {
                 fontStyle,
                 fontWeight,
                 textColor,
-                fontFamily,
-                font_align
+                fontFamily
             );
             this.add_tolerance(ob_scene_index, ob_session, band_name, session, undefined);
         }
@@ -3918,8 +3918,7 @@ function OB_TIMELINE() {
                 fontStyle,
                 fontWeight,
                 textColor,
-                fontFamily,
-                font_align
+                fontFamily
             );
         }
 
@@ -4008,20 +4007,21 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_text_sprite = function (ob_scene_index, ob_object, text, x, y, z, backgroundColor,
-                                                      fontSize, fontStyle, fontWeight, color, fontFamily, font_align) {
-        color = color || this.track[ob_scene_index](new THREE.Color("rgb(114, 171, 173)"));
-        let ob_sprite = this.track[ob_scene_index](new SpriteText(text, 10));
+                                                      fontSize, fontStyle, fontWeight, color, fontFamily) {
+        color = color || this.track[ob_scene_index](new THREE.Color("rgb(7,7,7)"));
+        let ob_sprite = this.track[ob_scene_index](new SpriteText(text));
         ob_sprite.color = color;
         ob_sprite.fontFamily = fontFamily;
         ob_sprite.textHeight = parseInt(fontSize);
         ob_sprite.fontSize = parseInt(fontSize);
         ob_sprite.fontStyle = fontStyle;
-        ob_sprite.padding = 0.1;
         ob_sprite.borderWidth = 0;
         ob_sprite.fontWeight = fontWeight;
         ob_sprite.borderRadius = 0;
         if (backgroundColor !== undefined)
             ob_sprite.backgroundColor = backgroundColor;
+        else
+            ob_sprite.backgroundColor = false;
 
         let ob_x = x;
         if (this.ob_scene[ob_scene_index].ob_camera_type !== "Orthographic") {

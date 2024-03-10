@@ -84,9 +84,7 @@ public class json_files_manager extends data_manager {
             return getDummyJson("no data_manager found");
 
         JSONParser parser = new JSONParser();
-        Object events = null;
-        JSONObject objPrevious = null;
-        String filePath = null;
+        Object events;
         JSONObject jsonObject = new JSONObject();
 
 
@@ -130,13 +128,6 @@ public class json_files_manager extends data_manager {
             }
         }
         String jsonObjectMerged_end = "}";
-
-        // Sort all_obj by date
-        /*try {
-            all_obj = sortByDate(all_obj);
-        } catch (Exception e) {
-            return getDummyJson("no data_manager found");
-        }*/
 
         try {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +

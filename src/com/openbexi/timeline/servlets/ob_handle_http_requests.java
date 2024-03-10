@@ -262,14 +262,15 @@ public class ob_handle_http_requests {
                 endDate = simpleDateFormat.format(new Date(req.getParameter("endDate")));
             }
 
-            Object json;
+            Object json = null;
             String connector_type = configuration.getType(0);
 
             if (connector_type.equals("json_file")) {
                 json_files_manager json_files_manager = new json_files_manager(resp, session, configuration);
-                json = json_files_manager.getData(json_files_manager.get_filter(),
-                        (String) configuration.getConfiguration().get("scene"));
-                ob_handle_flush(resp, configuration, json, json_files_manager);
+                if (!req.getHeader("accept").equals("text/event-stream"))
+                    json = json_files_manager.getData(json_files_manager.get_filter(),
+                            (String) configuration.getConfiguration().get("scene"));
+                ob_handle_flush(req, resp, configuration, json, json_files_manager);
             }
 
             if (connector_type.equals("mongoDb")) {
@@ -278,19 +279,20 @@ public class ob_handle_http_requests {
                                 (String) configuration.getConfiguration().get("search"),
                                 (String) configuration.getConfiguration().get("filter"),
                                 "GET", resp, session, configuration);
-                json = db_mongo_manager.getData(db_mongo_manager.get_filter(),
-                        (String) configuration.getConfiguration().get("scene"));
-                ob_handle_flush(resp, configuration, json, db_mongo_manager);
+                if (!req.getHeader("accept").equals("text/event-stream"))
+                    json = db_mongo_manager.getData(db_mongo_manager.get_filter(),
+                            (String) configuration.getConfiguration().get("scene"));
+                ob_handle_flush(req, resp, configuration, json, db_mongo_manager);
             }
         } catch (Exception e) {
             // Handle or log the exception
         }
     }
 
-    public void ob_handle_flush(HttpServletResponse resp, data_configuration configuration,
+    public void ob_handle_flush(HttpServletRequest req, HttpServletResponse resp, data_configuration configuration,
                                 Object json, Object db_manager) {
         try {
-            if (configuration.getConfiguration().get("accept").equals("text/event-stream")) {
+            if (req.getHeader("accept").equals("text/event-stream")) {
                 if (db_manager instanceof json_files_manager) {
                     json_files_watcher json_files_watcher =
                             new json_files_watcher((json_files_manager) db_manager,
