@@ -5,23 +5,25 @@ data_sources:
   permission: ""
   converter2events_class: "build_in"
   data_path: "/data/"
-  data_model: "/data/yyyy/mm/dd"
+  data_model: "/data/SOURCES1/yyyy/mm/dd"
   filter:
     include: ""
     exclude: ""
   connector: "secure_sse:8441|secure:8442"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "SOURCE2"
   type: "json_file"
   enable: false
   permission: ""
   converter2events_class: "build_in"
-  data_path: "/test/"
-  data_model: "/test/yyyy/mm/dd"
+  data_path: "/data/"
+  data_model: "/data/SOURCES2/yyyy/mm/dd"
   filter:
     include: ""
     exclude: ""
   connector: "secure_sse:8441|secure:8442"
   render:
     color: "#10b300"
+    alternateColor": "#9ac1db"

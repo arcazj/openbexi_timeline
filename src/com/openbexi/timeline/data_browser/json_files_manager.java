@@ -80,22 +80,18 @@ public class json_files_manager extends data_manager {
      */
     public Object getData(String filter, String ob_scene) {
         Date t1 = new Date();
-        if (_currentPathModel == null || _currentStartDate == null)
-            return getDummyJson("no data_manager found");
-
         JSONParser parser = new JSONParser();
         Object events;
-        JSONObject jsonObject = new JSONObject();
-
+        JSONObject jsonObject;
 
         // Look for all files in the pathModel directory according startDate and endDate.
         try {
-            this.getFiles(_currentStartDate, _currentEndDate, new File(_currentPathModel));
+            this.getFiles(_currentStartDate, _currentEndDate);
         } catch (Exception e) {
             return getDummyJson("no data_manager found - " + e.getMessage());
         }
 
-        if (files == null)
+        if (_files == null)
             return getDummyJson("no data_manager found");
 
         String jsonObjectMerged_begin = "{\n" +
@@ -104,7 +100,7 @@ public class json_files_manager extends data_manager {
                 "  \"events\": \n";
         int count = 0;
         JSONArray all_obj = new JSONArray();
-        for (Map.Entry<File, String> entry : files.entrySet()) {
+        for (Map.Entry<File, String> entry : _files.entrySet()) {
             try {
                 File file = new File(entry.getKey().toString());
                 if (file.exists()) {
@@ -214,50 +210,58 @@ public class json_files_manager extends data_manager {
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        String currentPathModel;
+
         long startDateS = new Date(_currentStartDate).getTime();
         long startDateE = new Date(_currentEndDate).getTime();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
         // Loop on
-        if (_currentPathModel.contains("dd"))
-            step = 86400000;
-        else
-            step = 2629746000.0;
-        if (_currentPathModel.contains("yyyy") && !_currentPathModel.contains("mm") && !_currentPathModel.contains("dd"))
-            step = 31556952000.0;
-        for (double d = startDateS; d <= startDateE; d = d + step) {
-            String formatedDateS = dateFormat.format(d);
-            yyyy = formatedDateS.substring(6, 10);
-            MM = formatedDateS.substring(3, 5);
-            dd = formatedDateS.substring(0, 2);
+        JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
+        for (int d = 0; d < configurations.size(); d++) {
+            currentPathModel = (String) _data_configuration.getConfiguration(d).get("data_model");
 
-            String buildFile = _currentPathModel;
-            buildFile = buildFile.replace("/yyyy", "/" + yyyy);
-            buildFile = buildFile.replace("/mm", "/" + MM);
-            buildFile = buildFile.replace("/dd", "/" + dd);
+            if (currentPathModel.contains("dd"))
+                step = 86400000;
+            else
+                step = 2629746000.0;
+            if (currentPathModel.contains("yyyy") && !currentPathModel.contains("mm") && !currentPathModel.contains("dd"))
+                step = 31556952000.0;
+            for (double t = startDateS; t <= startDateE; t = t + step) {
+                String formatedDateS = dateFormat.format(t);
+                yyyy = formatedDateS.substring(6, 10);
+                MM = formatedDateS.substring(3, 5);
+                dd = formatedDateS.substring(0, 2);
 
-            File[] file_list = new File(buildFile).listFiles();
+                String buildFile = currentPathModel;
+                buildFile = buildFile.replace("/yyyy", "/" + yyyy);
+                buildFile = buildFile.replace("/mm", "/" + MM);
+                buildFile = buildFile.replace("/dd", "/" + dd);
 
-            if (file_list != null) {
-                for (File file : file_list) {
-                    if (file.exists() && file.isFile() && file.getName().contains(".json")) {
-                        checksum += this.MD5Hash(file.getCanonicalPath());
-                    } else {
-                        if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
-                            this.getFiles(_currentStartDate, _currentEndDate, file);
+                File[] file_list = new File(buildFile).listFiles();
+
+                if (file_list != null) {
+                    for (File file : file_list) {
+                        if (file.exists() && file.isFile() && file.getName().contains(".json")) {
+                            checksum += this.MD5Hash(file.getCanonicalPath());
+                        } else {
+                            if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                                this.getFiles(_currentStartDate, _currentEndDate);
+                            }
                         }
                     }
                 }
             }
-        }
-        if (!checksum.equals(_checksum)) {
-            _checksum = checksum;
-            return true;
+
+            if (!checksum.equals(_checksum)) {
+                _checksum = checksum;
+                return true;
+            }
         }
         return false;
     }
 
-    private void getFiles(String startDate, String endDate, File dir) {
+    private void getFiles(String startDate, String endDate) {
 
         // Build file list according date range
         String yyyy;
@@ -266,46 +270,53 @@ public class json_files_manager extends data_manager {
         double step = 0;
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        if (_currentPathModel.contains("dd"))
-            step = 86400000;
-        else
-            step = 2629746000.0;
-        if (_currentPathModel.contains("yyyy") && !_currentPathModel.contains("mm") && !_currentPathModel.contains("dd"))
-            step = 31556952000.0;
+        String currentPathModel;
 
-        long startDateS = (long) (new Date(startDate).getTime() - step);
-        long startDateE = (long) (new Date(endDate).getTime() + step);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
+        for (int d = 0; d < configurations.size(); d++) {
+            currentPathModel = (String) _data_configuration.getConfiguration(d).get("data_model");
 
-        for (double d = startDateS; d <= startDateE; d = d + step) {
-            String formatedDateS = dateFormat.format(d);
-            yyyy = formatedDateS.substring(6, 10);
-            MM = formatedDateS.substring(3, 5);
-            dd = formatedDateS.substring(0, 2);
+            if (currentPathModel.contains("dd"))
+                step = 86400000;
+            else
+                step = 2629746000.0;
+            if (currentPathModel.contains("yyyy") && !currentPathModel.contains("mm") && !currentPathModel.contains("dd"))
+                step = 31556952000.0;
 
-            String buildFile = _currentPathModel;
-            buildFile = buildFile.replace("/yyyy", "/" + yyyy);
-            buildFile = buildFile.replace("/mm", "/" + MM);
-            buildFile = buildFile.replace("/dd", "/" + dd);
+            long startDateS = (long) (new Date(startDate).getTime() - step);
+            long startDateE = (long) (new Date(endDate).getTime() + step);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-            FilenameFilter filter = new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    boolean result;
-                    result = !name.startsWith("descriptors");
-                    return result;
-                }
-            };
-            File[] file_list = new File(buildFile).listFiles(filter);
+            for (double t = startDateS; t <= startDateE; t = t + step) {
+                String formatedDateS = dateFormat.format(t);
+                yyyy = formatedDateS.substring(6, 10);
+                MM = formatedDateS.substring(3, 5);
+                dd = formatedDateS.substring(0, 2);
 
-            if (file_list != null) {
-                for (File file : file_list) {
-                    if (file.exists() && file.isFile() && file.getName().contains(".json")) {
-                        files.put(file, MD5Hash(file.toString()));
-                        //log(file_list[f], "info");
-                    } else {
-                        if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
-                            this.getFiles(startDate, endDate, file);
+                String buildFile = currentPathModel;
+                buildFile = buildFile.replace("/yyyy", "/" + yyyy);
+                buildFile = buildFile.replace("/mm", "/" + MM);
+                buildFile = buildFile.replace("/dd", "/" + dd);
+
+                FilenameFilter filter = new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        boolean result;
+                        result = !name.startsWith("descriptors");
+                        return result;
+                    }
+                };
+                File[] file_list = new File(buildFile).listFiles(filter);
+
+                if (file_list != null) {
+                    for (File file : file_list) {
+                        if (file.exists() && file.isFile() && file.getName().contains(".json")) {
+                            _files.put(file, MD5Hash(file.toString()));
+                            //log(file_list[f], "info");
+                        } else {
+                            if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                                this.getFiles(startDate, endDate);
+                            }
                         }
                     }
                 }
@@ -379,19 +390,6 @@ public class json_files_manager extends data_manager {
                         new_events.add(event);
                 }
             }
-            /*for (int i = new_events.size() - 1; i >= 0; i--) {
-                matcher = pattern.matcher(new_events.get(i).toString().replaceAll(" ", "").replaceAll("\"", ""));
-                if (matcher.find()) {
-                    JSONObject obj1 = (JSONObject) new_events.get(i);
-                    JSONObject obj2 = (JSONObject) obj1.get("render");
-                    obj2.put("previous_date", previous_date);
-                    previous_date = obj1.get("start").toString();
-                    new_events2.add(new_events.get(i));
-                    //System.out.println(search+":"+((JSONObject) new_events.get(i)).get("start")+"  ---previous_date = "+
-                    //(obj2.get("previous_date")+"  ---next_date = "+next_date));
-                } else
-                    new_events2.add(new_events.get(i));
-            }*/
         }
 
         if (new_events2.size() == 0)
@@ -426,45 +424,52 @@ public class json_files_manager extends data_manager {
         String yyyy = new SimpleDateFormat("yyyy").format(date);
         String MM = new SimpleDateFormat("MM").format(date);
         String dd = new SimpleDateFormat("dd").format(date);
+        String currentPathModel;
 
-        String buildFile = _currentPathModel;
-        buildFile = buildFile.replace("/yyyy", "/" + yyyy);
-        buildFile = buildFile.replace("/mm", "/" + MM);
-        buildFile = buildFile.replace("/dd", "/" + dd);
+        JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
+        for (int d = 0; d < configurations.size(); d++) {
+            currentPathModel = (String) _data_configuration.getConfiguration(d).get("data_model");
 
-        String id = UUID.randomUUID().toString();
+            String buildFile = currentPathModel;
+            buildFile = buildFile.replace("/yyyy", "/" + yyyy);
+            buildFile = buildFile.replace("/mm", "/" + MM);
+            buildFile = buildFile.replace("/dd", "/" + dd);
 
-        File outputs = new File(buildFile + "/" + id + ".json");
+            String id = UUID.randomUUID().toString();
 
-        String icon = lookForIcon(((String) events.get(4)).replaceAll("icon:", ""));
-        String color = "#050100";
-        String line_start = "{\n" +
-                "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"scene\": \"" + ob_scene + "\",\n" +
-                "  \"events\": [\n";
+            File outputs = new File(buildFile + "/" + id + ".json");
 
-        if (!outputs.getParentFile().exists())
-            outputs.getParentFile().mkdirs();
+            String icon = lookForIcon(((String) events.get(4)).replaceAll("icon:", ""));
+            String color = "#050100";
+            String line_start = "{\n" +
+                    "  \"dateTimeFormat\": \"iso8601\",\n" +
+                    "  \"scene\": \"" + ob_scene + "\",\n" +
+                    "  \"events\": [\n";
 
-        try (FileWriter file = new FileWriter(outputs)) {
-            file.write(line_start);
-            file.write("  {\"id\":\"" + id + "\",");
-            file.write("  \"start\":\"" + ((String) events.get(1)).replaceAll("startEvent:", "") + "\",");
-            file.write("  \"end\":\"" + ((String) events.get(2)).replaceAll("endEvent:", "") + "\",");
-            file.write("\"data\":{");
-            file.write("\"title\":\"" + ((String) events.get(0)).replaceAll("title:", "") + "\",");
-            file.write("\"description\":\"" + ((String) events.get(3)).replaceAll("description:", "") + "\",");
-            file.write("},");
-            file.write("\"render\":{");
-            file.write("\"color\":\"" + color + "\",");
-            if (!icon.equals("") && !icon.contains("#"))
-                file.write("\"image\":\"" + icon + "\",");
-            file.write("}");
-            file.write("},");
+            if (!outputs.getParentFile().exists())
+                outputs.getParentFile().mkdirs();
 
-            file.write("]}");
-        } catch (IOException e) {
-            log(e, "Exception");
+            try (FileWriter file = new FileWriter(outputs)) {
+                file.write(line_start);
+                file.write("  {\"id\":\"" + id + "\",");
+                file.write("  \"start\":\"" + ((String) events.get(1)).replaceAll("startEvent:", "") + "\",");
+                file.write("  \"end\":\"" + ((String) events.get(2)).replaceAll("endEvent:", "") + "\",");
+                file.write("\"data\":{");
+                file.write("\"namespace\":\"" + ((String) events.get(0)).replaceAll("namespace:", "") + "\",");
+                file.write("\"title\":\"" + ((String) events.get(0)).replaceAll("title:", "") + "\",");
+                file.write("\"description\":\"" + ((String) events.get(3)).replaceAll("description:", "") + "\",");
+                file.write("},");
+                file.write("\"render\":{");
+                file.write("\"color\":\"" + color + "\",");
+                if (!icon.equals("") && !icon.contains("#"))
+                    file.write("\"image\":\"" + icon + "\",");
+                file.write("}");
+                file.write("},");
+
+                file.write("]}");
+            } catch (IOException e) {
+                log(e, "Exception");
+            }
         }
         return true;
     }

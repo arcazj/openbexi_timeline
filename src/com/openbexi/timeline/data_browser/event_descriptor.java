@@ -17,6 +17,7 @@ public class event_descriptor {
     private final String _start;
     private final String _original_end;
     private final String _end;
+    private final String _namespace;
     private final String _title;
     private final String _status;
     private final String _priority;
@@ -27,13 +28,14 @@ public class event_descriptor {
     private Object _data;
 
     public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
-                            String title, String type, String status, String priority, String tolerance,
+                            String namespace,String title, String type, String status, String priority, String tolerance,
                             String platform, JSONObject data_configuration) {
         _event_id = String.valueOf(event_id);
         _original_start = original_start;
         _start = start;
         _original_end = original_end;
         _end = end;
+        _namespace = namespace;
         _title = title;
         _status = status;
         _priority = priority;
@@ -62,7 +64,7 @@ public class event_descriptor {
         String dayS = day.format(new Date(_start));
 
         String buildFile = (String) _data_configuration_node.get("data_model");
-        buildFile=buildFile.replace(".json", "");
+        buildFile = buildFile.replace(".json", "");
         buildFile = buildFile.replace("/yyyy", "/" + yearS);
         buildFile = buildFile.replace("/mm", "/" + monthS);
         buildFile = buildFile.replace("/dd", "/" + dayS);
@@ -103,6 +105,7 @@ public class event_descriptor {
             if (!_original_end.equals(""))
                 jsonObjectMerged += "\"original_end\":\"" + _original_end + "\",";
             jsonObjectMerged += "\"data\":{";
+            jsonObjectMerged += "\"namespace\":\"" + _namespace + "\",";
             jsonObjectMerged += "\"title\":\"" + _title + "\",";
             if (!_platform.equals(""))
                 jsonObjectMerged += "\"type\":\"" + _platform + "\",";

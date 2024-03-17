@@ -12,6 +12,7 @@ data_sources:
   connector: "secure_sse:8441|secure:8442"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "TEST_SOURCE1"
   type: "json_file"
   enable: false
@@ -25,6 +26,7 @@ data_sources:
   connector: "secure_sse:8441|secure:8442"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_mongoDb>"
   type: "mongoDb"
   enable: false
@@ -39,6 +41,7 @@ data_sources:
   collection: "<collection_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_kafka>"
   type: "kafka"
   enable: false
@@ -63,6 +66,7 @@ data_sources:
   version: "<kafka_version>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
   retention:
     ms: "<retention_time_in_ms>"
   consumer:
@@ -83,6 +87,7 @@ data_sources:
   topicName: "<mqtt_topic_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_elasticsearch>"
   type: "elasticsearch"
   enable: false
@@ -96,6 +101,7 @@ data_sources:
   index: "<index_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
   document_type: "<document_type_if_needed>"
 - namespace: "<namespace_for_postgresql>"
   type: "postgresql"
@@ -115,6 +121,7 @@ data_sources:
   connector: "secure_sse:8443|secure:8445"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_hdfs>"
   type: "hdfs"
   enable: false
@@ -126,6 +133,7 @@ data_sources:
   directory: "<directory_path>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_rest_api>"
   type: "rest_api"
   enable: false
@@ -139,6 +147,7 @@ data_sources:
   connector: "secure_sse:8443|secure:8445"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_apache_pulsar>"
   type: "apache_pulsar"
   enable: false
@@ -150,6 +159,7 @@ data_sources:
   topicName: "<topic_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_snowflake>"
   type: "snowflake"
   enable: false
@@ -164,6 +174,7 @@ data_sources:
   connector: "secure_sse:8443|secure:8445"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_aws_iot_core>"
   type: "aws_iot_core"
   enable: false
@@ -175,6 +186,7 @@ data_sources:
   thingName: "<thing_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_azure_event_hubs>"
   type: "azure_event_hubs"
   enable: false
@@ -186,6 +198,7 @@ data_sources:
   eventHubName: "<event_hub_name>"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
   namespaceName: "<namespace_name>"
 - namespace: "<namespace_for_neo4j>"
   type: "neo4j"
@@ -199,6 +212,7 @@ data_sources:
   connector: "secure_sse:8443|secure:8445"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
 - namespace: "<namespace_for_solr>"
   type: "solr"
   enable: false
@@ -210,3 +224,4 @@ data_sources:
   connector: "secure_sse:8443|secure:8445"
   render:
     color: "#00b300"
+    alternateColor": "#6ac1db"
