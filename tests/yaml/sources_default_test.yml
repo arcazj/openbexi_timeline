@@ -1,0 +1,29 @@
+data_sources:
+  - namespace: "SOURCE1"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/data/"
+    data_model: "/data/SOURCES1/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#fca556"
+      alternateColor": "#fcc390"
+  - namespace: "SOURCE2"
+    type: "json_file"
+    enable: false
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/data/"
+    data_model: "/data/SOURCES2/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#fc4e54"
+      alternateColor": "#ff8084"

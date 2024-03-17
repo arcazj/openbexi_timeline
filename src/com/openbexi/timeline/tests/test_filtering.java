@@ -58,7 +58,7 @@ public class test_filtering {
         _data_configuration.getConfiguration().put("request", "");
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
-        JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        JSONObject jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -79,7 +79,7 @@ public class test_filtering {
         _data_configuration.getConfiguration().put("request", "");
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
-        JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        JSONObject jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -100,7 +100,7 @@ public class test_filtering {
         _data_configuration.getConfiguration().put("request", "");
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
-        JSONObject jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        JSONObject jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -122,7 +122,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -144,7 +144,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -166,7 +166,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -189,7 +189,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -211,7 +211,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -233,7 +233,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -256,7 +256,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -278,7 +278,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -300,7 +300,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -322,7 +322,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -344,7 +344,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -366,7 +366,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -388,7 +388,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 
@@ -410,7 +410,7 @@ public class test_filtering {
         json_files_manager data = new json_files_manager(null, null, _data_configuration);
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject = (JSONObject) read_events(new File("tests/events.json"));
+        jsonObject = (JSONObject) read_events(new File("tests/data/events.json"));
         JSONArray events = (JSONArray) jsonObject.get("events");
         events = data.filterEvents(events, data.get_include(), data.get_exclude());
 

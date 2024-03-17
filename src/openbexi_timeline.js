@@ -419,6 +419,7 @@ function OB_TIMELINE() {
             "?ob_request=" + "addEvent" +
             "&scene=" + ob_scene_index +
             "&title=" + title +
+            "&namespace=" + namespace +
             "&startEvent=" + startEventUTC +
             "&endEvent=" + endEventUTC +
             "&description=" + description +
@@ -578,6 +579,7 @@ function OB_TIMELINE() {
             "&scene=" + ob_scene_index +
             "&timelineName=" + this.name +
             "&title=" + this.title +
+            "&namespace=" + this.namespace +
             "&backgroundColor=" + backgroundColor +
             "&userName=" + this.ob_user_name +
             "&email=" + this.ob_email_name +

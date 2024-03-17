@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 abstract class data_manager {
     final static Charset ENCODING = StandardCharsets.UTF_8;
-    public final LinkedHashMap<File, String> files = new LinkedHashMap<>();
+    public final LinkedHashMap<File, String> _files = new LinkedHashMap<>();
     public final String _include;
     public final String _exclude;
     public final String _search;
@@ -38,9 +38,7 @@ abstract class data_manager {
     public String _currentEndDate;
     public long _currentStartDateL;
     public long _currentEndDateL;
-    public String _dataPath;
     public String _action_type;
-    public String _currentPathModel;
     public data_configuration _data_configuration;
     public String _checksum = "*";
     private String _dateE;
@@ -57,8 +55,6 @@ abstract class data_manager {
             _currentStartDate = startDate.replaceAll("'", "");
             _currentEndDate = endDate.replaceAll("'", "");
         }
-        _dataPath = configuration.getDataPath(0).replaceAll("\\\\", "/");
-        _currentPathModel = configuration.getDataModel(0).replaceAll("\\\\", "/");
 
         String filter = (String) _data_configuration.getConfiguration().get("filter");
         if (filter != null) {
@@ -85,38 +81,10 @@ abstract class data_manager {
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat year = new SimpleDateFormat("yyyy");
-        SimpleDateFormat month = new SimpleDateFormat("MM");
-        SimpleDateFormat day = new SimpleDateFormat("dd");
-        SimpleDateFormat hour = new SimpleDateFormat("hh");
 
         try {
             _currentStartDateL = new Date(_currentStartDate).getTime();
-            String yearS = year.format(new Date(_currentStartDate));
-            String monthS = month.format(new Date(_currentStartDate));
-            String dayS = day.format(new Date(_currentStartDate));
-            String hourS = hour.format(new Date(_currentStartDate));
-
             _currentEndDateL = new Date(_currentEndDate).getTime();
-            String yearE = year.format(new Date(_currentEndDate));
-            String monthE = month.format(new Date(_currentEndDate));
-            String dayE = day.format(new Date(_currentEndDate));
-            String hourE = hour.format(new Date(_currentEndDate));
-
-            String buildFile = _currentPathModel.replace(".json", "");
-            buildFile = buildFile.replace("/yyyy", "/" + yearS);
-            buildFile = buildFile.replace("/mm", "/" + monthS);
-            buildFile = buildFile.replace("/dd", "/" + dayS);
-            String dateS = null;
-            String fileParentPathS = new File(buildFile + "_" + dateS + ".json").getParent();
-
-            buildFile = buildFile.replace("/yyyy", "/" + yearE);
-            buildFile = buildFile.replace("/mm", "/" + monthE);
-            buildFile = buildFile.replace("/dd", "/" + dayE);
-            String fileParentPathE = new File(buildFile + "_" + _dateE + ".json").getParent();
-
-            //if (resp != null) start_watching();
-
         } catch (Exception e) {
             log(e.getMessage(), "err");
         }
@@ -242,7 +210,7 @@ abstract class data_manager {
                     "  \"sortBy\": \"" + ob_sort_by + "\",");
 
             jsonObjectMerged.append("  \"sources\":");
-            jsonObjectMerged.append( _data_configuration.getConfiguration().get("startup configuration"));
+            jsonObjectMerged.append(_data_configuration.getConfiguration().get("startup configuration"));
             jsonObjectMerged.append("  ,");
 
             jsonObjectMerged.append("  \"filters\":[");
@@ -357,15 +325,17 @@ abstract class data_manager {
 
     public boolean removeAllFilter(String ob_timeline_name, String ob_user) {
 
-        String buildFile = _currentPathModel;
-        buildFile = buildFile.replace("/yyyy", "");
-        buildFile = buildFile.replace("/mm", "");
-        buildFile = buildFile.replace("/dd", "");
+        for (int d = 0; d <= _data_configuration.getConfiguration().size(); d++) {
+            String buildFile = (String) _data_configuration.getConfiguration(d).get("data_model");
+            buildFile = buildFile.replace("/yyyy", "");
+            buildFile = buildFile.replace("/mm", "");
+            buildFile = buildFile.replace("/dd", "");
 
-        File outputs = new File(buildFile + "/" + ob_user + "_filter_setting.json");
-        if (outputs.getParentFile().exists()) {
-            outputs.delete();
-            return true;
+            File outputs = new File(buildFile + "/" + ob_user + "_filter_setting.json");
+            if (outputs.getParentFile().exists()) {
+                outputs.delete();
+                return true;
+            }
         }
         return false;
     }

@@ -4,7 +4,6 @@ import com.openbexi.timeline.data_browser.data_configuration;
 import com.openbexi.timeline.data_browser.event_descriptor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -13,6 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 public class event_generator {
+    private final String _namespace;
     private final Date _date;
     private JSONObject _data_configuration_node;
 
@@ -20,7 +20,8 @@ public class event_generator {
         return _date;
     }
 
-    event_generator(Date date, JSONObject data_configuration_node) {
+    event_generator(String namespace, Date date, JSONObject data_configuration_node) {
+        _namespace = namespace;
         _data_configuration_node = data_configuration_node;
         _date = date;
     }
@@ -124,6 +125,7 @@ public class event_generator {
                     description = "description_" + title;
 
                     file.write("  {\"id\":\"" + UUID.randomUUID() + "\",");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     if (!start.equals(original_start))
                         file.write("  \"original_start\":\"" + original_start + "\",");
                     file.write("  \"start\":\"" + start + "\",");
@@ -152,6 +154,7 @@ public class event_generator {
                         int aa = getRandomNumberUsingNextInt(1, 5);
                         file.write("\"activities\":[");
                         for (int a = 0; a < aa; a++) {
+                            file.write("  \"namespace\":\"" + _namespace + "\",");
                             file.write("  {\"id\":\"" + UUID.randomUUID() + "\",");
                             if (!start.equals(original_start))
                                 file.write("  \"original_start\":\"" + original_start + "\",");
@@ -166,6 +169,7 @@ public class event_generator {
                                 end_a = end;
                             file.write("  \"end\":\"" + end_a + "\",");
                             file.write("\"data\":{");
+                            file.write("\"namespace\":\"" + _namespace + a + "\",");
                             file.write("\"title\":\"" + "activity_" + a + "\",");
                             file.write("\"status\":\"" + status + "\",");
                             file.write("\"priority\":\"" + priority + "\",");
@@ -231,7 +235,7 @@ public class event_generator {
 
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
-            for (int j = 0; j < 350; j++) {
+            for (int j = 0; j < 50; j++) {
                 color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                         + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
                         getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
@@ -360,6 +364,7 @@ public class event_generator {
                     description = "description_" + j + " " + title;
                     UUID id = UUID.randomUUID();
                     file.write("  {\"id\":\"" + id + "\",");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     file.write("  \"original_start\":\"" + original_start + "\",");
                     file.write("  \"start\":\"" + start + "\",");
                     file.write("  \"original_end\":\"" + original_end + "\",");
@@ -384,6 +389,7 @@ public class event_generator {
                                 start,
                                 original_end,
                                 end,
+                                _namespace,
                                 title,
                                 type,
                                 status,
@@ -412,11 +418,13 @@ public class event_generator {
                         for (int a = 0; a < nb_act; a++) {
                             id = UUID.randomUUID();
                             file.write("  {\"id\":\"" + id + "\",");
+                            file.write("  \"namespace\":\"" + _namespace + "\",");
                             file.write("  \"original_start\":\"" + original_start + "\",");
                             file.write("  \"start\":\"" + start + "\",");
                             file.write("  \"original_end\":\"" + original_end + "\",");
                             file.write("  \"end\":\"" + end + "\",");
                             file.write("\"data\":{");
+                            file.write("  \"namespace\":\"" + _namespace + "\",");
                             if (end.equals(""))
                                 title = "Events_" + j + "_" + a;
                             else
@@ -446,6 +454,7 @@ public class event_generator {
                                         start,
                                         original_end,
                                         end,
+                                        _namespace,
                                         title,
                                         type,
                                         status,
@@ -487,13 +496,14 @@ public class event_generator {
         data_configuration data_configuration;
         List<String> models;
         try {
-            data_configuration = new data_configuration("yaml/sources_startup.yml");
-            models = data_configuration.getDataModels();
+            data_configuration = new data_configuration("tests/yaml/sources_default_test.yml");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        for (int d = 0; d <= data_configuration.getConfiguration().size(); d++) {
+        JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
+        for (int d = 0; d < configurations.size(); d++) {
+            String namespace = (String) data_configuration.getConfiguration(d).get("namespace");
             JSONObject configNode = (JSONObject) ((JSONArray) data_configuration.getConfiguration().get("startup configuration")).get(d);
             for (int i = 0; i < 1; i++) {
                 TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -509,9 +519,9 @@ public class event_generator {
                     String month = new SimpleDateFormat("MM").format(date);
                     String day = new SimpleDateFormat("dd").format(date);
                     String data_model = (String) configNode.get("data_model");
-                    data_model = data_model.replace("yyyy",year).replace("mm",month).replace("dd",day);
-                    File file = new File(data_model+ "/events.json");
-                    event_generator events = new event_generator(date, configNode);
+                    data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
+                    File file = new File(data_model + "/events.json");
+                    event_generator events = new event_generator(namespace, date, configNode);
                     events.generate_simple(file);
                     dateL = dateL + 3600 * 24 * 1000;
                 }

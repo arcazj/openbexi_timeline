@@ -1,6 +1,5 @@
 package com.openbexi.timeline.server;
 
-import com.openbexi.timeline.data_browser.data_configuration;
 import com.openbexi.timeline.data_browser.data_sources;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
@@ -50,7 +49,6 @@ public class openbexi_timeline implements Runnable {
      *             unused.
      */
     public static void main(String[] args) {
-        String connector = "";
         String[] connectors = new String[0];
         String data_conf = "";
 

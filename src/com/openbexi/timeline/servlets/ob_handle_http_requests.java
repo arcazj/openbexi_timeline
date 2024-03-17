@@ -48,7 +48,9 @@ public class ob_handle_http_requests {
         logger.info("POST readDescriptor - id=" + event_id);
 
         try {
-            event_descriptor descriptor = new event_descriptor(event_id, null, start, null, null, null, null, null, null, null, null, configuration.getConfiguration(0));
+            event_descriptor descriptor = new event_descriptor(event_id, null, start, null,
+                    null, null, null, null, null, null,
+                    null, null, configuration.getConfiguration(0));
             Object json = descriptor.read(event_id);
             PrintWriter respWriter = resp.getWriter();
 

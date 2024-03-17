@@ -236,9 +236,9 @@ public class data_configuration {
 
     public static void main(String[] args) {
         // create a new instance of DataConfig
-        data_configuration configuration = null;
+        data_configuration configuration;
         try {
-            configuration = new data_configuration("yaml\\sources_default_test.yml");
+            configuration = new data_configuration("yaml/sources_default_test.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseException e) {
