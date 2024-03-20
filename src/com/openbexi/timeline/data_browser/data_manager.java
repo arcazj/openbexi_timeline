@@ -143,10 +143,10 @@ abstract class data_manager {
         return filter_array;
     }
 
-    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
-                               String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
-                               String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
-                               String ob_sort_by, String ob_filter) {
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_namespace,
+                               String ob_title, String ob_filter_name, String ob_backgroundColor, String ob_user,
+                               String ob_email, String ob_top, String ob_left, String ob_width, String ob_height,
+                               String ob_camera, String ob_sort_by, String ob_filter) {
         JSONParser parser = new JSONParser();
         Object filters;
         StringBuilder jsonObjectMerged = null;
@@ -195,6 +195,7 @@ abstract class data_manager {
             jsonObjectMerged = new StringBuilder("{\n" +
                     "  \"dateTimeFormat\": \"iso8601\",\n" +
                     "  \"scene\": \"" + ob_scene + "\",\n" +
+                    "  \"namespace\": \"" + ob_namespace + "\",\n" +
                     "  \"openbexi_timeline\": [{\n" +
                     "  \"name\": \"" + ob_timeline_name + "\"," +
                     "  \"title1\": \"" + ob_title + "\"," +
@@ -284,8 +285,8 @@ abstract class data_manager {
         }
 
         if (no_filter_found && !ob_action.equals("deleteFilter")) {
-            return addFilter(ob_timeline_name, ob_title, ob_scene, ob_filter_name, ob_backgroundColor, ob_user,
-                    ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
+            return addFilter(ob_timeline_name, ob_title, ob_scene, ob_namespace, ob_filter_name, ob_backgroundColor,
+                    ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
         }
 
         try (FileWriter file = new FileWriter(outputs)) {
@@ -308,16 +309,18 @@ abstract class data_manager {
         }
     }
 
-    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_filter_name,
-                            String ob_backgroundColor, String ob_user, String ob_email, String ob_top, String ob_left,
-                            String ob_width, String ob_height, String ob_camera, String ob_sort_by, String ob_filter) {
-        return updateFilter("addFilter", ob_timeline_name, ob_scene, ob_title, ob_filter_name,
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene,String ob_namespace,
+                            String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
+                            String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
+                            String ob_sort_by, String ob_filter) {
+        return updateFilter("addFilter", ob_timeline_name, ob_scene,ob_namespace, ob_title, ob_filter_name,
                 ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by,
                 ob_filter);
     }
 
-    public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_scene, String ob_user) {
-        updateFilter("remove", ob_timeline_name, ob_scene, null, ob_filter_name, null,
+    public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_scene, String ob_namespace,
+                               String ob_user) {
+        updateFilter("remove", ob_timeline_name, ob_scene,ob_namespace, null, ob_filter_name, null,
                 null, null, null, null, null, null, null,
                 null, null);
         return false;
@@ -326,7 +329,7 @@ abstract class data_manager {
     public boolean removeAllFilter(String ob_timeline_name, String ob_user) {
 
         for (int d = 0; d <= _data_configuration.getConfiguration().size(); d++) {
-            String buildFile = (String) _data_configuration.getConfiguration(d).get("data_model");
+            String buildFile = (String) _data_configuration.getConfiguration(d).get("data_path");
             buildFile = buildFile.replace("/yyyy", "");
             buildFile = buildFile.replace("/mm", "");
             buildFile = buildFile.replace("/dd", "");

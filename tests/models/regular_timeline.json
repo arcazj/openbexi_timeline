@@ -3,11 +3,11 @@
     {
       "name": "ob_timeline_2",
       "title": "Timeline report",
-      "date": "current_time",
+      "date": "Mon Mar 18 2024 20:00:00 UTC",
       "timeZone": "UTC",
       "top": 0,
       "left": 0,
-      "height": 800,
+      "height": 1000,
       "fontSize": 12,
       "width": 1350,
       "data_default_port": 8442,
