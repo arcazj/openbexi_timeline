@@ -28,8 +28,8 @@ public class event_descriptor {
     private Object _data;
 
     public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
-                            String namespace,String title, String type, String status, String priority, String tolerance,
-                            String platform, JSONObject data_configuration) {
+                            String namespace, String title, String type, String status, String priority, String tolerance,
+                            String platform, data_configuration data_configuration) {
         _event_id = String.valueOf(event_id);
         _original_start = original_start;
         _start = start;
@@ -42,8 +42,12 @@ public class event_descriptor {
         _tolerance = tolerance;
         _type = type;
         _platform = platform;
-        if (data_configuration != null)
-            _data_configuration_node = data_configuration;
+        JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
+        _data_configuration_node = (JSONObject) data_configuration.getConfiguration(0);
+        for (int d = 1; d < configurations.size(); d++) {
+            if (data_configuration.getConfiguration(d).get("namespace").equals(namespace))
+                _data_configuration_node = (JSONObject) data_configuration.getConfiguration(d);
+        }
         _file = get_file();
     }
 
@@ -108,7 +112,7 @@ public class event_descriptor {
             jsonObjectMerged += "\"namespace\":\"" + _namespace + "\",";
             jsonObjectMerged += "\"title\":\"" + _title + "\",";
             if (!_platform.equals(""))
-                jsonObjectMerged += "\"type\":\"" + _platform + "\",";
+                jsonObjectMerged += "\"platform\":\"" + _platform + "\",";
             if (!_type.equals(""))
                 jsonObjectMerged += "\"type\":\"" + _type + "\",";
             if (!_priority.equals(""))
@@ -173,7 +177,7 @@ public class event_descriptor {
         ob_data += "{\"ID\": \"" + _event_id +
                 "\",\"start\": \"" + ob_start_time + "\"," +
                 "\"end\": \"" + "\"," +
-                "\"data\":{ \"title\":\"" + "message" + "\",\"description\":\"" + message + "\"}}";
+                "\"data\":{ \"namespace\":\"" + _namespace + "\",\"title\":\"" + "message" + "\",\"description\":\"" + message + "\"}}";
         ob_data_end = "]}\n\n";
         return ob_data_start + ob_data + ob_data_end;
     }

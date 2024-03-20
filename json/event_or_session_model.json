@@ -1,0 +1,26 @@
+{
+  "session": [
+    {
+      "id": "<session or evnet id>>",
+      "repeater": "NO||<repeater id>",
+      "start": "MMM DD HH:mm:ss YYYY",
+      "original_start": "MMM DD HH:mm:ss YYYY",
+      "end": "MMM DD HH:mm:ss YYYY",
+      "original_end": "MMM DD HH:mm:ss YYYY",
+      "data": {
+        "title": "<title name>",
+        "system": "<system name>",
+        "user": "username",
+        "type": "<type>",
+        "conflict_state": "Resource requirement satisfied||Resource conflict",
+        "priority": "1||..||90",
+        "duration": "1...172800",
+        "conflict_description": "conflict description text"
+      },
+      "render": {
+        "image": "<icon file>",
+        "color": "#f31733"
+      }
+    }
+  ]
+}

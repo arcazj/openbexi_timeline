@@ -14,15 +14,15 @@ import java.util.*;
 public class event_generator {
     private final String _namespace;
     private final Date _date;
-    private JSONObject _data_configuration_node;
+    private final data_configuration _data_configuration;
 
     public Date get_date() {
         return _date;
     }
 
-    event_generator(String namespace, Date date, JSONObject data_configuration_node) {
+    event_generator(String namespace, Date date, data_configuration data_configuration) {
         _namespace = namespace;
-        _data_configuration_node = data_configuration_node;
+        _data_configuration = data_configuration;
         _date = date;
     }
 
@@ -133,6 +133,7 @@ public class event_generator {
                         file.write("  \"original_end\":\"" + original_end + "\",");
                     file.write("  \"end\":\"" + end + "\",");
                     file.write("\"data\":{");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     file.write("\"title\":\"" + title + "\",");
                     file.write("\"status\":\"" + status + "\",");
                     file.write("\"type\":\"" + type + "\",");
@@ -169,7 +170,7 @@ public class event_generator {
                                 end_a = end;
                             file.write("  \"end\":\"" + end_a + "\",");
                             file.write("\"data\":{");
-                            file.write("\"namespace\":\"" + _namespace + a + "\",");
+                            file.write("  \"namespace\":\"" + _namespace + "\",");
                             file.write("\"title\":\"" + "activity_" + a + "\",");
                             file.write("\"status\":\"" + status + "\",");
                             file.write("\"priority\":\"" + priority + "\",");
@@ -370,6 +371,7 @@ public class event_generator {
                     file.write("  \"original_end\":\"" + original_end + "\",");
                     file.write("  \"end\":\"" + end + "\",");
                     file.write("\"data\":{");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     int des = getRandomNumberUsingNextInt(0, 2);
                     if (des == 0)
                         file.write("\"title\":\"" + title + "_read_descriptor" + "\",");
@@ -396,12 +398,11 @@ public class event_generator {
                                 priority,
                                 tolerance,
                                 platform,
-                                _data_configuration_node);
+                                _data_configuration);
                         event_descriptor.write(description + "_read_descriptor_in_file");
                         file.write("\"description\":\"" + "" + "\",");
                     } else
                         file.write("\"description\":\"" + description + "\",");
-                    file.write("\"description\":\"" + description + "\",");
                     file.write("},");
                     file.write("\"render\":{");
                     file.write("\"color\":\"" + color + "\",");
@@ -461,7 +462,7 @@ public class event_generator {
                                         priority,
                                         tolerance,
                                         platform,
-                                        _data_configuration_node);
+                                        _data_configuration);
                                 event_descriptor.write(description + "_read_descriptor_in_file");
                                 file.write("\"description\":\"" + "" + "\",");
                             } else
@@ -496,7 +497,7 @@ public class event_generator {
         data_configuration data_configuration;
         List<String> models;
         try {
-            data_configuration = new data_configuration("tests/yaml/sources_default_test.yml");
+            data_configuration = new data_configuration("yaml/sources_default_test.yml");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -504,7 +505,6 @@ public class event_generator {
         JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
         for (int d = 0; d < configurations.size(); d++) {
             String namespace = (String) data_configuration.getConfiguration(d).get("namespace");
-            JSONObject configNode = (JSONObject) ((JSONArray) data_configuration.getConfiguration().get("startup configuration")).get(d);
             for (int i = 0; i < 1; i++) {
                 TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
                 ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
@@ -518,15 +518,15 @@ public class event_generator {
                     String year = new SimpleDateFormat("yyyy").format(date);
                     String month = new SimpleDateFormat("MM").format(date);
                     String day = new SimpleDateFormat("dd").format(date);
-                    String data_model = (String) configNode.get("data_model");
+                    String data_model = (String) data_configuration.getConfiguration(d).get("data_model");
                     data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
                     File file = new File(data_model + "/events.json");
-                    event_generator events = new event_generator(namespace, date, configNode);
+                    event_generator events = new event_generator(namespace, date, data_configuration);
                     events.generate_simple(file);
                     dateL = dateL + 3600 * 24 * 1000;
                 }
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

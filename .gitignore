@@ -1013,3 +1013,5 @@
 /target/classes/tools.iml
 /target/maven-archiver/pom.properties
 /target/openbexi_timeline-1.0-SNAPSHOT.jar
+/yaml/ISAM_sources_startup.yml
+/yaml/ISAM_HTTP_sources_startup.yml
