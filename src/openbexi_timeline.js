@@ -235,7 +235,7 @@ function OB_TIMELINE() {
             if (this.backgroundColor === undefined)
                 this.backgroundColor = this.params[0].color;
         } catch (e) {
-                this.backgroundColor = "#ffffff";
+            this.backgroundColor = "#ffffff";
         }
         this.fontSize = this.params[0].fontSize;
         if (this.fontSize !== undefined && !isNaN(this.fontSize)) {
@@ -2134,65 +2134,63 @@ function OB_TIMELINE() {
         band,
         ob_attribute,
         ob_color,
-        ob_alternate_color,
         ob_text_color,
         ob_date_color,
         ob_layouts,
         max_name_length
     ) {
-        band.layouts = ob_layouts;
-        band.layouts.max_name_length = max_name_length;
+        const scene = this.ob_scene[ob_scene_index]; // Cache the scene for repeated access
+        const originalBandLength = scene.bands.original_length;
+        const bandsLength = scene.bands.length;
 
-        if (this.ob_scene[ob_scene_index].bands.original_length === this.ob_scene[ob_scene_index].bands.length) {
+        // Early exit if original length matches the current bands length
+        if (originalBandLength === bandsLength) {
             return;
         }
 
-        band.layout_name = band.layouts[0] || "NONE";
+        // Prepare the band with layouts and max name length
+        band.layouts = ob_layouts;
+        band.layouts.max_name_length = max_name_length;
+
+        // Assume default layout name if none provided
+        band.layout_name = ob_layouts[0] || "NONE";
+
         let set_alternate_color = true;
+        const ob_height = -scene.ob_height;
 
-        const originalBand = this.ob_scene[ob_scene_index].bands[0];
-        originalBand.maxY = 0;
-        originalBand.minY = 0;
-        originalBand.lastGreaterY = -this.ob_scene[ob_scene_index].ob_height;
+        // Iterate over layouts to apply changes
+        for (let i = 0; i < ob_layouts.length; i++) {
+            const layout = ob_layouts[i];
+            const layoutName = layout || "NONE"; // Safeguard against undefined layouts
 
-        if (ob_attribute === "namespace") {
-            for (let i = 0; i < band.layouts.length; i++) {
-                ob_color = this.get_source_property(ob_scene_index, band.layouts[i], "color", ob_color);
-                ob_text_color = this.get_source_property(ob_scene_index, band.layouts[i], "textColor", ob_text_color);
-                ob_date_color = this.get_source_property(ob_scene_index, band.layouts[i], "dateColor", ob_text_color);
-                //ob_alternate_color = this.get_source_property(ob_scene_index, band.layouts[i], "alternateColor", ob_alternate_color);
+            // Update colors based on current layout
+            ob_color = this.get_source_property(ob_scene_index, layout, "color", ob_color);
+            ob_text_color = this.get_source_property(ob_scene_index, layout, "textColor", ob_text_color);
+            ob_date_color = this.get_source_property(ob_scene_index, layout, "dateColor", ob_date_color);
 
-                this.ob_scene[ob_scene_index].bands[i] = {
-                    ...band,
-                    name: band.name + "_" + i,
-                    layout_name: band.layouts[i],
-                    color: ob_color,
-                    textBackgroundColor: ob_color,
-                    textColor: ob_text_color,
-                    dateColor: ob_date_color,
-                    maxY: 0,
-                    minY: 0,
-                    lastGreaterY: -this.ob_scene[ob_scene_index].ob_height,
-                };
-                set_alternate_color = !set_alternate_color;
-            }
-        } else {
-            for (let i = 1; i < band.layouts.length; i++) {
-                this.ob_scene[ob_scene_index].bands[i] = {
-                    ...band,
-                    name: band.name + "_" + i,
-                    layout_name: band.layouts[i],
-                    color: set_alternate_color ? ob_alternate_color : ob_color,
-                    textBackgroundColor: set_alternate_color ? ob_alternate_color : ob_color,
-                    maxY: 0,
-                    minY: 0,
-                    lastGreaterY: -this.ob_scene[ob_scene_index].ob_height,
-                };
+            // Decide whether to adjust color based on attribute and toggle state
+            const currentColor = ob_attribute === "namespace" ? ob_color : set_alternate_color ? this.hex_Luminance(ob_color, undefined) : ob_color;
 
-                set_alternate_color = !set_alternate_color;
+            // Clone and modify the band for the current layout
+            scene.bands[i] = {
+                ...band,
+                name: `${band.name}_${i}`,
+                layout_name: layoutName,
+                color: currentColor,
+                textBackgroundColor: currentColor,
+                textColor: ob_text_color,
+                dateColor: ob_date_color,
+                maxY: 0,
+                minY: 0,
+                lastGreaterY: ob_height,
+            };
+
+            if (ob_attribute !== "namespace") {
+                set_alternate_color = !set_alternate_color; // Toggle for next iteration
             }
         }
-        this.ob_scene[ob_scene_index].bands.original_length = this.ob_scene[ob_scene_index].bands.length;
+
+        scene.bands.original_length = bandsLength; // Update the original length to match current length
     };
 
     OB_TIMELINE.prototype.create_new_bands = function (ob_scene_index) {
@@ -2239,7 +2237,6 @@ function OB_TIMELINE() {
                 });
             }
 
-            const alternateColorStr = model.alternateColor?.toString() || "";
             const sortByStr = model.sortBy.toString();
 
             this.update_timeline_model(
@@ -2247,7 +2244,6 @@ function OB_TIMELINE() {
                 band,
                 sortByStr,
                 band.color,
-                alternateColorStr,
                 band.textColor,
                 band.dateColor,
                 [...ob_layouts],
@@ -2483,7 +2479,7 @@ function OB_TIMELINE() {
         width = isNaN(width) ? 0 : width;
         height = isNaN(height) ? 0 : height;
         depth = depth === undefined ? 1 : depth;
-        color = this.hex_Luminance(color, -0.15) || color;
+        color = this.hex_Luminance(color, undefined) || color;
 
         let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(width, height, depth));
         let ob_material;
@@ -2536,7 +2532,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_textBox = function (ob_scene_index, band_name, text, textColor, x, y, z, width, height,
-                                                  depth, color, texture, font_align) {
+                                                  depth, color, texture) {
         let ob_model_name = this.ob_scene[ob_scene_index].getObjectByName(band_name + "_" + text);
         if (ob_model_name !== undefined) return;
         if (isNaN(x)) x = 0;
@@ -2546,7 +2542,7 @@ function OB_TIMELINE() {
         if (isNaN(height)) height = 0;
         if (depth === undefined) depth = 1;
         if (color === undefined) {
-            color = this.hex_Luminance(color, -.15);
+            color = this.hex_Luminance(color, undefined);
         }
 
         let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(width, height, depth));
@@ -2589,30 +2585,49 @@ function OB_TIMELINE() {
 
     };
 
-    OB_TIMELINE.prototype.hex_Luminance = function (hex, lum = 0) {
+    OB_TIMELINE.prototype.hex_Luminance = function (hex, lum) {
+        // Validate and clean the hex string
         function validateHex(hex) {
             return String(hex).replace(/[^0-9a-f]/gi, '');
         }
 
+        // Convert shorthand hex to full length
         function extendShortHex(hex) {
-            if (hex.length < 6) {
-                return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            if (hex.length === 3) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
             }
             return hex;
         }
 
-        function adjustLuminance(colorComponent, lum) {
-            const adjusted = Math.round(Math.min(Math.max(0, colorComponent + (colorComponent * lum)), 255));
-            return adjusted.toString(16).padStart(2, '0');
+        // Dynamically adjust luminance for very dark or light colors
+        function calculateLuminanceAdjustment(hex) {
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+            // Set a fixed luminance adjustment for very dark colors
+            if (brightness < 20) return 0.2; // Significantly lighten very dark colors
+            else if (brightness > 200) return -0.2; // Darken very light colors
+            else return 0.15; // No adjustment for mid-range colors
         }
 
-        hex = validateHex(hex);
-        hex = extendShortHex(hex);
+        hex = extendShortHex(validateHex(hex));
+
+        if (lum === undefined) {
+            lum = calculateLuminanceAdjustment(hex);
+        }
+
+        if (lum === 0) lum = -0.15; // Default adjustment if not very dark or light
 
         let rgb = "#";
-        for (let i = 0; i < 3; i++) {
-            const colorComponent = parseInt(hex.substr(i * 2, 2), 16);
-            rgb += adjustLuminance(colorComponent, lum);
+        for (let i = 0; i < 6; i += 2) {
+            let colorComponent = parseInt(hex.substring(i, i + 2), 16);
+            // Apply a fixed increase for very dark colors, ensuring visibility
+            let newComponent = colorComponent + Math.round(255 * lum);
+            colorComponent = Math.max(0, Math.min(255, newComponent));
+            rgb += colorComponent.toString(16).padStart(2, '0');
         }
 
         return rgb;
@@ -2640,9 +2655,9 @@ function OB_TIMELINE() {
                     this.ob_scene[ob_scene_index].bands[b].textColor,
                     x, y, zz, w, h,
                     parseInt(this.ob_scene[ob_scene_index].bands[b].depth) + 1,
-                    this.hex_Luminance(color, -.15),
+                    this.hex_Luminance(color, undefined),
                     undefined,
-                    this.hex_Luminance(color, -.15),
+                    this.hex_Luminance(color, undefined),
                     this.ob_scene[ob_scene_index].font_align);
             }
         }
@@ -2670,13 +2685,13 @@ function OB_TIMELINE() {
                 const adjustedDepth = parseInt(band.depth) + 1;
                 const adjustedWidth = parseInt(band.layouts.max_name_length) *
                     parseInt(band.fontSizeInt) * 2.2;
-                const luminanceColor = this.hex_Luminance(band.color, -.15);
+                const luminanceColor = this.hex_Luminance(band.color, undefined);
 
                 this.add_textBox(
                     ob_scene_index, band.name, band.layout_name, band.textColor,
                     adjustedX, band.y, adjustedZ, adjustedWidth,
                     band.heightMax, adjustedDepth, luminanceColor,
-                    undefined, luminanceColor, currentScene.font_align
+                    undefined, undefined
                 );
             }
         });
@@ -3716,7 +3731,7 @@ function OB_TIMELINE() {
         session,
         color,
         texture,
-        luminance = -0.15,
+        luminance,
         opacity = 0.35
     ) {
         const scene = this.ob_scene[ob_scene_index];
