@@ -2158,6 +2158,26 @@ function OB_TIMELINE() {
         let set_alternate_color = true;
         const ob_height = -scene.ob_height;
 
+        if (this.ob_scene[ob_scene_index].sources !== undefined) {
+            const layout_name = this.ob_scene[ob_scene_index].sources[0].namespace;
+            ob_color = this.get_source_property(ob_scene_index, layout_name, "color", ob_color);
+            ob_text_color = this.get_source_property(ob_scene_index, layout_name, "textColor", ob_text_color);
+            ob_date_color = this.get_source_property(ob_scene_index, layout_name, "dateColor", ob_date_color);
+            const currentColor = ob_attribute === "namespace" ? ob_color : set_alternate_color ? this.hex_Luminance(ob_color, undefined) : ob_color;
+            scene.bands[0] = {
+                ...band,
+                name: `${band.name}_${0}`,
+                layout_name: layout_name,
+                color: currentColor,
+                textBackgroundColor: currentColor,
+                textColor: ob_text_color,
+                dateColor: ob_date_color,
+                maxY: 0,
+                minY: 0,
+                lastGreaterY: ob_height,
+            };
+        }
+
         // Iterate over layouts to apply changes
         for (let i = 0; i < ob_layouts.length; i++) {
             const layout = ob_layouts[i];
@@ -2472,7 +2492,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.add_zone = function (ob_scene_index, band_number, zone_number, band_name, zone_name, text,
-                                               textColor, x, y, z, width, height, depth, color, texture, font_align) {
+                                               textColor, x, y, z, width, height, depth, color, texture) {
         x = isNaN(x) ? 0 : x;
         y = isNaN(y) ? 0 : y;
         z = isNaN(z) ? 0 : z;
@@ -2657,8 +2677,7 @@ function OB_TIMELINE() {
                     parseInt(this.ob_scene[ob_scene_index].bands[b].depth) + 1,
                     this.hex_Luminance(color, undefined),
                     undefined,
-                    this.hex_Luminance(color, undefined),
-                    this.ob_scene[ob_scene_index].font_align);
+                    this.hex_Luminance(color, undefined));
             }
         }
     };
@@ -2826,6 +2845,7 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].height = setting_and_filters.openbexi_timeline[0].height;
             this.ob_scene[ob_scene_index].ob_camera_type = setting_and_filters.openbexi_timeline[0].camera;
             this.ob_scene[ob_scene_index].sources = setting_and_filters.openbexi_timeline[0].sources;
+            this.ob_scene[ob_scene_index].new_multiples = setting_and_filters.openbexi_timeline[0].multiples;
             if (this.ob_scene !== undefined)
                 this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = setting_and_filters.openbexi_timeline[0].sortBy;
             if (document.getElementById("ob_sort_by") !== null)
@@ -2952,7 +2972,6 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_camera(ob_scene_index);
                 }
                 let endDate = new Date();
-                ob_timeline.ob_optimize_load_time(ob_scene_index, ob_timeline.ob_scene[ob_scene_index].multiples);
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
                     if (ob_timeline.ob_scene[ob_scene_index].sessions.events.length !== 1)
@@ -4583,14 +4602,6 @@ function OB_TIMELINE() {
         return "events";
     };
 
-    OB_TIMELINE.prototype.ob_optimize_load_time = function (ob_scene_index, multiples) {
-        if (multiples === undefined)
-            this.ob_scene[ob_scene_index].multiples = 45;
-        else
-            this.ob_scene[ob_scene_index].multiples = multiples;
-        return this.ob_scene[ob_scene_index].multiples === 480;
-    };
-
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
         const ob_scene = this.ob_scene[ob_scene_index];
 
@@ -4611,11 +4622,9 @@ function OB_TIMELINE() {
             this.data.includes("addFilter") || this.data.includes("saveFilter") ||
             this.data.includes("deleteFilter") || this.data.includes("readFilters")) {
             this.method = "POST";
-            this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (this.data.includes("updateEvent") || this.data.includes("addEvent") ||
             this.data.includes("deleteEvent")) {
             this.method = "POST";
-            this.ob_optimize_load_time(ob_scene_index, 480);
         } else if (!this.data.includes(".json") && !this.data.includes("UTC")) {
             this.data = this.ob_get_url_head(ob_scene_index) +
                 "?startDate=" + ob_scene.minDate +
@@ -4788,7 +4797,7 @@ function OB_TIMELINE() {
                                 that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
                                 null, true);
                         } catch (err) {
-                            console.log('POST - cannot save setting_and_filters ...');
+                            console.log('POST - cannot save setting_and_filters ...'+err);
                         }
                     } else if (dataType === "event_descriptor") {
                         try {
