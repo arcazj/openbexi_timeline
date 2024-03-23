@@ -2,6 +2,7 @@ package com.openbexi.timeline.data_browser;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
@@ -13,9 +14,9 @@ import org.json.simple.JSONArray;
 import java.io.IOException;
 
 public class db_elasticsearch_manager extends data_manager {
-    public db_elasticsearch_manager( HttpServletResponse response,
+    public db_elasticsearch_manager(HttpServletResponse response,
                                     HttpSession session, data_configuration configuration) {
-        super(response,session,configuration);
+        super(response, session, configuration);
     }
 
     @Override
@@ -96,11 +97,12 @@ public class db_elasticsearch_manager extends data_manager {
     }
 
     @Override
-    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_title,
-                               String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
-                               String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
-                               String ob_sort_by, String ob_filter) {
-        return super.updateFilter(ob_action, ob_timeline_name, ob_scene, ob_title, ob_filter_name, ob_backgroundColor,
-                ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
+    public Object updateFilter(String ob_action, String ob_timeline_name, String ob_scene, String ob_namespace,
+                               String ob_title, String ob_filter_name, String ob_backgroundColor, String ob_user,
+                               String ob_email, String ob_top, String ob_left, String ob_width, String ob_height,
+                               String ob_camera, String ob_sort_by, String ob_filter) {
+        return super.updateFilter(ob_action, ob_timeline_name, ob_scene, ob_namespace, ob_title, ob_filter_name,
+                ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by,
+                ob_filter);
     }
 }

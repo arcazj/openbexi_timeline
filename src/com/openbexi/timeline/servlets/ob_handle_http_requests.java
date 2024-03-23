@@ -45,12 +45,13 @@ public class ob_handle_http_requests {
                                              data_configuration configuration) {
         String event_id = req.getParameter("event_id");
         String start = req.getParameter("start");
+        String namespace = req.getParameter("namespace");
         logger.info("POST readDescriptor - id=" + event_id);
 
         try {
             event_descriptor descriptor = new event_descriptor(event_id, null, start, null,
-                    null, null, null, null, null, null,
-                    null, null, configuration.getConfiguration(0));
+                    null, namespace, null, null, null, null,
+                    null, null, configuration);
             Object json = descriptor.read(event_id);
             PrintWriter respWriter = resp.getWriter();
 
@@ -152,6 +153,7 @@ public class ob_handle_http_requests {
                         (String) configuration.getConfiguration().get("timelineName"),
                         (String) configuration.getConfiguration().get("title"),
                         (String) configuration.getConfiguration().get("scene"),
+                        (String) configuration.getConfiguration().get("namespace"),
                         (String) configuration.getConfiguration().get("filterName"),
                         (String) configuration.getConfiguration().get("backgroundColor"),
                         (String) configuration.getConfiguration().get("userName"),
@@ -185,6 +187,7 @@ public class ob_handle_http_requests {
                         (String) configuration.getConfiguration().get("timelineName"),
                         (String) configuration.getConfiguration().get("title"),
                         (String) configuration.getConfiguration().get("scene"),
+                        (String) configuration.getConfiguration().get("namespace"),
                         (String) configuration.getConfiguration().get("filterName"),
                         (String) configuration.getConfiguration().get("backgroundColor"),
                         (String) configuration.getConfiguration().get("userName"),

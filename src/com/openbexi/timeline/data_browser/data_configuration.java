@@ -85,11 +85,9 @@ public class data_configuration {
     }
 
     public JSONObject getConfiguration(int index) {
-        for (int i = 0; i <= configuration.size(); i++) {
-            JSONObject configNode = (JSONObject) ((JSONArray) configuration.get("startup configuration")).get(i);
-            if (i == index)
-                return configNode;
-        }
+        JSONObject configNode = (JSONObject) ((JSONArray) configuration.get("startup configuration")).get(index);
+        if (configNode != null)
+            return configNode;
         return null;
     }
 

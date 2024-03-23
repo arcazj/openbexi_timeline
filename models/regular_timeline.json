@@ -7,7 +7,7 @@
       "timeZone": "UTC",
       "top": 0,
       "left": 0,
-      "height": 800,
+      "height": 1000,
       "fontSize": 12,
       "width": 1350,
       "data_default_port": 8442,
@@ -19,7 +19,7 @@
     {
       "name": "ob_band_1",
       "height": "75%",
-      "color": "#a1d9ff",
+      "color": "#ffffff",
       "intervalPixels": "1000",
       "subIntervalPixels": "AUTO",
       "intervalUnitPos": "TOP",
@@ -40,7 +40,7 @@
     {
       "name": "ob_overview_band_2",
       "height": "25%",
-      "color": "#8ac7f6",
+      "color": "#d9dbde",
       "intervalPixels": 1000,
       "intervalUnit": "DAY",
       "dateFormat": "yyyy mmm dd",
