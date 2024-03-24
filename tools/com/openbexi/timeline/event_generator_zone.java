@@ -1,5 +1,8 @@
 package com.openbexi.timeline;
 
+import com.openbexi.timeline.data_browser.data_configuration;
+import org.json.simple.JSONArray;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,13 +16,15 @@ import java.util.UUID;
 
 public class event_generator_zone {
     private final Date _date;
+    private final String _namespace;
 
     public Date get_date() {
         return _date;
     }
 
-    event_generator_zone(Date date) {
+    event_generator_zone(String namespace, Date date) {
         _date = date;
+        _namespace = namespace;
     }
 
     public void log(Object msg, String err) {
@@ -136,12 +141,14 @@ public class event_generator_zone {
 
                     // EVENTS/SESSIONS
                     file.write("  {\"id\":\"" + UUID.randomUUID() + "\",");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     file.write("  \"start\":\"" + start + "\",");
                     file.write("  \"end\":\"" + end + "\",");
                     file.write("\"data\":{");
+                    file.write("  \"namespace\":\"" + _namespace + "\",");
                     file.write("\"title\":\"" + title + "\",");
                     file.write("\"status\":\"" + status + "\",");
-                    type = getRandomNumberUsingNextInt(0,2);
+                    type = getRandomNumberUsingNextInt(0, 2);
                     file.write("\"type\":\"" + "type" + type + "\",");
                     if (type == 0) {
                         file.write("\"zone\":\"" + "zone_" + getRandomNumberUsingNextInt(0, 1) + "\",");
@@ -169,27 +176,41 @@ public class event_generator_zone {
 
     public static void main(String... args) throws IOException {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
         Date date = new Date();
-        //Instant now = Instant.now(); //current date
-        //Instant before = now.minus(Duration.ofDays(1));
-        //date = Date.from(before);
-        //Instant now = Instant.now(); //current date
-        //Instant after = now.plus(Duration.ofDays(1));
-        //date = Date.from(after);
+        data_configuration data_configuration;
+        String data_conf = "";
 
-        String year = new SimpleDateFormat("yyyy").format(date);
-        String month = new SimpleDateFormat("MM").format(date);
-        String day = new SimpleDateFormat("dd").format(date);
-        File file = new File("/data/" +
-                year + "/" + month + "/" + day + "/" + "events.json");
-        event_generator_zone events = new event_generator_zone(date);
-        events.generate(file);
+        if (args.length == 2 && args[0].equals("-data_conf")) {
+            data_conf = args[1];
+        } else {
+            System.err.println("Event_generator not started because of bad usage:");
+            System.err.println("Argument " + args[0] + " " + "-data_conf <file> ");
+            System.exit(1);
+        }
 
         try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            data_configuration = new data_configuration(data_conf);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
+        for (int d = 0; d < configurations.size(); d++) {
+            String namespace = (String) data_configuration.getConfiguration(d).get("namespace");
+            String year = new SimpleDateFormat("yyyy").format(date);
+            String month = new SimpleDateFormat("MM").format(date);
+            String day = new SimpleDateFormat("dd").format(date);
+            String data_model = (String) data_configuration.getConfiguration(d).get("data_model");
+            data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
+            File file = new File(data_model + "/events.json");
+            event_generator_zone events = new event_generator_zone(namespace, date);
+            events.generate(file);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

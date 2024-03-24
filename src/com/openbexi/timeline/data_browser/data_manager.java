@@ -174,7 +174,7 @@ abstract class data_manager {
                     jsonObject = (JSONObject) filters;
                     openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
                     ((JSONObject) openbexi_timeline.get(0)).put("sources", _data_configuration.getConfiguration().get("startup configuration"));
-                    ((JSONObject) openbexi_timeline.get(0)).put("multiples", "512");
+                    ((JSONObject) openbexi_timeline.get(0)).put("multiples", "45");
 
                     if (ob_action.equals("readFilters")) {
                         reader.close();
