@@ -267,7 +267,7 @@ function OB_TIMELINE() {
     }
     OB_TIMELINE.prototype.ob_scene_init = function (ob_scene_index) {
         // Set all timeline scene parameters:
-        this.ob_scene[ob_scene_index].multiples = 45;
+        this.ob_scene[ob_scene_index].multiples = 200;
         this.ob_scene[ob_scene_index].increment = 20;
 
         if (this.ob_scene[ob_scene_index].ob_filter_name === undefined)
@@ -2599,7 +2599,6 @@ function OB_TIMELINE() {
 
         this.ob_scene[ob_scene_index].add(ob_model_name);
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
-
         this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, false,
             24, "normal", "normal", textColor, 'Arial');
 
@@ -2702,16 +2701,17 @@ function OB_TIMELINE() {
                         parseInt(band.layouts.max_name_length) / 2);
                 const adjustedZ = parseInt(band.z) + 50;
                 const adjustedDepth = parseInt(band.depth) + 1;
-                const adjustedWidth = parseInt(band.layouts.max_name_length) *
+                let adjustedWidth = parseInt(band.layouts.max_name_length) *
                     parseInt(band.fontSizeInt) * 2.2;
                 const luminanceColor = this.hex_Luminance(band.color, undefined);
 
-                this.add_textBox(
-                    ob_scene_index, band.name, band.layout_name, band.textColor,
-                    adjustedX, band.y, adjustedZ, adjustedWidth,
-                    band.heightMax, adjustedDepth, luminanceColor,
-                    undefined, undefined
-                );
+                if (adjustedWidth > 0)
+                    this.add_textBox(
+                        ob_scene_index, band.name, band.layout_name, band.textColor,
+                        adjustedX, band.y, adjustedZ, adjustedWidth,
+                        band.heightMax, adjustedDepth, luminanceColor,
+                        undefined, undefined
+                    );
             }
         });
     };
@@ -4797,7 +4797,7 @@ function OB_TIMELINE() {
                                 that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
                                 null, true);
                         } catch (err) {
-                            console.log('POST - cannot save setting_and_filters ...'+err);
+                            console.log('POST - cannot save setting_and_filters ...' + err);
                         }
                     } else if (dataType === "event_descriptor") {
                         try {

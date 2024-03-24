@@ -3,10 +3,10 @@ package com.openbexi.timeline;
 import com.openbexi.timeline.data_browser.data_configuration;
 import com.openbexi.timeline.data_browser.event_descriptor;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -236,11 +236,11 @@ public class event_generator {
 
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
-            for (int j = 0; j < 50; j++) {
+            for (int j = 0; j < 450; j++) {
                 color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                         + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
                         getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
-                Date current_date = new Date();
+                Date current_date = _date;
                 long dateL = current_date.getTime();
                 int s = getRandomNumberUsingNextInt(0, 4);
                 if (s == 1)
@@ -495,36 +495,43 @@ public class event_generator {
 
     public static void main(String... args) throws IOException {
         data_configuration data_configuration;
-        List<String> models;
+        String data_conf = "";
+
+        if (args.length == 2 && args[0].equals("-data_conf")) {
+            data_conf = args[1];
+        } else {
+            System.err.println("Event_generator not started because of bad usage:");
+            System.err.println("Argument " + args[0] + " " + "-data_conf <file> ");
+            System.exit(1);
+        }
+
         try {
-            data_configuration = new data_configuration("yaml/sources_default_test.yml");
+            data_configuration = new data_configuration(data_conf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
+        long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
+        Date date = new Date(todayMidnight);
+
         JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
         for (int d = 0; d < configurations.size(); d++) {
             String namespace = (String) data_configuration.getConfiguration(d).get("namespace");
-            for (int i = 0; i < 1; i++) {
-                TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-                ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
-                long todayMidnight = utcTime.toLocalDate().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
-                Date date = new Date(todayMidnight);
-                long dateL = date.getTime();
-                long enddateL = date.getTime() + 3600 * 12 * 1000;
-
-                while (dateL < enddateL) {
-                    date = new Date(dateL);
-                    String year = new SimpleDateFormat("yyyy").format(date);
-                    String month = new SimpleDateFormat("MM").format(date);
-                    String day = new SimpleDateFormat("dd").format(date);
-                    String data_model = (String) data_configuration.getConfiguration(d).get("data_model");
-                    data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
-                    File file = new File(data_model + "/events.json");
-                    event_generator events = new event_generator(namespace, date, data_configuration);
-                    events.generate_simple(file);
-                    dateL = dateL + 3600 * 24 * 1000;
-                }
+            int number_of_day_in_the_future = 10;
+            long dateL = date.getTime();
+            for (int i = 0; i < number_of_day_in_the_future; i++) {
+                date = new Date(dateL);
+                String year = new SimpleDateFormat("yyyy").format(date);
+                String month = new SimpleDateFormat("MM").format(date);
+                String day = new SimpleDateFormat("dd").format(date);
+                String data_model = (String) data_configuration.getConfiguration(d).get("data_model");
+                data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
+                File file = new File(data_model + "/events.json");
+                event_generator events = new event_generator(namespace, date, data_configuration);
+                events.generate_simple(file);
+                dateL = dateL + (3600 * 24 * 1000);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

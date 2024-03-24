@@ -54,7 +54,7 @@ public class openbexi_timeline implements Runnable {
 
         if (args.length != 2) {
             System.err.println("openBEXI Timeline not started because of bad usage:");
-            System.err.println("Argument " + args[0] + " " + "-conf <file> ");
+            System.err.println("Argument " + args[0] + " " + "-data_conf <file> ");
             System.exit(1);
         }
         if (args[0].equals("-data_conf")) {
@@ -63,7 +63,7 @@ public class openbexi_timeline implements Runnable {
                 File file_configuration = new File(data_conf);
                 if (!file_configuration.exists()) {
                     System.err.println("openBEXI Timeline not started because the configuration file does not exist:");
-                    System.err.println("Argument " + args[0] + " " + "-conf <file does not exist> ");
+                    System.err.println("Argument " + args[0] + " " + "-data_conf <file does not exist> ");
                     System.exit(1);
                 }
                 data_sources source = new data_sources();

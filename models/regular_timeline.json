@@ -9,7 +9,7 @@
       "left": 0,
       "height": 1000,
       "fontSize": 12,
-      "width": 1350,
+      "width": 1500,
       "data_default_port": 8442,
       "data_sse_port": 8441,
       "data": ""
@@ -19,7 +19,7 @@
     {
       "name": "ob_band_1",
       "height": "75%",
-      "color": "#ffffff",
+      "color": "#f3ffff",
       "intervalPixels": "1000",
       "subIntervalPixels": "AUTO",
       "intervalUnitPos": "TOP",
