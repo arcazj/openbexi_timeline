@@ -3952,10 +3952,11 @@ function OB_TIMELINE() {
             image = "icon/ob_yellow_square.png";
         }
 
+        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         texture = this.load_texture(image);
         if (texture === undefined) {
             geometry = this.track[ob_scene_index](new THREE.SphereGeometry(session.size));
-            material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
+            material = this.track[ob_scene_index](new THREE.MeshBasicMaterial());
         } else {
             if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
                 geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(8, 8));
@@ -3966,7 +3967,6 @@ function OB_TIMELINE() {
             material = this.track[ob_scene_index](
                 new THREE.MeshBasicMaterial({
                     map: texture,
-                    color: textBackgroundColor,
                     transparent: true,
                     opacity: 1,
                 })
@@ -4001,7 +4001,6 @@ function OB_TIMELINE() {
 
         this.ob_scene[ob_scene_index].add(ob_event);
 
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         if (ob_band !== undefined) {
             ob_band.add(ob_event);
         }
