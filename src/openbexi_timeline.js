@@ -267,7 +267,8 @@ function OB_TIMELINE() {
     }
     OB_TIMELINE.prototype.ob_scene_init = function (ob_scene_index) {
         // Set all timeline scene parameters:
-        this.ob_scene[ob_scene_index].multiples = 200;
+        //this.ob_scene[ob_scene_index].multiples = 45;
+        this.ob_scene[ob_scene_index].multiples = 22;
         this.ob_scene[ob_scene_index].increment = 20;
 
         if (this.ob_scene[ob_scene_index].ob_filter_name === undefined)
@@ -962,6 +963,20 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_start_clock = function (ob_scene_index) {
+        if (this.params[0].date !== "current_time" && this.params[0].date !== "Date.now()") {
+            clearInterval(this.ob_interval_clock);
+            return;
+        }
+
+        const currentTime = this.get_current_time();
+        const markerTime = Date.parse(this.ob_markerDate.toString());
+        const timeDifference = Math.abs(markerTime - currentTime);
+
+        // Check if the time difference is within 10000 seconds (10000,000 milliseconds)
+        if (timeDifference > 10000) {
+            clearInterval(this.ob_interval_clock);
+            return;
+        }
         let that_clock = this;
         this.ob_sec_incr = 0;
         try {
@@ -1975,41 +1990,36 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.update_bands_MinDate = function (ob_scene_index, date) {
-        this.ob_scene[ob_scene_index].minDateL = 0;
+        let scene = this.ob_scene[ob_scene_index];
+        scene.minDateL = 0;
         this.iniMinDateL = 0;
-        for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            let pixelOffSet = this.dateToPixelOffSet(ob_scene_index, date,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].minDate =
-                this.pixelOffSetToDate(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].viewOffset +
-                    pixelOffSet, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            this.ob_scene[ob_scene_index].bands[i].iniMinDate =
-                this.pixelOffSetToDate(ob_scene_index, this.ob_scene[ob_scene_index].bands[i].minViewOffset +
-                    pixelOffSet, this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                    this.ob_scene[ob_scene_index].bands[i].intervalPixels);
-            // Round hour to 0
-            this.ob_scene[ob_scene_index].bands[i].minDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].minDate).setMinutes(0));
-            this.ob_scene[ob_scene_index].bands[i].minDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].minDate).setSeconds(0));
-            let minDateL = new Date(this.ob_scene[ob_scene_index].bands[i].minDate).getTime();
-            if (minDateL > this.ob_scene[ob_scene_index].minDateL) {
-                this.ob_scene[ob_scene_index].minDateL = minDateL;
-                this.ob_scene[ob_scene_index].minDate =
-                    new Date(this.ob_scene[ob_scene_index].minDateL).toString().substring(0, 24) + " UTC";
+
+        scene.bands.forEach(band => {
+            let pixelOffset = this.dateToPixelOffSet(ob_scene_index, date, band.gregorianUnitLengths, band.intervalPixels);
+            let offsetDate = pixelOffset + band.viewOffset;
+            let iniOffsetDate = pixelOffset + band.minViewOffset;
+
+            // Calculate minimum and initial minimum dates for the band
+            band.minDate = this.pixelOffSetToDate(ob_scene_index, offsetDate, band.gregorianUnitLengths, band.intervalPixels);
+            band.iniMinDate = this.pixelOffSetToDate(ob_scene_index, iniOffsetDate, band.gregorianUnitLengths, band.intervalPixels);
+
+            // Round hour to 0 and reset minutes and seconds
+            band.minDate = new Date(band.minDate.setHours(band.minDate.getHours(), 0, 0));
+            band.iniMinDate = new Date(band.iniMinDate.setHours(band.iniMinDate.getHours(), 0, 0));
+
+            // Update global minimum dates if necessary
+            let minDateL = band.minDate.getTime();
+            if (minDateL > scene.minDateL) {
+                scene.minDateL = minDateL;
+                scene.minDate = band.minDate.toString().substring(0, 24) + " UTC";
             }
-            this.ob_scene[ob_scene_index].bands[i].iniMinDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].iniMinDate).setMinutes(0));
-            this.ob_scene[ob_scene_index].bands[i].iniMinDate =
-                new Date(new Date(this.ob_scene[ob_scene_index].bands[0].iniMinDate).setSeconds(0));
-            let iniMinDateL = new Date(this.ob_scene[ob_scene_index].bands[i].iniMinDate).getTime();
+
+            let iniMinDateL = band.iniMinDate.getTime();
             if (iniMinDateL > this.iniMinDateL) {
                 this.iniMinDateL = iniMinDateL;
-                this.iniMinDate = new Date(this.iniMinDateL).toString().substring(0, 24) + " UTC";
+                this.iniMinDate = band.iniMinDate.toString().substring(0, 24) + " UTC";
             }
-        }
+        });
     };
 
     OB_TIMELINE.prototype.update_bands_MaxDate = function (ob_scene_index, date) {
@@ -2469,6 +2479,11 @@ function OB_TIMELINE() {
                 (band.intervalUnit === "HOUR" && parseInt(band.intervalPixels) >= 60) ?
                     parseInt(band.intervalPixels) / 4 :
                     band.subIntervalPixels;
+
+            // Disable this feature for now
+            //if (this.ob_scene[ob_scene_index].new_multiples !== undefined)
+                //band.multiples = parseInt(this.ob_scene[ob_scene_index].new_multiples);
+            //else
             band.multiples = this.ob_scene[ob_scene_index].multiples;
             band.trackIncrement = this.ob_scene[ob_scene_index].increment;
         });
@@ -2846,6 +2861,7 @@ function OB_TIMELINE() {
             this.ob_scene[ob_scene_index].ob_camera_type = setting_and_filters.openbexi_timeline[0].camera;
             this.ob_scene[ob_scene_index].sources = setting_and_filters.openbexi_timeline[0].sources;
             this.ob_scene[ob_scene_index].new_multiples = setting_and_filters.openbexi_timeline[0].multiples;
+            this.ob_scene[ob_scene_index].multiples = parseInt(this.ob_scene[ob_scene_index].new_multiples);
             if (this.ob_scene !== undefined)
                 this.ob_scene[ob_scene_index].bands[0].model[0].sortBy = setting_and_filters.openbexi_timeline[0].sortBy;
             if (document.getElementById("ob_sort_by") !== null)
@@ -2975,11 +2991,12 @@ function OB_TIMELINE() {
                 let ob_time = endDate.getTime() - startDate.getTime();
                 try {
                     if (ob_timeline.ob_scene[ob_scene_index].sessions.events.length !== 1)
-                        console.log("populated " +
+                        console.log("- populated " +
                             ob_timeline.ob_scene[ob_scene_index].sessions.events.length +
-                            " session(s) in " + ob_time + " ms and updated scene " + ob_scene_index +
-                            " (date min=" + ob_timeline.ob_scene[ob_scene_index].minDate + "- date max=" +
-                            ob_timeline.ob_scene[ob_scene_index].maxDate + ")");
+                            " session(s) in " + ob_time + " ms and updated scene " + ob_scene_index +"\n"+
+                            " * date min   =" + ob_timeline.ob_scene[ob_scene_index].minDate +"\n"+
+                            " * date marker=" + ob_timeline.ob_markerDate  +"\n"+
+                            " * date max   =" + ob_timeline.ob_scene[ob_scene_index].maxDate);
                 } catch (e) {
                 }
             }
@@ -2988,32 +3005,39 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.update_time_marker = function (ob_date) {
-        if (ob_date !== undefined)
+        if (ob_date !== undefined) {
             this.ob_markerDate = ob_date;
-        if (this.ob_marker !== undefined) {
+        }
+
+        // Update the main time marker style and position if it exists
+        if (this.ob_marker) {
             this.ob_marker.style.visibility = "visible";
             this.ob_marker.style.zIndex = "99999";
-            this.ob_marker.style.top = parseInt(this.ob_timeline_header.style.height) - 14 + "px";
-            this.ob_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) -
-                parseInt(this.ob_marker.style.width) / 2 + "px";
+            const markerWidth = parseInt(this.ob_marker.style.width, 10);
+            const halfHeaderWidth = this.ob_timeline_header.offsetWidth / 2;
+            this.ob_marker.style.top = (parseInt(this.ob_timeline_header.style.height, 10) - 14) + "px";
+            this.ob_marker.style.left = (halfHeaderWidth - markerWidth / 2) + "px";
         }
+
+        // Update the text time marker if innerText is defined
         if (this.ob_time_marker.innerText !== undefined) {
             this.ob_time_marker.style.visibility = "visible";
             this.ob_time_marker.style.zIndex = "99999";
             this.ob_time_marker.style.top = "0px";
-            this.ob_time_marker.style.left = (this.ob_timeline_header.offsetWidth / 2) - 200 + "px";
-            if (this.timeZone === "UTC") {
-                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25) +
-                    " - UTC";
-            } else {
-                this.ob_time_marker.innerText = this.title + " - " + this.ob_markerDate.toString().substring(0, 25);
-            }
-            if (this.ob_cal !== undefined) {
+            this.ob_time_marker.style.left = (this.ob_timeline_header.offsetWidth / 2 - 200) + "px";
+
+            // Set the text based on the timeZone
+            const dateString = this.ob_markerDate.toString().substring(0, 25);
+            this.ob_time_marker.innerText = `${this.title} - ${dateString}` + (this.timeZone === "UTC" ? " - UTC" : "");
+
+            // Calendar updates if available
+            if (this.ob_cal) {
                 this.ob_cal.goto(this.ob_markerDate);
                 this.ob_cal.set(this.ob_markerDate);
             }
         }
     };
+
 
     OB_TIMELINE.prototype.sync_bands = function (ob_scene_index, ob_band, x) {
         if (!ob_band) return;
@@ -3093,7 +3117,7 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.createSegment = function (ob_scene_index, band, incrementPixelOffSet) {
         const heightMaxHalf = band.heightMax / 2;
-        this.add_segment(ob_scene_index, band.name, incrementPixelOffSet, heightMaxHalf, 5, band.heightMax, "black", false);
+        this.add_segment(ob_scene_index, band.name, incrementPixelOffSet, heightMaxHalf, 5, band.heightMax, band.dateColor, false);
         this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + 0.15, heightMaxHalf, 5, band.heightMax, band.color, false);
     };
 
@@ -3117,7 +3141,7 @@ function OB_TIMELINE() {
         let incrementSubPixelOffSet = parseInt(band.subIntervalPixels);
         const heightMaxHalf = band.heightMax / 2;
         while (parseInt(incrementPixelOffSet) + incrementSubPixelOffSet < parseInt(incrementPixelOffSet) + parseInt(band.intervalPixels)) {
-            this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + incrementSubPixelOffSet, heightMaxHalf, 5, band.heightMax, "black", true);
+            this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + incrementSubPixelOffSet, heightMaxHalf, 5, band.heightMax, band.dateColor, true);
             this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + incrementSubPixelOffSet + 0.20, heightMaxHalf, 5, band.heightMax, band.color, true);
             incrementSubPixelOffSet += parseInt(band.subIntervalPixels);
         }
@@ -3692,7 +3716,7 @@ function OB_TIMELINE() {
                         fontWeight = render.fontWeight !== undefined ? render.fontWeight : fontWeight;
                         fontFamily = render.fontFamily !== undefined ? render.fontFamily : fontFamily;
                         fontStyle = render.fontStyle !== undefined ? render.fontStyle : fontStyle;
-                        textBackgroundColor = render.textBackgroundColor !== undefined ? render.textBackgroundColor : false;
+                        textBackgroundColor = render.backgroundColor !== undefined ? render.backgroundColor : false;
                         luminance = render.luminance !== undefined ? render.luminance : luminance;
                         opacity = render.opacity !== undefined ? render.opacity : opacity;
                         texture = render.texture !== undefined ? render.texture : texture;
@@ -3733,8 +3757,16 @@ function OB_TIMELINE() {
                 // Create box if multiple activities
                 if (session.activities.length > 1) {
                     if (band.name.match(/overview_/)) {
-                        if (this.ob_scene[ob_scene_index].ob_search_value === "" || session.activities.length > 0) {
-                            this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
+                        for (let a = 0; a < session.activities.length; a++) {
+                            const activity = session.activities[a];
+                            if (regex !== null && activity.id === undefined && !activity.data.title.match(regex)) {
+                                continue;
+                            }
+                            const render = activity.render;
+                            let textBackgroundColor = render.textBackgroundColor;
+                            if (this.ob_scene[ob_scene_index].ob_search_value === "" || textBackgroundColor === "#F8DF09") {
+                                this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
+                            }
                         }
                     } else {
                         this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
@@ -3932,7 +3964,7 @@ function OB_TIMELINE() {
         ob_scene_index,
         band_name,
         session,
-        color,
+        color,  // Ensure color parameter is used
         image,
         textBackgroundColor,
         fontSizeInt,
@@ -3943,46 +3975,36 @@ function OB_TIMELINE() {
         display_text,
         font_align
     ) {
-
-        if (session.data === undefined)
+        if (!session.data) {
             return null;
-        let geometry, material, ob_event, texture;
-
-        if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
-            image = "icon/ob_yellow_square.png";
         }
 
-        let ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
+        let geometry, material, ob_event, texture;
+        const ob_band = this.ob_scene[ob_scene_index].getObjectByName(band_name);
         texture = this.load_texture(image);
-        if (texture === undefined) {
-            geometry = this.track[ob_scene_index](new THREE.SphereGeometry(session.size));
-            material = this.track[ob_scene_index](new THREE.MeshBasicMaterial());
-        } else {
-            if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
-                geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(8, 8));
-            } else {
-                geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(16, 16));
-            }
+
+        if (texture) {
+            // Setting geometry based on band type and overview status
+            const size = band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "" ? 8 : 16;
+            geometry = this.track[ob_scene_index](new THREE.PlaneGeometry(size, size));
             texture.minFilter = THREE.LinearFilter;
-            material = this.track[ob_scene_index](
-                new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
-                    opacity: 1,
-                })
-            );
+            material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                opacity: 1,
+            }));
+        } else {
+            // Use sphere geometry if no texture is available
+            geometry = this.track[ob_scene_index](new THREE.SphereGeometry(session.size));
+            material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));  // Applied color parameter
         }
 
         ob_event = this.track[ob_scene_index](new THREE.Mesh(geometry, material));
         ob_event.position.set(session.x_relative, session.y, session.z);
-        ob_event.pos_x = session.x_relative;
-        ob_event.pos_y = session.y;
-        ob_event.pos_z = session.z;
         ob_event.data = session;
-        ob_event.data.tolerance = 0;
 
-        // Add text and tolerance
-        if (display_text === true) {
+        // Add text and tolerance handling
+        if (display_text) {
             this.add_text_sprite(
                 ob_scene_index,
                 ob_event,
@@ -4000,13 +4022,13 @@ function OB_TIMELINE() {
         }
 
         this.ob_scene[ob_scene_index].add(ob_event);
-
-        if (ob_band !== undefined) {
+        if (ob_band) {
             ob_band.add(ob_event);
         }
 
         return ob_event;
     };
+
 
     OB_TIMELINE.prototype.add_segment = function (ob_scene_index, band_name, x, y, z, size, color, dashed) {
         try {
@@ -4036,7 +4058,6 @@ function OB_TIMELINE() {
 
             const material = this.track[ob_scene_index](new THREE.LineDashedMaterial({
                 color: color,
-                linewidth: 1,
                 dashSize: 2,
                 gapSize: 4,
             }));
@@ -4086,18 +4107,24 @@ function OB_TIMELINE() {
                                                       fontSize, fontStyle, fontWeight, color, fontFamily) {
         color = color || this.track[ob_scene_index](new THREE.Color("rgb(7,7,7)"));
         let ob_sprite = this.track[ob_scene_index](new SpriteText(text));
-        ob_sprite.color = color;
         ob_sprite.fontFamily = fontFamily;
         ob_sprite.textHeight = parseInt(fontSize);
         ob_sprite.fontSize = parseInt(fontSize);
         ob_sprite.strokeWidth = 0;
-        ob_sprite.strokeColor = color;
+        ob_sprite.strokeColor = "#fcdb03";
         ob_sprite.fontStyle = "fontStyle";
-        ob_sprite.borderWidth = 0;
-        ob_sprite.borderColor = color;
         ob_sprite.fontWeight = fontWeight;
         ob_sprite.borderRadius = 0;
-        ob_sprite.textBackgroundColor = textBackgroundColor;
+        if (textBackgroundColor !== false) {
+            ob_sprite.borderColor = "#bd0202";
+            ob_sprite.borderWidth = 1;
+            ob_sprite.backgroundColor = textBackgroundColor;
+            ob_sprite.color = "#030303";
+        } else {
+            ob_sprite.borderWidth = 0;
+            ob_sprite.color = color;
+        }
+
 
         let ob_x = x;
         if (this.ob_scene[ob_scene_index].ob_camera_type !== "Orthographic") {
