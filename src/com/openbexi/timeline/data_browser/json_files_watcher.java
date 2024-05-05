@@ -60,8 +60,10 @@ public class json_files_watcher extends data_watcher {
                         // Stop sending data_manager, port has been closed.
                         break;
                     }
+                    Thread.sleep(60000);
+                } else {
+                    Thread.sleep(5000);
                 }
-                Thread.sleep(5000);
             } catch (Exception e) {
                 e.getMessage();
                 break;

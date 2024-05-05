@@ -245,8 +245,8 @@ abstract class data_manager {
                         String[] filter_attributs = ob_filter.split(":| ");
                         jsonObjectMerged.append("  \"name\":\"").append(ob_filter_name).append("\",");
                         if (filter_attributs.length > 0) {
-                            jsonObjectMerged.append("  \"backgroundColor\":\"" + ob_backgroundColor + "\",");
-                            jsonObjectMerged.append("  \"filter_value\":\"" + get_filter() + "\",");
+                            jsonObjectMerged.append("  \"backgroundColor\":\"").append(ob_backgroundColor).append("\",");
+                            jsonObjectMerged.append("  \"filter_value\":\"").append(get_filter()).append("\",");
                             jsonObjectMerged.append("  \"sortBy\":\"" + ob_sort_by + "\",");
                             jsonObjectMerged.append("  \"current\":\"" + "yes");
                             if (f == filter_size - 1)
