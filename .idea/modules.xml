@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/openbexi_timeline.iml" filepath="$PROJECT_DIR$/openbexi_timeline.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/openbexi_timeline.iml" filepath="$PROJECT_DIR$/.idea/openbexi_timeline.iml" />
     </modules>
   </component>
 </project>
