@@ -245,7 +245,10 @@ public class json_files_manager extends data_manager {
                         if (file.exists() && file.isFile() && file.getName().contains(".json")) {
                             checksum += this.MD5Hash(file.getCanonicalPath());
                         } else {
-                            if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                            if (file.exists() && !file.isHidden() &&
+                                    !file.getName().contains("descriptors") &&
+                                    !file.getName().contains("noises") &&
+                                    file.isDirectory()) {
                                 this.getFiles(_currentStartDate, _currentEndDate);
                             }
                         }
@@ -301,9 +304,7 @@ public class json_files_manager extends data_manager {
                 FilenameFilter filter = new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        boolean result;
-                        result = !name.startsWith("descriptors");
-                        return result;
+                        return !name.startsWith("descriptors") && !name.contains("noises");
                     }
                 };
                 File[] file_list = new File(buildFile).listFiles(filter);
@@ -314,7 +315,10 @@ public class json_files_manager extends data_manager {
                             _files.put(file, MD5Hash(file.toString()));
                             //log(file_list[f], "info");
                         } else {
-                            if (file.exists() && !file.isHidden() && !file.getName().contains("descriptors") && file.isDirectory()) {
+                            if (file.exists() && !file.isHidden() &&
+                                    !file.getName().contains("descriptors") &&
+                                    !file.getName().contains("noises") &&
+                                    file.isDirectory()) {
                                 this.getFiles(startDate, endDate);
                             }
                         }
