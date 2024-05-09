@@ -1058,13 +1058,13 @@ function OB_TIMELINE() {
                 that.reset_synced_time("new_calendar_date", ob_scene_index);
                 if (that.data && (that.data.match(/^(http?):\/\//) || that.data.match(/^(https?):\/\//))) {
                     that.data_head = that.ob_get_url_head(that.ob_scene[ob_scene_index]);
-                    that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
+                    /*that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
                         that.ob_scene[ob_scene_index].model, that.ob_scene[ob_scene_index].sessions,
-                        that.ob_scene[ob_scene_index].ob_camera_type, null, true);
+                        that.ob_scene[ob_scene_index].ob_camera_type, null, true);*/
                 } else {
-                    that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
+                    /*that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
                         that.ob_scene[ob_scene_index].model, that.ob_scene[ob_scene_index].sessions,
-                        that.ob_scene[ob_scene_index].ob_camera_type, null, false);
+                        that.ob_scene[ob_scene_index].ob_camera_type, null, false);*/
                 }
             });
 
@@ -2165,7 +2165,7 @@ function OB_TIMELINE() {
         // Assume default layout name if none provided
         band.layout_name = ob_layouts[0] || "NONE";
 
-        let set_alternate_color = true;
+        let set_alternate_color = false;
         const ob_height = -scene.ob_height;
 
         if (this.ob_scene[ob_scene_index].sources !== undefined) {
@@ -2482,7 +2482,7 @@ function OB_TIMELINE() {
 
             // Disable this feature for now
             //if (this.ob_scene[ob_scene_index].new_multiples !== undefined)
-                //band.multiples = parseInt(this.ob_scene[ob_scene_index].new_multiples);
+            //band.multiples = parseInt(this.ob_scene[ob_scene_index].new_multiples);
             //else
             band.multiples = this.ob_scene[ob_scene_index].multiples;
             band.trackIncrement = this.ob_scene[ob_scene_index].increment;
@@ -2993,9 +2993,9 @@ function OB_TIMELINE() {
                     if (ob_timeline.ob_scene[ob_scene_index].sessions.events.length !== 1)
                         console.log("- populated " +
                             ob_timeline.ob_scene[ob_scene_index].sessions.events.length +
-                            " session(s) in " + ob_time + " ms and updated scene " + ob_scene_index +"\n"+
-                            " * date min   =" + ob_timeline.ob_scene[ob_scene_index].minDate +"\n"+
-                            " * date marker=" + ob_timeline.ob_markerDate  +"\n"+
+                            " session(s) in " + ob_time + " ms and updated scene " + ob_scene_index + "\n" +
+                            " * date min   =" + ob_timeline.ob_scene[ob_scene_index].minDate + "\n" +
+                            " * date marker=" + ob_timeline.ob_markerDate + "\n" +
                             " * date max   =" + ob_timeline.ob_scene[ob_scene_index].maxDate);
                 } catch (e) {
                 }
@@ -3466,7 +3466,7 @@ function OB_TIMELINE() {
                     add_tolerance = parseInt(activity.data.tolerance);
                 }
                 let add_image = 0;
-                if (activity.render.image !== undefined && activity.render.image !== "") {
+                if (activity.render !== undefined && activity.render.image !== undefined && activity.render.image !== "") {
                     add_image = 32;
                 }
 
@@ -4736,11 +4736,11 @@ function OB_TIMELINE() {
                         if (that.ob_scene[ob_scene_index].sessions.scene !== undefined) {
                             ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         }
-                        if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
-                            that.update_scene(ob_scene_index, that.header, that.params,
-                                that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
-                                null, false);
+                        //if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
+                        that.update_scene(ob_scene_index, that.header, that.params,
+                            that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
+                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                            null, false);
                     }
                 };
 
@@ -4848,11 +4848,11 @@ function OB_TIMELINE() {
                         if (that.ob_scene[ob_scene_index].sessions.scene !== undefined) {
                             ob_scene_index = that.ob_scene[ob_scene_index].sessions.scene;
                         }
-                        if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
-                            that.update_scene(ob_scene_index, that.header, that.params,
-                                that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
-                                that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
-                                null, false);
+                        //if (that.ob_scene[ob_scene_index].sessions.events.length > 0)
+                        that.update_scene(ob_scene_index, that.header, that.params,
+                            that.ob_scene[ob_scene_index].bands, that.ob_scene[ob_scene_index].model,
+                            that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
+                            null, false);
                     }
                 }).catch(err => {
                     console.log('Error message:', err.statusText);
