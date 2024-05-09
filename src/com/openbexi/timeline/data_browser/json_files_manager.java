@@ -88,11 +88,11 @@ public class json_files_manager extends data_manager {
         try {
             this.getFiles(_currentStartDate, _currentEndDate);
         } catch (Exception e) {
-            return getDummyJson("no data_manager found - " + e.getMessage());
+            return getDummyJson("no data_manager found - " + e.getMessage(), null);
         }
 
         if (_files == null)
-            return getDummyJson("no data_manager found");
+            return getDummyJson("no data_manager found", null);
 
         String jsonObjectMerged_begin = "{\n" +
                 "  \"dateTimeFormat\": \"iso8601\",\n" +
@@ -120,7 +120,7 @@ public class json_files_manager extends data_manager {
                     reader.close();
                 }
             } catch (Exception e) {
-                return getDummyJson("no data_manager found");
+                return getDummyJson("no data_manager found", null);
             }
         }
         String jsonObjectMerged_end = "}";
@@ -128,9 +128,11 @@ public class json_files_manager extends data_manager {
         try {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
                     String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis", "info");
+            if (all_obj.size() == 0)
+                return getDummyJson("no data found", "");
             return parser.parse(jsonObjectMerged_begin + all_obj.toJSONString().replaceAll("\\\\/", "/") + jsonObjectMerged_end);
         } catch (ParseException e) {
-            return getDummyJson("no data_manager found");
+            return getDummyJson("no data found", null);
         }
     }
 
@@ -183,7 +185,7 @@ public class json_files_manager extends data_manager {
     /**
      * @return a sample json data with one event reporting there is no data found
      */
-    public String getDummyJson(String title) {
+    public String getDummyJson(String title, String date) {
 
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -191,6 +193,11 @@ public class json_files_manager extends data_manager {
         ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"scene\": \"0\",\"events\" : [";
         long ob_time = new Date().getTime();
         Date ob_start_time = new Date(ob_time);
+        if (date == null)
+            ob_start_time = new Date(ob_time);
+        else
+            ob_start_time = new Date(_data_configuration.getCurrentDate());
+
         ob_data += "{\"ID\": \"" + UUID.randomUUID() +
                 "\",\"start\": \"" + ob_start_time + "\"," +
                 "\"end\": \"" + "\"," +

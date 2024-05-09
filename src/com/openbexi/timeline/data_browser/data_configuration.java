@@ -208,6 +208,21 @@ public class data_configuration {
         return (String) configNode.get("sasl.mechanism");
     }
 
+    public String getCurrentDate() {
+        String current_date;
+        try {
+            long ob_time_start = new Date(String.valueOf(configuration.get("startDate"))).getTime();
+            long ob_time_end = new Date(String.valueOf(configuration.get("endDate"))).getTime();
+            Date ob_start_time = new Date(ob_time_start + (ob_time_end - ob_time_start));
+            current_date = ob_start_time.toString();
+        } catch (Exception e) {
+            long ob_time = new Date().getTime();
+            Date ob_start_time = new Date(ob_time);
+            current_date = ob_start_time.toString();
+        }
+        return current_date;
+    }
+
     public void testGetters(int index) {
         // call all the getters and print the results
         System.out.println("Type: " + getType(index));
