@@ -143,7 +143,7 @@ public class JsonDecoder {
 
         try (FileReader reader = new FileReader("json/source_example.json")) {
             JSONObject jsonObject = (JSONObject) parser.parse(reader);
-            JSONObject targetJsonObject = new JSONObject(new LinkedHashMap());  // To maintain order
+            JSONObject targetJsonObject = new JSONObject();  // To maintain order
 
             decodeJson(jsonObject, targetJsonObject, "");
 

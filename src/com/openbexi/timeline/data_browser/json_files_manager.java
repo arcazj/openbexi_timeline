@@ -634,4 +634,7 @@ public class json_files_manager extends data_manager {
 
         return new_events;
     }
+    public void reindexFiles() {
+
+    }
 }
