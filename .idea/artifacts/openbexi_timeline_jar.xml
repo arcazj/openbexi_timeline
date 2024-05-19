@@ -70,6 +70,7 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/net/java/dev/jna/jna/5.10.0/jna-5.10.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-cbor/2.14.2/jackson-dataformat-cbor-2.14.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/groupId/openbexi_timeline/1.0-SNAPSHOT/openbexi_timeline-1.0-SNAPSHOT.jar" path-in-jar="/" />
+      <element id="module-source" name="openbexi_timeline" />
     </root>
   </artifact>
 </component>

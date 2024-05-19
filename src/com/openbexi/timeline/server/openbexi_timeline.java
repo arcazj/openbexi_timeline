@@ -67,6 +67,7 @@ public class openbexi_timeline implements Runnable {
                     System.exit(1);
                 }
                 data_sources source = new data_sources();
+                System.out.println("reading "+file_configuration.getAbsolutePath());
                 source.readYaml(file_configuration.getAbsolutePath());
                 String jsonOutput = source.dataSourcesToJson();
                 connectors = source.getConnectors(jsonOutput).split("\\|");

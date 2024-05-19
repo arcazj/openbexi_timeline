@@ -332,7 +332,7 @@ public class db_mongo_manager extends data_manager {
 
     public JSONArray documentToJsonArray(Document doc) {
         JSONArray jsonArray = new JSONArray();
-        JSONObject jsonObject = new JSONObject(doc);
+        JSONObject jsonObject = new JSONObject();
         jsonArray.add(jsonObject);
         return jsonArray;
     }
