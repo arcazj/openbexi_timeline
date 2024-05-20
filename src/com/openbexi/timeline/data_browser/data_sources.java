@@ -252,12 +252,14 @@ public class data_sources {
         return data_sources;
     }
 
+
     public static void main(String[] args) {
         data_sources data_sources = new data_sources();
-        data_sources.readYaml("tests/sources_default_test.yml");
+        data_sources.readYaml("tests/yaml/sources_default_test.yml");
         String jsonOutput = data_sources.dataSourcesToJson();
         data_sources.jsonToDataSources(jsonOutput);
-        data_sources.saveYaml("tests/sources_default_test.yml");
+        if (data_sources.data_sources.isEmpty()) System.exit(0);
+        data_sources.saveYaml("tests/yaml/sources_default_test.yml");
 
         // Get all connectors
         String connectors = data_sources.getConnectors(jsonOutput);
