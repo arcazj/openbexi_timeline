@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="openbexi_timeline:jar">
+  <artifact type="jar" build-on-make="true" name="openbexi_timeline:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/openbexi_timeline_jar</output-path>
     <root id="archive" name="openbexi_timeline.jar">
       <element id="directory" name="META-INF">
@@ -8,7 +8,6 @@
       <element id="module-output" name="openbexi_timeline" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/elasticsearch-plugin-classloader/7.17.10/elasticsearch-plugin-classloader-7.17.10.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/net/sf/jopt-simple/jopt-simple/5.0.2/jopt-simple-5.0.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.14.2/jackson-core-2.14.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/elasticsearch-secure-sm/7.17.10/elasticsearch-secure-sm-7.17.10.jar" path-in-jar="/" />
@@ -17,7 +16,6 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/bson-record-codec/4.9.0/bson-record-codec-4.9.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.14.2/jackson-dataformat-yaml-2.14.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/lucene/lucene-backward-codecs/8.11.1/lucene-backward-codecs-8.11.1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpasyncclient/4.1.5/httpasyncclient-4.1.5.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/lucene/lucene-core/8.11.1/lucene-core-8.11.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/lucene/lucene-memory/8.11.1/lucene-memory-8.11.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/lucene/lucene-sandbox/8.11.1/lucene-sandbox-8.11.1.jar" path-in-jar="/" />
@@ -36,7 +34,6 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.15/commons-codec-1.15.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/plugin/aggs-matrix-stats-client/7.17.10/aggs-matrix-stats-client-7.17.10.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/lz4/lz4-java/1.8.0/lz4-java-1.8.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/client/elasticsearch-rest-client/8.6.2/elasticsearch-rest-client-8.6.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/github/spullara/mustache/java/compiler/0.9.6/compiler-0.9.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/elasticsearch/7.17.10/elasticsearch-7.17.10.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/github/luben/zstd-jni/1.5.2-1/zstd-jni-1.5.2-1.jar" path-in-jar="/" />
@@ -47,7 +44,6 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/xerial/snappy/snappy-java/1.1.8.4/snappy-java-1.1.8.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/plugin/rank-eval-client/7.17.10/rank-eval-client-7.17.10.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/elasticsearch/plugin/parent-join-client/7.17.10/parent-join-client-7.17.10.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpcore-nio/4.4.13/httpcore-nio-4.4.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/lucene/lucene-queries/8.11.1/lucene-queries-8.11.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/kafka/kafka-clients/3.4.0/kafka-clients-3.4.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/mongodb-driver-core/4.9.0/mongodb-driver-core-4.9.0.jar" path-in-jar="/" />
@@ -69,8 +65,38 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/logging/log4j/log4j-api/2.17.1/log4j-api-2.17.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/net/java/dev/jna/jna/5.10.0/jna-5.10.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-cbor/2.14.2/jackson-dataformat-cbor-2.14.2.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/groupId/openbexi_timeline/1.0-SNAPSHOT/openbexi_timeline-1.0-SNAPSHOT.jar" path-in-jar="/" />
       <element id="module-source" name="openbexi_timeline" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.17.1" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.17.1" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.17.1" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.1" />
+      <element id="library" level="project" name="Maven: com.github.luben:zstd-jni:1.5.5-6" />
+      <element id="library" level="project" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" />
+      <element id="library" level="project" name="Maven: io.prometheus.jmx:jmx_prometheus_javaagent:1.0.0" />
+      <element id="library" level="project" name="Maven: javax.websocket:javax.websocket-api:1.1" />
+      <element id="library" level="project" name="Maven: junit:junit:4.13.2" />
+      <element id="library" level="project" name="Maven: org.apache.kafka:kafka-clients:3.7.0" />
+      <element id="library" level="project" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:9.0.85" />
+      <element id="library" level="project" name="Maven: org.apache.tomcat:tomcat-annotations-api:9.0.85" />
+      <element id="library" level="project" name="Maven: org.apiguardian:apiguardian-api:1.1.2" />
+      <element id="library" level="project" name="Maven: org.hamcrest:hamcrest-core:1.3" />
+      <element id="library" level="project" name="Maven: org.json:json:20240303" />
+      <element id="library" level="project" name="Maven: org.jsoup:jsoup:1.17.2" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-api:5.11.0-M2" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-params:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.platform:junit-platform-commons:1.11.0-M2" />
+      <element id="library" level="project" name="Maven: org.junit.platform:junit-platform-engine:1.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.lz4:lz4-java:1.8.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:bson-record-codec:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:bson:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:mongodb-driver-core:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:mongodb-driver-sync:5.1.0" />
+      <element id="library" level="project" name="Maven: org.opentest4j:opentest4j:1.3.0" />
+      <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.36" />
+      <element id="library" level="project" name="Maven: org.xerial.snappy:snappy-java:1.1.10.5" />
+      <element id="library" level="project" name="Maven: org.yaml:snakeyaml:2.2" />
     </root>
   </artifact>
 </component>

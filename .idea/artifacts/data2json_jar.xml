@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="data2json.jar">
-    <output-path>$PROJECT_DIR$/lib</output-path>
-    <root id="archive" name="openbexi_timeline.jar">
+  <artifact type="jar" build-on-make="true" name="data2json.jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/data2json</output-path>
+    <root id="archive" name="GNS_tools.jar">
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/junit/junit/4.13.1/junit-4.13.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/tomcat/lib/annotations-api.jar" path-in-jar="/" />
@@ -12,6 +12,40 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/tomcat/lib/tomcat-embed-el.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/tomcat/lib/tomcat-embed-jasper.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/tomcat/lib/tomcat-embed-websocket.jar" path-in-jar="/" />
+      <element id="dir-copy" path="$PROJECT_DIR$/tools" />
+      <element id="module-output" name="openbexi_timeline" />
+      <element id="library" level="project" name="Maven: com.github.luben:zstd-jni:1.5.5-6" />
+      <element id="library" level="project" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" />
+      <element id="library" level="project" name="Maven: io.prometheus.jmx:jmx_prometheus_javaagent:1.0.0" />
+      <element id="library" level="project" name="Maven: javax.websocket:javax.websocket-api:1.1" />
+      <element id="library" level="project" name="Maven: junit:junit:4.13.2" />
+      <element id="library" level="project" name="Maven: org.apache.kafka:kafka-clients:3.7.0" />
+      <element id="library" level="project" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:9.0.85" />
+      <element id="library" level="project" name="Maven: org.apache.tomcat:tomcat-annotations-api:9.0.85" />
+      <element id="library" level="project" name="Maven: org.apiguardian:apiguardian-api:1.1.2" />
+      <element id="library" level="project" name="Maven: org.hamcrest:hamcrest-core:1.3" />
+      <element id="library" level="project" name="Maven: org.json:json:20240303" />
+      <element id="library" level="project" name="Maven: org.jsoup:jsoup:1.17.2" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-api:5.11.0-M2" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter-params:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.jupiter:junit-jupiter:5.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.junit.platform:junit-platform-commons:1.11.0-M2" />
+      <element id="library" level="project" name="Maven: org.junit.platform:junit-platform-engine:1.11.0-M1" />
+      <element id="library" level="project" name="Maven: org.lz4:lz4-java:1.8.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:bson-record-codec:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:bson:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:mongodb-driver-core:5.1.0" />
+      <element id="library" level="project" name="Maven: org.mongodb:mongodb-driver-sync:5.1.0" />
+      <element id="library" level="project" name="Maven: org.opentest4j:opentest4j:1.3.0" />
+      <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.36" />
+      <element id="library" level="project" name="Maven: org.xerial.snappy:snappy-java:1.1.10.5" />
+      <element id="library" level="project" name="Maven: org.yaml:snakeyaml:2.2" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.17.0" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.17.0" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.17.0" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0" />
+      <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy:1.14.9" />
     </root>
   </artifact>
 </component>

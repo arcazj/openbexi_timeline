@@ -37,7 +37,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl --fail http://localhost:8442/health || exit 1
 
 # Command to run the application with the javaagent option
-CMD ["java", "-cp", "openbexi_timeline.jar", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_startup.yml"]
+CMD ["java", "-javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml", "-cp", "openbexi_timeline-jar-with-dependencies.jar", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_startup.yml"]
 
 #  docker push arcazj/openbexi_timeline
 
