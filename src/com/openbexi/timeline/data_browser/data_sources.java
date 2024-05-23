@@ -1,8 +1,8 @@
 package com.openbexi.timeline.data_browser;
 
-import io.prometheus.jmx.shaded.org.yaml.snakeyaml.DumperOptions;
-import io.prometheus.jmx.shaded.org.yaml.snakeyaml.Yaml;
-import io.prometheus.jmx.shaded.org.yaml.snakeyaml.representer.Representer;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.representer.Representer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
