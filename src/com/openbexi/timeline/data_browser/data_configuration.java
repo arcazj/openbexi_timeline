@@ -36,7 +36,7 @@ public class data_configuration {
         JSONParser parser = new JSONParser();
         try {
             this.configuration = (JSONObject) parser.parse(json_sources);
-        } catch (ParseException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
