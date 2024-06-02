@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0
+ *     OpenBEXI Timeline version 1.0a
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -934,7 +934,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0</legend>\n" +
+                "<legend> version 1.0a</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2255,10 +2255,9 @@ function OB_TIMELINE() {
                             if (sortByValue && !ob_layouts.has(sortByValue)) {
                                 ob_layouts.add(sortByValue);
                             }
-
-                            const firstLayoutLength = [...ob_layouts][0]?.length || 0;
+                            const firstLayoutLength = [...ob_layouts][ob_layouts.size - 1]?.length || 0;
                             if (firstLayoutLength > max_name_length) {
-                                max_name_length = firstLayoutLength + 1;
+                                max_name_length = firstLayoutLength;
                             }
                         } catch (error) {
                             //console.error(error);
@@ -2614,8 +2613,8 @@ function OB_TIMELINE() {
 
         this.ob_scene[ob_scene_index].add(ob_model_name);
         this.ob_scene[ob_scene_index].objects.push(ob_model_name);
-        this.add_text_sprite(ob_scene_index, ob_model_name, text, 60, 0, 10, false,
-            24, "normal", "normal", textColor, 'Arial');
+        this.add_text_sprite(ob_scene_index, ob_model_name, text, 0, 0, 10, false,
+            24, "normal", "bold", textColor, 'Arial');
 
     };
 
@@ -2703,6 +2702,7 @@ function OB_TIMELINE() {
 
         const currentScene = this.ob_scene[ob_scene_index];
         const bands = currentScene.bands;
+        let coef = 1;
 
         bands.forEach(band => {
             this.add_band(
@@ -2711,13 +2711,13 @@ function OB_TIMELINE() {
             );
 
             if (band.layout_name !== "NONE") {
-                const adjustedX = -(currentScene.width / 2) +
-                    (parseInt(band.layouts.max_name_length) *
-                        parseInt(band.layouts.max_name_length) / 2);
                 const adjustedZ = parseInt(band.z) + 50;
                 const adjustedDepth = parseInt(band.depth) + 1;
-                let adjustedWidth = parseInt(band.layouts.max_name_length) *
-                    parseInt(band.fontSizeInt) * 2.2;
+                if (parseInt(band.layouts.max_name_length) <= 4) coef = 1.4;
+                if (parseInt(band.layouts.max_name_length) >= 12) coef = .8;
+                if (parseInt(band.layouts.max_name_length) >= 22) coef = .7;
+                let adjustedWidth = parseInt(band.layouts.max_name_length) * 24 * coef;
+                const adjustedX = -(currentScene.width / 2) + (adjustedWidth / 2);
                 const luminanceColor = this.hex_Luminance(band.color, undefined);
 
                 if (adjustedWidth > 0)
@@ -4115,6 +4115,7 @@ function OB_TIMELINE() {
         ob_sprite.fontStyle = "fontStyle";
         ob_sprite.fontWeight = fontWeight;
         ob_sprite.borderRadius = 0;
+
         if (textBackgroundColor !== false) {
             ob_sprite.borderColor = "#bd0202";
             ob_sprite.borderWidth = 1;
@@ -4125,15 +4126,8 @@ function OB_TIMELINE() {
             ob_sprite.color = color;
         }
 
-
-        let ob_x = x;
-        if (this.ob_scene[ob_scene_index].ob_camera_type !== "Orthographic") {
-            ob_x -= 32;
-            z = text.toString().length * 3.2;
-        }
-
-        ob_sprite.position.set(ob_x, y, z);
-        ob_sprite.pos_x = ob_x;
+        ob_sprite.position.set(x, y, z);
+        ob_sprite.pos_x = x;
         ob_sprite.pos_y = y;
         ob_sprite.pos_z = z;
 

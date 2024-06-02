@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" build-on-make="true" name="openbexi_timeline:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/openbexi_timeline_jar</output-path>
+    <output-path>$PROJECT_DIR$/lib</output-path>
     <root id="archive" name="openbexi_timeline.jar">
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
@@ -67,9 +67,6 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-cbor/2.14.2/jackson-dataformat-cbor-2.14.2.jar" path-in-jar="/" />
       <element id="module-source" name="openbexi_timeline" />
       <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.17.1" />
-      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.17.1" />
-      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.17.1" />
-      <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.1" />
       <element id="library" level="project" name="Maven: com.github.luben:zstd-jni:1.5.5-6" />
       <element id="library" level="project" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" />
       <element id="library" level="project" name="Maven: io.prometheus.jmx:jmx_prometheus_javaagent:1.0.0" />

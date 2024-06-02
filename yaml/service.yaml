@@ -9,12 +9,12 @@ spec:
     - protocol: TCP
       port: 8441
       targetPort: 8441
-      nodePort: 30001  # Specific node port if desired
+      nodePort: 30041  # Specific node port if desired
       name: sse-port
     - protocol: TCP
       port: 8442
       targetPort: 8442
-      nodePort: 30002  # Specific node port if desired
+      nodePort: 30042  # Specific node port if desired
       name: http-port
   type: NodePort
   # or NodePort, ClusterIP based on your needs
