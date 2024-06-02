@@ -6,6 +6,7 @@ WORKDIR /
 
 # Copy the essential static files that are less likely to change frequently
 COPY openbexi_timeline.html ./
+COPY openbexi_test_timeline.html ./
 COPY src src
 COPY css css
 COPY lib lib
@@ -17,9 +18,6 @@ COPY icon icon
 COPY tests tests
 COPY tomcat tomcat
 COPY node_modules node_modules
-
-# Copy the JAR file and other dependencies that might change frequently
-COPY out/artifacts/openbexi_timeline_jar/openbexi_timeline.jar ./
 
 # Expose the required ports;
 # use port 8441 to enable the openbexi timeline server to push real-time updates or events via the Server-Sent Events (SSE) technology.
@@ -37,7 +35,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl --fail http://localhost:8442/health || exit 1
 
 # Command to run the application with the javaagent option
-CMD ["java", "-javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml", "-cp", "openbexi_timeline-jar-with-dependencies.jar", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_startup.yml"]
+CMD ["java", "-javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml", "-cp", "lib/openbexi_timeline.jar", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_startup.yml"]
 
 #  docker push arcazj/openbexi_timeline
 
