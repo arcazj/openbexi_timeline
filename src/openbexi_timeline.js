@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0a
+ *     OpenBEXI Timeline version 1.0b
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -934,7 +934,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0a</legend>\n" +
+                "<legend> version 1.0b</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -3977,6 +3977,10 @@ function OB_TIMELINE() {
     ) {
         if (!session.data) {
             return null;
+        }
+
+        if (band_name.match(/_overview/) && this.ob_scene[ob_scene_index].ob_search_value !== "") {
+            image = "icon/ob_yellow_square.png";
         }
 
         let geometry, material, ob_event, texture;

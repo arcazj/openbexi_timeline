@@ -57,7 +57,7 @@ public class openbexi_timeline implements Runnable {
             System.err.println("Argument " + args[0] + " " + "-data_conf <file> ");
             System.exit(1);
         }
-        if (args[0].equals("-data_conf")) {
+        if (args[0].equals("-data_conf") || args[0].equals("-data_path")) {
             data_conf = args[1];
             try {
                 File file_configuration = new File(data_conf);
@@ -67,7 +67,7 @@ public class openbexi_timeline implements Runnable {
                     System.exit(1);
                 }
                 data_sources source = new data_sources();
-                System.out.println("reading "+file_configuration.getAbsolutePath());
+                System.out.println("reading " + file_configuration.getAbsolutePath());
                 source.readYaml(file_configuration.getAbsolutePath());
                 String jsonOutput = source.dataSourcesToJson();
                 connectors = source.getConnectors(jsonOutput).split("\\|");
