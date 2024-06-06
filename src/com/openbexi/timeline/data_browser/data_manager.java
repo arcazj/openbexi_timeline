@@ -292,9 +292,9 @@ abstract class data_manager {
 
         try (FileWriter file = new FileWriter(outputs)) {
             if (ob_user.equals("guest")) {
-                File source = new File("filters/default_filter_setting.json");
+                /*File source = new File("filters/default_filter_setting.json");
                 if (Files.exists(Path.of(source.getAbsolutePath())))
-                    Files.copy(source.toPath(), outputs.toPath());
+                    Files.copy(source.toPath(), outputs.toPath());*/
             } else {
                 file.write(jsonObjectMerged.toString());
                 file.flush();

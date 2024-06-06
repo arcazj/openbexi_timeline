@@ -318,7 +318,6 @@ public class data_sources {
             jsonToDataSources(jsonContent);
         } catch (IOException e) {
             System.err.println("Error reading YAML file: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
