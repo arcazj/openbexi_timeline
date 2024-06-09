@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -163,6 +164,9 @@ abstract class data_manager {
         boolean change_current = true;
 
         File outputs = new File(buildFile + "/" + ob_user + "_" + ob_timeline_name + "_filter_setting.json");
+        if (ob_user.equals("guest"))
+            outputs = new File("filters/default_filter_setting.json");
+
         if (!outputs.getParentFile().exists())
             outputs.getParentFile().mkdirs();
 
@@ -290,19 +294,14 @@ abstract class data_manager {
                     ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
         }
 
+        if (ob_user.equals("guest"))
+            outputs = new File(buildFile + "/" + ob_user + "_" + ob_timeline_name + "_filter_setting.json");
         try (FileWriter file = new FileWriter(outputs)) {
-            if (ob_user.equals("guest")) {
-                /*File source = new File("filters/default_filter_setting.json");
-                if (Files.exists(Path.of(source.getAbsolutePath())))
-                    Files.copy(source.toPath(), outputs.toPath());*/
-            } else {
-                file.write(jsonObjectMerged.toString());
-                file.flush();
-            }
+            file.write(jsonObjectMerged.toString());
+            file.flush();
         } catch (IOException e) {
             log(e, "Exception");
         }
-
         try {
             return parser.parse(jsonObjectMerged.toString());
         } catch (ParseException e) {
@@ -310,18 +309,18 @@ abstract class data_manager {
         }
     }
 
-    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene,String ob_namespace,
+    public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_namespace,
                             String ob_filter_name, String ob_backgroundColor, String ob_user, String ob_email,
                             String ob_top, String ob_left, String ob_width, String ob_height, String ob_camera,
                             String ob_sort_by, String ob_filter) {
-        return updateFilter("addFilter", ob_timeline_name, ob_scene,ob_namespace, ob_title, ob_filter_name,
+        return updateFilter("addFilter", ob_timeline_name, ob_scene, ob_namespace, ob_title, ob_filter_name,
                 ob_backgroundColor, ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by,
                 ob_filter);
     }
 
     public Object removeFilter(String ob_timeline_name, String ob_filter_name, String ob_scene, String ob_namespace,
                                String ob_user) {
-        updateFilter("remove", ob_timeline_name, ob_scene,ob_namespace, null, ob_filter_name, null,
+        updateFilter("remove", ob_timeline_name, ob_scene, ob_namespace, null, ob_filter_name, null,
                 null, null, null, null, null, null, null,
                 null, null);
         return false;
