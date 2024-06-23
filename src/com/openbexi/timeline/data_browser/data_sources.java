@@ -129,6 +129,7 @@ class DataSourceConfig {
     private Filter filter;
     private String connector;
     private Render render;
+    private String url;
 
     public String getNamespace() {
         return namespace;
@@ -218,6 +219,7 @@ class DataSourceConfig {
         json.put("permission", permission);
         json.put("converter2events_class", converter2events_class);
         json.put("data_path", dataPath);
+        json.put("url", url);
         json.put("data_model", dataModel);
         json.put("filter", filter != null ? filter.toJson() : null);
         json.put("connector", connector);
@@ -232,6 +234,7 @@ class DataSourceConfig {
         this.permission = (String) jsonObject.get("permission");
         this.converter2events_class = (String) jsonObject.get("converter2events_class");
         this.dataPath = (String) jsonObject.get("data_path");
+        this.url = (String) jsonObject.get("url");
         this.dataModel = (String) jsonObject.get("data_model");
         if (jsonObject.containsKey("filter")) {
             this.filter = new Filter();
