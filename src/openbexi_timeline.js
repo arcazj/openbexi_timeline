@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0b
+ *     OpenBEXI Timeline version 1.0d
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -76,6 +76,9 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_error.png", new THREE.TextureLoader().load("icon/ob_error.png"));
     ob_texture.set("icon/ob_warning.png", new THREE.TextureLoader().load("icon/ob_warning.png"));
     ob_texture.set("icon/ob_info.png", new THREE.TextureLoader().load("icon/ob_info.png"));
+    ob_texture.set("icon/ob_install.png", new THREE.TextureLoader().load("icon/ob_install.png"));
+    ob_texture.set("icon/ob_uninstall.png", new THREE.TextureLoader().load("icon/ob_uninstall.png"));
+    ob_texture.set("icon/ob_uninstall.png", new THREE.TextureLoader().load("icon/ob_uninstall.png"));
     ob_texture.set("icon/ob_start.png", new THREE.TextureLoader().load("icon/ob_start.png"));
     ob_texture.set("icon/ob_stop.png", new THREE.TextureLoader().load("icon/ob_stop.png"));
     ob_texture.set("icon/ob_check_failed.png", new THREE.TextureLoader().load("icon/ob_check_failed.png"));
@@ -104,6 +107,15 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_info2.png", new THREE.TextureLoader().load("icon/ob_info2.png"));
     ob_texture.set("icon/ob_delete.png", new THREE.TextureLoader().load("icon/ob_delete.png"));
     ob_texture.set("icon/ob_yellow_ring.png", new THREE.TextureLoader().load("icon/ob_yellow_ring.png"));
+    ob_texture.set("icon/ob_data_issue.png", new THREE.TextureLoader().load("icon/ob_data_issue.png"));
+    ob_texture.set("icon/ob_data.png", new THREE.TextureLoader().load("icon/ob_data.png"));
+    ob_texture.set("icon/ob_data_source.png", new THREE.TextureLoader().load("icon/ob_data_source.png"));
+    ob_texture.set("icon/ob_sync.png", new THREE.TextureLoader().load("icon/ob_sync.png"));
+    ob_texture.set("icon/ob_out_of_sync.png", new THREE.TextureLoader().load("icon/ob_out_of_sync.png"));
+    ob_texture.set("icon/ob_emergency.png", new THREE.TextureLoader().load("icon/ob_emergency.png"));
+    ob_texture.set("icon/ob_clone.png", new THREE.TextureLoader().load("icon/ob_clone.png"));
+    ob_texture.set("icon/ob_view.png", new THREE.TextureLoader().load("icon/ob_view.png"));
+
 
 
     // Satellite/Communication texture
@@ -934,7 +946,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0b</legend>\n" +
+                "<legend> version 1.0d</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +

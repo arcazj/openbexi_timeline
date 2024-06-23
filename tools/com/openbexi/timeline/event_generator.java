@@ -60,7 +60,8 @@ public class event_generator {
                 "icon\\/ob_check_failed.png", "icon\\/ob_warning.png", "icon\\/ob_connect.png", "icon\\/ob_phone.png",
                 "icon\\/ob_conflict.png", "icon\\/ob_bug.png", "icon\\/ob_lost_connection.png", "icon\\/ob_swap.png",
                 "icon\\/ob_blue_square.png", "icon\\/ob_orange_square.png", "icon\\/ob_green_square.png",
-                "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png"
+                "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png", "icon\\/ob_data_issue.png",
+                "icon\\/ob_data.png", "icon\\/ob_sync.png", "icon\\/ob_out_of_sync.png", "icon\\/ob_loading.png"
         };
         String color;
         long dateL = date.getTime();
@@ -146,7 +147,7 @@ public class event_generator {
                     file.write("\"render\":{");
                     file.write("\"color\":\"" + color + "\",");
                     if (i == 0 || i == 1 || i == 3 || i == 5 || i == 7)
-                        file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 20)] + "\",");
+                        file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 27)] + "\",");
                     file.write("},");
 
                     // Add activities randomly inside session
@@ -183,7 +184,7 @@ public class event_generator {
                             file.write("\"render\":{");
                             file.write("\"color\":\"" + color + "\",");
                             if (i == 0 || i == 1 || i == 3 || i == 5 || i == 7)
-                                file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 20)] + "\",");
+                                file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 25)] + "\",");
                             file.write("},");
                             file.write("},");
                         }
@@ -221,7 +222,8 @@ public class event_generator {
                 "icon\\/ob_check_failed.png", "icon\\/ob_warning.png", "icon\\/ob_connect.png", "icon\\/ob_phone.png",
                 "icon\\/ob_conflict.png", "icon\\/ob_bug.png", "icon\\/ob_lost_connection.png", "icon\\/ob_swap.png",
                 "icon\\/ob_blue_square.png", "icon\\/ob_orange_square.png", "icon\\/ob_green_square.png",
-                "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png"
+                "icon\\/ob_purple_square.png", "icon\\/ob_yellow_square.png", "icon\\/ob_data_issue.png",
+                "icon\\/ob_data.png", "icon\\/ob_sync.png", "icon\\/ob_out_of_sync.png", "icon\\/ob_loading.png"
         };
         String color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                 + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
