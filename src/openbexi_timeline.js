@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0d
+ *     OpenBEXI Timeline version 1.0e
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -115,7 +115,6 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_emergency.png", new THREE.TextureLoader().load("icon/ob_emergency.png"));
     ob_texture.set("icon/ob_clone.png", new THREE.TextureLoader().load("icon/ob_clone.png"));
     ob_texture.set("icon/ob_view.png", new THREE.TextureLoader().load("icon/ob_view.png"));
-
 
 
     // Satellite/Communication texture
@@ -453,8 +452,8 @@ function OB_TIMELINE() {
             "&userName=" + this.ob_user_name;
         this.load_data(ob_scene_index);
     };
+
     OB_TIMELINE.prototype.ob_get_all_sorting_options = function (ob_scene_index) {
-        let OB_MAX_ATT_VALUE = 15;
         let ob_build_all_sorting_options = "<option value='" + "NONE" + "'>" + "NONE" + "</option>\n";
         try {
             for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
@@ -463,12 +462,8 @@ function OB_TIMELINE() {
 
                 if (value_items.length > 1) {
                     for (let i = 0; i < value_items.length; i++) {
-                        if (value_items[i].length > OB_MAX_ATT_VALUE) {
-                            ob_key_display = false;
-                            break;
-                        }
+                        ob_key_display = true;
                     }
-                    // Allow only Sorting for short attribute value not longer than OB_MAX_ATT_VALUE
                     if (ob_key_display === true) {
                         ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
                     }
@@ -946,7 +941,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0d</legend>\n" +
+                "<legend> version 1.0e</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
