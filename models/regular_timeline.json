@@ -10,8 +10,6 @@
       "height": 1000,
       "fontSize": 12,
       "width": 2200,
-      "data_default_port": 8442,
-      "data_sse_port": 8441,
       "data": ""
     }
   ],
