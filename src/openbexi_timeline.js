@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0e
+ *     OpenBEXI Timeline version 1.0f
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -941,7 +941,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0e</legend>\n" +
+                "<legend> version 1.0f</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -2367,7 +2367,7 @@ function OB_TIMELINE() {
             }
         }
 
-        if (new_timeline_height !== 0) {
+        if (new_timeline_height !== 0 && !isNaN(new_timeline_height)) {
             this.ob_scene[ob_scene_index].ob_height = new_timeline_height;
         }
     };
@@ -3611,6 +3611,13 @@ function OB_TIMELINE() {
 
                 if (band.lastGreaterY !== -this.ob_scene[ob_scene_index].ob_height / 2) {
                     band.lastGreaterY += band.trackIncrement;
+                    if (i === 0 && this.ob_scene[ob_scene_index].bands.length === 2 &&
+                        this.ob_scene[ob_scene_index].bands[1].name.match(/overview_/) &&
+                        band.lastGreaterY <= this.ob_scene[ob_scene_index].height / 2) {
+                        band.maxY = this.ob_scene[ob_scene_index].height / 2;
+                        band.minY = -band.maxY;
+                        band.lastGreaterY = this.ob_scene[ob_scene_index].height / 2;
+                    }
                 } else {
                     band.maxY = this.ob_scene[ob_scene_index].height / 2;
                     band.minY = -band.maxY;
