@@ -1,0 +1,67 @@
+{
+  "dateTimeFormat": "iso8601",
+  "scene": "Timeline report",
+  "namespace": "0",
+  "openbexi_timeline": [
+    {
+      "name": "ob_timeline_2",
+      "title1": "null",
+      "user": "guest",
+      "email": "",
+      "start": "current_time",
+      "top": "0",
+      "left": "0",
+      "width": "2200",
+      "height": "1000",
+      "camera": "Orthographic",
+      "backgroundColor": "#f3ffff",
+      "sortBy": "NONE",
+      "sources": [
+        {
+          "filter": {
+            "include": "",
+            "exclude": ""
+          },
+          "connector": "secure_sse:8441|secure:8442",
+          "enable": true,
+          "data_model": "\/data\/SOURCES1\/yyyy\/mm\/dd",
+          "namespace": "SOURCE1",
+          "converter2events_class": "build_in",
+          "permission": "",
+          "type": "json_file",
+          "render": {
+            "alternateColor": "#e6e6e6",
+            "color": "#000000",
+            "dateColor": "#ffffff",
+            "textColor": "#ffffff"
+          },
+          "url": null,
+          "data_path": "\/data\/"
+        }
+      ],
+      "filters": [
+        {
+          "name": "ALL",
+          "backgroundColor": "#f3ffff",
+          "filter_value": "",
+          "sortBy": "NONE",
+          "current": "yes"
+        },
+        {
+          "backgroundColor": "#f3ffff",
+          "current": "no",
+          "filter_value": "",
+          "name": "STATUS",
+          "sortBy": "status"
+        },
+        {
+          "backgroundColor": "#f3ffff",
+          "current": "no",
+          "filter_value": "",
+          "name": "SYSTEM",
+          "sortBy": "NONE"
+        }
+      ]
+    }
+  ]
+}
