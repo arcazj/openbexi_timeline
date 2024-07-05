@@ -129,7 +129,7 @@ public class json_files_manager extends data_manager {
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
                     String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis", "info");
             if (all_obj.size() == 0)
-                return getDummyJson("no data found", "");
+                return getDummyJson("no data found", null);
             return parser.parse(jsonObjectMerged_begin + all_obj.toJSONString().replaceAll("\\\\/", "/") + jsonObjectMerged_end);
         } catch (ParseException e) {
             return getDummyJson("no data found", null);
@@ -182,27 +182,54 @@ public class json_files_manager extends data_manager {
         return true;
     }
 
-    /**
-     * @return a sample json data with one event reporting there is no data found
-     */
     public String getDummyJson(String title, String date) {
 
-        // set time zone to default
+        // Set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        String ob_data = "", ob_data_start, ob_data_end = "";
-        ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"scene\": \"0\",\"events\" : [";
-        long ob_time = new Date().getTime();
-        Date ob_start_time = new Date(ob_time);
-        if (date == null)
-            ob_start_time = new Date(ob_time);
-        else
-            ob_start_time = new Date(_data_configuration.getCurrentDate());
 
-        ob_data += "{\"ID\": \"" + UUID.randomUUID() +
-                "\",\"start\": \"" + ob_start_time + "\"," +
-                "\"end\": \"" + "\"," +
-                "\"data\":{ \"title\":\"" + title + "\",\"description\":\"NONE\"}}";
-        ob_data_end = "]}\n\n";
+        // Define JSON start and end
+        String ob_data_start = "{\"dateTimeFormat\": \"iso8601\",\"scene\": \"0\",\"events\" : [";
+        String ob_data_end = "]}\n\n";
+
+        // Initialize date and time
+        long ob_time = new Date().getTime();
+        Date ob_start_time;
+
+        if (date == null) {
+            ob_start_time = new Date(ob_time);
+        } else {
+            ob_start_time = new Date(); // You need to parse the provided date here
+        }
+
+        // Formatting dates
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+        String ob_start_time_str = dateFormat.format(ob_start_time);
+        String ob_end_time_str = "";
+
+        // Constructing data object
+        JSONObject dataObject = new JSONObject();
+        dataObject.put("namespace", "NONE");
+        dataObject.put("title", title);
+        dataObject.put("description", "NONE");
+
+        // Constructing render object
+        JSONObject renderObject = new JSONObject();
+        renderObject.put("color", "#687828");
+        renderObject.put("image", "icon/ob_data_issue.png");
+
+        // Constructing main event object
+        JSONObject eventObject = new JSONObject();
+        eventObject.put("id", UUID.randomUUID().toString());
+        eventObject.put("start", ob_start_time_str);
+        eventObject.put("end", ob_end_time_str);
+        eventObject.put("status", "NONE");
+        eventObject.put("data", dataObject);
+        eventObject.put("render", renderObject);
+
+        // Final JSON string
+        String ob_data = eventObject.toString();
+
+        // Return combined JSON
         return ob_data_start + ob_data + ob_data_end;
     }
 
@@ -634,6 +661,7 @@ public class json_files_manager extends data_manager {
 
         return new_events;
     }
+
     public void reindexFiles() {
 
     }
