@@ -184,7 +184,7 @@ public class event_generator {
                             file.write("\"render\":{");
                             file.write("\"color\":\"" + color + "\",");
                             if (i == 0 || i == 1 || i == 3 || i == 5 || i == 7)
-                                file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 25)] + "\",");
+                                file.write("\"image\":\"" + icon[getRandomNumberUsingNextInt(0, 20)] + "\",");
                             file.write("},");
                             file.write("},");
                         }
@@ -200,7 +200,7 @@ public class event_generator {
         }
     }
 
-    private void generate_simple(File outputs) {
+    private void generate_simple(File outputs, int eventsNumber) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Date date = this.get_date();
         String status;
@@ -238,7 +238,7 @@ public class event_generator {
 
         try (FileWriter file = new FileWriter(outputs)) {
             file.write(line_start);
-            for (int j = 0; j < 450; j++) {
+            for (int j = 0; j < eventsNumber; j++) {
                 color = "#" + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9)
                         + getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9) +
                         getRandomNumberUsingNextInt(0, 9) + getRandomNumberUsingNextInt(0, 9);
@@ -521,7 +521,7 @@ public class event_generator {
         JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
         for (int d = 0; d < configurations.size(); d++) {
             String namespace = (String) data_configuration.getConfiguration(d).get("namespace");
-            int number_of_day_in_the_future = 10;
+            int number_of_day_in_the_future = 30;
             long dateL = date.getTime();
             for (int i = 0; i < number_of_day_in_the_future; i++) {
                 date = new Date(dateL);
@@ -532,7 +532,8 @@ public class event_generator {
                 data_model = data_model.replace("yyyy", year).replace("mm", month).replace("dd", day);
                 File file = new File(data_model + "/events.json");
                 event_generator events = new event_generator(namespace, date, data_configuration);
-                events.generate_simple(file);
+                int eventNumber = events.getRandomNumberUsingNextInt(50, 600);;
+                events.generate_simple(file, eventNumber);
                 dateL = dateL + (3600 * 24 * 1000);
                 try {
                     Thread.sleep(1000);
