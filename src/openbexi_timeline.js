@@ -3611,13 +3611,13 @@ function OB_TIMELINE() {
 
                 if (band.lastGreaterY !== -this.ob_scene[ob_scene_index].ob_height / 2) {
                     band.lastGreaterY += band.trackIncrement;
-                    if (i === 0 && this.ob_scene[ob_scene_index].bands.length === 2 &&
+                    /*if (i === 0 && this.ob_scene[ob_scene_index].bands.length === 2 &&
                         this.ob_scene[ob_scene_index].bands[1].name.match(/overview_/) &&
-                        band.lastGreaterY <= this.ob_scene[ob_scene_index].height / 2) {
+                        band.minY > -this.ob_scene[ob_scene_index].height / 2) {
                         band.maxY = this.ob_scene[ob_scene_index].height / 2;
                         band.minY = -band.maxY;
                         band.lastGreaterY = this.ob_scene[ob_scene_index].height / 2;
-                    }
+                    }*/
                 } else {
                     band.maxY = this.ob_scene[ob_scene_index].height / 2;
                     band.minY = -band.maxY;
