@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0f
+ *     OpenBEXI Timeline version 1.0g
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -165,8 +165,8 @@ function OB_TIMELINE() {
                 this.set_bands(ob_scene_index);
                 this.update_bands_MinDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
                 this.update_bands_MaxDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
-                this.ob_scene[ob_scene_index].minDate = this.iniMinDate;
-                this.ob_scene[ob_scene_index].maxDate = this.iniMaxDate;
+                //this.ob_scene[ob_scene_index].minDate = this.iniMinDate;
+                //this.ob_scene[ob_scene_index].maxDate = this.iniMaxDate;
             } else if (ob_case === "re_sync") {
                 this.ob_set_scene(ob_scene_index);
                 this.ob_scene_init(ob_scene_index);
@@ -941,7 +941,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0f</legend>\n" +
+                "<legend> version 1.0g</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1444,7 +1444,7 @@ function OB_TIMELINE() {
                     that2.update_scene(ob_scene_index, that2.header, that2.params,
                         that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
                         that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
-                        null, false);
+                        null, true);
                 }
             }
             this.ob_view.onmousemove = function () {
@@ -2919,7 +2919,7 @@ function OB_TIMELINE() {
             if (this.first_sync === undefined) {
                 this.first_sync = true;
                 this.reset_synced_time("new_sync", ob_scene_index);
-                this.runEmptyTimeline(ob_scene_index);
+                //this.runEmptyTimeline(ob_scene_index);
                 if (this.data && this.data.match(/^(https|http?):\/\//)) {
                     this.ob_read_filter(ob_scene_index, 0);
                 } else if (this.data.includes("readDescriptor")) {
@@ -3611,13 +3611,13 @@ function OB_TIMELINE() {
 
                 if (band.lastGreaterY !== -this.ob_scene[ob_scene_index].ob_height / 2) {
                     band.lastGreaterY += band.trackIncrement;
-                    /*if (i === 0 && this.ob_scene[ob_scene_index].bands.length === 2 &&
+                    if (i === 0 && this.ob_scene[ob_scene_index].bands.length === 2 &&
                         this.ob_scene[ob_scene_index].bands[1].name.match(/overview_/) &&
                         band.minY > -this.ob_scene[ob_scene_index].height / 2) {
                         band.maxY = this.ob_scene[ob_scene_index].height / 2;
                         band.minY = -band.maxY;
                         band.lastGreaterY = this.ob_scene[ob_scene_index].height / 2;
-                    }*/
+                    }
                 } else {
                     band.maxY = this.ob_scene[ob_scene_index].height / 2;
                     band.minY = -band.maxY;
@@ -4157,6 +4157,8 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.build_model = function (ob_scene_index, sessions) {
         try {
             let ob_obj = Object.entries(sessions);
+            if (sessions.title === "no data found")
+                this.ob_scene[ob_scene_index].model = undefined;
             if (this.ob_scene[ob_scene_index].model === undefined) {
                 this.ob_scene[ob_scene_index].model = new Map(ob_obj);
                 this.ob_scene[ob_scene_index].model.delete("title");
