@@ -126,14 +126,37 @@ public class json_files_manager extends data_manager {
         String jsonObjectMerged_end = "}";
 
         try {
+            // Set default timezone to UTC
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+            // Calculate difference between end and start dates
+            long diffDate = this._currentEndDateL - this._currentStartDateL;
+
+            // Calculate new date as halfway between start and end dates
+            long newDate = this._currentEndDateL - (diffDate / 2);
+
+            // Format new date in UTC
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'UTC'");
+            String newDateStr = dateFormat.format(new Date(newDate));
+
+            // Logging the details
             log("Return " + String.format("% 5d", count) + " events/sessions -  " +
-                    String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis", "info");
+                    String.format("% 4d", (new Date().getTime() - t1.getTime())) + " millis" +
+                    " start=" + this._currentStartDate + " end=" + this._currentEndDate +
+                    " (current=" + newDateStr + ")", "info");
+
+            // Check if there are no objects returned
             if (all_obj.size() == 0)
-                return getDummyJson("no data found", null);
+                return getDummyJson("no data found", newDateStr);
+
+            // Parse and return the JSON object
             return parser.parse(jsonObjectMerged_begin + all_obj.toJSONString().replaceAll("\\\\/", "/") + jsonObjectMerged_end);
+
         } catch (ParseException e) {
+            // Handle parsing exception
             return getDummyJson("no data found", null);
         }
+
     }
 
     @Override
@@ -198,7 +221,7 @@ public class json_files_manager extends data_manager {
         if (date == null) {
             ob_start_time = new Date(ob_time);
         } else {
-            ob_start_time = new Date(); // You need to parse the provided date here
+            ob_start_time = new Date(date); // You need to parse the provided date here
         }
 
         // Formatting dates
