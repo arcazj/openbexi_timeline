@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0g
+ *     OpenBEXI Timeline version 1.0h
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -126,6 +126,19 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_tlm_red.png", new THREE.TextureLoader().load("icon/ob_tlm_red.png"));
     ob_texture.set("icon/ob_tlm_green.png", new THREE.TextureLoader().load("icon/ob_tlm_green.png"));
     ob_texture.set("icon/ob_tlm_orange.png", new THREE.TextureLoader().load("icon/ob_tlm_orange.png"));
+
+    // geology texture
+    ob_texture.set("icon/ob_earthquake_mag_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_red.png"));
+    ob_texture.set("icon/ob_earthquake_mag_9_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_9_red.png"));
+    ob_texture.set("icon/ob_earthquake_mag_8_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_8_red.png"));
+    ob_texture.set("icon/ob_earthquake_mag_7_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_7_red.png"));
+    ob_texture.set("icon/ob_earthquake_mag_6_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_6_red.png"));
+    ob_texture.set("icon/ob_earthquake_mag_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_black.png"));
+    ob_texture.set("icon/ob_earthquake_mag_5_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_5_black.png"));
+    ob_texture.set("icon/ob_earthquake_mag_4_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_4_black.png"));
+    ob_texture.set("icon/ob_earthquake_mag_3_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_3_black.png"));
+    ob_texture.set("icon/ob_earthquake_mag_2_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_2_black.png"));
+    ob_texture.set("icon/ob_earthquake_mag_1_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_1_black.png"));
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         try {
@@ -941,7 +954,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0g</legend>\n" +
+                "<legend> version 1.0h</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -1184,8 +1197,9 @@ function OB_TIMELINE() {
                 let ob_descriptor_body = "";
                 for (let [key, value] of Object.entries(descriptor.data)) {
                     if (key !== "sortByValue" && key !== "description" && key !== "analyze" && key !== "title" &&
-                        value.trim() !== "" && value !== "NA" && value !== "?" && value !== undefined)
-                        ob_descriptor_body += "<tr><td class=ob_descriptor_td>" + key + ":</td><td>" + value +
+                        value != null && value.toString().trim() !== "" && value.toString() !== "NA" &&
+                        value.toString() !== "?" && value.toString() !== undefined)
+                        ob_descriptor_body += "<tr><td class=ob_descriptor_td>" + key + ":</td><td>" + value.toString() +
                             "</td></tr>";
                 }
                 let innerHTML = "<div class=ob_descriptor_head >" + "data" + "<\div><br><br>" +
