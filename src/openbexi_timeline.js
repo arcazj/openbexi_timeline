@@ -470,15 +470,17 @@ function OB_TIMELINE() {
         let ob_build_all_sorting_options = "<option value='" + "NONE" + "'>" + "NONE" + "</option>\n";
         try {
             for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
-                let ob_key_display = true;
-                let value_items = value.split(",");
+                if (value !== null) {
+                    let ob_key_display = true;
+                    let value_items = value.toString().split(",");
 
-                if (value_items.length > 1) {
-                    for (let i = 0; i < value_items.length; i++) {
-                        ob_key_display = true;
-                    }
-                    if (ob_key_display === true) {
-                        ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
+                    if (value_items.length > 1) {
+                        for (let i = 0; i < value_items.length; i++) {
+                            ob_key_display = true;
+                        }
+                        if (ob_key_display === true) {
+                            ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
+                        }
                     }
                 }
             }

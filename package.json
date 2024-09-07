@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "simple-jscalendar": "^1.4.5",
-    "three": "^0.164.1",
+    "three": "^0.168.0",
     "three-spritetext": "^1.8.2"
   }
 }
