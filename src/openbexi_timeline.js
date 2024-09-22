@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0h
+ *     OpenBEXI Timeline version 1.0i
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -139,6 +139,10 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_earthquake_mag_3_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_3_black.png"));
     ob_texture.set("icon/ob_earthquake_mag_2_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_2_black.png"));
     ob_texture.set("icon/ob_earthquake_mag_1_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_1_black.png"));
+    ob_texture.set("icon/ob_volcano_very_active.png", new THREE.TextureLoader().load("icon/ob_volcano_very_active.png"));
+    ob_texture.set("icon/ob_volcano_active.png", new THREE.TextureLoader().load("icon/ob_volcano_active.png"));
+    ob_texture.set("icon/ob_volcano.png", new THREE.TextureLoader().load("icon/ob_volcano.png"));
+    ob_texture.set("icon/ob_volcano_no_active.png", new THREE.TextureLoader().load("icon/ob_volcano_no_active.png"));
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         try {
@@ -471,14 +475,9 @@ function OB_TIMELINE() {
         try {
             for (let [key, value] of this.ob_scene[ob_scene_index].model.entries()) {
                 if (value !== null) {
-                    let ob_key_display = true;
                     let value_items = value.toString().split(",");
-
                     if (value_items.length > 1) {
-                        for (let i = 0; i < value_items.length; i++) {
-                            ob_key_display = true;
-                        }
-                        if (ob_key_display === true) {
+                        if (key.length < 15 && value_items.length < 15 && value_items[0].length < 15 && typeof value_items[0] === 'string') {
                             ob_build_all_sorting_options += "  <option value='" + key + "'>" + key + " </option>\n";
                         }
                     }
@@ -956,7 +955,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0h</legend>\n" +
+                "<legend> version 1.0i</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -4182,12 +4181,19 @@ function OB_TIMELINE() {
                 this.ob_scene[ob_scene_index].model.delete("analyze");
                 this.ob_scene[ob_scene_index].model.delete("sortByValue");
             } else {
+
                 for (let i = 0; i < ob_obj.length; i++) {
-                    if (ob_obj[i][0] !== "title" && ob_obj[i][0] !== "description" && ob_obj[i][0] !== "analyze" &&
-                        ob_obj[i][0] !== "sortByValue") {
-                        let v = this.ob_scene[ob_scene_index].model.get(ob_obj[i][0]);
-                        if (!v.toString().includes(ob_obj[i][1]))
-                            this.ob_scene[ob_scene_index].model.set(ob_obj[i][0], v + "," + ob_obj[i][1]);
+                    try {
+                        if (ob_obj[i][0] !== "title" && ob_obj[i][0] !== "description" && ob_obj[i][0] !== "analyze" &&
+                            ob_obj[i][0] !== "sortByValue") {
+                            if (ob_obj[i][1] !== null) {
+                                let v = this.ob_scene[ob_scene_index].model.get(ob_obj[i][0]);
+                                if (!v.toString().includes(ob_obj[i][1]))
+                                    this.ob_scene[ob_scene_index].model.set(ob_obj[i][0], v + "," + ob_obj[i][1]);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(err.toString());
                     }
                 }
             }
