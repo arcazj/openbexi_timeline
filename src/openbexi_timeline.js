@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2024 arcazj All rights reserved.
- *     OpenBEXI Timeline version 1.0i
+ *     OpenBEXI Timeline version 1.0j
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -955,7 +955,7 @@ function OB_TIMELINE() {
                 "<div class=\"ob_form1\">\n" +
                 "</form>\n" +
                 "<form>\n" +
-                "<legend> version 1.0i</legend>\n" +
+                "<legend> version 1.0j</legend>\n" +
                 "<br>" + "<br>" +
                 "</form>\n" +
                 "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
@@ -4070,7 +4070,6 @@ function OB_TIMELINE() {
                 //console.error("Invalid coordinates or size provided.");
                 return;
             }
-
             color = color || new THREE.Color("rgb(114, 171, 173)");
 
             const points = [
@@ -4188,8 +4187,12 @@ function OB_TIMELINE() {
                             ob_obj[i][0] !== "sortByValue") {
                             if (ob_obj[i][1] !== null) {
                                 let v = this.ob_scene[ob_scene_index].model.get(ob_obj[i][0]);
-                                if (!v.toString().includes(ob_obj[i][1]))
-                                    this.ob_scene[ob_scene_index].model.set(ob_obj[i][0], v + "," + ob_obj[i][1]);
+                                try {
+                                    if (!v.toString().includes(ob_obj[i][1]))
+                                        this.ob_scene[ob_scene_index].model.set(ob_obj[i][0], v + "," + ob_obj[i][1]);
+                                } catch (err1) {
+                                    //console.log(err1.toString());
+                                }
                             }
                         }
                     } catch (err) {
