@@ -23,6 +23,7 @@
 import * as THREE from 'three';
 import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
+import {TimelineViews} from './openbexi_timeline_views.js';
 
 const ob_MAX_SCENES = 3;
 const ob_timelines = [];
@@ -1600,6 +1601,9 @@ function OB_TIMELINE() {
         if (this.ob_timeline_header.style.width === undefined || this.ob_timeline_header.style.width === "")
             this.ob_timeline_header.style.width = "100%";
 
+        if (this.ob_views === undefined)
+            this.ob_views = new TimelineViews(this);
+
         // Mouse events
         //this.ob_timeline_header.addEventListener('mousedown', this.ob_onMouseDown);
         //this.ob_timeline_header.addEventListener('mousemove', this.ob_onMove);
@@ -1747,6 +1751,8 @@ function OB_TIMELINE() {
             this.ob_view.style.left = (this.ob_timeline_header.offsetWidth - 150) + "px";
         if (this.ob_no_view !== undefined)
             this.ob_no_view.style.left = (this.ob_timeline_header.offsetWidth - 150) + "px";
+
+        this.ob_views.refresh(ob_scene_index);
     };
 
     OB_TIMELINE.prototype.setGregorianUnitLengths = function (ob_scene_index) {
@@ -3051,6 +3057,9 @@ function OB_TIMELINE() {
             // Set the text based on the timeZone
             const dateString = this.ob_markerDate.toString().substring(0, 25);
             this.ob_time_marker.innerText = `${this.title} - ${dateString}` + (this.timeZone === "UTC" ? " - UTC" : "");
+
+            if (this.ob_views !== undefined)
+                this.ob_views.layoutToolbar();
 
             // Calendar updates if available
             if (this.ob_cal) {
@@ -4570,6 +4579,8 @@ function OB_TIMELINE() {
         this.ob_timeline_body.appendChild(rendererElement);
 
         this.ob_scene[ob_scene_index].ob_renderer.setSize(this.ob_scene[ob_scene_index].width, this.ob_scene[ob_scene_index].ob_height);
+        // Restore the split viewport after a scene rebuild has attached the canvas again.
+        this.ob_views.applyLayout();
     };
 
     OB_TIMELINE.prototype.ob_set_camera = function (ob_scene_index) {

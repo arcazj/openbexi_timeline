@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Timeline view regression checks</title>
+    <base href="../">
+    <link rel="stylesheet" href="css/ob_timeline_modern.css">
+    <script type="importmap">
+        {"imports": {
+            "three": "./node_modules/three/build/three.module.min.js",
+            "drag_controls": "./node_modules/three/examples/jsm/controls/DragControls.js",
+            "three-spritetext": "./node_modules/three-spritetext/dist/three-spritetext.mjs"
+        }}
+    </script>
+</head>
+<body>
+<h1>Timeline view regression checks</h1>
+<p>Serve the repository and open this page. These checks use the real toolbar and DOM without requiring a data server or WebGL.</p>
+<pre id="results">Running…</pre>
+<script type="module">
+    import {runTimelineViewTests} from './tests/timeline_views.test.js';
+    const results = document.getElementById('results');
+    try {
+        results.textContent = runTimelineViewTests().join('\n');
+    } catch (error) {
+        results.textContent = 'FAIL: ' + error.stack;
+        throw error;
+    }
+</script>
+</body>
+</html>
