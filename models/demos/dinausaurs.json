@@ -1,0 +1,69 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "Dinosaurs",
+      "date": 140,
+      "timeZone": "UTC",
+      "timeZoneLabel": "million years ago",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 700,
+      "fontSize": 12,
+      "data": "",
+      "overview": true,
+      "showCurrentTime": false
+    }
+  ],
+  "dataSource": {
+    "format": "simile-xml",
+    "time": {
+      "kind": "numeric",
+      "unit": "Ma",
+      "millisecondsPerUnit": 31536000000,
+      "direction": -1,
+      "approximatePrefixes": ["?"]
+    }
+  },
+  "bands": [
+    {
+      "name": "ob_band_main",
+      "height": "80%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 160,
+      "color": "#f0f4ec",
+      "dateFormat": "numeric",
+      "dateColor": "#8f9b8f",
+      "textColor": "#263238",
+      "SessionColor": "#638e62",
+      "eventColor": "#638e62",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band",
+      "height": "20%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 48,
+      "color": "#dbe3d5",
+      "dateFormat": "numeric",
+      "dateColor": "#7a8979",
+      "textColor": "#263238",
+      "SessionColor": "#638e62",
+      "eventColor": "#638e62",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    }
+  ]
+}

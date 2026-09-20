@@ -1,0 +1,63 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "Claude Monet",
+      "date": "1869-01-01T00:00:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 480,
+      "fontSize": 12,
+      "data": "",
+      "overview": false,
+      "showCurrentTime": false
+    }
+  ],
+  "dataSource": {
+    "format": "simile-xml",
+    "iconColors": {
+      "../../api/images/green-circle.png": "#00aa22"
+    },
+    "zones": [
+      {
+        "start": "1840-11-14T00:00:00Z",
+        "end": "1926-12-05T00:00:00Z",
+        "title": "birth",
+        "render": {
+          "color": "#f5bd76",
+          "opacity": 0.4,
+          "height": 32,
+          "verticalAlign": "top",
+          "labelFontSize": 20
+        }
+      }
+    ]
+  },
+  "bands": [
+    {
+      "name": "ob_band_life",
+      "height": "100%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 155,
+      "color": "#eeeeee",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "secondaryScale": {
+        "format": "elapsedYears",
+        "origin": "1840-11-14T00:00:00Z"
+      }
+    }
+  ]
+}

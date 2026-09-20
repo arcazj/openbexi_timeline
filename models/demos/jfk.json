@@ -1,0 +1,82 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "JFK chronology",
+      "date": "1963-11-22T18:55:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 520,
+      "fontSize": 12,
+      "data": "",
+      "overview": true,
+      "showCurrentTime": false,
+      "displayOffsetMinutes": -360,
+      "timeZoneLabel": "UTC-06:00"
+    }
+  ],
+  "dataSource": {
+    "format": "simile-xml",
+    "iconColors": {
+      "../../api/images/dark-red-circle.png": "#b00000"
+    },
+    "zones": [
+      {
+        "start": "1963-11-22T18:30:00Z",
+        "end": "1963-11-22T19:00:00Z",
+        "title": "shot",
+        "color": "#f5bd76",
+        "opacity": 0.35
+      },
+      {
+        "start": "1963-11-22T19:00:00Z",
+        "end": "1963-11-22T19:01:00Z",
+        "title": "t.o.d.",
+        "color": "#f5bd76",
+        "opacity": 0.35
+      }
+    ]
+  },
+  "bands": [
+    {
+      "name": "ob_band_main",
+      "height": "78%",
+      "intervalUnit": "MINUTE",
+      "intervalPixels": 12,
+      "color": "#eeeeee",
+      "dateFormat": "HH:mm",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band",
+      "height": "22%",
+      "intervalUnit": "HOUR",
+      "intervalPixels": 70,
+      "color": "#dcdcdc",
+      "dateFormat": "HH:mm",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    }
+  ]
+}
