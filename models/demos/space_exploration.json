@@ -1,0 +1,61 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "Space exploration",
+      "date": "2020-01-02T00:00:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 640,
+      "fontSize": 12,
+      "data": "",
+      "overview": true,
+      "showCurrentTime": false
+    }
+  ],
+  "dataSource": {
+    "format": "json"
+  },
+  "bands": [
+    {
+      "name": "ob_band_main",
+      "height": "80%",
+      "intervalUnit": "MONTH",
+      "intervalPixels": 260,
+      "color": "#f4f4ed",
+      "dateFormat": "yyyy-mmm",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#168548",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band",
+      "height": "20%",
+      "intervalUnit": "YEAR",
+      "intervalPixels": 180,
+      "color": "#d1d1d1",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#168548",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    }
+  ]
+}

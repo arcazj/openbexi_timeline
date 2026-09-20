@@ -1,0 +1,14 @@
+data_sources:
+- namespace: "ISAM"
+  type: "json_file"
+  enable: true
+  permission: ""
+  converter2events_class: "build_in"
+  data_path: "/fdc_logs/ESOC/"
+  data_model: "/fdc_logs/ESOC/GNS_data/yyyy/mm/dd"
+  filter:
+    include: ""
+    exclude: ""
+  connector: "secure_sse:8444|secure:8446"
+  render:
+    color: "#00b300"

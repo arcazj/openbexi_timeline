@@ -17,26 +17,6 @@
       "backgroundColor": "#f3ffff",
       "sortBy": "NONE",
       "sources": [
-        {
-          "filter": {
-            "include": "",
-            "exclude": ""
-          },
-          "connector": "secure_sse:8441|secure:8442",
-          "enable": true,
-          "data_model": "\/data\/SOURCES1\/yyyy\/mm\/dd",
-          "namespace": "SOURCE1",
-          "converter2events_class": "build_in",
-          "permission": "",
-          "type": "json_file",
-          "render": {
-            "alternateColor": "#e6e6e6",
-            "color": "#000000",
-            "dateColor": "#ffffff",
-            "textColor": "#ffffff"
-          },
-          "data_path": "\/data\/"
-        }
       ],
       "filters": [
         {
@@ -47,18 +27,11 @@
           "current": "yes"
         },
         {
-          "backgroundColor": "#f3ffff",
+          "backgroundColor": "#a1d9ff",
           "current": "no",
           "filter_value": "",
-          "name": "STATUS",
-          "sortBy": "status"
-        },
-        {
-          "backgroundColor": "#f3ffff",
-          "current": "no",
-          "filter_value": "",
-          "name": "SYSTEM",
-          "sortBy": "NONE"
+          "name": "BY_NAMESPACE",
+          "sortBy": "namespace"
         }
       ]
     }

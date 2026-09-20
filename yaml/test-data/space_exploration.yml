@@ -1,0 +1,8 @@
+version: 1
+server:
+  host: 127.0.0.1
+  port: 8786
+  local_browser: true
+  state_root: ../../var/test-data/space_exploration
+snapshot:
+  file: ../../data/space_exploration.json

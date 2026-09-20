@@ -1,0 +1,100 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "Religious history",
+      "date": "0010-01-01T00:00:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 760,
+      "fontSize": 12,
+      "data": "",
+      "overview": true,
+      "showCurrentTime": false
+    }
+  ],
+  "dataSource": {
+    "format": "simile-xml"
+  },
+  "bands": [
+    {
+      "name": "ob_overview_band_top",
+      "height": "10%",
+      "intervalUnit": "CENTURY",
+      "intervalPixels": 110,
+      "color": "#cfcdca",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    },
+    {
+      "name": "ob_band_durations",
+      "height": "30%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 300,
+      "color": "#e8dfd5",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "eventKind": "duration"
+    },
+    {
+      "name": "ob_band_events",
+      "height": "42%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 300,
+      "color": "#e9e8f5",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band_bottom",
+      "height": "18%",
+      "intervalUnit": "CENTURY",
+      "intervalPixels": 110,
+      "color": "#d0cde6",
+      "dateFormat": "yyyy",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ]
+    }
+  ]
+}

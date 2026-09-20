@@ -1,0 +1,46 @@
+{
+  "params": [
+    {
+      "name": "ob_demo",
+      "title": "Satellite ephemeris",
+      "date": "2020-04-22T12:00:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 660,
+      "fontSize": 12,
+      "data": "",
+      "overview": false,
+      "showCurrentTime": false
+    }
+  ],
+  "dataSource": {
+    "format": "json",
+    "fields": {
+      "namespace": "data.satellite"
+    }
+  },
+  "bands": [
+    {
+      "name": "ob_band_satellites",
+      "height": "100%",
+      "intervalUnit": "HOUR",
+      "intervalPixels": 90,
+      "color": "#edf5f8",
+      "dateFormat": "MM/dd HH:mm",
+      "dateColor": "#a0a6ab",
+      "textColor": "#263238",
+      "SessionColor": "#397aa6",
+      "eventColor": "#7675c8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "groupBy": "data.satellite"
+    }
+  ]
+}

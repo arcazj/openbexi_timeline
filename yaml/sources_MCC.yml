@@ -1,0 +1,33 @@
+data_sources:
+  - namespace: "MCC"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/fdc_logs/MCC_RH7/"
+    data_model: "/fdc_logs/MCC_RH7/GNS_data/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#b6e09d"
+      textColor: "#050505"
+      dateColor: "#050505"
+      alternateColor: "#e6e6e6"
+  - namespace: "POV"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/fdc_logs/MCC_RH7/"
+    data_model: "/fdc_logs/MCC_RH7/GNS_data/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#eabfff"
+      textColor: "#050505"
+      dateColor: "#050505"
+      alternateColor: "#e6e6e6"

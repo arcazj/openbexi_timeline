@@ -1,0 +1,8 @@
+version: 1
+server:
+  host: 127.0.0.1
+  port: 8785
+  local_browser: true
+  state_root: ../../var/test-data/religions
+snapshot:
+  file: ../../data/religions.json

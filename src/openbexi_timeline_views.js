@@ -162,7 +162,8 @@ export class TimelineViews {
                 if (String(activity.render?.backgroundColor).toUpperCase() === "#F8DF09") {
                     row.className = "ob_event_table_match";
                 }
-                const values = [data.title, activity.start, activity.end,
+                const formatDate = value => value && timeline.formatEventDate ? timeline.formatEventDate(value) : value;
+                const values = [data.title, formatDate(activity.start), formatDate(activity.end),
                     activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,
                     data.status];
                 for (const value of values) {

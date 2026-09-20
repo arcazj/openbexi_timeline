@@ -1,11 +1,11 @@
 data_sources:
-  - namespace: "SOURCE1"
+  - namespace: "SOURCE2"
     type: "json_file"
     enable: true
     permission: ""
     converter2events_class: "build_in"
     data_path: "/data/"
-    data_model: "/data/SOURCES1/yyyy/mm/dd"
+    data_model: "/data/SOURCES2/yyyy/mm/dd"
     filter:
       include: ""
       exclude: ""

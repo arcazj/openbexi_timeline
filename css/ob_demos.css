@@ -1,0 +1,17 @@
+body.ob_demo_page { margin: 0; background: #f7f9fb; color: #263238; font: 14px Arial, sans-serif; }
+#demo-header { padding: 14px 16px; border-bottom: 1px solid #c8d4dd; background: #fff; }
+.ob_demo_heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ob_demo_heading h1 { margin: 0; font-size: 20px; font-weight: 600; }
+.ob_demo_heading form { display: flex; align-items: center; gap: 8px; }
+.ob_demo_heading select, .ob_demo_heading button { font: inherit; padding: 6px 8px; border: 1px solid #9eafbc; border-radius: 4px; }
+.ob_demo_heading button { background: #e5edf3; color: #164d78; cursor: pointer; }
+#demo-description { margin: 10px 0; }
+#demo-header nav { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; align-items: center; }
+#demo-header a { color: #17679c; }
+#demo-status { color: #4b6273; }
+#demo-status[data-error="true"] { color: #a02727; }
+.ob_demo_page .ob_timeline_right_panel { width: 320px; max-width: calc(100vw - 24px); left: auto !important; right: 12px; background: white; z-index: 100001; }
+.ob_static_description { padding: 16px; white-space: normal; overflow-wrap: anywhere; }
+.ob_static_description h2 { font-size: 18px; }
+.ob_static_description p { font-size: 14px; line-height: 1.5; }
+.ob_demo_page :focus-visible { outline: 2px solid #17679c; outline-offset: 2px; }

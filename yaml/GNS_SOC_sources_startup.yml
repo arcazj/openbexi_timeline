@@ -1,0 +1,46 @@
+data_sources:
+  - namespace: "ESOC"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/fdc_logs/ESOC/"
+    data_model: "/fdc_logs/ESOC/GNS_data/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#a1d9ff"
+      textColor: "#000000"
+      dateColor: "#000000"
+  - namespace: "LSOC"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/fdc_logs/LSOC/"
+    data_model: "/fdc_logs/LSOC/GNS_data/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#E9D0A3"
+      textColor: "#000000"
+      dateColor: "#000000"
+  - namespace: "POV"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/fdc_logs/POV/"
+    data_model: "/fdc_logs/POV/GNS_data/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#E3A3E9"
+      textColor: "#000000"
+      dateColor: "#000000"

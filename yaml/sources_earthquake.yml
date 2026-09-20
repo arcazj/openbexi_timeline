@@ -1,0 +1,33 @@
+data_sources:
+  - namespace: "earthquake"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/data/"
+    data_model: "/data/earthquake/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#BBEDF0"
+      textColor: "#080808"
+      dateColor: "#080808"
+      alternateColor: "#BCD9DB"
+  - namespace: "volcano"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/data/"
+    data_model: "/data/volcano/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "secure_sse:8441|secure:8442"
+    render:
+      color: "#B6E8A7"
+      textColor: "#080808"
+      dateColor: "#080808"
+      alternateColor: "#BCD9DB"

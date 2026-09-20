@@ -24,6 +24,8 @@ import * as THREE from 'three';
 import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
+import {parseTimelineData, parseTimelineDate, formatTimelineDate, searchTimelineData,
+    prepareStaticBands, layoutStaticSessions, timelineValueToTime, formatTimelineValue} from './openbexi_timeline_data.js';
 
 const ob_MAX_SCENES = 3;
 const ob_timelines = [];
@@ -146,6 +148,7 @@ function OB_TIMELINE() {
     ob_texture.set("icon/ob_volcano_no_active.png", new THREE.TextureLoader().load("icon/ob_volcano_no_active.png"));
 
     OB_TIMELINE.prototype.get_synced_time = function () {
+        if (this.staticData) return parseTimelineDate(this.date);
         try {
             if (this.date === "current_time" || this.date === "Date.now()") {
                 return this.timeZone === "UTC" ? this.getUTCTime(Date.now()) : Date.now();
@@ -168,7 +171,7 @@ function OB_TIMELINE() {
         clearInterval(this.ob_interval_clock);
         try {
             if (ob_case === "new_view") {
-                this.ob_scene.sync_time = Date.parse(this.ob_markerDate.toString());
+                this.ob_scene.sync_time = this.ob_markerDate.getTime();
                 this.ob_scene[ob_scene_index].date = new Date(this.ob_scene.sync_time);
                 this.ob_scene[ob_scene_index].offset = this.ob_scene[ob_scene_index].width;
                 this.set_bands(ob_scene_index);
@@ -195,20 +198,21 @@ function OB_TIMELINE() {
                 this.update_bands_MinDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
                 this.update_bands_MaxDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
             } else if (ob_case === "new_search") {
-                this.ob_scene.sync_time = Date.parse(this.ob_markerDate.toString());
+                this.ob_scene.sync_time = this.ob_markerDate.getTime();
             } else if (ob_case === "new_calendar_date") {
                 this.first_sync = true;
+                const calendarTime = this.staticData ? parseTimelineDate(this.ob_scene[ob_scene_index].date_cal) : Date.parse(this.ob_scene[ob_scene_index].date_cal);
                 if (this.timeZone === "UTC")
                     this.ob_scene.sync_time =
-                        this.getUTCTime(Date.parse(this.ob_scene[ob_scene_index].date_cal));
+                        this.getUTCTime(calendarTime);
                 else
-                    this.ob_scene.sync_time = Date.parse(this.ob_scene[ob_scene_index].date_cal);
+                    this.ob_scene.sync_time = calendarTime;
                 this.ob_scene[ob_scene_index].date = this.ob_scene[ob_scene_index].date_cal;
                 this.set_bands(ob_scene_index);
                 this.update_bands_MinDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
                 this.update_bands_MaxDate(ob_scene_index, this.ob_scene[ob_scene_index].date);
             } else {
-                this.ob_scene.sync_time = Date.parse(this.ob_markerDate.toString());
+                this.ob_scene.sync_time = this.ob_markerDate.getTime();
             }
         } catch (err) {
             console.log("reset_synced_time(): Exception - Cannot sync time");
@@ -1123,7 +1127,7 @@ function OB_TIMELINE() {
                 "<div class='ob_gui_iframe_container2' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
                 "</div>";
 
-            this.div_cal.appendChild(ob_add_event_div);
+            if (!this.staticData) this.div_cal.appendChild(ob_add_event_div);
             this.ob_timeline_right_panel.appendChild(this.div_cal);
         } catch (err) {
             // Handle the error if needed
@@ -1139,6 +1143,11 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_read_descriptor = function (ob_scene_index, ob_event_id, start, namespace) {
+        if (this.staticData) {
+            const event = this.staticData.events.find(event => event.id === ob_event_id);
+            if (event) this.ob_createDescriptor(ob_scene_index, event);
+            return;
+        }
         this.data = this.ob_get_url_head(ob_scene_index) +
             "?ob_request=" + "readDescriptor" +
             "&scene=" + ob_scene_index +
@@ -1186,6 +1195,22 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.ob_createDescriptor = function (ob_scene_index, descriptor) {
+        if (this.staticData) {
+            this.ob_timeline_right_panel.replaceChildren();
+            this.ob_timeline_right_panel.style.visibility = "visible";
+            const details = document.createElement("div");
+            details.id = this.name + "_descriptor";
+            details.className = "ob_static_description";
+            const heading = document.createElement("h2");
+            heading.textContent = descriptor.data.title;
+            const text = document.createElement("p");
+            text.textContent = descriptor.data.description;
+            const dates = document.createElement("p");
+            dates.textContent = this.formatEventDate(descriptor.start) + (descriptor.end ? " — " + this.formatEventDate(descriptor.end) : "");
+            details.append(heading, dates, text);
+            this.ob_timeline_right_panel.appendChild(details);
+            return;
+        }
         // Use default descriptor if a specific descriptor has not been defined somewhere for events or sessions
         if (document.getElementById(this.name + "_descriptor") === null) {
             this.ob_timeline_right_panel.style.visibility = "visible";
@@ -1603,6 +1628,14 @@ function OB_TIMELINE() {
 
         if (this.ob_views === undefined)
             this.ob_views = new TimelineViews(this);
+        if (this.staticData) {
+            this.ob_start.hidden = this.ob_stop.hidden = this.ob_filter.hidden = true;
+            this.ob_calendar.hidden = this.staticTimeAxis?.kind === "numeric";
+            this.ob_view.hidden = this.ob_no_view.hidden = !this.bands.some(band => band.name.includes("overview_"));
+            this.ob_view.style.visibility = this.ob_visible_view ? "visible" : "hidden";
+            this.ob_no_view.style.visibility = this.ob_visible_view ? "hidden" : "visible";
+            this.ob_sync.title = "Return to the model's reference date";
+        }
 
         // Mouse events
         //this.ob_timeline_header.addEventListener('mousedown', this.ob_onMouseDown);
@@ -1782,6 +1815,7 @@ function OB_TIMELINE() {
 
 
     OB_TIMELINE.prototype.getUTCTime = function (ob_date) {
+        if (this.staticData) return ob_date;
         return ob_date + (this.timeZoneOffset * 60000);
     };
 
@@ -1925,6 +1959,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.dateToPixelOffSet = function (ob_scene_index, date, gregorianUnitLengths, intervalPixels) {
+        if (this.staticData) return (parseTimelineDate(date) - this.ob_scene.sync_time) / (gregorianUnitLengths / intervalPixels);
         if (date === undefined || date === "") {
             return NaN;
         }
@@ -1945,6 +1980,9 @@ function OB_TIMELINE() {
     ) {
         const totalGregorianUnitLengths =
             this.ob_scene.sync_time + pixels * (gregorianUnitLengths / intervalPixels);
+
+        if (this.staticData) return formatTimelineValue(totalGregorianUnitLengths, this.staticTimeAxis,
+            dateFormat === "DEFAULT" ? "yyyy-MM-dd HH:mm" : dateFormat, this.params[0].displayOffsetMinutes || 0);
 
         if (dateFormat !== "DEFAULT") {
             return this.convertDate(totalGregorianUnitLengths, dateFormat);
@@ -2018,6 +2056,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.update_bands_MinDate = function (ob_scene_index, date) {
+        if (this.staticData) return;
         let scene = this.ob_scene[ob_scene_index];
         scene.minDateL = 0;
         this.iniMinDateL = 0;
@@ -2051,6 +2090,7 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.update_bands_MaxDate = function (ob_scene_index, date) {
+        if (this.staticData) return;
         const currentScene = this.ob_scene[ob_scene_index];
         currentScene.maxDateL = 0;
         this.iniMaxDateL = 0;
@@ -2518,6 +2558,10 @@ function OB_TIMELINE() {
 
 
     OB_TIMELINE.prototype.set_bands = function (ob_scene_index) {
+        if (this.staticData) {
+            prepareStaticBands(this, ob_scene_index);
+            return;
+        }
         // If no overview defined, add a default one
         if (this.ob_visible_view) {
             this.add_band_overview(ob_scene_index);
@@ -2696,6 +2740,23 @@ function OB_TIMELINE() {
 
 
     OB_TIMELINE.prototype.create_zones = function (ob_scene_index) {
+        if (this.staticData) {
+            for (const band of this.ob_scene[ob_scene_index].bands) for (const zone of band.zones) {
+                const start = this.dateToPixelOffSet(ob_scene_index, zone.start, band.gregorianUnitLengths, band.intervalPixels);
+                const end = this.dateToPixelOffSet(ob_scene_index, zone.end, band.gregorianUnitLengths, band.intervalPixels);
+                const width = end - start;
+                const height = zone.render.height || band.height;
+                const mesh = this.track[ob_scene_index](new THREE.Mesh(
+                    this.track[ob_scene_index](new THREE.BoxGeometry(width, height, 1)),
+                    this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: zone.render.color || "#f5c994",
+                        transparent: true, opacity: zone.render.opacity ?? 0.25, depthWrite: false}))));
+                mesh.position.set(start + width / 2, zone.render.verticalAlign === "top" ? (band.height - height) / 2 : 0, 1);
+                this.ob_scene[ob_scene_index].getObjectByName(band.name).add(mesh);
+                if (!band.name.includes("overview_")) this.add_text_sprite(ob_scene_index, mesh, zone.data.title,
+                    -width / 2 + 70, height / 2 - 20, 2, false, zone.render.labelFontSize || 12, "normal", "bold", "#79552d", this.fontFamily);
+            }
+            return;
+        }
         for (let b = 0; b < this.ob_scene[ob_scene_index].bands.length; b++) {
             for (let z = 0; z < this.ob_scene[ob_scene_index].bands[b].zones.length; z++) {
                 let x = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].bands[b].zones[z].start,
@@ -2998,8 +3059,9 @@ function OB_TIMELINE() {
                     ob_timeline.ob_set_renderer(ob_scene_index);
                     ob_timeline.create_bands(ob_scene_index, false);
                     ob_timeline.create_zones(ob_scene_index);
-                    ob_timeline.add_line_current_time(ob_scene_index,
-                        new Date(ob_timeline.get_current_time()), "rgb(243,23,51)");
+                    if (ob_timeline.params[0].showCurrentTime !== false)
+                        ob_timeline.add_line_current_time(ob_scene_index,
+                            new Date(ob_timeline.get_current_time()), "rgb(243,23,51)");
                     ob_timeline.center_bands(ob_scene_index);
                     ob_timeline.ob_scene[ob_scene_index].ob_camera_type = camera;
                     ob_timeline.ob_start_clock(ob_scene_index);
@@ -3014,6 +3076,7 @@ function OB_TIMELINE() {
                     ob_timeline.create_segments_and_dates(ob_scene_index);
                     //if (ob_timeline.ob_scene[ob_scene_index].ready=== true)
                     ob_timeline.ob_set_camera(ob_scene_index);
+                    if (ob_timeline.staticData) ob_timeline.ob_timeline_panel.dispatchEvent(new CustomEvent("timeline-rendered", {bubbles: true}));
                 }
                 let endDate = new Date();
                 let ob_time = endDate.getTime() - startDate.getTime();
@@ -3055,8 +3118,8 @@ function OB_TIMELINE() {
             this.ob_time_marker.style.left = (this.ob_timeline_header.offsetWidth / 2 - 200) + "px";
 
             // Set the text based on the timeZone
-            const dateString = this.ob_markerDate.toString().substring(0, 25);
-            this.ob_time_marker.innerText = `${this.title} - ${dateString}` + (this.timeZone === "UTC" ? " - UTC" : "");
+            const dateString = this.staticData ? this.formatEventDate(this.ob_markerDate) : this.ob_markerDate.toString().substring(0, 25);
+            this.ob_time_marker.innerText = `${this.title} - ${dateString}` + (this.timeZone === "UTC" ? " - " + (this.params[0].timeZoneLabel || "UTC") : "");
 
             if (this.ob_views !== undefined)
                 this.ob_views.layoutToolbar();
@@ -3158,6 +3221,12 @@ function OB_TIMELINE() {
         const textY = this.calculateTextYPosition(band);
         this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, false, band.fontSizeInt,
             band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily);
+        if (this.staticData && band.secondaryScale) {
+            const time = this.ob_scene.sync_time + incrementPixelOffSet * band.gregorianUnitLengths / band.intervalPixels;
+            const secondary = formatTimelineDate(time, band.secondaryScale.format, 0, band.secondaryScale.origin);
+            this.add_text_sprite(ob_scene_index, ob_band, secondary, textX, band.height / 2 - band.fontSizeInt, 5,
+                false, band.fontSizeInt, band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily);
+        }
     };
 
     OB_TIMELINE.prototype.calculateTextYPosition = function (band) {
@@ -3582,6 +3651,10 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
+        if (this.staticData) {
+            layoutStaticSessions(this, ob_scene_index);
+            return;
+        }
         let y = this.ob_scene[ob_scene_index].ob_height / 2;
         let z = 5;
         this.ob_scene[ob_scene_index].bands.updated = false;
@@ -4681,6 +4754,13 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.load_data = function (ob_scene_index) {
         const ob_scene = this.ob_scene[ob_scene_index];
 
+        if (this.staticData) {
+            ob_scene.sessions = searchTimelineData(this.staticData, ob_scene.ob_search_value);
+            this.update_scene(ob_scene_index, this.header, this.params, ob_scene.bands,
+                ob_scene.model, ob_scene.sessions, ob_scene.ob_camera_type, null, false);
+            return;
+        }
+
         if (this.ob_scene !== undefined && ob_scene.ob_interval_move !== undefined) {
             clearInterval(ob_scene.ob_interval_move);
         }
@@ -4947,37 +5027,34 @@ function OB_TIMELINE() {
         }
     };
 
-    OB_TIMELINE.prototype.loadModel = function (model) {
-        let this_new_timeline = this;
-        fetch(model)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(async data => {
-                // Validate data before applying
-                if (!data.params || !data.bands) {
-                    throw new Error('Invalid data structure');
-                }
-
-                this_new_timeline.params = data.params;
-                this_new_timeline.bands = data.bands;
-
-                // Modularized URL update function
-                this.params[0].title = "Timeline report real-time";
-                this.params[0].data = await this_new_timeline.updateURL();
-                if (this.params[0].data.includes("sse"))
-                    this.params[0].title = "Timeline report";
-
-                // Rest of the initialization
-                this_new_timeline.initializeTimeline();
-            })
-            .catch(error => {
-                console.error('Error loading the JSON file:', error);
-                // Implement user-friendly error handling
-            });
+    OB_TIMELINE.prototype.loadModel = async function (model, options = {}) {
+        const response = await fetch(model);
+        if (!response.ok) throw new Error(`Model HTTP error: ${response.status}`);
+        const data = await response.json();
+        if (!data.params?.[0] || !data.bands?.length) throw new Error('Invalid timeline model');
+        this.params = data.params;
+        this.bands = data.bands;
+        if (data.dataSource) {
+            const dataset = options.dataset || data.dataSource.url;
+            if (!dataset) throw new Error('The model needs a dataset URL');
+            const datasetResponse = await fetch(dataset);
+            if (!datasetResponse.ok) throw new Error(`Dataset HTTP error: ${datasetResponse.status}`);
+            this.staticData = parseTimelineData(await datasetResponse.text(), data.dataSource);
+            this.staticTimeAxis = data.dataSource.time;
+            if (this.staticTimeAxis?.kind === "numeric") this.params[0].date = new Date(timelineValueToTime(this.params[0].date, this.staticTimeAxis)).toISOString();
+            this.formatEventDate = value => formatTimelineValue(value, this.staticTimeAxis, "yyyy-MM-dd HH:mm", this.params[0].displayOffsetMinutes || 0);
+            this.params[0].data = "";
+            this.ob_visible_view = this.params[0].overview !== false;
+            for (const key of ["width", "top", "left"]) {
+                if (Number.isFinite(options[key])) this.params[0][key] = options[key];
+            }
+        } else {
+            this.params[0].title = "Timeline report real-time";
+            this.params[0].data = await this.updateURL();
+            if (this.params[0].data.includes("sse")) this.params[0].title = "Timeline report";
+        }
+        this.initializeTimeline();
+        return this;
     };
 
     OB_TIMELINE.prototype.updateURL = async function () {
@@ -5000,6 +5077,15 @@ function OB_TIMELINE() {
         this.ob_init();
         this.ob_scene_index = 0;
         this.first_sync = undefined;
+        if (this.staticData) {
+            this.reset_synced_time("new_sync", 0);
+            this.first_sync = true;
+            this.ob_scene[0].sessions = searchTimelineData(this.staticData);
+            ob_timelines.push(this);
+            this.update_all_timelines(0, this.header, this.params, this.ob_scene[0].bands,
+                this.ob_scene[0].model, this.ob_scene[0].sessions, this.camera || "Orthographic");
+            return;
+        }
         this.update_scene(this.ob_scene_index, null, this.params,
             this.bands, this.model, this.sessions, null, null,
             false);

@@ -3,5 +3,13 @@
     "simple-jscalendar": "^1.4.5",
     "three": "^0.168.0",
     "three-spritetext": "^1.8.2"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.0"
+  },
+  "scripts": {
+    "demo": "node tools/serve-demos.mjs",
+    "demos:readme": "node tools/update-demo-readme.mjs",
+    "test:demos": "node --experimental-vm-modules --test tests/demo-data.test.mjs tests/demo-http.test.mjs"
   }
 }

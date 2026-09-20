@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "basePath": "../",
+  "demos": [
+    {
+      "id": "default-dataset",
+      "title": "Operations sample",
+      "description": "Sessions, milestones, source colors, and maintenance and verification windows.",
+      "dataset": "json/test-data/default-dataset.json",
+      "model": "models/demos/default-dataset.json",
+      "reference": "json/test-data/default-dataset.png",
+      "recordCount": 1008
+    },
+    {
+      "id": "dinausaurs",
+      "title": "Dinosaurs",
+      "description": "Dinosaur lifespans on a numeric axis measured in millions of years ago.",
+      "dataset": "json/test-data/dinausaurs.json",
+      "model": "models/demos/dinausaurs.json",
+      "reference": null,
+      "recordCount": 224
+    },
+    {
+      "id": "ephemeris",
+      "title": "Satellite ephemeris",
+      "description": "Orbital visibility sessions grouped by satellite.",
+      "dataset": "json/test-data/ephemeris.json",
+      "model": "models/demos/ephemeris.json",
+      "reference": null,
+      "recordCount": 127
+    },
+    {
+      "id": "jfk",
+      "title": "JFK chronology",
+      "description": "A minute-scale historical chronology with highlighted reference windows.",
+      "dataset": "json/test-data/jfk.json",
+      "model": "models/demos/jfk.json",
+      "reference": "json/test-data/jfk.png",
+      "recordCount": 130
+    },
+    {
+      "id": "monet",
+      "title": "Claude Monet",
+      "description": "Life events, painting periods, original colors, and a secondary age scale.",
+      "dataset": "json/test-data/monet.json",
+      "model": "models/demos/monet.json",
+      "reference": "json/test-data/monet.png",
+      "recordCount": 27
+    },
+    {
+      "id": "religions",
+      "title": "Religious history",
+      "description": "BCE/CE dates, duration and event bands, and overview context.",
+      "dataset": "json/test-data/religions.json",
+      "model": "models/demos/religions.json",
+      "reference": "json/test-data/religions.png",
+      "recordCount": 730
+    },
+    {
+      "id": "space_exploration",
+      "title": "Space exploration",
+      "description": "A month-scale view with a yearly overview of the supplied space-history events.",
+      "dataset": "json/test-data/space_exploration.json",
+      "model": "models/demos/space_exploration.json",
+      "reference": "doc/openbexi_timeline_space_exploration.PNG",
+      "recordCount": 1287
+    }
+  ]
+}

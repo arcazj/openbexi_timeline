@@ -1,0 +1,52 @@
+{
+  "params": [
+    {
+      "name": "ob_timeline_2",
+      "title": "Timeline MCC report",
+      "date": "Fri May 03 2024 13:00:00 UTC",
+      "timeZone": "UTC",
+      "top": 0,
+      "left": 0,
+      "height": 1000,
+      "fontSize": 12,
+      "width": 1500,
+      "data_default_port": 8442,
+      "data_sse_port": 8441,
+      "data": ""
+    }
+  ],
+  "bands": [
+    {
+      "name": "ob_band_1",
+      "height": "75%",
+      "color": "#b6e09d",
+      "intervalPixels": "1000",
+      "subIntervalPixels": "AUTO",
+      "intervalUnitPos": "TOP",
+      "intervalUnit": "HOUR",
+      "dateFormat": "MM/dd-hh:mm",
+      "dateColor": "#050505",
+      "textColor": "#050505",
+      "SessionColor": "#f8feff",
+      "eventColor": "#0f91f9",
+      "defaultEventSize": 5,
+      "model": [
+        {
+          "sortBy": "NONE",
+          "alternateColor": "#9ac1db"
+        }
+      ]
+    },
+    {
+      "name": "ob_overview_band_2",
+      "height": "25%",
+      "color": "#759e65",
+      "intervalPixels": 1000,
+      "intervalUnit": "DAY",
+      "dateFormat": "yyyy mmm dd",
+      "SessionColor": "#a110ff",
+      "eventColor": "#238448",
+      "dateColor": "#f31733"
+    }
+  ]
+}

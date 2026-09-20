@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OpenBEXI Timeline demos</title>
+    <link rel="stylesheet" href="css/ob_timeline_modern.css">
+    <link rel="stylesheet" href="css/ob_jsCalendar.css">
+    <link rel="stylesheet" href="css/ob_descriptor.css">
+    <link rel="stylesheet" href="css/ob_demos.css">
+    <script src="node_modules/simple-jscalendar/source/jsCalendar.min.js"></script>
+    <script type="importmap">
+        {"imports": {
+            "three": "./node_modules/three/build/three.module.min.js",
+            "drag_controls": "./node_modules/three/examples/jsm/controls/DragControls.js",
+            "three-spritetext": "./node_modules/three-spritetext/dist/three-spritetext.mjs"
+        }}
+    </script>
+</head>
+<body class="ob_demo_page">
+<header id="demo-header">
+    <div class="ob_demo_heading">
+        <h1>OpenBEXI Timeline demos</h1>
+        <form action="demos.html" method="get">
+            <label for="demo-select">Dataset</label>
+            <select id="demo-select" name="demo" required></select>
+            <button type="submit">Open demo</button>
+        </form>
+    </div>
+    <p id="demo-description"></p>
+    <nav aria-label="Demo resources">
+        <a id="demo-dataset">Dataset</a>
+        <a id="demo-model">Model</a>
+        <a id="demo-reference" hidden>Reference image</a>
+        <a href="docs/demos.md">Demo guide</a>
+        <span id="demo-status" role="status">Loading catalog…</span>
+    </nav>
+</header>
+<script type="module" src="src/openbexi_demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+version: 1
+server:
+  host: 127.0.0.1
+  port: 8783
+  local_browser: true
+  state_root: ../../var/test-data/jfk
+snapshot:
+  file: ../../data/jfk.json
