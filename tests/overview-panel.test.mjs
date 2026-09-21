@@ -105,6 +105,88 @@ test('Docked overview navigation follows actual time mappings and commits click,
     } finally { harness.close(); }
 });
 
+test('Panning retains overview events, zones and windows while updating actual axis coordinates', async () => {
+    for (const demo of ['default-dataset', 'dinausaurs', 'jfk']) {
+        const harness = await load(demo);
+        try {
+            const {timeline, sync} = harness;
+            const scene = timeline.ob_scene[0];
+            const main = scene.bands.find(band => !band.name.includes('overview_'));
+            const overview = scene.bands.at(-1);
+            const mainMesh = scene.getObjectByName(main.name), overviewMesh = scene.getObjectByName(overview.name);
+            const svg = timeline.ob_timeline_panel.querySelector('.ob_docked_overview svg');
+            const content = svg.querySelector('[data-overview-content]');
+            const events = [...svg.querySelectorAll('[data-event-id]')];
+            const zones = [...svg.querySelectorAll('[data-zone-id]')];
+            const selection = svg.querySelector('[data-overview-window]');
+            const mainAxis = svg.querySelector('[data-overview-axis="main"]');
+            const firstTicks = [...mainAxis.querySelectorAll('line')];
+            const initialAxisX = firstTicks.map(line => line.getAttribute('x1'));
+            for (let step = 1; step <= 40; step++) {
+                timeline.move_band(0, main.name, -step, mainMesh.position.y, mainMesh.position.z, true);
+                sync();
+                assert.deepEqual([...svg.querySelectorAll('[data-event-id]')], events,
+                    demo + ': pointer movement must not replace event nodes');
+                assert.deepEqual([...svg.querySelectorAll('[data-zone-id]')], zones,
+                    demo + ': pointer movement must not replace highlighted zones');
+                assert.equal(svg.querySelector('[data-overview-window]'), selection);
+            }
+            assert.equal(content.getAttribute('transform'), `translate(${overviewMesh.position.x} 0)`);
+            const retainedTick = firstTicks.find((line, index) => line.isConnected && line.getAttribute('x1') !== initialAxisX[index]);
+            assert.ok(retainedTick, demo + ': existing axis ticks move to their current time positions');
+            const left = -scene.width / 2 - mainMesh.position.x;
+            const start = timeline.dateToBandPixelOffSet(0, overview, timeline.pixelOffSetToBandDate(0, main, left));
+            const end = timeline.dateToBandPixelOffSet(0, overview, timeline.pixelOffSetToBandDate(0, main, left + scene.width));
+            assert.ok(Math.abs(Number(selection.getAttribute('x')) - (scene.width / 2 + overviewMesh.position.x + start)) < 1e-7);
+            assert.ok(Math.abs(Number(selection.getAttribute('width')) - (end - start)) < 1e-7,
+                demo + ': the retained selection follows calendar, numeric and magnified axes');
+        } finally { harness.close(); }
+    }
+});
+
+test('Overview content refreshes for edits, changed topology, rebuilt arrays and resizing', async () => {
+    const harness = await load();
+    try {
+        const {timeline, sync} = harness;
+        const scene = timeline.ob_scene[0];
+        const overview = scene.bands.at(-1);
+        const svg = timeline.ob_timeline_panel.querySelector('.ob_docked_overview svg');
+        const firstNode = svg.querySelector('[data-event-id]');
+        const first = overview.sessions[0].activities[0];
+        first.render.color = '#123456';
+        first.data.title = 'Updated projected label';
+        sync();
+        const edited = svg.querySelector('[data-event-id]');
+        assert.notEqual(edited, firstNode);
+        assert.equal(edited.getAttribute('fill'), '#123456');
+        assert.equal(edited.querySelector('title').textContent, 'Updated projected label');
+        const previousCount = svg.querySelectorAll('[data-event-id]').length;
+        overview.sessions[0].activities.push({...first, id: 'new-activity', y: first.y - 10});
+        sync();
+        assert.equal(svg.querySelectorAll('[data-event-id]').length, previousCount + 1,
+            'Appending within the existing activity array invalidates the projection');
+        const beforeArrayChange = svg.querySelector('[data-event-id]');
+        overview.sessions = [...overview.sessions];
+        sync();
+        assert.notEqual(svg.querySelector('[data-event-id]'), beforeArrayChange,
+            'A new projected session array begins a new layout');
+        scene.width = 900;
+        sync();
+        assert.equal(svg.getAttribute('width'), '900');
+        assert.equal(svg.querySelectorAll('[data-event-id]').length, previousCount + 1);
+        timeline.ob_views.setMode('table');
+        timeline.ob_views.setMode('timeline');
+        sync();
+        assert.equal(svg.isConnected, true, 'View changes retain the SVG and its input handlers');
+        assert.equal(svg.querySelectorAll('[data-event-id]').length, previousCount + 1);
+        timeline.update_all_timelines(0, timeline.header, timeline.params, scene.bands, scene.model, scene.sessions, 'Orthographic');
+        sync();
+        const rebuilt = timeline.ob_scene[0].bands.at(-1);
+        assert.equal(svg.querySelectorAll('[data-event-id]').length, rebuilt.sessions.flatMap(session => session.activities).length,
+            'A scene rebuild replaces the previous projection and removes local stale nodes');
+    } finally { harness.close(); }
+});
+
 test('Ordinary models keep their original overview and toolbar layout', async () => {
     const harness = await load('space_exploration');
     try {

@@ -35,6 +35,13 @@ import {parseTimelineData, parseTimelineDate, formatTimelineDate, searchTimeline
 
 const ob_MAX_SCENES = 3;
 const ob_timelines = [];
+const requestPanFrame = callback => window.requestAnimationFrame ? window.requestAnimationFrame(callback) :
+    window.setTimeout(() => callback(window.performance.now()), 16);
+const cancelPanFrame = frame => {
+    if (frame === undefined) return;
+    if (window.cancelAnimationFrame) window.cancelAnimationFrame(frame);
+    else window.clearTimeout(frame);
+};
 
 
 window.get_ob_timeline = function (ob_timeline_name) {
@@ -174,6 +181,11 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.reset_synced_time = function (ob_case, ob_scene_index) {
+        // Explicit date/search navigation supersedes an unrebuilt static pan.
+        if (this.ob_scene?.[ob_scene_index]) {
+            this.ob_scene[ob_scene_index].cancelPan?.();
+            delete this.ob_scene[ob_scene_index].ob_pan_time;
+        }
         clearInterval(this.ob_interval_clock);
         try {
             if (ob_case === "new_view") {
@@ -2830,6 +2842,7 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.destroy_scene = function (ob_scene_index) {
         if (this.ob_scene === undefined || this.ob_scene[ob_scene_index] === undefined) return;
+        this.ob_scene[ob_scene_index].cancelPan?.();
         for (let i = 0; i < this.ob_scene[ob_scene_index].children.length; i++) {
             try {
                 this.ob_scene[ob_scene_index].remove(this.ob_scene[ob_scene_index].children[i]);
@@ -3000,6 +3013,11 @@ function OB_TIMELINE() {
                 if (ob_scene_index === undefined)
                     ob_scene_index = 0;
                 if (ob_timeline.name === params[0].name) {
+                    const pendingTime = ob_timeline.ob_scene[ob_scene_index].ob_pan_time;
+                    if (ob_timeline.staticData && Number.isFinite(pendingTime)) {
+                        ob_timeline.ob_scene.sync_time = pendingTime;
+                        delete ob_timeline.ob_scene[ob_scene_index].ob_pan_time;
+                    }
                     ob_timeline.destroy_scene(ob_scene_index);
                     ob_timeline.header = header;
                     ob_timeline.params = params;
@@ -3193,6 +3211,29 @@ function OB_TIMELINE() {
             }
         }
         if (this.staticData) this.render_band_scale_headers(ob_scene_index);
+    };
+
+    // Static demos already contain the records and ticks around the viewport.
+    // Keep that scene while panning; rebuild only once its prepared range is left.
+    OB_TIMELINE.prototype.finish_static_pan = function (ob_scene_index) {
+        const scene = this.ob_scene[ob_scene_index];
+        if (!this.staticData || !Number.isFinite(scene.ob_pan_time)) return;
+        const needsData = scene.bands.filter(band => !band.name.includes('overview_')).some(band => {
+            const mesh = scene.getObjectByName(band.name);
+            if (!mesh) return false;
+            const left = -scene.width / 2 - mesh.position.x;
+            const right = scene.width / 2 - mesh.position.x;
+            let preparedLeft = -band.width / 2, preparedRight = band.width / 2;
+            if (band.timeScale) {
+                preparedLeft = Math.max(preparedLeft, band.timeScale.toPixel(band.timeScale.contextFrom));
+                preparedRight = Math.min(preparedRight, band.timeScale.toPixel(band.timeScale.contextTo));
+            }
+            return left < preparedLeft || right > preparedRight;
+        });
+        if (needsData) {
+            this.reset_synced_time('new_view', ob_scene_index);
+            this.load_data(ob_scene_index);
+        }
     };
 
     OB_TIMELINE.prototype.render_band_scale_headers = function (index) {
@@ -4325,6 +4366,58 @@ function OB_TIMELINE() {
         let that = this;
         let ob_scene = this.ob_scene[ob_scene_index];
         let dragged = false;
+        let pendingDrag, lastPointer, velocity = 0;
+        const isBand = object => that.staticData ? ob_scene.bands.some(band => band.name === object.name) :
+            object.name.includes('_band_');
+        ob_scene.cancelPan = () => {
+            cancelPanFrame(ob_scene.ob_drag_frame);
+            cancelPanFrame(ob_scene.ob_pan_frame);
+            ob_scene.ob_drag_frame = ob_scene.ob_pan_frame = undefined;
+            pendingDrag = undefined;
+            velocity = 0;
+        };
+
+        function flushDrag() {
+            cancelPanFrame(ob_scene.ob_drag_frame);
+            ob_scene.ob_drag_frame = undefined;
+            const object = pendingDrag;
+            pendingDrag = undefined;
+            if (object) applyDrag(object);
+        }
+
+        function rememberPan() {
+            const time = that.ob_markerDate?.getTime();
+            if (Number.isFinite(time)) {
+                ob_scene.ob_pan_time = time;
+                ob_scene.date = new Date(time).toISOString();
+                ob_scene.date_cal = new Date(time);
+            }
+        }
+
+        function coast(band) {
+            if (!band || !dragged) return;
+            const now = window.performance.now();
+            if (!lastPointer || now - lastPointer.time > 80) velocity = 0;
+            if (Math.abs(velocity) < 0.015) {
+                that.finish_static_pan(ob_scene_index);
+                return;
+            }
+            let previous = now;
+            const step = timestamp => {
+                ob_scene.ob_pan_frame = undefined;
+                const dt = Math.min(32, Math.max(0, timestamp - previous));
+                previous = timestamp;
+                const decay = Math.exp(-dt / 140);
+                const distance = velocity * 140 * (1 - decay);
+                velocity *= decay;
+                that.move_band(ob_scene_index, band.name, band.position.x + distance, band.pos_y, band.pos_z, true);
+                rememberPan();
+                that.ob_render(ob_scene_index);
+                if (Math.abs(velocity) >= 0.015 && timestamp - now < 700) ob_scene.ob_pan_frame = requestPanFrame(step);
+                else that.finish_static_pan(ob_scene_index);
+            };
+            ob_scene.ob_pan_frame = requestPanFrame(step);
+        }
 
         ob_scene.dragControls = this.track[ob_scene_index](
             new DragControls(
@@ -4339,6 +4432,7 @@ function OB_TIMELINE() {
         ob_scene.dragControls.addEventListener('drag', onDrag);
 
         function onDragStart(e) {
+            ob_scene.cancelPan();
             dragged = false;
             clearInterval(that.ob_interval_clock);
             clearInterval(ob_scene.ob_interval_move);
@@ -4347,6 +4441,7 @@ function OB_TIMELINE() {
             if (ob_obj === undefined) return;
 
             ob_obj.dragstart_source = ob_obj.position.x || 0;
+            lastPointer = {x: ob_obj.position.x, time: window.performance.now()};
 
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
@@ -4355,7 +4450,7 @@ function OB_TIMELINE() {
                 let parent = ob_obj.parent;
                 parent.dragstart_source = parent.position.x || 0;
                 that.move_band(ob_scene_index, parent.name, parent.position.x, parent.pos_y, parent.pos_z, true);
-            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
+            } else if (ob_obj.type.match(/Mesh/) && isBand(ob_obj)) {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, false);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
@@ -4370,6 +4465,7 @@ function OB_TIMELINE() {
         }
 
         function onDragEnd(e) {
+            flushDrag();
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
 
@@ -4382,14 +4478,19 @@ function OB_TIMELINE() {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
-            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
+            } else if (ob_obj.type.match(/Mesh/) && isBand(ob_obj)) {
                 that.move_band(ob_scene_index, ob_obj.name, ob_obj.position.x, ob_obj.pos_y, ob_obj.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
-            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "" && ob_obj.parent.name.match(/_overview_/)) {
+            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "" && ob_obj.parent.name.match(/_overview_/) &&
+                (!that.staticData || !dragged)) {
                 that.move_band(ob_scene_index, ob_obj.parent.name, -ob_obj.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
+                if (that.staticData) {
+                    rememberPan();
+                    that.finish_static_pan(ob_scene_index);
+                }
                 that.ob_render(ob_scene_index);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
@@ -4406,6 +4507,15 @@ function OB_TIMELINE() {
             }
 
             that.ob_render(ob_scene_index);
+
+            if (that.staticData) {
+                if (dragged) {
+                    rememberPan();
+                    const band = ob_obj.name.match(/zone_/) || ob_obj.name === '' ? ob_obj.parent : ob_obj;
+                    coast(band);
+                }
+                return;
+            }
 
             ob_scene.date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
             ob_scene.date_cal = that.ob_markerDate;
@@ -4558,18 +4668,33 @@ function OB_TIMELINE() {
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
             dragged = true;
+            if (that.staticData) {
+                const now = window.performance.now();
+                const dt = Math.max(1, now - lastPointer.time);
+                velocity = Math.max(-2, Math.min(2, (ob_obj.position.x - lastPointer.x) / dt));
+                lastPointer = {x: ob_obj.position.x, time: now};
+                pendingDrag = ob_obj;
+                if (ob_scene.ob_drag_frame === undefined) ob_scene.ob_drag_frame = requestPanFrame(flushDrag);
+                return;
+            }
+            applyDrag(ob_obj);
+        }
+
+        function applyDrag(ob_obj) {
+            if (!ob_scene.getObjectById(ob_obj.id)) return;
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/zone_/)) {
                 moveZone(ob_obj);
-            } else if (ob_obj.type.match(/Mesh/) && ob_obj.name.match(/_band_/)) {
+            } else if (ob_obj.type.match(/Mesh/) && isBand(ob_obj)) {
                 moveBand(ob_obj);
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 moveSession(ob_obj);
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
+            if (that.staticData) rememberPan();
             that.ob_render(ob_scene_index);
         }
 
