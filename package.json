@@ -2,7 +2,7 @@
   "dependencies": {
     "simple-jscalendar": "^1.4.5",
     "three": "^0.168.0",
-    "three-spritetext": "^1.8.2"
+    "three-spritetext": "^1.10.0"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
