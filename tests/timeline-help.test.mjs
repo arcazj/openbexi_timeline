@@ -70,6 +70,9 @@ test('Help renders configured resource groups and every catalog dataset with usa
     const harness = await fixture('jfk');
     try {
         const panel = await harness.open();
+        await settle();
+        assert.ok(harness.requests.includes('/api/v1/health'), 'Help checks its own host for API availability');
+        assert.equal(anchor(panel, 'Live API'), undefined, 'A static server 404 keeps Live API disabled');
         assert.deepEqual([...panel.querySelectorAll('.ob_help_resource_group > .ob_help_section_heading h3')].map(node => node.textContent),
             ['Project', 'Developer docs', 'Guides']);
         assert.match(panel.textContent, /Version 1\.1/);
@@ -100,6 +103,32 @@ test('Help renders configured resource groups and every catalog dataset with usa
         selector.dispatchEvent(new harness.window.Event('change'));
         assert.equal(anchor(panel, 'Open dataset').href, 'http://localhost/demos.html?demo=dinausaurs');
         assert.doesNotMatch(anchor(panel, 'Open dataset').href, /PRIVATE/);
+    } finally { harness.close(); }
+});
+
+test('Help enables Live API only after its same-origin health probe confirms API v1', async () => {
+    const harness = await fixture('monet');
+    try {
+        const fetch = harness.window.fetch;
+        let finishProbe;
+        let probe;
+        harness.window.fetch = (resource, options) => {
+            if (new URL(String(resource)).pathname !== '/api/v1/health') return fetch(resource, options);
+            probe = {url: String(resource), signal: options.signal};
+            return new Promise(resolve => { finishProbe = resolve; });
+        };
+        const panel = await harness.open();
+        assert.equal(probe.url, 'http://localhost/api/v1/health');
+        assert.ok(probe.signal, 'Availability checks have an abort signal');
+        assert.ok(button(panel, 'Live API').disabled, 'The link stays unavailable while the probe is pending');
+        finishProbe(new Response(JSON.stringify({apiVersion: '1'}), {status: 200}));
+        await settle();
+        const live = anchor(panel, 'Live API');
+        assert.ok(live, 'A confirmed API enables the documentation link');
+        assert.equal(live.href, 'http://localhost/docs/api.html#live');
+        assert.equal(live.target, '_blank');
+        assert.equal(live.rel, 'noopener noreferrer');
+        assert.equal(button(panel, 'Live API'), undefined);
     } finally { harness.close(); }
 });
 

@@ -16,8 +16,8 @@
       "links": [
         {"label": "Swagger (offline)", "href": "docs/api.html", "icon": "code"},
         {"label": "Swagger (Markdown)", "href": "docs/api.md", "icon": "file"},
-        {"label": "Live API", "icon": "globe", "disabledReason": "No live API documentation URL is configured for this installation."},
-        {"label": "Download OpenAPI", "href": "swagger/openbexi_timeline_swagger.yaml", "icon": "download", "download": "openbexi_timeline_swagger.yaml"}
+        {"label": "Live API", "href": "docs/api.html#live", "probe": "api/v1/health", "icon": "globe", "disabledReason": "The Java REST API is not available on this host."},
+        {"label": "Download OpenAPI", "href": "swagger/openapi-v1.json", "icon": "download", "download": "openapi-v1.json"}
       ]
     },
     {

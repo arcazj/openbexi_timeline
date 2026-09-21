@@ -3,11 +3,12 @@ package com.openbexi.timeline.server;
 import com.openbexi.timeline.data_browser.data_sources;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
+import com.openbexi.timeline.api.TimelineApiServlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
-import org.apache.catalina.servlets.DefaultServlet;
+import com.openbexi.timeline.api.PublicAssetServlet;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.coyote.http2.Http2Protocol;
 
@@ -77,17 +78,7 @@ public class openbexi_timeline implements Runnable {
         }
         System.out.println("Argument : " + args[0] + " " + args[1]);
 
-        // use http://localhost:9010/ to get metrics
-        // add VM options: -javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml
-        // Include the JMX Exporter for Grafana
-        System.setProperty("com.sun.management.jmxremote", "true");
-        System.setProperty("com.sun.management.jmxremote.port", "9010"); // Choose an appropriate port
-        System.setProperty("com.sun.management.jmxremote.authenticate", "false");
-        System.setProperty("com.sun.management.jmxremote.ssl", "false");
-        // Path to the JMX Exporter jar and its config file
-        String jmxExporterJarPath = "lib/jmx_prometheus_javaagent-0.19.0.jar";
-        String jmxConfigPath = "yaml/tomcat.yml";
-        System.setProperty("javaagent", jmxExporterJarPath + "=" + jmxConfigPath);
+        // Monitoring is opt-in through JVM launch options; no unauthenticated JMX port is opened here.
 
 
         for (int i = 0; i < connectors.length; i++) {
@@ -163,7 +154,7 @@ public class openbexi_timeline implements Runnable {
             //Context ctx = tomcat.addContext("", null);
             ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
 
             Tomcat.addServlet(ob_timeline_context, "ob", new ob_ajax_timeline());
@@ -181,7 +172,7 @@ public class openbexi_timeline implements Runnable {
             //Context ctx = tomcat.addContext("", null);
             ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
 
             Tomcat.addServlet(ob_timeline_context, "ob", new ob_ajax_timeline());
@@ -194,6 +185,8 @@ public class openbexi_timeline implements Runnable {
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
             ob_timeline_context = tomcat.addWebapp("/", ".");
+            Tomcat.addServlet(ob_timeline_context, "publicAssets", new PublicAssetServlet());
+            ob_timeline_context.addServletMappingDecoded("/", "publicAssets");
         }
         if (mode == ob_mode.secure_sse) {
             // Set Http2 connector
@@ -211,7 +204,7 @@ public class openbexi_timeline implements Runnable {
 
             ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
 
-            Tomcat.addServlet(ob_timeline_context, "default", new DefaultServlet());
+            Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
 
             Tomcat.addServlet(ob_timeline_context, "ob_sse", new ob_sse_timeline());
@@ -220,6 +213,9 @@ public class openbexi_timeline implements Runnable {
         }
         if (_data_conf != null && ob_timeline_context != null)
             ob_timeline_context.addParameter("data_conf", _data_conf);
+
+        Tomcat.addServlet(ob_timeline_context, "api_v1", new TimelineApiServlet()).setLoadOnStartup(1);
+        ob_timeline_context.addServletMappingDecoded("/api/v1/*", "api_v1");
 
         // Add MIME type mapping for JavaScript files
         ob_timeline_context.addMimeMapping("js", "application/javascript");

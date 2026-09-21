@@ -143,7 +143,19 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
             if (section.title === 'Project') title.append(element('span', 'ob_help_note', 'Version ' + resources.version));
             group.append(title);
             const links = element('div', 'ob_help_actions');
-            for (const resource of section.links) { const link = resourceLink(resource); if (link) links.append(link); }
+            for (const resource of section.links) {
+                const link = resourceLink(resource); if (link) links.append(link);
+                if (resource.probe && link) {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 4000);
+                    fetch(new URL(resource.probe, rootURL), {signal: controller.signal}).then(async response => {
+                        if (response.ok && (await response.json()).apiVersion === '1') {
+                            const available = resourceLink({...resource, disabledReason: undefined});
+                            if (available) link.replaceWith(available);
+                        }
+                    }).catch(() => {}).finally(() => clearTimeout(timeout));
+                }
+            }
             group.append(links); help.append(group);
         }
         const datasetGroup = element('section', 'ob_help_resource_group ob_help_datasets');

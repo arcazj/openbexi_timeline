@@ -76,9 +76,18 @@ The supplied `jfk.json`, `monet.json`, `religions.json`, and `dinausaurs.json` c
 1. Add the source file under `json/test-data` and an optional reference PNG.
 2. Add or reuse a model under `models/demos`. Define all visual and schema differences in its JSON configuration.
 3. Add one catalog entry and run `npm run demos:readme`.
-4. Run `npm run test:demos`, then inspect the demo in a browser against its reference image.
+4. Run `npm run demos:validate` and `npm run test:demos`, then inspect the demo in a browser against its reference image.
+5. Run `npm run test:browser` for Chromium/WebGL layout and screenshot checks. For a new demo, review and add its screenshots using the [browser regression guide](browser-tests.md).
 
-Validation rejects missing datasets/models/references, duplicate IDs, omitted dataset files, invalid dates, and stale README links. Tests build actual Three.js scene geometry and exercise the DOM, with GPU rendering and text measurement stubbed. They do not replace visual browser checks.
+Validation rejects missing datasets/models/references, duplicate IDs, omitted dataset files, invalid dates, and stale README links. The unit suite builds actual Three.js scene geometry and exercises the DOM, with GPU rendering and text measurement stubbed. The browser suite additionally renders all catalog demos using Chromium's actual layout engine and WebGL, comparing reviewed normal/Split screenshots at two window sizes and checking Overview, panels, hidden scrollbar tracks, keyboard scrolling, and resize behavior. Intentional visual changes require baseline review.
+
+## Model validation
+
+The catalog and file-backed models have formal JSON Schema draft-07 definitions in [demo-catalog.schema.json](../schemas/demo-catalog.schema.json) and [demo-model.schema.json](../schemas/demo-model.schema.json). The browser validates the catalog before selecting a demo and validates its model before fetching data or replacing the current timeline. Errors identify the exact field, for example `models/demos/example.json: $.bands[0].ticks.step must be > 0`. Unknown options are rejected so misspelled configuration does not silently change the view. Existing server models without `dataSource` keep their original loading path.
+
+Run `npm run demos:validate` to check every catalog model and its local dataset/reference files. An alternate local catalog can be supplied with `npm run demos:validate -- path/to/catalog.json`. Schema edits require `npm run demos:schemas`; `npm run demos:schemas -- --check` verifies that the committed browser validators match the schemas. Ajv compiles these validators during development; runtime validation uses the generated local ES module without dynamic code generation, a CDN, or extra schema requests.
+
+Structural validation covers dimensions, colors, band options, time units, ratios, and focus magnification. Semantic validation also checks finite dates, endpoint ordering in the declared axis direction, unique names, Overview source references, and incompatible tick/axis options. Calendar configurations support extended ISO dates for BCE history; numeric range and context values use the declared native unit. Numeric ticks use `NUMERIC`, calendar month/year ticks use integer steps, and `ticks` cannot be combined with the `tickMinutes` shorthand. An Overview can select existing normal bands; omit `sourceBands` when using generated groups. A docked Overview must be the last band.
 
 ## Hosting portability
 

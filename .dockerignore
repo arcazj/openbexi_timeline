@@ -1,0 +1,11 @@
+.git
+.idea
+node_modules
+target
+out
+test-results
+playwright-report
+tomcat*
+.env*
+*.log
+lib

@@ -1,41 +1,45 @@
-# Use the specific version of OpenJDK
-FROM openjdk:17
+FROM node:24-bookworm-slim AS browser-dependencies
+WORKDIR /build
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts
 
-# Set the working directory for the application
-WORKDIR /
+FROM maven:3.9.16-eclipse-temurin-17 AS java-build
+WORKDIR /build
+COPY pom.xml ./
+COPY src ./src
+COPY schemas ./schemas
+RUN mvn --batch-mode --no-transfer-progress -Dmaven.test.skip=true package
 
-# Copy the essential static files that are less likely to change frequently
-COPY openbexi_timeline.html ./
-COPY openbexi_test_timeline.html ./
-COPY src src
-COPY css css
-COPY lib lib
-COPY json json
-COPY yaml yaml
-COPY models models
-COPY filters filters
-COPY icon icon
-COPY tests tests
-COPY tomcat tomcat
-COPY node_modules node_modules
-
-# Expose the required ports;
-# use port 8441 to enable the openbexi timeline server to push real-time updates or events via the Server-Sent Events (SSE) technology.
-# use port 8442 to make asynchronous HTTP requests to the openbexi timeline server
-EXPOSE 8441 8442
-
-# If there are any environment variables or other configurations that need to be set, you can do it here
-# ENV SOME_VARIABLE=value
-
-# Define volumes if needed
+FROM eclipse-temurin:17-jre-noble
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 openbexi \
+    && useradd --uid 10001 --gid openbexi --no-create-home openbexi \
+    && mkdir -p /app/tomcat /data/api /opt/openbexi
+WORKDIR /app
+COPY --from=java-build /build/target/classes /opt/openbexi/classes
+COPY --from=java-build /build/target/runtime /opt/openbexi/runtime
+COPY --from=browser-dependencies /build/node_modules ./node_modules
+COPY *.html *.png favicon.ico README.md LICENSE ./
+COPY src/*.js ./src/
+COPY css ./css
+COPY json ./json
+COPY models ./models
+COPY filters ./filters
+COPY icon ./icon
+COPY demos ./demos
+COPY doc ./doc
+COPY docs ./docs
+COPY help ./help
+COPY schemas ./schemas
+COPY swagger ./swagger
+COPY yaml/sources_container.yml ./yaml/sources_container.yml
+RUN chown -R openbexi:openbexi /app /data
+ENV OPENBEXI_API_DATA_DIR=/data/api
+USER 10001:10001
+EXPOSE 8442
 VOLUME /data
-
-# Health check for Kubernetes to know when the container is ready
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl --fail http://localhost:8442/health || exit 1
-
-# Command to run the application with the javaagent option
-CMD ["java", "-javaagent:lib/jmx_prometheus_javaagent-0.19.0.jar=9010:yaml/tomcat.yml", "-cp", "lib/openbexi_timeline.jar", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_startup.yml"]
-
-#  docker push arcazj/openbexi_timeline
-
+    CMD curl --fail --silent http://127.0.0.1:8442/api/v1/health || exit 1
+CMD ["java", "-cp", "/opt/openbexi/classes:/opt/openbexi/runtime/*", "com.openbexi.timeline.server.openbexi_timeline", "-data_conf", "yaml/sources_container.yml"]

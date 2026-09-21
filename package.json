@@ -5,11 +5,20 @@
     "three-spritetext": "^1.8.2"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "ajv": "8.20.0",
     "jsdom": "30.1.0"
   },
   "scripts": {
+    "api:spec": "node tools/build-api-spec.mjs",
     "demo": "node tools/serve-demos.mjs",
+    "api": "mvn --batch-mode --no-transfer-progress compile exec:java -Dexec.mainClass=com.openbexi.timeline.api.ApiServer",
     "demos:readme": "node tools/update-demo-readme.mjs",
-    "test:demos": "node --experimental-vm-modules --test tests/demo-data.test.mjs tests/demo-http.test.mjs tests/timeline-interactions.test.mjs tests/demo-layout.test.mjs tests/overview-projection.test.mjs tests/timeline-scale.test.mjs tests/overview-panel.test.mjs tests/timeline-ticks.test.mjs tests/timeline-share.test.mjs tests/timeline-help.test.mjs"
+    "demos:validate": "node tools/validate-demo-models.mjs",
+    "demos:schemas": "node tools/build-demo-validators.mjs",
+    "test:browser": "playwright test",
+    "test:browser:update": "playwright test --update-snapshots",
+    "test:model": "node --experimental-vm-modules --test tests/model-validation.test.mjs",
+    "test:demos": "node --experimental-vm-modules --test tests/demo-data.test.mjs tests/demo-http.test.mjs tests/timeline-interactions.test.mjs tests/demo-layout.test.mjs tests/overview-projection.test.mjs tests/timeline-scale.test.mjs tests/overview-panel.test.mjs tests/timeline-ticks.test.mjs tests/timeline-share.test.mjs tests/timeline-help.test.mjs tests/model-validation.test.mjs"
   }
 }

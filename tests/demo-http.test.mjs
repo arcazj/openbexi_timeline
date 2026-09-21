@@ -15,8 +15,11 @@ test('Local demo links, catalog assets, scripts, styles and reference PNGs resol
             'src/openbexi_timeline_data.js', 'src/openbexi_timeline_views.js', 'src/openbexi_timeline_overview.js',
             'src/openbexi_timeline_scale.js', 'src/openbexi_timeline_ticks.js', 'src/openbexi_timeline_overview_panel.js', 'css/ob_demos.css', 'css/ob_timeline_modern.css',
             'src/openbexi_timeline_help.js', 'src/openbexi_timeline_share.js', 'css/ob_help.css',
+            'src/openbexi_timeline_model_validation.js', 'src/openbexi_timeline_schema_validators.js',
+            'schemas/demo-model.schema.json', 'schemas/demo-catalog.schema.json',
             'css/ob_timeline_views.css', 'css/ob_jsCalendar.css', 'css/ob_descriptor.css', 'docs/demos.md',
             'help/resources.json', 'docs/help-guide.md', 'docs/help-guide.html', 'docs/api.md', 'docs/api.html',
+            'docs/api-reference.js', 'docs/rest-api.md', 'docs/security.md', 'swagger/openapi-v1.json',
             'node_modules/three/build/three.module.min.js', 'node_modules/three/examples/jsm/controls/DragControls.js',
             'node_modules/three-spritetext/dist/three-spritetext.mjs', 'node_modules/simple-jscalendar/source/jsCalendar.min.js']);
         for (const demo of catalog.demos) {

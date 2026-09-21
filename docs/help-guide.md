@@ -47,8 +47,8 @@ Follow [Add a demo](demos.md#add-a-demo) to add a dataset, model, and catalog en
 | [openbexi_timeline_scale.js](../src/openbexi_timeline_scale.js), [openbexi_timeline_ticks.js](../src/openbexi_timeline_ticks.js) | Time-to-pixel transforms and model-driven axis ticks. |
 | [openbexi_timeline_overview.js](../src/openbexi_timeline_overview.js), [openbexi_timeline_overview_panel.js](../src/openbexi_timeline_overview_panel.js) | Projection of normal rows, visible-range windows, and docked Overview. |
 | [openbexi_timeline_views.js](../src/openbexi_timeline_views.js) | Timeline, Table, and Split view layout and interaction. |
-| [serve-demos.mjs](../tools/serve-demos.mjs) | Local static-file server for demos and documentation. |
-| [Java server](../src/com/openbexi/timeline/server/openbexi_timeline.java) | Separate server-backed application using the Java data-source and servlet components. |
+| [serve-demos.mjs](https://github.com/arcazj/openbexi_timeline/blob/master/tools/serve-demos.mjs) | Local static-file server for demos and documentation. |
+| [Java server](https://github.com/arcazj/openbexi_timeline/blob/master/src/com/openbexi/timeline/server/openbexi_timeline.java) | Separate server-backed application using the Java data-source and servlet components. |
 
 The static demos do not call the Java service. The [API reference](api.html) documents the checked-in Swagger contract, not a running server discovered by the demo page.
 
@@ -62,9 +62,9 @@ npm run test:demos
 node tools/update-demo-readme.mjs --check
 ```
 
-The demo suite validates catalog coverage, source imports, model settings, local HTTP assets, interaction state, responsive layout, time scales, axis ticks, Overview geometry, and docked panel behavior. Tests use actual scene objects and a simulated DOM; GPU rendering and text measurement are stubbed. Browser inspection remains necessary for visual changes.
+The demo suite validates catalog coverage, source imports, model settings, local HTTP assets, interaction state, responsive layout, time scales, axis ticks, Overview geometry, and docked panel behavior. It uses actual scene objects and a simulated DOM, with GPU rendering and text measurement stubbed. The separate `npm run test:browser` suite renders all seven demos in Chromium/WebGL, compares reviewed screenshots at two window sizes, and checks panel boundaries, Overview toggling, scrolling, and resizing. See the [browser regression guide](browser-tests.md) for installation and baseline review instructions.
 
-To update the generated README demo list after a catalog edit, run `npm run demos:readme`. Java test sources are also present under [src/com/openbexi/timeline/tests](../src/com/openbexi/timeline/tests/test_timeline.java); the demo suite does not run them.
+To update the generated README demo list after a catalog edit, run `npm run demos:readme`. Java test sources are also present under [src/com/openbexi/timeline/tests](https://github.com/arcazj/openbexi_timeline/blob/master/src/com/openbexi/timeline/tests/test_timeline.java); the demo suite does not run them.
 
 ## Deployment
 
@@ -78,7 +78,7 @@ Open `http://localhost:8780/demos.html`. The server binds to `127.0.0.1`; `npm r
 
 Static hosting must include the page, source modules, styles, icons, demo catalog, models, datasets, and browser dependencies referenced by the page's import map. Include `help`, `docs`, `swagger`, `README.md`, and `LICENSE` to keep the Help links available. Keep their relative directory structure when hosting under a subdirectory. See [hosting portability](demos.md#hosting-portability).
 
-The Java deployment is separate. Its [Maven configuration](../pom.xml) targets Java 17, and the repository provides [Windows](../openbexi_timeline.bat) and [shell](../openbexi_timeline.sh) startup examples. Configure their installation and data paths for your environment before use. The [Kubernetes deployment](../yaml/deployment.yaml) and [service](../yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
+The Java deployment is separate. Its [Maven configuration](https://github.com/arcazj/openbexi_timeline/blob/master/pom.xml) targets Java 17, and the repository provides [Windows](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.bat) and [shell](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.sh) startup examples. Configure their installation and data paths for your environment before use. The [Kubernetes deployment](https://github.com/arcazj/openbexi_timeline/blob/master/yaml/deployment.yaml) and [service](https://github.com/arcazj/openbexi_timeline/blob/master/yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
 
 ## Resource maintenance
 
