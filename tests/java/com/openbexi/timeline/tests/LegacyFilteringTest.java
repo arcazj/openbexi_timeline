@@ -6,12 +6,19 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.io.*;
 
-public class test_filtering {
+/**
+ * Historical counts depend on tests/data/events.json and yaml/sources_startup.yml.
+ * The legacy manager also sets the JVM default time zone. Explicitly opt in with
+ * -Dopenbexi.legacyTests=true when using the expected fixtures.
+ */
+@EnabledIfSystemProperty(named = "openbexi.legacyTests", matches = "true")
+public class LegacyFilteringTest {
     private data_configuration _data_configuration;
 
     public void set_data_configuration() {
@@ -65,7 +72,7 @@ public class test_filtering {
         int filter1 = 3155;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -86,7 +93,7 @@ public class test_filtering {
         int filter1 = 3155;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -107,7 +114,7 @@ public class test_filtering {
         int filter1 = 2567;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -129,7 +136,7 @@ public class test_filtering {
         int filter1 = 73;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -151,7 +158,7 @@ public class test_filtering {
         int filter1 = 53;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -173,7 +180,7 @@ public class test_filtering {
         int filter1 = 36;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
 
@@ -196,7 +203,7 @@ public class test_filtering {
         int filter1 = 3189;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -218,7 +225,7 @@ public class test_filtering {
         int filter1 = 10056;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -240,7 +247,7 @@ public class test_filtering {
         int filter1 = 2855;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
 
@@ -263,7 +270,7 @@ public class test_filtering {
         int filter1 = 1813;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -285,7 +292,7 @@ public class test_filtering {
         int filter1 = 11187;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -307,7 +314,7 @@ public class test_filtering {
         int filter1 = 4486;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -329,7 +336,7 @@ public class test_filtering {
         int filter1 = 30;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -351,7 +358,7 @@ public class test_filtering {
         int filter1 = 12770;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -373,7 +380,7 @@ public class test_filtering {
         int filter1 = 3177;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -395,7 +402,7 @@ public class test_filtering {
         int filter1 = 5;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -417,6 +424,6 @@ public class test_filtering {
         int filter1 = 12795;
         int filter2 = events.size();
         //print(events);
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 }

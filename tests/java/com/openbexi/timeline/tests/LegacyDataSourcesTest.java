@@ -1,33 +1,39 @@
 package com.openbexi.timeline.tests;
 
 import com.openbexi.timeline.data_browser.data_sources;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-public class test_data_sources  {
+/**
+ * Historical serialization check that backs up and overwrites yaml/sources_default.yml.
+ * Opt in only with disposable fixtures using -Dopenbexi.legacyTests=true.
+ */
+@EnabledIfSystemProperty(named = "openbexi.legacyTests", matches = "true")
+public class LegacyDataSourcesTest {
 
     private data_sources dataSourceManager;
     private static final Path ORIGINAL_FILE_PATH = Path.of("yaml/sources_default.yml");
     private static final Path BACKUP_FILE_PATH = Path.of("yaml/sources_default_backup.yml");
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         dataSourceManager = new data_sources();
         // Backup the original file before tests
         if (Files.exists(ORIGINAL_FILE_PATH)) {
             Files.copy(ORIGINAL_FILE_PATH, BACKUP_FILE_PATH, StandardCopyOption.REPLACE_EXISTING);
         } else {
-            Assert.fail("Original YAML file does not exist.");
+            Assertions.fail("Original YAML file does not exist.");
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         // Restore the original file from backup
         if (Files.exists(BACKUP_FILE_PATH)) {
@@ -48,7 +54,7 @@ public class test_data_sources  {
         dataSourceManager.readYaml(ORIGINAL_FILE_PATH.toString());
         String jsonOutput2 = dataSourceManager.dataSourcesToJson();
 
-        Assert.assertEquals("JSON output should be consistent before and after saving YAML", jsonOutput1, jsonOutput2);
+        Assertions.assertEquals(jsonOutput1, jsonOutput2, "JSON output should be consistent before and after saving YAML");
     }
 }
 
