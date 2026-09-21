@@ -9,6 +9,7 @@ export class TimelineViews {
         this.onScroll = () => {
             if (this.mode !== "table") this.scrollPositions[this.mode] = this.frame.scrollLeft;
             this.layoutTimeMarker();
+            this.renderOverviewViewport();
         };
 
         this.controls = document.createElement("div");
@@ -106,6 +107,14 @@ export class TimelineViews {
         if (this.mode !== "table") frame.scrollLeft = this.scrollPositions[this.mode];
         if (this.mode !== "timeline" && this.dirty) this.renderTable();
         this.layoutToolbar();
+        this.renderOverviewViewport();
+    }
+
+    renderOverviewViewport() {
+        const scene = this.timeline.ob_scene[this.sceneIndex];
+        if (scene?.ob_camera && scene?.ob_renderer && scene.overviewViewports?.length) {
+            this.timeline.ob_render(this.sceneIndex);
+        }
     }
 
     layoutToolbar() {
@@ -130,7 +139,10 @@ export class TimelineViews {
         const marker = timeline.ob_marker;
         if (!this.frame || !marker || !scene) return;
         const width = this.frame.clientWidth || (this.mode === "split" ? Math.floor(scene.width / 2) : scene.width);
-        const center = scene.width / 2 - this.frame.scrollLeft;
+        const mainBand = scene.bands?.find(band => !band.name.includes('overview_'));
+        const referenceOffset = mainBand?.timeScale ?
+            timeline.dateToBandPixelOffSet(this.sceneIndex, mainBand, timeline.ob_scene.sync_time) : 0;
+        const center = scene.width / 2 + referenceOffset - this.frame.scrollLeft;
         marker.style.left = (center - parseInt(marker.style.width, 10) / 2) + "px";
         marker.style.visibility = this.mode === "table" || center < 0 || center > width ? "hidden" : "visible";
     }

@@ -3,15 +3,16 @@
     {
       "name": "ob_demo",
       "title": "Operations sample",
-      "date": "2026-09-12T13:30:00Z",
+      "date": "2026-09-12T12:30:00Z",
       "timeZone": "UTC",
       "top": 130,
       "left": 12,
       "width": 1400,
       "height": 640,
-      "fontSize": 12,
+      "fontSize": 13,
       "data": "",
       "overview": true,
+      "dockOverview": true,
       "showCurrentTime": false
     }
   ],
@@ -22,27 +23,46 @@
   "bands": [
     {
       "name": "ob_band_main",
-      "height": "82%",
-      "intervalUnit": "HOUR",
-      "intervalPixels": 150,
+      "height": "84%",
+      "intervalUnit": "MINUTE",
+      "intervalPixels": 30,
       "color": "#eef1f2",
       "dateFormat": "HH:mm",
       "dateColor": "#a0a6ab",
       "textColor": "#263238",
       "SessionColor": "#5c9ddb",
       "eventColor": "#7675c8",
-      "fontSize": 12,
+      "fontSize": 13,
       "intervalUnitPos": "BOTTOM",
       "model": [
         {
           "sortBy": "NONE"
         }
       ],
-      "trackIncrement": 28
+      "trackIncrement": 32,
+      "range": {
+        "from": "2026-09-12T08:00:00Z",
+        "to": "2026-09-12T17:00:00Z"
+      },
+      "context": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "focus": {
+        "from": "2026-09-12T12:10:00Z",
+        "to": "2026-09-12T13:20:00Z",
+        "magnification": 3,
+        "tickMinutes": 10
+      },
+      "tickMinutes": 30,
+      "labelPosition": "above",
+      "topPadding": 60,
+      "sessionHeight": 8,
+      "defaultEventSize": 4
     },
     {
       "name": "ob_overview_band",
-      "height": "18%",
+      "height": "16%",
       "intervalUnit": "HOUR",
       "intervalPixels": 55,
       "color": "#dfe7e9",
@@ -51,14 +71,24 @@
       "textColor": "#263238",
       "SessionColor": "#5c9ddb",
       "eventColor": "#7675c8",
-      "fontSize": 12,
+      "fontSize": 11,
       "intervalUnitPos": "BOTTOM",
       "model": [
         {
           "sortBy": "NONE"
         }
       ],
-      "defaultEventSize": 1
+      "defaultEventSize": 1,
+      "showContextLabel": true,
+      "range": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "context": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "tickMinutes": 60
     }
   ]
 }

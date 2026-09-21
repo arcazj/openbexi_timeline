@@ -24,6 +24,11 @@ import * as THREE from 'three';
 import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
+import {createTimelineHelp} from './openbexi_timeline_help.js';
+import {projectOverviewSessions, renderOverviewSessions, updateOverviewViewport} from './openbexi_timeline_overview.js';
+import {bandTimeToPixel, bandPixelToTime} from './openbexi_timeline_scale.js';
+import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
+import {bandTicks, secondaryTicks} from './openbexi_timeline_ticks.js';
 import {parseTimelineData, parseTimelineDate, formatTimelineDate, searchTimelineData,
     prepareStaticBands, layoutStaticSessions, timelineValueToTime, formatTimelineValue} from './openbexi_timeline_data.js';
 
@@ -953,25 +958,8 @@ function OB_TIMELINE() {
                 return;
             }
             this.ob_timeline_right_panel.style.visibility = "visible";
-            let div = document.createElement("div");
-            div.className = "ob_head_panel";
-            div.id = this.name + '_help';
-            div.innerHTML = "<div style='padding:8px;text-align: center;'>OpenBEXI timeline<\div>\n" +
-                "<div class=\"ob_form1\">\n" +
-                "</form>\n" +
-                "<form>\n" +
-                "<legend> version 1.1</legend>\n" +
-                "<br>" + "<br>" +
-                "</form>\n" +
-                "<a  href='https://github.com/arcazj/openbexi_timeline'>https://github.com/arcazj/openbexi_timeline</a >\n" +
-                "<img src='openbexi_logo.png' alt='OpenBexi Timeline' width=250 height=210 style='vertical-align:middle;margin:0 50px'>" +
-                "<br>" + "<br>" +
-                "<form>\n" +
-                "<input type='button' onclick=\"get_ob_timeline('" + this.name + "').ob_cancel_user(" + ob_scene_index + ");\" value='Close' />\n"
-            "<fieldset>\n" +
-            "</form>\n" +
-            "<fieldset>\n" +
-            "</div>";
+            const div = createTimelineHelp(this, ob_scene_index);
+            this.helpReady = div.ready;
 
             this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
             this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
@@ -1036,7 +1024,7 @@ function OB_TIMELINE() {
 
             let div = document.createElement("div");
             div.className = "ob_head_panel";
-            div.id = this.name + '_help';
+            div.id = this.name + '_calendar_heading';
             div.innerHTML = "<div style='padding:8px;text-align: center;'>Calendar</div>";
             this.ob_timeline_right_panel.appendChild(div);
 
@@ -1061,9 +1049,9 @@ function OB_TIMELINE() {
                 if (that.ob_scene[ob_scene_index].ob_interval_move !== undefined)
                     clearInterval(that.ob_scene[ob_scene_index].ob_interval_move);
                 that.ob_scene[ob_scene_index].date_cal = date.toString();
-                that.ob_scene[ob_scene_index].show_calendar = true;
                 that.reset_synced_time("new_calendar_date", ob_scene_index);
                 that.ob_remove_calendar();
+                that.ob_scene[ob_scene_index].show_calendar = true;
                 if (that.data && (that.data.match(/^(http?):\/\//) || that.data.match(/^(https?):\/\//))) {
                     that.data_head = that.ob_get_url_head(that.ob_scene[ob_scene_index]);
                     that.update_scene(ob_scene_index, that.header, that.params, that.ob_scene[ob_scene_index].bands,
@@ -1129,12 +1117,18 @@ function OB_TIMELINE() {
 
             if (!this.staticData) this.div_cal.appendChild(ob_add_event_div);
             this.ob_timeline_right_panel.appendChild(this.div_cal);
+            this.ob_scene[ob_scene_index].date_cal = date === "now" ? new Date() : date;
+            this.ob_scene[ob_scene_index].show_calendar = true;
         } catch (err) {
             // Handle the error if needed
         }
     };
 
     OB_TIMELINE.prototype.ob_remove_calendar = function () {
+        for (const scene of this.ob_scene || []) {
+            if (scene) scene.show_calendar = false;
+        }
+        document.getElementById(this.name + '_calendar_heading')?.remove();
         try {
             this.ob_timeline_right_panel.style.visibility = "hidden";
             this.ob_timeline_right_panel.removeChild(document.getElementById(this.name + "_cal"));
@@ -1201,13 +1195,18 @@ function OB_TIMELINE() {
             const details = document.createElement("div");
             details.id = this.name + "_descriptor";
             details.className = "ob_static_description";
+            const close = document.createElement("button");
+            close.type = "button";
+            close.textContent = "Close";
+            close.setAttribute("aria-label", "Close event details");
+            close.addEventListener("click", () => this.ob_remove_descriptor());
             const heading = document.createElement("h2");
             heading.textContent = descriptor.data.title;
             const text = document.createElement("p");
             text.textContent = descriptor.data.description;
             const dates = document.createElement("p");
             dates.textContent = this.formatEventDate(descriptor.start) + (descriptor.end ? " — " + this.formatEventDate(descriptor.end) : "");
-            details.append(heading, dates, text);
+            details.append(close, heading, dates, text);
             this.ob_timeline_right_panel.appendChild(details);
             return;
         }
@@ -1353,12 +1352,7 @@ function OB_TIMELINE() {
             this.ob_calendar.style.width = 32 + "px";
             this.ob_calendar.onclick = function () {
                 that2.moving = false;
-                //if (that2.ob_scene[ob_scene_index].show_calendar === undefined)
-                that2.ob_scene[ob_scene_index].show_calendar = true;
-                if (that2.ob_scene[ob_scene_index].show_calendar === true) {
-                    that2.ob_create_calendar(ob_scene_index, that2.ob_markerDate);
-                    that2.ob_scene[ob_scene_index].show_calendar = false;
-                }
+                that2.ob_create_calendar(ob_scene_index, that2.ob_markerDate);
             };
             this.ob_calendar.onmousemove = function () {
                 that2.moving = false;
@@ -1546,6 +1540,14 @@ function OB_TIMELINE() {
             this.ob_help = document.createElement("IMG");
             this.ob_help.className = "ob_help";
             this.ob_help.alt = "Help";
+            this.ob_help.setAttribute('role', 'button');
+            this.ob_help.tabIndex = 0;
+            this.ob_help.onkeydown = function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    this.click();
+                }
+            };
             this.ob_help.style.height = 32 + "px";
             this.ob_help.style.width = 32 + "px";
             this.ob_help.onclick = function () {
@@ -1763,6 +1765,7 @@ function OB_TIMELINE() {
             this.ob_timeline_right_panel = document.createElement("div");
             this.ob_timeline_right_panel.id = this.name + '_right_panel';
             this.ob_timeline_right_panel.className = "ob_timeline_right_panel";
+            this.ob_timeline_right_panel.style.visibility = "hidden";
             document.body.appendChild(this.ob_timeline_right_panel);
         }
 
@@ -1770,7 +1773,6 @@ function OB_TIMELINE() {
         this.ob_timeline_right_panel.style.top = parseInt(this.ob_timeline_panel.style.top) + "px";
         this.ob_timeline_right_panel.style.left = this.ob_scene[ob_scene_index].left + this.ob_scene[ob_scene_index].width + "px";
         this.ob_timeline_right_panel.style.height = parseInt(this.ob_timeline_panel.style.height) + "px";
-        this.ob_timeline_right_panel.style.visibility = "hidden";
         this.ob_timeline_panel_resizer.style.top = (this.ob_timeline_panel.offsetHeight - 8) + "px";
         this.ob_timeline_panel_resizer.style.left = (this.ob_timeline_panel.offsetWidth - 8) + "px";
 
@@ -1958,6 +1960,16 @@ function OB_TIMELINE() {
             return String(new Date(totalGregorianUnitLengths).getHours());
     };
 
+    OB_TIMELINE.prototype.dateToBandPixelOffSet = function (index, band, date) {
+        return this.staticData ? bandTimeToPixel(this, index, band, date) :
+            this.dateToPixelOffSet(index, date, band.gregorianUnitLengths, band.intervalPixels);
+    };
+
+    OB_TIMELINE.prototype.pixelOffSetToBandDate = function (index, band, pixel) {
+        return this.staticData ? new Date(bandPixelToTime(this, index, band, pixel)) :
+            this.pixelOffSetToDate(index, pixel, band.gregorianUnitLengths, band.intervalPixels);
+    };
+
     OB_TIMELINE.prototype.dateToPixelOffSet = function (ob_scene_index, date, gregorianUnitLengths, intervalPixels) {
         if (this.staticData) return (parseTimelineDate(date) - this.ob_scene.sync_time) / (gregorianUnitLengths / intervalPixels);
         if (date === undefined || date === "") {
@@ -2027,6 +2039,13 @@ function OB_TIMELINE() {
         let ob_sync = false;
         const scene = this.ob_scene[ob_scene_index];
         const {bands, width, center} = scene;
+
+        if (this.staticData && bands.some(band => band.timeScale)) {
+            for (const band of bands) this.move_band(ob_scene_index, band.name, 0, band.y, band.z, false);
+            this.ob_markerDate = new Date(this.ob_scene.sync_time);
+            this.update_time_marker();
+            return;
+        }
 
         for (let i = 0; i < bands.length; i++) {
             const band = bands[i];
@@ -2217,138 +2236,59 @@ function OB_TIMELINE() {
         ob_layouts,
         max_name_length
     ) {
-        const scene = this.ob_scene[ob_scene_index]; // Cache the scene for repeated access
-        const originalBandLength = scene.bands.original_length;
-        const bandsLength = scene.bands.length;
-
-        // Early exit if original length matches the current bands length
-        if (originalBandLength === bandsLength) {
-            return;
-        }
-
-        // Prepare the band with layouts and max name length
-        band.layouts = ob_layouts;
+        const scene = this.ob_scene[ob_scene_index];
+        band.layouts = [...ob_layouts];
         band.layouts.max_name_length = max_name_length;
+        band.layout_name = "NONE";
+        if (band.name.includes("overview_") || ob_attribute === "NONE" ||
+            ob_attribute === "" || !ob_layouts.length) return [band];
 
-        // Assume default layout name if none provided
-        band.layout_name = ob_layouts[0] || "NONE";
-
-        let set_alternate_color = false;
-        const ob_height = -scene.ob_height;
-
-        if (this.ob_scene[ob_scene_index].sources !== undefined) {
-            const layout_name = this.ob_scene[ob_scene_index].sources[0].namespace;
-            ob_color = this.get_source_property(ob_scene_index, layout_name, "color", ob_color);
-            ob_text_color = this.get_source_property(ob_scene_index, layout_name, "textColor", ob_text_color);
-            ob_date_color = this.get_source_property(ob_scene_index, layout_name, "dateColor", ob_date_color);
-            const currentColor = ob_attribute === "namespace" ? ob_color : set_alternate_color ? this.hex_Luminance(ob_color, undefined) : ob_color;
-            scene.bands[0] = {
+        // Return replacement bands rather than overwriting indexes in the scene.
+        // Group growth must not replace an adjacent overview or another main band.
+        return ob_layouts.map((layout, index) => {
+            const color = this.get_source_property(ob_scene_index, layout, "color", ob_color);
+            const textColor = this.get_source_property(ob_scene_index, layout, "textColor", ob_text_color);
+            const dateColor = this.get_source_property(ob_scene_index, layout, "dateColor", ob_date_color);
+            const currentColor = ob_attribute !== "namespace" && index % 2 ? this.hex_Luminance(color, undefined) : color;
+            return {
                 ...band,
-                name: `${band.name}_${0}`,
-                layout_name: layout_name,
+                name: `${band.name}_${index}`,
+                layout_name: layout,
                 color: currentColor,
                 textBackgroundColor: currentColor,
-                textColor: ob_text_color,
-                dateColor: ob_date_color,
+                textColor,
+                dateColor,
                 maxY: 0,
                 minY: 0,
-                lastGreaterY: ob_height,
+                lastGreaterY: -scene.ob_height,
             };
-        }
-
-        // Iterate over layouts to apply changes
-        for (let i = 0; i < ob_layouts.length; i++) {
-            const layout = ob_layouts[i];
-            const layoutName = layout || "NONE"; // Safeguard against undefined layouts
-
-            // Update colors based on current layout
-            ob_color = this.get_source_property(ob_scene_index, layout, "color", ob_color);
-            ob_text_color = this.get_source_property(ob_scene_index, layout, "textColor", ob_text_color);
-            ob_date_color = this.get_source_property(ob_scene_index, layout, "dateColor", ob_date_color);
-
-            // Decide whether to adjust color based on attribute and toggle state
-            const currentColor = ob_attribute === "namespace" ? ob_color : set_alternate_color ? this.hex_Luminance(ob_color, undefined) : ob_color;
-
-            // Clone and modify the band for the current layout
-            scene.bands[i] = {
-                ...band,
-                name: `${band.name}_${i}`,
-                layout_name: layoutName,
-                color: currentColor,
-                textBackgroundColor: currentColor,
-                textColor: ob_text_color,
-                dateColor: ob_date_color,
-                maxY: 0,
-                minY: 0,
-                lastGreaterY: ob_height,
-            };
-
-            if (ob_attribute !== "namespace") {
-                set_alternate_color = !set_alternate_color; // Toggle for next iteration
-            }
-        }
-
-        scene.bands.original_length = bandsLength; // Update the original length to match current length
-    };
-
-    OB_TIMELINE.prototype.create_new_bands = function (ob_scene_index) {
-        const ob_layouts = new Set();
-        let max_name_length = 0;
-        const {bands, sessions} = this.ob_scene[ob_scene_index];
-        const events = sessions?.events || [];
-
-        bands.forEach((band, i) => {
-            if (!band.model) {
-                Object.assign(band, {
-                    layouts: ["NONE"],
-                    layout_name: "NONE",
-                    model: [{sortBy: "NONE"}]
-                });
-            }
-
-            const model = band.model[0] || {sortBy: "NONE"};
-
-            if (i === 0) {
-                events.forEach((event, k) => {
-                    if (event.id && !event.zone) {
-                        try {
-                            let sortByValue = eval(`sessions.events[k].data.${model.sortBy}`);
-
-                            if (!isNaN(sortByValue)) {
-                                sortByValue = `${model.sortBy} ${sortByValue}`;
-                            }
-
-                            event.data.sortByValue = sortByValue;
-
-                            if (sortByValue && !ob_layouts.has(sortByValue)) {
-                                ob_layouts.add(sortByValue);
-                            }
-                            const firstLayoutLength = [...ob_layouts][ob_layouts.size - 1]?.length || 0;
-                            if (firstLayoutLength > max_name_length) {
-                                max_name_length = firstLayoutLength;
-                            }
-                        } catch (error) {
-                            //console.error(error);
-                        }
-                    }
-                });
-            }
-
-            const sortByStr = model.sortBy.toString();
-
-            this.update_timeline_model(
-                ob_scene_index,
-                band,
-                sortByStr,
-                band.color,
-                band.textColor,
-                band.dateColor,
-                [...ob_layouts],
-                max_name_length
-            );
         });
     };
 
+    OB_TIMELINE.prototype.create_new_bands = function (ob_scene_index) {
+        const scene = this.ob_scene[ob_scene_index];
+        const events = scene.sessions?.events || [];
+        const bands = [];
+        for (const band of scene.bands) {
+            if (!band.model?.length) band.model = [{sortBy: "NONE"}];
+            const sortBy = String(band.model[0].sortBy || "NONE");
+            const layouts = new Set();
+            let maxNameLength = 0;
+            if (!band.name.includes("overview_") && sortBy !== "NONE") {
+                for (const event of events) {
+                    if (event.zone || !event.data) continue;
+                    let value = sortBy.split(".").reduce((data, key) => data?.[key], event.data);
+                    if (value === undefined || value === null || value === "") continue;
+                    if (!isNaN(value)) value = `${sortBy} ${value}`;
+                    layouts.add(value);
+                    maxNameLength = Math.max(maxNameLength, String(value).length);
+                }
+            }
+            bands.push(...this.update_timeline_model(ob_scene_index, band, sortBy,
+                band.color, band.textColor, band.dateColor, [...layouts], maxNameLength));
+        }
+        scene.bands = bands;
+    };
 
     OB_TIMELINE.prototype.set_bands_height = function (ob_scene_index) {
         let new_timeline_height = 0;
@@ -2408,15 +2348,10 @@ function OB_TIMELINE() {
                 band.height = 0
 
             if (band.height !== undefined) {
-                band.y = this.ob_scene[ob_scene_index].ob_height - pos - band.height / 2;
-                band.pos_x = band.x;
-                band.pos_y = band.y;
-                band.pos_z = band.z;
                 pos += band.height;
                 band.heightMax = band.height;
                 band.maxY = band.heightMax / 2;
                 band.minY = -band.maxY;
-                band.heightMin = this.ob_scene[ob_scene_index].ob_height - pos;
             }
 
             if (band.name.match(/overview_/)) {
@@ -2428,8 +2363,19 @@ function OB_TIMELINE() {
             }
         }
 
-        if (new_timeline_height !== 0 && !isNaN(new_timeline_height)) {
-            this.ob_scene[ob_scene_index].ob_height = new_timeline_height;
+        // Position every band against the final height, including any minimum-height
+        // expansion. Using the previous height leaves the scene background exposed.
+        if (pos > 0 && Number.isFinite(pos)) {
+            this.ob_scene[ob_scene_index].ob_height = pos;
+        }
+        let top = this.ob_scene[ob_scene_index].ob_height;
+        for (const band of this.ob_scene[ob_scene_index].bands) {
+            band.y = top - band.height / 2;
+            band.pos_x = band.x;
+            band.pos_y = band.y;
+            band.pos_z = band.z;
+            top -= band.height;
+            band.heightMin = top;
         }
     };
 
@@ -2741,9 +2687,9 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.create_zones = function (ob_scene_index) {
         if (this.staticData) {
-            for (const band of this.ob_scene[ob_scene_index].bands) for (const zone of band.zones) {
-                const start = this.dateToPixelOffSet(ob_scene_index, zone.start, band.gregorianUnitLengths, band.intervalPixels);
-                const end = this.dateToPixelOffSet(ob_scene_index, zone.end, band.gregorianUnitLengths, band.intervalPixels);
+            for (const band of this.ob_scene[ob_scene_index].bands.filter(band => !band.name.includes("overview_"))) for (const zone of band.zones) {
+                const start = this.dateToBandPixelOffSet(ob_scene_index, band, zone.start);
+                const end = this.dateToBandPixelOffSet(ob_scene_index, band, zone.end);
                 const width = end - start;
                 const height = zone.render.height || band.height;
                 const mesh = this.track[ob_scene_index](new THREE.Mesh(
@@ -2752,12 +2698,18 @@ function OB_TIMELINE() {
                         transparent: true, opacity: zone.render.opacity ?? 0.25, depthWrite: false}))));
                 mesh.position.set(start + width / 2, zone.render.verticalAlign === "top" ? (band.height - height) / 2 : 0, 1);
                 this.ob_scene[ob_scene_index].getObjectByName(band.name).add(mesh);
-                if (!band.name.includes("overview_")) this.add_text_sprite(ob_scene_index, mesh, zone.data.title,
-                    -width / 2 + 70, height / 2 - 20, 2, false, zone.render.labelFontSize || 12, "normal", "bold", "#79552d", this.fontFamily);
+                if (!band.name.includes("overview_")) {
+                    const fontSize = zone.render.labelFontSize || 12;
+                    const labelWidth = this.getTextWidth(zone.data.title, fontSize + 'px ' + this.fontFamily, 0);
+                    const labelY = zone.render.labelPosition === 'bottom' ? -height / 2 + 36 : height / 2 - 20;
+                    this.add_text_sprite(ob_scene_index, mesh, zone.data.title,
+                        -width / 2 + labelWidth / 2 + 6, labelY, 2, false, fontSize, "normal", "bold", "#79552d", this.fontFamily);
+                }
             }
             return;
         }
         for (let b = 0; b < this.ob_scene[ob_scene_index].bands.length; b++) {
+            if (this.ob_scene[ob_scene_index].bands[b].name.includes("overview_")) continue;
             for (let z = 0; z < this.ob_scene[ob_scene_index].bands[b].zones.length; z++) {
                 let x = this.dateToPixelOffSet(ob_scene_index, this.ob_scene[ob_scene_index].bands[b].zones[z].start,
                     this.ob_scene[ob_scene_index].bands[b].gregorianUnitLengths,
@@ -2894,8 +2846,10 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_render = function (ob_scene_index) {
         //console.log("OB_TIMELINE.prototype.ob_render(ob_render_index=" + ob_scene_index + ")");
         this.ob_render_index = ob_scene_index;
+        updateOverviewViewport(this, ob_scene_index);
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
+        syncOverviewPanel(this, ob_scene_index);
     };
 
     OB_TIMELINE.prototype.get_backgroundColor = function () {
@@ -3149,6 +3103,20 @@ function OB_TIMELINE() {
         }
 
         if (matchingBand) {
+            if (this.staticData && bands.some(band => band.timeScale)) {
+                const anchor = this.dateToBandPixelOffSet(ob_scene_index, matchingBand, this.ob_scene.sync_time);
+                this.ob_markerDate = this.pixelOffSetToBandDate(ob_scene_index, matchingBand, anchor - x);
+                matchingBand.x = x;
+                for (const band of bands) {
+                    const mesh = currentScene.getObjectByName(band.name);
+                    if (!mesh || mesh === ob_band) continue;
+                    ob_band.position.x_with_no_scale = mesh.position.x;
+                    mesh.position.x = this.dateToBandPixelOffSet(ob_scene_index, band, this.ob_scene.sync_time) -
+                        this.dateToBandPixelOffSet(ob_scene_index, band, this.ob_markerDate);
+                }
+                this.update_time_marker();
+                return;
+            }
             this.ob_markerDate = this.pixelOffSetToDate(
                 ob_scene_index, -x, matchingBand.gregorianUnitLengths, matchingBand.intervalPixels
             );
@@ -3195,6 +3163,22 @@ function OB_TIMELINE() {
         const scene = this.ob_scene[ob_scene_index];
         for (const band of scene.bands) {
             const ob_band = scene.getObjectByName(band.name);
+            if (band.timeScale) {
+                const from = this.pixelOffSetToBandDate(ob_scene_index, band, -band.width / 2).getTime();
+                const to = this.pixelOffSetToBandDate(ob_scene_index, band, band.width / 2).getTime();
+                const ticks = bandTicks(band, from, to, this.params[0].displayOffsetMinutes || 0);
+                let lastLabel = -Infinity;
+                for (const {time, format} of ticks) {
+                    const pixel = this.dateToBandPixelOffSet(ob_scene_index, band, time);
+                    if (Math.abs(pixel) > band.width / 2) continue;
+                    this.createSegment(ob_scene_index, band, pixel);
+                    if (pixel - lastLabel >= (band.tickLabelSpacing || 45)) {
+                        this.createDateText(ob_scene_index, ob_band, band, pixel, format);
+                        lastLabel = pixel;
+                    }
+                }
+                continue;
+            }
             let incrementPixelOffSet = this.dateToPixelOffSet(ob_scene_index, band.minDate, band.gregorianUnitLengths, band.intervalPixels);
             let maxPixelOffSet = this.dateToPixelOffSet(ob_scene_index, band.maxDate, band.gregorianUnitLengths, band.intervalPixels);
 
@@ -3207,6 +3191,53 @@ function OB_TIMELINE() {
                 incrementPixelOffSet = parseInt(incrementPixelOffSet) + parseInt(band.intervalPixels);
             }
         }
+        if (this.staticData) this.render_band_scale_headers(ob_scene_index);
+    };
+
+    OB_TIMELINE.prototype.render_band_scale_headers = function (index) {
+        const scene = this.ob_scene[index];
+        for (const band of scene.bands) {
+            const header = band.scaleHeader;
+            const secondary = band.secondaryScale?.step ? band.secondaryScale : null;
+            if (!header && !secondary) continue;
+            const parent = scene.getObjectByName(band.name);
+            const group = new THREE.Group();
+            group.name = band.name + '_scale_headers';
+            parent.add(group);
+            const text = (label, x, y, color, tag) => {
+                this.add_text_sprite(index, group, label, x, y, 22, false, 11,
+                    'normal', 'normal', color, band.fontFamily);
+                group.children.at(-1).userData[tag] = true;
+            };
+            const strip = (height, top, color, tag) => {
+                const mesh = this.track[index](new THREE.Mesh(this.track[index](new THREE.PlaneGeometry(band.width, height)),
+                    this.track[index](new THREE.MeshBasicMaterial({color, depthWrite: false}))));
+                mesh.position.set(0, top - height / 2, 20);
+                mesh.userData[tag] = true;
+                mesh.raycast = () => {};
+                group.add(mesh);
+            };
+            let top = band.height / 2;
+            if (header) {
+                const height = header.height || 38;
+                strip(height, top, header.color || '#edf0f1', 'scaleHeader');
+                const labelWidth = this.getTextWidth(header.label || '', '11px ' + band.fontFamily, 0);
+                text(header.label || '', -scene.width / 2 + labelWidth / 2 + 18, top - height / 2,
+                    header.textColor || '#397a9c', 'scaleHeaderLabel');
+                text(header.unit || '', 0, top - height / 2, header.textColor || '#397a9c', 'scaleHeaderUnit');
+                top -= height;
+            }
+            if (secondary) {
+                const height = secondary.height || 25;
+                strip(height, top, secondary.color || '#ffd58a', 'secondaryScaleStrip');
+                const from = this.pixelOffSetToBandDate(index, band, -band.width / 2).getTime();
+                const to = this.pixelOffSetToBandDate(index, band, band.width / 2).getTime();
+                for (const tick of secondaryTicks(secondary, from, to)) {
+                    const x = this.dateToBandPixelOffSet(index, band, tick.time);
+                    text(tick.label, x, top - height / 2, secondary.textColor || '#704308', 'secondaryScaleLabel');
+                }
+            }
+        }
     };
 
     OB_TIMELINE.prototype.createSegment = function (ob_scene_index, band, incrementPixelOffSet) {
@@ -3215,14 +3246,16 @@ function OB_TIMELINE() {
         this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + 0.15, heightMaxHalf, 5, band.heightMax, band.color, false);
     };
 
-    OB_TIMELINE.prototype.createDateText = function (ob_scene_index, ob_band, band, incrementPixelOffSet) {
-        const text = this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet, band.gregorianUnitLengths, band.intervalPixels, band.intervalUnit, band.dateFormat);
+    OB_TIMELINE.prototype.createDateText = function (ob_scene_index, ob_band, band, incrementPixelOffSet, format = band.dateFormat) {
+        const text = band.timeScale ? formatTimelineValue(this.pixelOffSetToBandDate(ob_scene_index, band, incrementPixelOffSet),
+            this.staticTimeAxis, format, this.params[0].displayOffsetMinutes || 0) :
+            this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet, band.gregorianUnitLengths, band.intervalPixels, band.intervalUnit, band.dateFormat);
         const textX = incrementPixelOffSet - (band.fontSizeInt / 2) + 6;
         const textY = this.calculateTextYPosition(band);
         this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 5, false, band.fontSizeInt,
             band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily);
-        if (this.staticData && band.secondaryScale) {
-            const time = this.ob_scene.sync_time + incrementPixelOffSet * band.gregorianUnitLengths / band.intervalPixels;
+        if (this.staticData && band.secondaryScale && !band.secondaryScale.step) {
+            const time = this.pixelOffSetToBandDate(ob_scene_index, band, incrementPixelOffSet);
             const secondary = formatTimelineDate(time, band.secondaryScale.format, 0, band.secondaryScale.origin);
             this.add_text_sprite(ob_scene_index, ob_band, secondary, textX, band.height / 2 - band.fontSizeInt, 5,
                 false, band.fontSizeInt, band.fontStyle, band.fontWeight, band.dateColor, band.fontFamily);
@@ -3615,14 +3648,10 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.init_sessions = function (ob_scene_index, band_index) {
         let layout;
-        let sortByValue;
+        const sortByValue = String(this.ob_scene[ob_scene_index].bands[band_index].model[0].sortBy || "NONE");
         let session = {};
 
         // Assign each event to the right bands and store zones
-        if (sortByValue === undefined) {
-            let that_eval2 = this;
-            sortByValue = eval("that_eval2.ob_scene[ob_scene_index].bands[band_index].model[0].sortBy");
-        }
         for (let k = 0; k < this.ob_scene[ob_scene_index].sessions.events.length; k++) {
             if (this.ob_scene[ob_scene_index].sessions.events[k].activities === undefined) {
                 if (this.ob_scene[ob_scene_index].sessions.events[k].id === undefined)
@@ -3638,9 +3667,11 @@ function OB_TIMELINE() {
                 if (sortByValue === "NONE" || sortByValue === "") {
                     this.ob_scene[ob_scene_index].bands[band_index].sessions.push(session);
                 } else {
-                    layout = session.data.sortByValue;
-                    if (layout === undefined)
-                        layout = eval("session.data." + sortByValue);
+                    // Each normal band can group the same records by a different
+                    // field. A shared cached sortByValue would mix those groups.
+                    layout = sortByValue.split(".").reduce((data, key) => data?.[key], session.data);
+                    if (layout !== undefined && layout !== null && layout !== "" && !isNaN(layout))
+                        layout = `${sortByValue} ${layout}`;
                     if (layout !== undefined && this.ob_scene[ob_scene_index].bands[band_index].layout_name === layout) {
                         this.ob_scene[ob_scene_index].bands[band_index].sessions.push(session);
                     }
@@ -3653,6 +3684,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.set_sessions = function (ob_scene_index) {
         if (this.staticData) {
             layoutStaticSessions(this, ob_scene_index);
+            projectOverviewSessions(this, ob_scene_index);
             return;
         }
         let y = this.ob_scene[ob_scene_index].ob_height / 2;
@@ -3672,6 +3704,7 @@ function OB_TIMELINE() {
 
                 band.zones = [];
                 band.sessions = [];
+                if (band.name.includes("overview_")) continue;
                 band.lastGreaterY = -this.ob_scene[ob_scene_index].ob_height / 2;
 
                 this.init_sessions(ob_scene_index, i);
@@ -3724,6 +3757,7 @@ function OB_TIMELINE() {
 
             this.set_bands_height(ob_scene_index);
         }
+        projectOverviewSessions(this, ob_scene_index);
     };
 
     OB_TIMELINE.prototype.build_sessions_filter = function (ob_scene_index, filter) {
@@ -3795,6 +3829,7 @@ function OB_TIMELINE() {
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             const band = this.ob_scene[ob_scene_index].bands[i];
+            if (band.name.includes("overview_")) continue;
 
             for (let j = 0; j < band.sessions.length; j++) {
                 const session = band.sessions[j];
@@ -3837,54 +3872,23 @@ function OB_TIMELINE() {
                     }
 
                     if (activity.pixelOffSetEnd === undefined || isNaN(parseInt(activity.pixelOffSetEnd))) {
-                        // Events
-                        if (band.name.match(/overview_/)) {
-                            if (this.ob_scene[ob_scene_index].ob_search_value === "" || textBackgroundColor === "#F8DF09") {
-                                this.add_event(ob_scene_index, band.name, activity, eventColor, undefined,
-                                    textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily,
-                                    false, this.ob_scene[ob_scene_index].font_align);
-                            }
-                        } else {
-                            this.add_event(ob_scene_index, band.name, activity, eventColor, image, textBackgroundColor,
-                                fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, true,
-                                this.ob_scene[ob_scene_index].font_align);
-                        }
+                        this.add_event(ob_scene_index, band.name, activity, eventColor, image, textBackgroundColor,
+                            fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, true,
+                            this.ob_scene[ob_scene_index].font_align);
                     } else {
-                        // Sessions
-                        if (band.name.match(/overview_/)) {
-                            if (this.ob_scene[ob_scene_index].ob_search_value === "" || textBackgroundColor === "#F8DF09") {
-                                this.add_session(ob_scene_index, band.name, activity, sessionColor, texture,
-                                    undefined, textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor,
-                                    fontFamily, this.ob_scene[ob_scene_index].font_align);
-                            }
-                        } else {
-                            this.add_session(ob_scene_index, band.name, activity, sessionColor, texture, image,
-                                textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily,
-                                this.ob_scene[ob_scene_index].font_align);
-                        }
+                        this.add_session(ob_scene_index, band.name, activity, sessionColor, texture, image,
+                            textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily,
+                            this.ob_scene[ob_scene_index].font_align);
                     }
                 }
 
-                // Create box if multiple activities
+                // Create one container for each session's activities.
                 if (session.activities.length > 1) {
-                    if (band.name.match(/overview_/)) {
-                        for (let a = 0; a < session.activities.length; a++) {
-                            const activity = session.activities[a];
-                            if (regex !== null && activity.id === undefined && !activity.data.title.match(regex)) {
-                                continue;
-                            }
-                            const render = activity.render;
-                            let textBackgroundColor = render.textBackgroundColor;
-                            if (this.ob_scene[ob_scene_index].ob_search_value === "" || textBackgroundColor === "#F8DF09") {
-                                this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
-                            }
-                        }
-                    } else {
-                        this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
-                    }
+                    this.add_sessionsBox(ob_scene_index, band.name, session, undefined, undefined, undefined, undefined);
                 }
             }
         }
+        renderOverviewSessions(this, ob_scene_index, regex);
     };
 
     OB_TIMELINE.prototype.add_sessionsBox = function (
@@ -4024,7 +4028,9 @@ function OB_TIMELINE() {
                 metalness: 1.0
             }));
         } else {
-            ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
+            const opacity = Math.max(0, Math.min(1, Number(session.render?.opacity ?? 1)));
+            ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color,
+                transparent: opacity < 1, opacity}));
         }
 
         let ob_session = this.track[ob_scene_index](
@@ -4046,7 +4052,7 @@ function OB_TIMELINE() {
                 ob_session,
                 session.data.title,
                 session.textX,
-                0,
+                session.textY || 0,
                 session.z,
                 textBackgroundColor,
                 fontSizeInt,
@@ -4116,6 +4122,9 @@ function OB_TIMELINE() {
 
         ob_event = this.track[ob_scene_index](new THREE.Mesh(geometry, material));
         ob_event.position.set(session.x_relative, session.y, session.z);
+        ob_event.pos_x = session.x_relative;
+        ob_event.pos_y = session.y;
+        ob_event.pos_z = session.z;
         ob_event.data = session;
 
         // Add text and tolerance handling
@@ -4314,6 +4323,7 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.ob_setListeners = function (ob_scene_index) {
         let that = this;
         let ob_scene = this.ob_scene[ob_scene_index];
+        let dragged = false;
 
         ob_scene.dragControls = this.track[ob_scene_index](
             new DragControls(
@@ -4328,6 +4338,7 @@ function OB_TIMELINE() {
         ob_scene.dragControls.addEventListener('drag', onDrag);
 
         function onDragStart(e) {
+            dragged = false;
             clearInterval(that.ob_interval_clock);
             clearInterval(ob_scene.ob_interval_move);
 
@@ -4378,10 +4389,17 @@ function OB_TIMELINE() {
                 that.move_band(ob_scene_index, ob_obj.parent.name, -ob_obj.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
                 that.ob_marker.style.visibility = "visible";
                 that.ob_time_marker.style.visibility = "visible";
+                that.ob_render(ob_scene_index);
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
                 that.ob_open_descriptor(ob_scene_index, ob_obj.data);
+                // A click selects an event; it must not start an inertial pan and
+                // refresh the side panel as if the user had dragged the timeline.
+                if (!dragged) {
+                    that.ob_render(ob_scene_index);
+                    return;
+                }
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -4390,7 +4408,6 @@ function OB_TIMELINE() {
 
             ob_scene.date = that.ob_markerDate.toString().substring(0, 24) + " UTC";
             ob_scene.date_cal = that.ob_markerDate;
-            ob_scene.show_calendar = true;
 
             if (ob_obj.name.match(/zone_/) || ((ob_obj.type.match(/Mesh/) && ob_obj.name === ""))) {
                 ob_obj.parent.ob_source = ob_obj.parent.position.x;
@@ -4539,6 +4556,7 @@ function OB_TIMELINE() {
         function onDrag(e) {
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
+            dragged = true;
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
                 return;
@@ -5045,7 +5063,7 @@ function OB_TIMELINE() {
             this.formatEventDate = value => formatTimelineValue(value, this.staticTimeAxis, "yyyy-MM-dd HH:mm", this.params[0].displayOffsetMinutes || 0);
             this.params[0].data = "";
             this.ob_visible_view = this.params[0].overview !== false;
-            for (const key of ["width", "top", "left"]) {
+            for (const key of ["width", "height", "top", "left"]) {
                 if (Number.isFinite(options[key])) this.params[0][key] = options[key];
             }
         } else {

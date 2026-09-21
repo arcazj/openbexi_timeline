@@ -16,6 +16,8 @@ export async function createTimelineHarness(options = {}) {
     const context = dom.getInternalVMContext();
     const {window} = dom;
     window.structuredClone = structuredClone;
+    if (options.calendar) vm.runInContext(await fs.readFile(path.join(root,
+        'node_modules/simple-jscalendar/source/jsCalendar.min.js'), 'utf8'), context);
     const requests = [];
     window.fetch = async resource => {
         const url = new URL(String(resource), 'http://localhost/');

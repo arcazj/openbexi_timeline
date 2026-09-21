@@ -1,16 +1,31 @@
-body.ob_demo_page { margin: 0; background: #f7f9fb; color: #263238; font: 14px Arial, sans-serif; }
-#demo-header { padding: 14px 16px; border-bottom: 1px solid #c8d4dd; background: #fff; }
-.ob_demo_heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.ob_demo_heading h1 { margin: 0; font-size: 20px; font-weight: 600; }
-.ob_demo_heading form { display: flex; align-items: center; gap: 8px; }
-.ob_demo_heading select, .ob_demo_heading button { font: inherit; padding: 6px 8px; border: 1px solid #9eafbc; border-radius: 4px; }
-.ob_demo_heading button { background: #e5edf3; color: #164d78; cursor: pointer; }
-#demo-description { margin: 10px 0; }
-#demo-header nav { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; align-items: center; }
-#demo-header a { color: #17679c; }
-#demo-status { color: #4b6273; }
-#demo-status[data-error="true"] { color: #a02727; }
-.ob_demo_page .ob_timeline_right_panel { width: 320px; max-width: calc(100vw - 24px); left: auto !important; right: 12px; background: white; z-index: 100001; }
+body.ob_demo_page { margin: 0; height: 100vh; height: 100dvh; display: grid; grid-template-rows: minmax(0, 1fr); overflow: hidden; background: #f7f9fb; color: #263238; font: 14px Arial, sans-serif; }
+#demo-status { position: fixed; right: 12px; bottom: 12px; box-sizing: border-box; max-width: calc(25vw - 24px); padding: 10px; border: 1px solid #c8d4dd; border-radius: 4px; background: #fff; color: #4b6273; overflow-wrap: anywhere; z-index: 1000; }
+#demo-status[data-state="ready"] { width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#demo-status[data-error="true"] { color: #a02727; border-color: #a02727; }
+#demo-workspace { --demo-toolbar-height: 40px; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); min-height: 0; min-width: 0; overflow: hidden; }
+/* Preserve scrolling without the legacy descriptor stylesheet's grey tracks. */
+#demo-workspace, #demo-workspace * { scrollbar-width: none; }
+#demo-workspace::-webkit-scrollbar, #demo-workspace ::-webkit-scrollbar { display: none; width: 0; height: 0; }
+#demo-timeline-slot, #demo-side-slot { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+#demo-side-slot { background: #fff; box-shadow: inset 1px 0 #c8d4dd; }
+#demo-timeline-slot > .ob_timeline_panel { box-sizing: border-box; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; border: 0; border-radius: 0; overflow: hidden; }
+#demo-side-slot > .ob_timeline_right_panel { box-sizing: border-box; position: absolute; top: 0 !important; left: 0 !important; right: auto; width: 100%; height: 100% !important; border: 0; border-radius: 0; overflow: auto; overscroll-behavior: contain; background: white; }
+#demo-timeline-slot .ob_demo_timeline_viewport,
+#demo-timeline-slot .ob_event_table_panel { top: var(--demo-toolbar-height) !important; height: calc(100% - var(--demo-toolbar-height)) !important; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+#demo-timeline-slot .ob_demo_timeline_viewport { height: calc(100% - var(--demo-toolbar-height) - var(--ob-overview-height, 0px)) !important; }
+#demo-timeline-slot .ob_timeline_body { width: 100%; }
+#demo-timeline-slot .ob_timeline_body canvas { display: block; }
+#demo-timeline-slot .ob_demo_toolbar_viewport { position: absolute; top: 0; left: 0; width: 100%; height: var(--demo-toolbar-height); overflow: visible; }
+#demo-timeline-slot .ob_demo_toolbar_viewport[data-overflow="true"] { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; }
+#demo-side-slot .ob_head_panel { box-sizing: border-box; width: 100% !important; max-width: 100%; overflow-wrap: anywhere; }
+#demo-side-slot input, #demo-side-slot select, #demo-side-slot textarea { box-sizing: border-box; max-width: 100%; }
+#demo-side-slot img { max-width: 100%; object-fit: contain; }
+#demo-side-slot .jsCalendar table { width: calc(100% - 10px); table-layout: fixed; }
+#demo-side-slot .jsCalendar thead .jsCalendar-week-days th,
+#demo-side-slot .jsCalendar tbody td { display: table-cell; width: auto; min-width: 0; margin: 0; }
+#demo-side-slot .jsCalendar thead .jsCalendar-title-name { padding: 0 2px; font-size: 14px; }
+#demo-side-slot .jsCalendar thead .jsCalendar-nav-left,
+#demo-side-slot .jsCalendar thead .jsCalendar-nav-right { margin: 10px 2px; }
 .ob_static_description { padding: 16px; white-space: normal; overflow-wrap: anywhere; }
 .ob_static_description h2 { font-size: 18px; }
 .ob_static_description p { font-size: 14px; line-height: 1.5; }

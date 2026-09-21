@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenBEXI Timeline - Help guide</title>
+  <style>
+    :root {color-scheme: light; font: 16px/1.65 system-ui, sans-serif; color: #233346; background: #f2f5f8;}
+    body {margin: 0; padding: 28px 18px;}
+    main {max-width: 980px; margin: auto; padding: 26px 32px; background: white; border: 1px solid #dbe2ea; border-radius: 12px;}
+    h1 {font-size: 1.85rem; line-height: 1.25; margin: 24px 0 14px;}
+    h2 {font-size: 1.3rem; margin-top: 36px; padding-top: 10px; border-top: 1px solid #e1e7ee; scroll-margin-top: 20px;}
+    p, li {max-width: 90ch;}
+    li + li {margin-top: 8px;}
+    a {color: #075ea1; text-underline-offset: 3px; overflow-wrap: anywhere;}
+    a:focus-visible {outline: 3px solid #6aaad7; outline-offset: 3px;}
+    nav {display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: .9rem;}
+    .contents {margin-top: 18px; padding: 12px 16px; background: #f3f6fa; border-radius: 6px;}
+    code {font: .9em ui-monospace, monospace; overflow-wrap: anywhere;}
+    pre {padding: 16px; background: #f3f6fa; border-left: 4px solid #4c85b0; white-space: pre-wrap; overflow-wrap: anywhere;}
+    table {width: 100%; border-collapse: collapse; font-size: .93rem;}
+    th, td {text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid #e1e7ee;}
+    th {background: #f3f6fa;}
+    .table-wrap {overflow-x: auto;}
+    @media (max-width: 600px) {body {padding: 8px;} main {padding: 18px;} th, td {padding: 7px;}}
+    @media print {body, main {padding: 0; background: white; border: 0;} nav {display: none;}}
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="Documentation links">
+    <a href="../demos.html">Local demos</a>
+    <a href="help-guide.md">Markdown guide</a>
+    <a href="api.html">Offline API reference</a>
+  </nav>
+  <nav class="contents" aria-label="Guide sections">
+    <a href="#user-manual">User manual</a>
+    <a href="#design">Design</a>
+    <a href="#data-design">Data design</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#tests">Tests</a>
+    <a href="#deployment">Deployment</a>
+  </nav>
+<h1 id="openbexi-timeline-help">OpenBEXI Timeline help</h1>
+<p>These notes describe the version 1.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the <a href="../README.md">README</a> for the demo catalog and the <a href="demos.md">demo configuration guide</a> for all model options.</p>
+<h2 id="user-manual">User manual</h2>
+<ul>
+<li>Use <strong>Timeline</strong>, <strong>Table</strong>, or <strong>Split</strong> on the main toolbar to change the presentation. Split places the chart beside the event table.</li>
+<li>Select an event to open its description and source details in the right panel. Live demos reserve 75% of the window for the views and 25% for panels.</li>
+<li>Search the loaded records using the toolbar search field. File-backed demos keep the complete dataset available even when the initial chart displays a smaller date range.</li>
+<li>Drag the timeline to navigate through time. When a model provides a docked Overview, its highlighted window shows the visible range; move that window to navigate while keeping the wider context in view.</li>
+<li>Scroll within the chart, table, or panel to reach additional rows. Live demos hide native scrollbar tracks without removing scrolling.</li>
+<li>Use the return-to-reference control to restore the model's initial date. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.</li>
+</ul>
+<p>The Help panel collects project resources and local demo choices. The local demos run from files and do not require a Java data service. They do not offer server login, saved server filters, or event creation.</p>
+<p>In <strong>Help</strong>, select a local dataset and choose <strong>Open dataset</strong> to load its default view. <strong>Reset reference view</strong> returns the current local demo to its model's initial date, Timeline view, default Overview setting, and first row, and clears the search.</p>
+<p>In <strong>Share</strong>, choose <strong>Copy link</strong> to copy the current local demo's dataset, time, view, search, and Overview setting. A localhost link works on a computer running the demo server at that address. Copying puts the link on your clipboard; it does not publish the data or send a message. Server-backed timelines share the page address without private server settings.</p>
+<p>In <strong>Diagnostics</strong>, use <strong>Refresh</strong> for current view, scale, and record-count information, then <strong>Copy diagnostics</strong> if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.</p>
+<h2 id="design">Design</h2>
+<p>Every demo uses the same toolbar, loader, chart renderer, table, and responsive layout. Models define the differences in appearance: band heights and colors, event and duration styles, highlighted intervals, tick labels, initial range, and expanded focus intervals. Text above the toolbar is omitted so that the chart uses the available window height.</p>
+<p>Overview projects the rows already laid out in the normal view. It preserves event colors, relative row order, sessions, groups, and zones. A model can keep Overview below the scrolling rows, use a wider time range, and fit those rows into a compact miniature.</p>
+<p>See <a href="demos.md#catalog-and-models">model options</a> and <a href="demos.md#responsive-layout-and-overview">responsive layout</a>.</p>
+<h2 id="data-design">Data design</h2>
+<p>The <a href="../demos/catalog.json">demo catalog</a> maps a demo ID to its dataset and model. A model's <code>dataSource</code> describes its format and field mapping; <code>params</code> defines initial view settings and <code>bands</code> describes the chart. Different schemas and visual styles belong in those files rather than dataset-specific JavaScript.</p>
+<p>The shared loader accepts JSON and legacy Simile XML. A file's suffix does not determine its format: several supplied <code>.json</code> files contain XML and explicitly declare <code>simile-xml</code>. Field mappings can use dotted paths and fallback paths. Numeric axes declare their units and direction; approximate source values remain available in event metadata.</p>
+<p>Ranges limit the initial visible interval. Context ranges select the records laid out for that view without deleting records from the loaded dataset. Focus intervals change horizontal spacing and have an inverse mapping so navigation and Overview remain aligned. The table and search can use records outside the initial range.</p>
+<p>Follow <a href="demos.md#add-a-demo">Add a demo</a> to add a dataset, model, and catalog entry, then regenerate the README and run validation.</p>
+<h2 id="architecture">Architecture</h2>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">Component</th><th scope="col">Responsibility</th></tr></thead>
+<tbody>
+<tr><td><a href="../demos.html">demos.html</a>, <a href="../src/openbexi_demo.js">openbexi_demo.js</a></td><td>Catalog selection, model loading, and responsive demo shell.</td></tr>
+<tr><td><a href="../src/openbexi_timeline.js">openbexi_timeline.js</a></td><td>Timeline lifecycle, Three.js scene construction, toolbar, navigation, and panels.</td></tr>
+<tr><td><a href="../src/openbexi_timeline_data.js">openbexi_timeline_data.js</a></td><td>Shared file loading, normalized event data, and normal-band layout.</td></tr>
+<tr><td><a href="../src/openbexi_timeline_scale.js">openbexi_timeline_scale.js</a>, <a href="../src/openbexi_timeline_ticks.js">openbexi_timeline_ticks.js</a></td><td>Time-to-pixel transforms and model-driven axis ticks.</td></tr>
+<tr><td><a href="../src/openbexi_timeline_overview.js">openbexi_timeline_overview.js</a>, <a href="../src/openbexi_timeline_overview_panel.js">openbexi_timeline_overview_panel.js</a></td><td>Projection of normal rows, visible-range windows, and docked Overview.</td></tr>
+<tr><td><a href="../src/openbexi_timeline_views.js">openbexi_timeline_views.js</a></td><td>Timeline, Table, and Split view layout and interaction.</td></tr>
+<tr><td><a href="../tools/serve-demos.mjs">serve-demos.mjs</a></td><td>Local static-file server for demos and documentation.</td></tr>
+<tr><td><a href="../src/com/openbexi/timeline/server/openbexi_timeline.java">Java server</a></td><td>Separate server-backed application using the Java data-source and servlet components.</td></tr>
+</tbody>
+</table></div>
+<p>The static demos do not call the Java service. The <a href="api.html">API reference</a> documents the checked-in Swagger contract, not a running server discovered by the demo page.</p>
+<h2 id="tests">Tests</h2>
+<p>Use Node.js 24 or later. From the repository root:</p>
+<pre><code>npm install
+npm run test:demos
+node tools/update-demo-readme.mjs --check</code></pre>
+<p>The demo suite validates catalog coverage, source imports, model settings, local HTTP assets, interaction state, responsive layout, time scales, axis ticks, Overview geometry, and docked panel behavior. Tests use actual scene objects and a simulated DOM; GPU rendering and text measurement are stubbed. Browser inspection remains necessary for visual changes.</p>
+<p>To update the generated README demo list after a catalog edit, run <code>npm run demos:readme</code>. Java test sources are also present under <a href="../src/com/openbexi/timeline/tests/test_timeline.java">src/com/openbexi/timeline/tests</a>; the demo suite does not run them.</p>
+<h2 id="deployment">Deployment</h2>
+<p>For local demos, install dependencies and run:</p>
+<pre><code>npm run demo</code></pre>
+<p>Open <code>http://localhost:8780/demos.html</code>. The server binds to <code>127.0.0.1</code>; <code>npm run demo -- --port 8788</code> selects another port. A demo link can select a dataset and view, for example <code>demos.html?demo=monet&amp;view=split</code>.</p>
+<p>Static hosting must include the page, source modules, styles, icons, demo catalog, models, datasets, and browser dependencies referenced by the page's import map. Include <code>help</code>, <code>docs</code>, <code>swagger</code>, <code>README.md</code>, and <code>LICENSE</code> to keep the Help links available. Keep their relative directory structure when hosting under a subdirectory. See <a href="demos.md#hosting-portability">hosting portability</a>.</p>
+<p>The Java deployment is separate. Its <a href="../pom.xml">Maven configuration</a> targets Java 17, and the repository provides <a href="../openbexi_timeline.bat">Windows</a> and <a href="../openbexi_timeline.sh">shell</a> startup examples. Configure their installation and data paths for your environment before use. The <a href="../yaml/deployment.yaml">Kubernetes deployment</a> and <a href="../yaml/service.yaml">service</a> are examples containing environment and storage placeholders, not a deployment created by opening a local demo.</p>
+<h2 id="resource-maintenance">Resource maintenance</h2>
+<p><a href="../help/resources.json">help/resources.json</a> supplies Help resource labels and destinations. Local links are relative to the project root. Keep linked documents with the deployed assets, and only enable a Live API link when a real documentation endpoint is configured. No public prompt-history document is currently included.</p>
+</main>
+</body>
+</html>
