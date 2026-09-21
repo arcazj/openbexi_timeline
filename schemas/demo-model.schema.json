@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openbexi.org/schemas/demo-model.schema.json",
+  "title": "OpenBEXI file-backed timeline model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["params", "dataSource", "bands"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "params": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"$ref": "#/definitions/params"}},
+    "dataSource": {"$ref": "#/definitions/dataSource"},
+    "bands": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/band"}}
+  },
+  "definitions": {
+    "text": {"type": "string", "minLength": 1},
+    "positive": {"type": "number", "exclusiveMinimum": 0},
+    "timeValue": {"type": ["string", "number"], "minLength": 1},
+    "unit": {"enum": ["MILLISECOND", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR", "DECADE", "CENTURY"]},
+    "path": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},
+    "field": {"anyOf": [{"$ref": "#/definitions/path"}, {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/path"}}]},
+    "range": {
+      "type": "object", "additionalProperties": false, "required": ["from", "to"],
+      "properties": {"from": {"$ref": "#/definitions/timeValue"}, "to": {"$ref": "#/definitions/timeValue"}}
+    },
+    "ticks": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "step"],
+      "properties": {
+        "unit": {"enum": ["MILLISECOND", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR", "DECADE", "CENTURY", "NUMERIC"]},
+        "step": {"$ref": "#/definitions/positive"}, "format": {"$ref": "#/definitions/text"}
+      }
+    },
+    "focus": {
+      "type": "object", "additionalProperties": false, "required": ["from", "to", "magnification"],
+      "properties": {
+        "from": {"$ref": "#/definitions/timeValue"}, "to": {"$ref": "#/definitions/timeValue"},
+        "magnification": {"type": "number", "minimum": 1},
+        "ticks": {"$ref": "#/definitions/ticks"}, "tickMinutes": {"$ref": "#/definitions/positive"}
+      }
+    },
+    "params": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "date", "width", "height"],
+      "properties": {
+        "name": {"$ref": "#/definitions/text"}, "title": {"type": "string"}, "date": {"$ref": "#/definitions/timeValue"},
+        "timeZone": {"type": "string"}, "timeZoneLabel": {"type": "string"},
+        "displayOffsetMinutes": {"type": "number", "minimum": -1440, "maximum": 1440},
+        "top": {"type": "number"}, "left": {"type": "number"},
+        "width": {"$ref": "#/definitions/positive"}, "height": {"$ref": "#/definitions/positive"},
+        "fontSize": {"$ref": "#/definitions/positive"}, "fontFamily": {"$ref": "#/definitions/text"},
+        "data": {"type": "string"}, "overview": {"type": "boolean"}, "dockOverview": {"type": "boolean"},
+        "overviewHeightRatio": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "showCurrentTime": {"type": "boolean"}
+      }
+    },
+    "dataSource": {
+      "type": "object", "additionalProperties": false, "required": ["format"],
+      "properties": {
+        "format": {"enum": ["json", "simile-xml"]}, "url": {"$ref": "#/definitions/text"},
+        "recordsPath": {"$ref": "#/definitions/path"},
+        "fields": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "id": {"$ref": "#/definitions/field"}, "title": {"$ref": "#/definitions/field"},
+            "description": {"$ref": "#/definitions/field"}, "namespace": {"$ref": "#/definitions/field"}, "color": {"$ref": "#/definitions/field"}
+          }
+        },
+        "iconColors": {"type": "object", "additionalProperties": {"$ref": "#/definitions/text"}},
+        "zones": {"type": "array", "items": {"$ref": "#/definitions/zone"}},
+        "time": {
+          "type": "object", "additionalProperties": false, "required": ["kind", "unit", "millisecondsPerUnit"],
+          "properties": {
+            "kind": {"const": "numeric"}, "unit": {"$ref": "#/definitions/text"},
+            "millisecondsPerUnit": {"$ref": "#/definitions/positive"}, "direction": {"enum": [-1, 1]},
+            "approximatePrefixes": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/text"}}
+          }
+        }
+      }
+    },
+    "zone": {
+      "type": "object", "additionalProperties": false, "required": ["start", "end", "title"],
+      "properties": {
+        "id": {"type": ["string", "number"]}, "start": {"$ref": "#/definitions/timeValue"}, "end": {"$ref": "#/definitions/timeValue"},
+        "title": {"type": "string"}, "color": {"$ref": "#/definitions/text"}, "opacity": {"type": "number", "minimum": 0, "maximum": 1},
+        "render": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "color": {"$ref": "#/definitions/text"}, "opacity": {"type": "number", "minimum": 0, "maximum": 1},
+            "height": {"$ref": "#/definitions/positive"}, "verticalAlign": {"enum": ["top", "center"]}, "labelPosition": {"enum": ["top", "bottom"]}
+          }
+        }
+      }
+    },
+    "band": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "height", "intervalUnit", "intervalPixels"],
+      "dependencies": {"context": ["range"], "focus": ["range"]},
+      "properties": {
+        "name": {"$ref": "#/definitions/text"},
+        "height": {"anyOf": [{"$ref": "#/definitions/positive"}, {"type": "string", "pattern": "^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},
+        "intervalUnit": {"$ref": "#/definitions/unit"}, "intervalPixels": {"$ref": "#/definitions/positive"},
+        "color": {"$ref": "#/definitions/text"}, "SessionColor": {"$ref": "#/definitions/text"},
+        "eventColor": {"$ref": "#/definitions/text"}, "dateColor": {"$ref": "#/definitions/text"}, "textColor": {"$ref": "#/definitions/text"},
+        "dateFormat": {"$ref": "#/definitions/text"}, "fontSize": {"$ref": "#/definitions/positive"},
+        "intervalUnitPos": {"enum": ["TOP", "BOTTOM"]},
+        "model": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["sortBy"], "properties": {"sortBy": {"const": "NONE"}}}},
+        "range": {"$ref": "#/definitions/range"}, "context": {"$ref": "#/definitions/range"},
+        "focus": {"anyOf": [{"$ref": "#/definitions/focus"}, {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/focus"}}]},
+        "ticks": {"$ref": "#/definitions/ticks"}, "tickMinutes": {"$ref": "#/definitions/positive"},
+        "labelPosition": {"enum": ["above", "inside"]}, "topPadding": {"type": "number", "minimum": 0},
+        "trackIncrement": {"$ref": "#/definitions/positive"}, "sessionHeight": {"$ref": "#/definitions/positive"}, "defaultEventSize": {"$ref": "#/definitions/positive"},
+        "groupBy": {"$ref": "#/definitions/path"}, "eventKind": {"enum": ["event", "duration"]},
+        "filter": {"type": "object", "additionalProperties": false, "required": ["field", "equals"], "properties": {"field": {"$ref": "#/definitions/path"}, "equals": {"type": ["string", "number", "boolean", "null"]}}},
+        "sourceBands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/text"}},
+        "fitRows": {"type": "boolean"}, "showContextLabel": {"type": "boolean"}, "viewportHandles": {"type": "boolean"},
+        "overviewLabel": {"anyOf": [{"type": "string"}, {"const": false}]},
+        "uncertaintyOpacity": {"type": "number", "minimum": 0, "maximum": 1},
+        "scaleHeader": {
+          "type": "object", "additionalProperties": false, "required": ["label"],
+          "properties": {"label": {"type": "string"}, "unit": {"type": "string"}, "height": {"$ref": "#/definitions/positive"}, "color": {"$ref": "#/definitions/text"}, "textColor": {"$ref": "#/definitions/text"}}
+        },
+        "secondaryScale": {
+          "type": "object", "additionalProperties": false, "required": ["format", "origin", "step"],
+          "properties": {
+            "format": {"const": "elapsedYears"}, "origin": {"$ref": "#/definitions/timeValue"}, "step": {"$ref": "#/definitions/positive"},
+            "position": {"enum": ["top", "bottom"]}, "height": {"$ref": "#/definitions/positive"},
+            "color": {"$ref": "#/definitions/text"}, "textColor": {"$ref": "#/definitions/text"}, "suffix": {"type": "string"}, "min": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}

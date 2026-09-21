@@ -25,6 +25,7 @@ import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
 import {createTimelineHelp} from './openbexi_timeline_help.js';
+import {validateDemoModel} from './openbexi_timeline_model_validation.js';
 import {projectOverviewSessions, renderOverviewSessions, updateOverviewViewport} from './openbexi_timeline_overview.js';
 import {bandTimeToPixel, bandPixelToTime} from './openbexi_timeline_scale.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
@@ -5049,6 +5050,7 @@ function OB_TIMELINE() {
         const response = await fetch(model);
         if (!response.ok) throw new Error(`Model HTTP error: ${response.status}`);
         const data = await response.json();
+        if (data.dataSource) validateDemoModel(data, {label: String(model)});
         if (!data.params?.[0] || !data.bands?.length) throw new Error('Invalid timeline model');
         this.params = data.params;
         this.bands = data.bands;

@@ -1023,3 +1023,8 @@
 /tomcat/catalina.out*
 /.idea/easycode/
 /.idea/modules.xml
+
+# Playwright failure artifacts; reviewed visual baselines remain in tests/browser.
+/test-results/
+/playwright-report/
+/blob-report/

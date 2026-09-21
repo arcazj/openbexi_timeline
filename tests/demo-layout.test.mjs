@@ -40,7 +40,7 @@ async function createDemo(demo) {
     return {...harness, timeline, resize, workspace, toolbarHeight};
 }
 
-for (const demo of catalog.demos.slice(0, 3)) test(demo.id + ': demo resize retains 75/25 slots, views, and event selection', async () => {
+for (const demo of catalog.demos) test(demo.id + ': demo resize retains 75/25 slots, views, and event selection', async () => {
     const harness = await createDemo(demo);
     try {
         const {window, timeline, workspace, resize, toolbarHeight} = harness;

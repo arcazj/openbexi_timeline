@@ -2,9 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {projectRoot} from './serve-demos.mjs';
+import {validateDemoCatalog} from '../src/openbexi_timeline_model_validation.js';
 
 export async function readDemoCatalog() {
-    const catalog = JSON.parse(await fs.readFile(path.join(projectRoot, 'demos/catalog.json'), 'utf8'));
+    const catalog = validateDemoCatalog(JSON.parse(await fs.readFile(path.join(projectRoot, 'demos/catalog.json'), 'utf8')),
+        {label: 'demos/catalog.json'});
     const supplied = (await fs.readdir(path.join(projectRoot, 'json/test-data'))).filter(file => file.endsWith('.json')).sort();
     const listed = catalog.demos.map(demo => path.basename(demo.dataset)).sort();
     if (JSON.stringify(supplied) !== JSON.stringify(listed)) throw new Error('The catalog must include each file in json/test-data exactly once.');

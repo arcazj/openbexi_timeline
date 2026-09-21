@@ -1,5 +1,6 @@
 import {OB_TIMELINE} from './openbexi_timeline.js';
 import {applyTimelineShareState} from './openbexi_timeline_share.js';
+import {validateDemoCatalog} from './openbexi_timeline_model_validation.js';
 
 const minimumToolbarWidth = 700;
 
@@ -88,7 +89,7 @@ export async function startDemoPage() {
     const catalogURL = new URL('../demos/catalog.json', import.meta.url);
     const response = await fetch(catalogURL);
     if (!response.ok) throw new Error('Unable to load the demo catalog (' + response.status + ').');
-    const catalog = await response.json();
+    const catalog = validateDemoCatalog(await response.json(), {label: 'demos/catalog.json'});
     const root = new URL(catalog.basePath, catalogURL);
     const query = new URLSearchParams(location.search);
     const id = query.get('demo') || catalog.demos[0]?.id;

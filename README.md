@@ -4,9 +4,7 @@
 * OpenBEXI Timeline offers a highly customizable user interface along with a data-driven interactive Gantt chart, designed for the effective visualization of temporal data.
 
 ## Docker Deployment
-* To utilize OpenBEXI Timeline, deploy it using Docker by downloading the image from its Docker Hub repository: OpenBEXI_Timeline Docker Repository.
-* For access, launch Edge, Firefox, or Chrome and navigate to either:
-** https://localhost:8442/openbexi_timeline.html
+Build the current source with `docker build -t openbexi-timeline .`, then run `docker run --rm -p 127.0.0.1:8442:8442 -v openbexi-data:/data openbexi-timeline`. Open `http://localhost:8442/demos.html`. The container serves HTTP behind your TLS reverse proxy; configure API tokens to enable managed-data access. See [security and deployment](docs/security.md).
 
 <!-- LIVE_DEMOS:START -->
 ## Live Demos
@@ -31,6 +29,12 @@ Append `&view=table` or `&view=split` to open that view directly. See the [demo 
 
 Regenerate this list after editing the catalog with `npm run demos:readme`. Run `npm run test:demos` to validate all catalog entries, data imports, scene geometry, view switching, and local HTTP links.
 <!-- LIVE_DEMOS:END -->
+
+## REST API and validation
+
+With JDK 17+ and Maven installed, run `npm run api` and open `http://localhost:8781/docs/api.html`. API v1 provides dataset/model discovery, paginated event and session queries, and authorized CRUD for editable datasets and saved filters. Catalog examples remain read-only and can be cloned. Numeric axes use their actual units, including Ma. See [API setup and examples](docs/rest-api.md) and the [OpenAPI contract](swagger/openapi-v1.json).
+
+Models and catalogs are validated against shared [JSON schemas](schemas/demo-model.schema.json). Run `npm run demos:validate`, `npm run test:demos`, `npm run test:browser`, and `mvn verify`. GitHub CI repeats these checks, verifies generated files, and audits dependencies. The [browser guide](docs/browser-tests.md) explains screenshot baselines; the [security guide](docs/security.md) records dependency updates and audit commands.
 
 ## Visualization Examples
 <img src="https://raw.githubusercontent.com/arcazj/openbexi_timeline/master/doc/openbexi_timeline_space_exploration.PNG" />
