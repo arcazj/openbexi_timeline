@@ -40,6 +40,11 @@ npx playwright show-report
   Calendar checks apply to date models; the dinosaur axis uses numeric ages.
 - Scroll regions retain keyboard access and scrolling without visible scrollbar
   tracks. Resizing preserves the selected time and the open panel.
+- Real mouse drags navigate every demo in both directions. Checks retain overview
+  event nodes, prevent scene rebuilds while dragging, verify finite coordinates,
+  wait for coasting to stop, and preserve the selected time after resizing.
+  Work counts and render durations are attached to the report; hardware-dependent
+  frame rates are not used as pass/fail thresholds.
 - The API reference renders the checked-in OpenAPI contract on a static server.
   Separate explorer checks mock only health, dataset discovery, and event responses
   to verify query encoding, response status, and safe text rendering. The Java API

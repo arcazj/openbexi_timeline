@@ -61,6 +61,8 @@ export function applyTimelineShareState(timeline, query) {
     let changed = false;
     const time = sharedTime(query.get('time'));
     if (time !== undefined) {
+        scene.cancelPan?.();
+        delete scene.ob_pan_time;
         timeline.ob_scene.sync_time = time;
         timeline.ob_markerDate = new Date(time);
         scene.date = new Date(time);
