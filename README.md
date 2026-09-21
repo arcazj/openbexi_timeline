@@ -11,9 +11,11 @@
 <!-- LIVE_DEMOS:START -->
 ## Live Demos
 
-These are **local interactive demos**. Install dependencies with `npm install`, then run `npm run demo` and open [the demo gallery](http://localhost:8780/demos.html). The default server listens only on your computer; these links are not public hosted demos.
+These are **local interactive demos**. Install dependencies with `npm install`, then run `npm run demo` and open a dataset using the links below. The default server listens only on your computer; these links are not public hosted demos.
 
 Every dataset uses the same page, renderer, and Timeline / Table / vertical Split controls. Search works locally. Dataset selection, source format, bands, colors, highlights, and time scales come from [the JSON catalog](demos/catalog.json) and its model files.
+
+Each demo starts with the original timeline toolbar, with no heading or dataset selector above it. The layout keeps 75% of the window width for the timeline views and reserves 25% for descriptors, the calendar, and other panels. Height adapts to the window with scrolling inside each area. Overview mirrors the normal layout with compact events, proportional session bars, and a visible-range highlight; model settings can magnify selected time intervals.
 
 | Demo | Description | Configuration | Visual reference |
 | --- | --- | --- | --- |

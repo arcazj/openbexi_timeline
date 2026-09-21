@@ -1,0 +1,36 @@
+{
+  "version": "1.1",
+  "repository": "https://github.com/arcazj/openbexi_timeline",
+  "sections": [
+    {
+      "title": "Project",
+      "links": [
+        {"label": "GitHub", "href": "https://github.com/arcazj/openbexi_timeline", "icon": "github"},
+        {"label": "README", "href": "README.md", "icon": "book"},
+        {"label": "Release history", "href": "https://github.com/arcazj/openbexi_timeline/releases", "icon": "history"},
+        {"label": "License", "href": "LICENSE", "icon": "license"}
+      ]
+    },
+    {
+      "title": "Developer docs",
+      "links": [
+        {"label": "Swagger (offline)", "href": "docs/api.html", "icon": "code"},
+        {"label": "Swagger (Markdown)", "href": "docs/api.md", "icon": "file"},
+        {"label": "Live API", "icon": "globe", "disabledReason": "No live API documentation URL is configured for this installation."},
+        {"label": "Download OpenAPI", "href": "swagger/openbexi_timeline_swagger.yaml", "icon": "download", "download": "openbexi_timeline_swagger.yaml"}
+      ]
+    },
+    {
+      "title": "Guides",
+      "links": [
+        {"label": "User manual", "href": "docs/help-guide.html#user-manual", "icon": "book"},
+        {"label": "Design", "href": "docs/help-guide.html#design", "icon": "layout"},
+        {"label": "Data design", "href": "docs/help-guide.html#data-design", "icon": "database"},
+        {"label": "Architecture", "href": "docs/help-guide.html#architecture", "icon": "layers"},
+        {"label": "Tests", "href": "docs/help-guide.html#tests", "icon": "check"},
+        {"label": "Deployment", "href": "docs/help-guide.html#deployment", "icon": "server"},
+        {"label": "Prompt history", "icon": "history", "disabledReason": "No public prompt-history document is included in this project."}
+      ]
+    }
+  ]
+}

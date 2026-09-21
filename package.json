@@ -10,6 +10,6 @@
   "scripts": {
     "demo": "node tools/serve-demos.mjs",
     "demos:readme": "node tools/update-demo-readme.mjs",
-    "test:demos": "node --experimental-vm-modules --test tests/demo-data.test.mjs tests/demo-http.test.mjs"
+    "test:demos": "node --experimental-vm-modules --test tests/demo-data.test.mjs tests/demo-http.test.mjs tests/timeline-interactions.test.mjs tests/demo-layout.test.mjs tests/overview-projection.test.mjs tests/timeline-scale.test.mjs tests/overview-panel.test.mjs tests/timeline-ticks.test.mjs tests/timeline-share.test.mjs tests/timeline-help.test.mjs"
   }
 }

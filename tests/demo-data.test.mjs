@@ -53,7 +53,7 @@ for (const demo of catalog.demos) test(demo.id + ': load and build real scene ge
     } finally { harness.close(); }
 });
 
-test('The shared demo page loads catalog-selected data, links, and the requested view', async () => {
+test('The shared demo page loads catalog-selected data and the requested view without a page header', async () => {
     const demo = catalog.demos[0];
     const harness = await createTimelineHarness({html: await fs.readFile(path.join(root, 'demos.html'), 'utf8'),
         url: 'http://localhost/demos.html?demo=' + demo.id + '&view=split'});
@@ -61,8 +61,9 @@ test('The shared demo page loads catalog-selected data, links, and the requested
         const {demoReady} = await harness.importModule('src/openbexi_demo.js');
         const timeline = await demoReady;
         assert.equal(timeline.ob_views.mode, 'split');
-        assert.equal(harness.window.document.querySelectorAll('#demo-select option').length, catalog.demos.length);
-        assert.equal(harness.window.document.getElementById('demo-model').getAttribute('href'), 'http://localhost/' + demo.model);
+        assert.equal(harness.window.document.querySelector('body > header'), null);
+        assert.equal(harness.window.document.getElementById('demo-workspace').getAttribute('aria-label'), demo.title + ' live timeline demo');
+        assert.ok(harness.window.document.title.startsWith(demo.title));
         assert.ok(harness.window.document.getElementById('demo-status').textContent.includes(demo.recordCount + ' records'));
     } finally { harness.close(); }
 });
@@ -81,7 +82,9 @@ test('Historical dates, legacy colors and model annotations retain their meaning
         assert.equal(dataset.events.find(event => event.data.title === 'Camille').render.color, '#00aa22');
         assert.equal(dataset.events.find(event => event.data.title === 'Camille').end, undefined, 'An uncertain point event is not promoted to a duration');
         assert.ok(dataset.events.find(event => event.data.title === 'Joined Cavalry in Algeria').end);
-        assert.ok(dataset.events.some(event => event.zone && event.data.title === 'birth'));
+        assert.equal(dataset.events.filter(event => !event.zone).length, 27);
+        assert.equal(dataset.events.some(event => event.zone), false, 'The age strip is an axis annotation rather than a fabricated event');
+        assert.equal(Date.parse(model.bands[0].secondaryScale.origin), Date.parse(dataset.events.find(event => event.data.title === 'Birth').start));
         assert.equal(formatTimelineDate('1870', 'elapsedYears', 0, '1840'), '30');
         assert.throws(() => parseTimelineData('{"events":[{"start":"invalid","title":"bad"}]}'), /Invalid start/);
     } finally { harness.close(); }

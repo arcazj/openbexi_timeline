@@ -3,15 +3,17 @@
     {
       "name": "ob_demo",
       "title": "Claude Monet",
-      "date": "1869-01-01T00:00:00Z",
+      "date": "1870-01-01T00:00:00Z",
       "timeZone": "UTC",
       "top": 130,
       "left": 12,
       "width": 1400,
-      "height": 480,
-      "fontSize": 12,
+      "height": 760,
+      "fontSize": 11,
       "data": "",
-      "overview": false,
+      "overview": true,
+      "dockOverview": true,
+      "overviewHeightRatio": 0.16,
       "showCurrentTime": false
     }
   ],
@@ -19,45 +21,100 @@
     "format": "simile-xml",
     "iconColors": {
       "../../api/images/green-circle.png": "#00aa22"
-    },
-    "zones": [
-      {
-        "start": "1840-11-14T00:00:00Z",
-        "end": "1926-12-05T00:00:00Z",
-        "title": "birth",
-        "render": {
-          "color": "#f5bd76",
-          "opacity": 0.4,
-          "height": 32,
-          "verticalAlign": "top",
-          "labelFontSize": 20
-        }
-      }
-    ]
+    }
   },
   "bands": [
     {
       "name": "ob_band_life",
-      "height": "100%",
+      "height": "84%",
       "intervalUnit": "DECADE",
       "intervalPixels": 155,
       "color": "#eeeeee",
       "dateFormat": "yyyy",
       "dateColor": "#a0a6ab",
-      "textColor": "#263238",
-      "SessionColor": "#5c9ddb",
-      "eventColor": "#7675c8",
-      "fontSize": 12,
+      "textColor": "#333333",
+      "SessionColor": "#678beb",
+      "eventColor": "#7b5cda",
+      "fontSize": 11,
       "intervalUnitPos": "BOTTOM",
       "model": [
         {
           "sortBy": "NONE"
         }
       ],
+      "scaleHeader": {
+        "label": "Uniform time scale",
+        "unit": "Decade / UTC",
+        "height": 38,
+        "color": "#edf0f1",
+        "textColor": "#397a9c"
+      },
       "secondaryScale": {
         "format": "elapsedYears",
-        "origin": "1840-11-14T00:00:00Z"
-      }
+        "origin": "1840-11-14T00:00:00Z",
+        "position": "top",
+        "height": 25,
+        "color": "#ffd58a",
+        "textColor": "#704308",
+        "step": 10,
+        "suffix": " Age"
+      },
+      "range": {
+        "from": "1824-01-01T00:00:00Z",
+        "to": "1916-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "1824-01-01T00:00:00Z",
+        "to": "1929-01-01T00:00:00Z"
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 10
+      },
+      "labelPosition": "above",
+      "topPadding": 78,
+      "trackIncrement": 25,
+      "sessionHeight": 6,
+      "defaultEventSize": 4,
+      "uncertaintyOpacity": 0.35
+    },
+    {
+      "name": "ob_overview_band",
+      "height": "16%",
+      "intervalUnit": "YEAR",
+      "intervalPixels": 18,
+      "color": "#dddddd",
+      "dateFormat": "yyyy",
+      "dateColor": "#8095a3",
+      "textColor": "#333333",
+      "SessionColor": "#678beb",
+      "eventColor": "#7b5cda",
+      "fontSize": 11,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "sourceBands": ["ob_band_life"],
+      "fitRows": true,
+      "showContextLabel": false,
+      "overviewLabel": false,
+      "viewportHandles": true,
+      "range": {
+        "from": "1824-01-01T00:00:00Z",
+        "to": "1929-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "1824-01-01T00:00:00Z",
+        "to": "1929-01-01T00:00:00Z"
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 5
+      },
+      "sessionHeight": 3,
+      "defaultEventSize": 1
     }
   ]
 }

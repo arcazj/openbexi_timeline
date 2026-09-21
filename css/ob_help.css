@@ -1,0 +1,24 @@
+.ob_help_panel { box-sizing: border-box; width: 100%; min-width: 0; padding: 18px 16px; background: #f6f8fa; color: #2e3d44; font: 13px/1.45 Arial, sans-serif; }
+.ob_help_panel *, .ob_help_panel *::before, .ob_help_panel *::after { box-sizing: border-box; }
+.ob_help_panel h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.ob_help_panel h3 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
+.ob_help_heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.ob_help_heading > button { padding: 5px 8px; }
+.ob_help_tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid #c4d0da; padding-bottom: 12px; }
+.ob_help_panel .ob_help_action { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 10px; max-width: 100%; border: 1px solid #c4d0da; border-radius: 3px; background: transparent; color: #354650; font: inherit; text-decoration: none; cursor: pointer; white-space: normal; text-align: left; }
+.ob_help_panel .ob_help_action:hover { background: #e9f0f5; border-color: #8eaabc; }
+.ob_help_panel .ob_help_action:disabled { opacity: .5; cursor: default; }
+.ob_help_panel .ob_help_action:disabled:hover { background: transparent; border-color: #c4d0da; }
+.ob_help_panel .ob_help_action svg { width: 16px; height: 16px; flex: 0 0 16px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ob_help_tabs .ob_help_action { border-color: transparent; padding: 7px 9px; }
+.ob_help_tabs [aria-selected="true"] { color: #176da0; border-color: #3388b7; background: #e2eef6; }
+.ob_help_tabpanel[hidden] { display: none; }
+.ob_help_tabpanel { padding-top: 14px; }
+.ob_help_resource_group { margin: 0 0 18px; }
+.ob_help_section_heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ob_help_actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ob_help_datasets { border-top: 1px solid #c4d0da; padding-top: 20px; }
+.ob_help_panel select { min-width: 0; max-width: 100%; width: 100%; padding: 8px; border: 1px solid #c4d0da; border-radius: 3px; background: #f6f8fa; color: inherit; font: inherit; }
+.ob_help_note { margin: 4px 0 10px; color: #687f8e; font-size: 12px; overflow-wrap: anywhere; }
+.ob_help_text { display: block; width: 100%; min-width: 0; margin: 10px 0; border: 1px solid #c4d0da; border-radius: 3px; padding: 10px; background: white; color: #354650; font: 12px/1.5 Consolas, monospace; resize: vertical; overflow-wrap: anywhere; }
+.ob_help_panel :focus-visible { outline: 2px solid #176da0; outline-offset: 2px; }

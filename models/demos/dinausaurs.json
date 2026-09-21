@@ -13,6 +13,8 @@
       "fontSize": 12,
       "data": "",
       "overview": true,
+      "dockOverview": true,
+      "overviewHeightRatio": 0.18,
       "showCurrentTime": false
     }
   ],
@@ -29,7 +31,7 @@
   "bands": [
     {
       "name": "ob_band_main",
-      "height": "80%",
+      "height": "82%",
       "intervalUnit": "DECADE",
       "intervalPixels": 160,
       "color": "#f0f4ec",
@@ -44,11 +46,35 @@
         {
           "sortBy": "NONE"
         }
-      ]
+      ],
+      "scaleHeader": {
+        "label": "Millions of years ago",
+        "unit": "Ma",
+        "height": 38,
+        "color": "#e4ecdf",
+        "textColor": "#456744"
+      },
+      "range": {
+        "from": 165,
+        "to": 115
+      },
+      "context": {
+        "from": 240,
+        "to": 40
+      },
+      "ticks": {
+        "unit": "NUMERIC",
+        "step": 5
+      },
+      "labelPosition": "above",
+      "topPadding": 60,
+      "trackIncrement": 26,
+      "sessionHeight": 6,
+      "defaultEventSize": 4
     },
     {
       "name": "ob_overview_band",
-      "height": "20%",
+      "height": "18%",
       "intervalUnit": "DECADE",
       "intervalPixels": 48,
       "color": "#dbe3d5",
@@ -63,7 +89,26 @@
         {
           "sortBy": "NONE"
         }
-      ]
+      ],
+      "sourceBands": ["ob_band_main"],
+      "fitRows": true,
+      "showContextLabel": false,
+      "overviewLabel": "Overview",
+      "viewportHandles": true,
+      "range": {
+        "from": 240,
+        "to": 40
+      },
+      "context": {
+        "from": 240,
+        "to": 40
+      },
+      "ticks": {
+        "unit": "NUMERIC",
+        "step": 40
+      },
+      "sessionHeight": 3,
+      "defaultEventSize": 1
     }
   ]
 }

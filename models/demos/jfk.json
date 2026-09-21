@@ -3,7 +3,7 @@
     {
       "name": "ob_demo",
       "title": "JFK chronology",
-      "date": "1963-11-22T18:55:00Z",
+      "date": "1963-11-22T19:00:00Z",
       "timeZone": "UTC",
       "top": 130,
       "left": 12,
@@ -14,7 +14,9 @@
       "overview": true,
       "showCurrentTime": false,
       "displayOffsetMinutes": -360,
-      "timeZoneLabel": "UTC-06:00"
+      "timeZoneLabel": "UTC-06:00",
+      "dockOverview": true,
+      "overviewHeightRatio": 0.22
     }
   ],
   "dataSource": {
@@ -28,14 +30,20 @@
         "end": "1963-11-22T19:00:00Z",
         "title": "shot",
         "color": "#f5bd76",
-        "opacity": 0.35
+        "opacity": 0.35,
+        "render": {
+          "labelPosition": "bottom"
+        }
       },
       {
         "start": "1963-11-22T19:00:00Z",
         "end": "1963-11-22T19:01:00Z",
         "title": "t.o.d.",
         "color": "#f5bd76",
-        "opacity": 0.35
+        "opacity": 0.35,
+        "render": {
+          "labelPosition": "bottom"
+        }
       }
     ]
   },
@@ -47,17 +55,32 @@
       "intervalPixels": 12,
       "color": "#eeeeee",
       "dateFormat": "HH:mm",
-      "dateColor": "#a0a6ab",
+      "dateColor": "#8d989f",
       "textColor": "#263238",
-      "SessionColor": "#5c9ddb",
-      "eventColor": "#7675c8",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
       "fontSize": 12,
       "intervalUnitPos": "BOTTOM",
       "model": [
         {
           "sortBy": "NONE"
         }
-      ]
+      ],
+      "range": {
+        "from": "1963-11-22T18:00:00Z",
+        "to": "1963-11-22T20:00:00Z"
+      },
+      "context": {
+        "from": "1963-08-15T06:00:00Z",
+        "to": "1963-11-23T06:00:00Z"
+      },
+      "topPadding": 15,
+      "trackIncrement": 21,
+      "defaultEventSize": 4,
+      "ticks": {
+        "unit": "MINUTE",
+        "step": 5
+      }
     },
     {
       "name": "ob_overview_band",
@@ -66,15 +89,54 @@
       "intervalPixels": 70,
       "color": "#dcdcdc",
       "dateFormat": "HH:mm",
-      "dateColor": "#a0a6ab",
+      "dateColor": "#8d989f",
       "textColor": "#263238",
-      "SessionColor": "#5c9ddb",
-      "eventColor": "#7675c8",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
       "fontSize": 12,
       "intervalUnitPos": "BOTTOM",
       "model": [
         {
           "sortBy": "NONE"
+        }
+      ],
+      "range": {
+        "from": "1963-08-15T06:00:00Z",
+        "to": "1963-11-23T06:00:00Z"
+      },
+      "context": {
+        "from": "1963-08-15T06:00:00Z",
+        "to": "1963-11-23T06:00:00Z"
+      },
+      "topPadding": 8,
+      "trackIncrement": 4,
+      "defaultEventSize": 1,
+      "ticks": {
+        "unit": "MONTH",
+        "step": 1,
+        "format": "yyyy-MM"
+      },
+      "overviewLabel": "Magnified overview",
+      "focus": [
+        {
+          "from": "1963-11-22T15:00:00Z",
+          "to": "1963-11-23T06:00:00Z",
+          "magnification": 900,
+          "ticks": {
+            "unit": "HOUR",
+            "step": 1,
+            "format": "HH:mm"
+          }
+        },
+        {
+          "from": "1963-11-22T18:00:00Z",
+          "to": "1963-11-22T19:00:00Z",
+          "magnification": 3,
+          "ticks": {
+            "unit": "MINUTE",
+            "step": 30,
+            "format": "HH:mm"
+          }
         }
       ]
     }

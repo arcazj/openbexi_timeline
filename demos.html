@@ -18,24 +18,11 @@
     </script>
 </head>
 <body class="ob_demo_page">
-<header id="demo-header">
-    <div class="ob_demo_heading">
-        <h1>OpenBEXI Timeline demos</h1>
-        <form action="demos.html" method="get">
-            <label for="demo-select">Dataset</label>
-            <select id="demo-select" name="demo" required></select>
-            <button type="submit">Open demo</button>
-        </form>
-    </div>
-    <p id="demo-description"></p>
-    <nav aria-label="Demo resources">
-        <a id="demo-dataset">Dataset</a>
-        <a id="demo-model">Model</a>
-        <a id="demo-reference" hidden>Reference image</a>
-        <a href="docs/demos.md">Demo guide</a>
-        <span id="demo-status" role="status">Loading catalog…</span>
-    </nav>
-</header>
+<main id="demo-workspace" aria-label="Live timeline demo">
+    <section id="demo-timeline-slot" aria-label="Timeline, table, and split views"></section>
+    <aside id="demo-side-slot" aria-label="Descriptor, calendar, and settings panels"></aside>
+</main>
+<div id="demo-status" role="status" aria-live="polite" data-state="loading">Loading catalog…</div>
 <script type="module" src="src/openbexi_demo.js"></script>
 </body>
 </html>

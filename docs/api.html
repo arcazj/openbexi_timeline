@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenBEXI Timeline - Offline API reference</title>
+  <style>
+    :root {color-scheme: light; font: 16px/1.6 system-ui, sans-serif; color: #233346; background: #f2f5f8;}
+    body {margin: 0; padding: 28px 18px;}
+    main {max-width: 940px; margin: auto; padding: 26px 32px; background: white; border: 1px solid #dbe2ea; border-radius: 12px;}
+    h1 {font-size: 1.8rem; line-height: 1.2; margin: 10px 0 14px;}
+    h2 {font-size: 1.2rem; margin-top: 30px;}
+    a {color: #075ea1; text-underline-offset: 3px;}
+    nav {display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: .9rem;}
+    code {font: .9em ui-monospace, monospace; overflow-wrap: anywhere;}
+    pre {padding: 16px; background: #edf6f2; border-left: 4px solid #258063; white-space: pre-wrap; overflow-wrap: anywhere;}
+    .note {padding: 12px 16px; background: #f3f6fa; border-radius: 6px;}
+    .version {color: #5e6c7d; font-size: .9rem;}
+    table {width: 100%; border-collapse: collapse; font-size: .93rem;}
+    th, td {text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid #e1e7ee;}
+    th {background: #f3f6fa;}
+    .table-wrap {overflow-x: auto;}
+    @media (max-width: 600px) {body {padding: 8px;} main {padding: 18px;} th, td {padding: 7px;}}
+  </style>
+</head>
+<body>
+<main>
+  <nav aria-label="Documentation links">
+    <a href="../demos.html">Local demos</a>
+    <a href="api.md">Markdown reference</a>
+    <a href="../swagger/openbexi_timeline_swagger.yaml" download="openbexi_timeline_swagger.yaml">Download specification</a>
+  </nav>
+  <h1>OpenBEXI Timeline API</h1>
+  <p class="version">Offline reference &middot; Swagger 2.0 &middot; API contract 1.0.0</p>
+  <p>This page describes the checked-in specification. The browser application is version 1.1; the API contract has a separate version.</p>
+  <p class="note">The specification declares HTTPS host <code>openbexi_timeline.swagger.io</code> and base path <code>/</code>. This does not confirm a reachable service. Local file-backed demos do not provide this API, and this page makes no network requests.</p>
+
+  <h2 id="sessions">Get sessions by zone</h2>
+  <pre><code>GET /sessions/{startDate}/{endDate}/{filter}/{search}/{userAccess}</code></pre>
+  <p>Returns sessions between the requested start and end dates. Operation ID: <code>getSessionByZone</code>. Response media type: <code>application/json</code>.</p>
+  <p>All parameters are required path parameters. Encode each value as a URL path component.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Parameter</th><th scope="col">Type</th><th scope="col">Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>startDate</code></td><td>string, date-time</td><td>Start date in ISO format.</td></tr>
+      <tr><td><code>endDate</code></td><td>string, date-time</td><td>End date in ISO format.</td></tr>
+      <tr><td><code>filter</code></td><td>string</td><td>Criteria used to filter events.</td></tr>
+      <tr><td><code>search</code></td><td>string</td><td>Keyword used to search events.</td></tr>
+      <tr><td><code>userAccess</code></td><td>string enum</td><td><code>read</code>, <code>write</code>, or <code>admin</code>. This parameter is not proof of server authorization.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The specification does not define a filter expression grammar or an empty-value convention for these required parameters.</p>
+
+  <h2 id="responses">Responses</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Meaning</th><th scope="col">Body</th></tr></thead>
+    <tbody>
+      <tr><td><code>200</code></td><td>Successful operation</td><td><code>Response</code> object.</td></tr>
+      <tr><td><code>400</code></td><td>Invalid input</td><td>No schema specified.</td></tr>
+      <tr><td><code>401</code></td><td>Unauthorized</td><td>No schema specified.</td></tr>
+    </tbody>
+  </table></div>
+  <p><code>Response</code> declares <code>status</code> (string), <code>message</code> (string), and <code>data</code> (one <code>Object</code>, not an array). No required-property list is provided.</p>
+  <p><code>Object</code> declares <code>id</code> (integer, int64), <code>type</code> (string), <code>label</code> (string), and <code>startDate</code> (string, date). The request bounds use <code>date-time</code>, while this response property uses <code>date</code>.</p>
+
+  <h2 id="security">Security definitions</h2>
+  <p>The contract defines OAuth 2 implicit flow as <code>sessionstore_auth</code>, with authorization URL <code>https://localhost:8443/</code> and scopes <code>write:sessions</code> and <code>read:sessions</code>. It also defines the <code>api_key</code> request header.</p>
+  <p>Neither global nor operation-level security requirements are attached to this endpoint in the checked-in file. Check authentication behavior against the actual deployed server.</p>
+
+  <h2 id="scope">Specification scope</h2>
+  <p>Only the GET operation above is defined. Comments mention other operations, but no POST or DELETE contract is supplied. This offline page has no &ldquo;Try it out&rdquo; action.</p>
+</main>
+</body>
+</html>

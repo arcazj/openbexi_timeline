@@ -1,4 +1,6 @@
 // Shared, model-driven import and layout helpers for file-backed timelines.
+import {prepareBandScale, bandTimeToPixel} from './openbexi_timeline_scale.js';
+
 export const TIME_UNITS = {
     MILLISECOND: 1, SECOND: 1000, MINUTE: 60000, HOUR: 3600000,
     DAY: 86400000, WEEK: 604800000, MONTH: 2678400000,
@@ -174,6 +176,7 @@ export function prepareStaticBands(timeline, sceneIndex) {
             band.x = 0;
             band.z = 0;
             band.depth = 0;
+            prepareBandScale(timeline, sceneIndex, band);
             bands.push(band);
         }
     }
@@ -185,13 +188,24 @@ export function prepareStaticBands(timeline, sceneIndex) {
 export function layoutStaticSessions(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
     for (const band of scene.bands) {
-        const overview = band.name.includes("overview_");
         band.zones = [];
         band.sessions = [];
+        if (band.name.includes("overview_")) continue;
         const rowEnds = [];
-        const orderedEvents = [...scene.sessions.events].sort((a, b) => parseTimelineDate(a.start) - parseTimelineDate(b.start));
+        const aboveLabels = band.labelPosition === 'above';
+        const anchoredLabels = aboveLabels || band.labelPosition === 'inside';
+        const orderedEvents = [...scene.sessions.events].sort((a, b) => {
+            const start = parseTimelineDate(a.start) - parseTimelineDate(b.start);
+            if (start || !aboveLabels) return start;
+            const aEnd = parseTimelineDate(a.end), bEnd = parseTimelineDate(b.end);
+            // Shorter durations first leave room for later starts on the same row.
+            // Point events follow durations at that instant, with stable id ties.
+            if (Number.isFinite(aEnd) !== Number.isFinite(bEnd)) return Number.isFinite(aEnd) ? -1 : 1;
+            return (Number.isFinite(aEnd) ? aEnd - bEnd : 0) || String(a.id).localeCompare(String(b.id));
+        });
         for (const event of orderedEvents) {
             if (event.zone) { band.zones.push(event); continue; }
+            if (band.filter && field(event, band.filter.field) !== band.filter.equals) continue;
             if (band.groupBy && field(event, band.groupBy, "Other") !== band.groupValue) continue;
             if (band.eventKind === "duration" && !event.end) continue;
             if (band.eventKind === "event" && event.end) continue;
@@ -199,18 +213,32 @@ export function layoutStaticSessions(timeline, sceneIndex) {
             session.activities = session.activities || [structuredClone(event)];
             const activities = [];
             for (const activity of session.activities) {
-                const x = timeline.dateToPixelOffSet(sceneIndex, activity.start, band.gregorianUnitLengths, band.intervalPixels);
-                const end = timeline.dateToPixelOffSet(sceneIndex, activity.end, band.gregorianUnitLengths, band.intervalPixels);
+                const startTime = parseTimelineDate(activity.start);
+                const endTime = parseTimelineDate(activity.end);
+                if (band.timeScale && ((Number.isFinite(endTime) ? endTime : startTime) < band.timeScale.contextFrom ||
+                    startTime >= band.timeScale.contextTo)) continue;
+                const x = bandTimeToPixel(timeline, sceneIndex, band, activity.start);
+                const end = bandTimeToPixel(timeline, sceneIndex, band, activity.end);
                 const width = Number.isFinite(end) ? end - x : 0;
-                if (x + width < -scene.width * 1.5 || x > scene.width * 1.5) continue;
-                const textWidth = overview ? 0 : timeline.getTextWidth(activity.data.title, band.fontSize + " " + band.fontFamily, 6);
+                if (!band.timeScale && (x + width < -scene.width * 1.5 || x > scene.width * 1.5)) continue;
+                const textWidth = timeline.getTextWidth(activity.data.title, band.fontSize + " " + band.fontFamily, 6);
+                const anchoredDuration = anchoredLabels && Number.isFinite(end);
+                const durationLabelAbove = aboveLabels && anchoredDuration;
+                if (Number.isFinite(end) && band.uncertaintyOpacity !== undefined &&
+                    (activity.data.lateststart || activity.data.earliestend) && activity.render.opacity === undefined)
+                    activity.render.opacity = Math.max(0, Math.min(1, Number(band.uncertaintyOpacity)));
+                const labelLeft = anchoredDuration ?
+                    (end >= -scene.width / 2 ? Math.max(x, -scene.width / 2 + 6) : x) : x + width + 6;
+                const occupiedWidth = anchoredDuration ? Math.max(width, labelLeft - x + textWidth) : width + textWidth + 12;
                 let row = rowEnds.findIndex(right => right + 12 < x);
                 if (row < 0) row = rowEnds.length;
-                rowEnds[row] = x + width + textWidth + 12;
+                rowEnds[row] = x + occupiedWidth;
                 Object.assign(activity, {
-                    x, original_x: x, x_relative: x + width / 2, width, total_width: width + textWidth + 12,
+                    x, original_x: x, x_relative: x + width / 2, width, total_width: occupiedWidth,
                     pixelOffSetStart: x, pixelOffSetEnd: end, height: band.sessionHeight,
-                    size: band.defaultEventSize, textX: (width + textWidth) / 2 + 6,
+                    size: band.defaultEventSize,
+                    textX: anchoredDuration ? labelLeft - (x + width / 2) + textWidth / 2 : (width + textWidth) / 2 + 6,
+                    textY: durationLabelAbove ? band.fontSizeInt / 2 + band.sessionHeight / 2 + 3 : 0,
                     z: 5, row
                 });
                 activities.push(activity);
@@ -220,7 +248,8 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 band.sessions.push(session);
             }
         }
-        band.height = Math.max(band.height, rowEnds.length * band.trackIncrement + band.fontSizeInt * 3);
+        band.height = Math.max(band.height, rowEnds.length * band.trackIncrement +
+            (band.topPadding ?? band.fontSizeInt * 2) + band.fontSizeInt);
     }
     scene.ob_height = scene.bands.reduce((height, band) => height + band.height, 0);
     let top = scene.ob_height;
@@ -235,7 +264,7 @@ export function layoutStaticSessions(timeline, sceneIndex) {
         top -= band.height;
         for (const session of band.sessions) {
             for (const activity of session.activities) {
-                activity.y = band.height / 2 - band.fontSizeInt * 2 - activity.row * band.trackIncrement;
+                activity.y = band.height / 2 - (band.topPadding ?? band.fontSizeInt * 2) - activity.row * band.trackIncrement;
             }
             const left = Math.min(...session.activities.map(activity => activity.x));
             const right = Math.max(...session.activities.map(activity => activity.x + activity.width));
