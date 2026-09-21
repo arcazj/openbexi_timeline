@@ -13,6 +13,14 @@ The September 2026 maintenance replaces the old Java dependency set while preser
 
 Unused direct Jackson annotations and JMX agent dependencies were removed. `json-simple` remains for compatibility with the legacy adapters; its accidental JUnit runtime dependency is excluded. The old checked-in JMX exporter binary is retired. Exporter configuration, when needed, is an explicit deployment choice: use a current [Prometheus JMX Exporter](https://prometheus.github.io/jmx_exporter/) release on a restricted monitoring interface. The application does not enable unauthenticated remote JMX.
 
+## Java test sources
+
+The repository's JUnit classes live under `tests/java` and use JUnit Jupiter with test-only dependencies. The application source tree `src` compiles without JUnit or Maven file exclusions, including in IntelliJ. After updating an existing checkout, reload the Maven project and rebuild to refresh the source roots and remove stale classes. The historical `test_timeline` class stays in `src` because the legacy server uses it at runtime; it does not use JUnit.
+
+Optional local converter tests belong in `tests/local-java`, marked as a test source folder in IntelliJ. That folder stays ignored with the private converter sources and is separate from the Maven test suite.
+
+The four `Legacy*Test` classes preserve historical manual checks. They compile with the regular tests but run only when `-Dopenbexi.legacyTests=true` is explicitly set. They depend on developer configuration and fixtures, and some write YAML/filter files or access MongoDB; prepare an isolated test environment before opting in. The regular suite uses temporary storage or isolated database doubles and does not enable these checks.
+
 ## Repeatable audit
 
 With Java 17, Maven, and Node 24 installed:

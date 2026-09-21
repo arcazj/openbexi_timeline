@@ -6,13 +6,20 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.UUID;
 
-class db_mongo_managerTest {
+/**
+ * Historical manual MongoDB checks using etc/ob_mongodb_test_conf.json and a live
+ * database, including writes. The fixture/configuration must be repaired and isolated
+ * before opting in with -Dopenbexi.legacyTests=true; ordinary builds never connect.
+ */
+@EnabledIfSystemProperty(named = "openbexi.legacyTests", matches = "true")
+class LegacyMongoManagerTest {
 
     @Test
     void searchEvents() {

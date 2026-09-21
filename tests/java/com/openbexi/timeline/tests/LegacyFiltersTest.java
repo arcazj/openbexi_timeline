@@ -3,12 +3,20 @@ package com.openbexi.timeline.tests;
 import com.openbexi.timeline.data_browser.data_configuration;
 import com.openbexi.timeline.data_browser.json_files_manager;
 import org.json.simple.parser.ParseException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.io.IOException;
 
-public class test_filters {
+/**
+ * Historical, state-dependent checks that read startup configuration and rewrite
+ * filters/test_ob_timeline_0_filter_setting.json; cleanup can delete a filter file
+ * under the configured data path. Opt in only with disposable fixture/configuration
+ * paths using -Dopenbexi.legacyTests=true.
+ */
+@EnabledIfSystemProperty(named = "openbexi.legacyTests", matches = "true")
+public class LegacyFiltersTest {
 
     private data_configuration _data_configuration;
 
@@ -42,7 +50,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -63,7 +71,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -84,7 +92,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"\",\"name\":\"My_filter2\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -105,7 +113,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"system\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -127,7 +135,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter3\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -148,7 +156,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter4\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter3\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3;type:type0;type:type4+status:SCHEDULE\",\"name\":\"My_filter1\",\"sortBy\":\"NONE\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -169,7 +177,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter4\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter3\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -190,7 +198,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:systemA;system:system1;system:system3\",\"name\":\"My_filter4\",\"sortBy\":\"NONE\"},{\"backgroundColor\":\"#a1d9ff\",\"current\":\"no\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -209,7 +217,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[{\"backgroundColor\":\"#a1d9ff\",\"current\":\"yes\",\"filter_value\":\"system:system1;system:system2;system:system3|system:system3+type:type0\",\"name\":\"My_filter2\",\"sortBy\":\"system\"}],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 
     @Test
@@ -228,7 +236,7 @@ public class test_filters {
                 data.get_filter());
         String filter1 = "{\"dateTimeFormat\":\"iso8601\",\"openbexi_timeline\":[{\"backgroundColor\":\"#a1d9ff\",\"sources\":[{\"filter\":{\"include\":\"\",\"exclude\":\"\"},\"connector\":\"secure_sse:8441|secure:8442\",\"enable\":true,\"data_model\":\"\\/data\\/SOURCES1\\/yyyy\\/mm\\/dd\",\"namespace\":\"SOURCE1\",\"converter2events_class\":\"build_in\",\"permission\":\"\",\"type\":\"json_file\",\"render\":{\"alternateColor\":\"#e6e6e6\",\"color\":\"#000000\",\"dateColor\":\"#ffffff\",\"textColor\":\"#ffffff\"},\"url\":null,\"data_path\":\"\\/data\\/\"}],\"start\":\"current_time\",\"title1\":\"Timeline report\",\"filters\":[],\"top\":\"0\",\"left\":\"0\",\"name\":\"ob_timeline_0\",\"width\":\"1350\",\"sortBy\":\"NONE\",\"camera\":\"Orthographic\",\"user\":\"test\",\"email\":\"test@mail.com\",\"height\":\"600\"}],\"namespace\":\"\",\"scene\":\"0\"}";
         String filter2 = json.toString();
-        Assert.assertEquals(filter1, filter2);
+        Assertions.assertEquals(filter1, filter2);
     }
 }
 
