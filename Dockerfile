@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS browser-dependencies
+FROM node:25-bookworm-slim AS browser-dependencies
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
