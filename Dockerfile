@@ -10,7 +10,7 @@ COPY src ./src
 COPY schemas ./schemas
 RUN mvn --batch-mode --no-transfer-progress -Dmaven.test.skip=true package
 
-FROM eclipse-temurin:17-jre-noble
+FROM eclipse-temurin:25-jre-noble
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
