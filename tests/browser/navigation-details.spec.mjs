@@ -4,7 +4,7 @@ import path from 'node:path';
 
 async function ready(page) {
     await expect.poll(()=>page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;
-        return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;})).toBe(true);
+        return {pending:Boolean(t.ob_results.pending),headerDelta:t.ob_viewport.headerHeight-t.ob_timeline_header.offsetHeight};})).toEqual({pending:false,headerDelta:0});
 }
 async function centered(page) {
     // Query and measure in one browser task; a layout refresh can replace SVG
@@ -33,6 +33,28 @@ test('Overview stays centered during both drag directions, zoom, details and res
     await page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;t.ob_open_descriptor(0,t.staticData.events.find(e=>!e.zone));});
     await ready(page);await centered(page);
     const size=page.viewportSize();await page.setViewportSize({width:size.width-70,height:size.height-60});await ready(page);await centered(page);
+});
+
+test('A toolbar change within one render updates the plot even without a ResizeObserver notification',async({page})=>{
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    // Let the startup observer's already queued refresh finish first.
+    await page.waitForTimeout(250);
+    const stale=await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        // A transient loading row can be measured and removed in one task.
+        // ResizeObserver sees the same final size as before that task.
+        const row=document.createElement('div');row.style.cssText='flex-basis:100%;height:42px';
+        t.ob_timeline_header.append(row);t.ob_viewport.measure();row.remove();
+        const delta=t.ob_viewport.headerHeight-t.ob_timeline_header.offsetHeight;
+        t.ob_viewport.layout();return delta;
+    });
+    expect(stale).toBeGreaterThan(0);
+    await ready(page);
+    const gap=await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        return t.ob_timeline_body_frame.getBoundingClientRect().top-t.ob_timeline_header.getBoundingClientRect().bottom;
+    });
+    expect(Math.abs(gap)).toBeLessThanOrEqual(1);
 });
 
 test('Connected details retain full history, survive empty responses and reject stale selections',async({page},info)=>{
