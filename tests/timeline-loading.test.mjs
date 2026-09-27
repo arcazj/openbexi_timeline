@@ -7,14 +7,17 @@ const waitFor=async predicate=>{
     const deadline=Date.now()+6000;
     while(!predicate()) {assert.ok(Date.now()<deadline,'Loading must settle'); await new Promise(resolve=>setTimeout(resolve,15));}
 };
-async function connected() {
+async function connected({abortRequests=true}={}) {
     const h=await createTimelineHarness({calendar:true});
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-    const t=new OB_TIMELINE(),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
     t.params=model.params; t.bands=model.bands;
     Object.assign(t.params[0],{data:'http://localhost/sessions',date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
     const requests=[];
-    h.window.fetch=(url,options={})=>new Promise((resolve,reject)=>requests.push({url:String(url),options,resolve,reject}));
+    h.window.fetch=(url,options={})=>new Promise((resolve,reject)=>{
+        requests.push({url:String(url),options,resolve,reject});
+        if(abortRequests)options.signal?.addEventListener('abort',()=>reject(new h.window.DOMException('Request aborted','AbortError')),{once:true});
+    });
     t.initializeTimeline();
     const settings={name:t.name,user:'guest',email:'',top:0,left:0,width:1100,height:650,camera:'Orthographic',multiples:'45',
         backgroundColor:'#eef1f2',sortBy:'NONE',sources:[],filters:[{name:'ALL',current:'yes',filter_value:'',sortBy:'NONE',backgroundColor:'#eef1f2'}]};
@@ -38,9 +41,10 @@ test('Visible records render before later pages; prefetch stays interactive, mer
         assert.equal(new URL(requests[1].url).searchParams.get('progressive'),'1');
         batch(requests[1],['first','second'],'page-two');
         await waitFor(()=>r.snapshot?.counts.eligible.events===2 && requests.length===3);
-        assert.equal(r.loading,false); assert.equal(r.busy.hidden,false); assert.equal(t.ob_search_input.disabled,false);
+        assert.equal(r.loading,false); assert.equal(r.fetching,true); assert.equal(t.ob_search_input.disabled,false);
         assert.equal(t.ob_timeline_body_frame.inert,false); assert.equal(r.complete,false);
-        assert.equal(r.busy.parentElement,r.feedback,'Background progress uses header space without covering records or panel headings');
+        assert.equal(h.window.document.querySelector('.ob_timeline_loading'),null);
+        assert.equal(t.ob_stop.getAttribute('aria-label'),'Stop loading');
         assert.equal(r.snapshot.entries[0].record.data.series,'alpha');
         const currentURL=new URL(requests[1].url),prefetch=new URL(requests[2].url);
         assert.equal(prefetch.searchParams.get('purpose'),'past-prefetch');
@@ -60,10 +64,10 @@ test('Visible records render before later pages; prefetch stays interactive, mer
         batch(requests[4],['second','third'],'last-page');
         await waitFor(()=>r.snapshot.counts.eligible.events===3 && requests.length>=6);
         assert.equal(new Set(r.snapshot.entries.map(e=>e.record.id)).size,3);
-        const snapshot=r.snapshot;r.cancelLoad();
+        const snapshot=r.snapshot;t.ob_stop.click();
         assert.equal(requests[5].options.signal.aborted,true); assert.equal(r.fetching,false);
         batch(requests[5],['stale']);await new Promise(resolve=>setTimeout(resolve,100));
-        assert.equal(r.snapshot,snapshot);assert.equal(r.busy.hidden,true);
+        assert.equal(r.snapshot,snapshot);assert.equal(t.ob_timeline_header.classList.contains('ob_results_loading'),false);
     } finally {f.close();}
 });
 
@@ -76,9 +80,13 @@ test('Changing query abandons old cursors and an empty response retries without 
         await waitFor(()=>requests.some(req=>new URL(req.url).searchParams.get('search')==='latest'));
         const latest=requests.find(req=>new URL(req.url).searchParams.get('search')==='latest');
         assert.equal(requests[2].options.signal.aborted,true);
+        r.request({mode:'only'});
+        r.request({highlight:false});
+        assert.equal(r.explorer.searchQuery,'latest','Display options retain pending search navigation');
         batch(requests[2],['stale']);batch(latest,['current']);
         await waitFor(()=>r.snapshot?.query==='latest' && r.snapshot.entries[0]?.record.id==='current');
-        await waitFor(()=>requests.at(-1)!==latest);
+        assert.equal(r.explorer.searchQuery,null,'The first matching batch completes search navigation');
+        await waitFor(()=>!r.pending && !r.navigationTimer && requests.at(-1)!==latest && !requests.at(-1).options.signal.aborted);
         requests.at(-1).resolve(new Response('',{status:200,headers:{'X-Request-ID':'empty-batch'}}));
         await waitFor(()=>!!r.error);
         assert.match(r.error,/empty response, HTTP 200.*empty-batch/);
@@ -87,6 +95,21 @@ test('Changing query abandons old cursors and an empty response retries without 
         batch(requests.at(-1),['reconnected']);
         await waitFor(()=>r.snapshot.entries.some(e=>e.record.id==='reconnected'));
         assert.equal(r.error,'');
+    } finally {f.close();}
+});
+
+test('An empty first response commits a new search without waiting for a resize or Auto scale',async()=>{
+    const f=await connected();const {r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        batch(requests[1],['first']);await waitFor(()=>r.snapshot?.counts.eligible.events===1 && requests.length===3);
+        r.request({query:'missing'});
+        await waitFor(()=>requests.some(req=>new URL(req.url).searchParams.get('search')==='missing'));
+        batch(requests.find(req=>new URL(req.url).searchParams.get('search')==='missing'),[]);
+        await waitFor(()=>!r.pending && r.snapshot?.query==='missing');
+        assert.equal(r.snapshot.hasCondition,true);assert.equal(r.snapshot.counts.eligible.events,0);
+        assert.equal(r.empty.hidden,true,'The no-results panel stays hidden while the search is still loading');
+        assert.equal(r.state.auto,false);assert.equal(r.error,'');
     } finally {f.close();}
 });
 
@@ -126,6 +149,87 @@ test('Dense background data pauses at the cache budget while visible loading con
         assert.equal(r.error,'');assert.deepEqual([...r.snapshot.entries].map(e=>e.record.id).sort(),['new-visible','visible']);
         assert.equal(r.complete,false);assert.ok(r.remoteMetadata.warnings.some(warning=>warning.includes('cache limit')));
         assert.ok(t.ob_loader.cache.some(entry=>entry.paused));
+    } finally {f.close();}
+});
+
+for (const limit of ['records','nestedRecords','characters']) test(`Visible ${limit} limit retains records and releases cursors without a connection failure`,async()=>{
+    const f=await connected();const {t,r,requests,settings}=f;
+    const dataRequests=()=>requests.filter(request=>{const url=new URL(request.url);return url.searchParams.has('startDate') && !url.searchParams.has('cancel');});
+    try {
+        r.state.query='volcano';r.state.mode='only';
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>dataRequests().length===1);
+        t.ob_loader.limits[limit]=limit==='characters'?1200:2;
+        let disconnected=0;t.ob_not_connected=()=>disconnected++;
+        batch(dataRequests()[0],['visible'],'visible-next');await waitFor(()=>dataRequests().length===2);
+        batch(dataRequests()[1],['past'],'past-next');await waitFor(()=>dataRequests().length===3);
+        batch(dataRequests()[2],[]);await waitFor(()=>dataRequests().length===4);
+        batch(dataRequests()[3],['new-one','new-two',...(limit==='characters'?['large-'.repeat(200)]:[])],'newest-cursor');
+        await waitFor(()=>!r.fetching && !r.pending);
+        assert.equal(r.error,'');assert.equal(disconnected,0);
+        assert.equal(r.status.textContent,'Data limit reached');assert.equal(r.retryButton.hidden,true);
+        assert.equal(r.narrowButton.hidden,false);assert.equal(r.narrowButton.disabled,false);
+        assert.equal(r.complete,false);assert.equal(r.fitButton.disabled,true);
+        assert.deepEqual([...r.snapshot.entries].map(entry=>entry.record.id),['visible']);
+        assert.equal(r.snapshot.query,'volcano');assert.equal(r.state.mode,'only');
+        assert.ok(r.remoteMetadata.warnings.some(warning=>warning.includes('Narrow the time window')));
+        const cancelled=requests.filter(request=>new URL(request.url).searchParams.get('cancel')==='1')
+            .map(request=>new URL(request.url).searchParams.get('cursor'));
+        assert.ok(cancelled.includes('newest-cursor'));assert.ok(cancelled.includes('past-next'));
+        assert.equal(t.ob_loader.cursorURLs.size,0);
+        assert.ok(t.ob_loader.cache.every(entry=>!entry.cursor));
+        // Capacity pressure must not poll the same interval indefinitely.
+        let scheduled=0;const timeout=f.h.window.setTimeout;
+        f.h.window.setTimeout=()=>scheduled++;
+        try {t.ob_loader.schedule(t.ob_loader.input);assert.equal(scheduled,0);} finally {f.h.window.setTimeout=timeout;}
+        r.captureRanges();
+        const before={...r.visibleRanges.values().next().value},count=dataRequests().length;
+        r.narrowButton.click();await waitFor(()=>dataRequests().length>count);
+        const recovery=new URL(dataRequests()[count].url);
+        assert.equal(recovery.searchParams.get('search'),'volcano');
+        assert.ok(Math.abs(Date.parse(recovery.searchParams.get('endDate'))-Date.parse(recovery.searchParams.get('startDate'))-
+            (before.to-before.from)/2)<2,JSON.stringify({before,recovery:recovery.href}));
+        let answered=count;const deadline=Date.now()+6000;
+        while(r.fetching) {
+            assert.ok(Date.now()<deadline,'Narrowed loading must settle');
+            if(dataRequests().length>answered) batch(dataRequests()[answered++],[]);
+            await new Promise(resolve=>setTimeout(resolve,15));
+            assert.ok(answered<=count+4,'Narrowing completes with bounded requests');
+        }
+        await waitFor(()=>!r.pending);
+        assert.equal(r.error,'');assert.equal(r.remoteMetadata.loadLimited,false);assert.equal(r.narrowButton.hidden,true);
+        assert.ok(!r.remoteMetadata.warnings.some(warning=>warning.includes('limit')));
+        assert.equal(r.complete,true);
+    } finally {f.close();}
+});
+
+test('Connected zoom expands beyond cached coverage and requests the wider visible interval',async()=>{
+    const f=await connected();const {r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        batch(requests[1],['current']);await waitFor(()=>!r.pending && requests.length===3);
+        const before={...r.explorer.range()},span=before.to-before.from,center=(before.from+before.to)/2;
+        r.zoom(64);
+        await waitFor(()=>!r.pending && requests.some(request=>{
+            const url=new URL(request.url);
+            return Date.parse(url.searchParams.get('endDate'))-Date.parse(url.searchParams.get('startDate'))>=span*64;
+        }));
+        const after=r.explorer.range();
+        assert.ok(Math.abs(after.to-after.from-span*64)<2);
+        assert.ok(Math.abs((after.from+after.to)/2-center)<2);
+        assert.equal(r.error,'');
+    } finally {f.close();}
+});
+
+test('An oversized initial page provides an actionable partial state even without loaded records',async()=>{
+    const f=await connected();const {t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        t.ob_loader.limits.records=1;
+        batch(requests[1],['first','second'],'oversized-next');await waitFor(()=>!r.fetching && !r.pending);
+        assert.equal(r.error,'');assert.equal(r.status.textContent,'Data limit reached');
+        assert.equal(r.snapshot.entries.length,0);assert.equal(r.complete,false);
+        assert.equal(r.narrowButton.hidden,false);assert.equal(r.narrowButton.disabled,false);
+        assert.ok(requests.some(request=>{const url=new URL(request.url);return url.searchParams.get('cancel')==='1' && url.searchParams.get('cursor')==='oversized-next';}));
     } finally {f.close();}
 });
 
@@ -202,7 +306,8 @@ test('An expired cursor restarts once with retained records and a repeated failu
 });
 
 test('A retired response cancels the cursor it created without publishing stale records',async()=>{
-    const f=await connected();const {r,requests,settings}=f;
+    // Model a reply that arrives even though its request has been cancelled.
+    const f=await connected({abortRequests:false});const {r,requests,settings}=f;
     try {
         requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
         batch(requests[1],['current']);await waitFor(()=>requests.length===3);
@@ -327,7 +432,7 @@ test('A saved profile with no active preset starts unfiltered without a stale pr
 test('Configured local JSON loads without a server and local saved exclusions compose with grouping',async()=>{
     const h=await createTimelineHarness();
     try {
-        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');const t=new OB_TIMELINE();
+        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');const t=new OB_TIMELINE({autoStart:false});
         const catalog=JSON.parse(await fs.readFile('demos/catalog.json','utf8'));
         await t.loadModel('models/demos/default-dataset.json',{dataset:catalog.demos.find(d=>d.id==='default-dataset').dataset});
         assert.ok(t.staticData.events.length);assert.ok(!h.requests.some(path=>path.includes('/sessions')));

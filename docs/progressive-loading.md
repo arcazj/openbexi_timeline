@@ -12,8 +12,9 @@ The default buffer extends one visible span beyond each edge. Aligned windows
 reuse overlapping pages and cursors during dragging; the direction of movement
 gets priority when new buffer coverage is needed. Completed adjacent windows can
 jointly cover a new visible range. Background
-loading leaves navigation, grouping, and the current records available. Cancel
-stops the current load; Retry reconnects while retaining the view. Changing the
+loading leaves navigation, grouping, and the current records available. Loading
+status appears in the toolbar. Its Stop control or Escape cancels the current
+load; Retry reconnects while retaining the view. Changing the
 query cancels superseded work and rejects late responses. Navigation cancels only
 scans outside the retained buffer and schedules replenishment every 16–80 ms while
 moving. Cached records enter the view before release without rebuilding the scene.
@@ -21,17 +22,43 @@ Measured request latency and movement speed guide replenishment and direction
 priority. If data density fills the cache budget, neighboring scans pause with a
 partial-coverage warning; visible work can evict distant buffers first. Moving
 into a paused interval resumes it as visible work. A visible interval that exceeds
-the budget still requires a narrower time range.
+the budget retains accepted records and shows **Data limit reached** with a
+**Narrow time window** action. This halves the visible range and loads that
+interval, preserving the search and display options. Coverage remains partial
+and exact Fit matches stays disabled until loading completes. At this limit the
+client releases remaining cursors and pauses automatic refresh; navigating or
+changing the query resumes loading.
 Loading failures have a red **Update failed — open details** control. Click it or
 press Enter to inspect the error. Retry or navigate to another interval to resume;
 an explicit Cancel stays cancelled until Retry. Calendar month arrows only browse
 the calendar; choosing a day moves the timeline and requests that interval first.
 Counts and Overview describe loaded records and identify partial coverage.
+Searches prioritize sources whose namespaces match the query while retaining
+other sources as context. If the current view has no match, nearby searches
+inspect up to four pages per interval before expanding to another interval;
+they retain the overall limit of eight intervals, 32 pages and 20 seconds.
+Changing display options preserves a pending search. Connected zoom can extend
+beyond the loaded cache and requests the wider visible interval.
 Overview has its own linear zoom span; its context follows the main interval to
 keep the visible-window indicator centered. Zooming Overview does not change the
 main range or analysis scope. See [request and diagnostic examples](connected-diagnostics.md).
 
 ## File-provider protocol
+
+Auto scale distinguishes completed empty intervals from incomplete coverage.
+**Timeline details** shows the state of each retained window. A confirmed empty view can
+look backward for matching activity while keeping the current scene visible.
+Entering a search centers the first matching event or session as it arrives,
+including its full duration, with Auto scale on or off. If the loaded records
+contain no match, the search alternates expanding past and future intervals.
+Later batches do not repeat the initial centering. Resync moves to now and
+suppresses the empty-view fallback until the next search or Auto scale change.
+These searches use the same query and saved filter with a `seek-past` or
+`seek-future` purpose. They inspect up to eight expanding windows, 32 pages and
+20 seconds, stop on the first useful batch, and release remaining cursors on
+success, failure or cancellation. No new server endpoint is required.
+See [Auto scale and exploration](help-guide.md#auto-scale-and-exploration) for
+navigation, Lock current view, grouping and accessibility controls.
 
 The `json_file` provider accepts `matchProtocol=1&progressive=1` on the existing
 sessions endpoint. `startDate`, `endDate`, `search`, and legacy filter parameters

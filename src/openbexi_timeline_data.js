@@ -3,6 +3,8 @@ import {prepareBandScale, bandTimeToPixel} from './openbexi_timeline_scale.js';
 import {createStaticSearchMatcher} from './openbexi_timeline_matches.js';
 import {activityFootprint, createRowPacker, projectMap} from './openbexi_timeline_adaptive.js';
 import {recordKey, rowHeader, dateAxisHeight, configureDateAxes} from './openbexi_timeline_paging.js';
+import {clusterEvents} from './openbexi_timeline_exploration.js';
+import {activityLabelMetrics} from './openbexi_timeline_activity_focus.js';
 
 export const TIME_UNITS = {
     MILLISECOND: 1, SECOND: 1000, MINUTE: 60000, HOUR: 3600000,
@@ -35,9 +37,10 @@ export function formatTimelineDate(value, format = "yyyy-MM-dd HH:mm", offsetMin
         mmm: months[date.getUTCMonth()], MM: String(date.getUTCMonth() + 1).padStart(2, "0"),
         dd: String(date.getUTCDate()).padStart(2, "0"),
         HH: String(date.getUTCHours()).padStart(2, "0"), hh: String(date.getUTCHours()).padStart(2, "0"),
-        mm: String(date.getUTCMinutes()).padStart(2, "0")
+        mm: String(date.getUTCMinutes()).padStart(2, "0"), ss: String(date.getUTCSeconds()).padStart(2, "0"),
+        SSS: String(date.getUTCMilliseconds()).padStart(3, "0")
     };
-    return format.replace(/yyyy|mmm|MM|dd|HH|hh|mm/g, token => values[token]);
+    return format.replace(/yyyy|mmm|MM|dd|HH|hh|mm|ss|SSS/g, token => values[token]);
 }
 
 export function timelineValueToTime(value, axis) {
@@ -245,9 +248,12 @@ export function layoutStaticSessions(timeline, sceneIndex) {
         if (band.name.includes("overview_")) continue;
         const countActivities = record => 1 + (record.activities || []).reduce((sum, child) => sum + countActivities(child), 0);
         const packer = createRowPacker(scene.sessions.events.reduce((sum, record) => sum + countActivities(record), 0));
+        const perspective=scene.ob_camera_type==='Perspective';
+        band.activityBaseTrackIncrement ??= band.trackIncrement;
+        band.trackIncrement=band.activityBaseTrackIncrement;
         const aboveLabels = band.labelPosition === 'above';
         const anchoredLabels = aboveLabels || band.labelPosition === 'inside';
-        const orderedEvents = [...scene.sessions.events].sort((a, b) => {
+        let orderedEvents = [...scene.sessions.events].sort((a, b) => {
             const start = parseTimelineDate(a.start) - parseTimelineDate(b.start);
             if (start || !aboveLabels) return start;
             const aEnd = parseTimelineDate(a.end), bEnd = parseTimelineDate(b.end);
@@ -256,6 +262,12 @@ export function layoutStaticSessions(timeline, sceneIndex) {
             if (Number.isFinite(aEnd) !== Number.isFinite(bEnd)) return Number.isFinite(aEnd) ? -1 : 1;
             return (Number.isFinite(aEnd) ? aEnd - bEnd : 0) || String(a.id).localeCompare(String(b.id));
         });
+        if(timeline.ob_results?.state?.auto && !timeline.ob_measureLayout) {
+            const r=timeline.ob_results,protectedKeys=new Set([...r.explorer.expanded,r.selectedKey]);
+            orderedEvents=clusterEvents(orderedEvents.filter(event=>(!band.filter || field(event,band.filter.field)===band.filter.equals) &&
+                (!band.groupBy || event.activities || (band.groupValues.get(recordKey(event)) || 'Other')===band.groupValue)),band.timeScale,protectedKeys);
+            for(const event of orderedEvents) if(event.cluster && band.groupBy) band.groupValues.set(recordKey(event),band.groupValue);
+        }
         for (const event of orderedEvents) {
             if (event.zone) { band.zones.push(event); continue; }
             if (band.filter && field(event, band.filter.field) !== band.filter.equals) continue;
@@ -276,7 +288,7 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 const startTime = parseTimelineDate(activity.start);
                 const endTime = parseTimelineDate(activity.end);
                 if (band.timeScale && ((Number.isFinite(endTime) ? endTime : startTime) < band.timeScale.contextFrom ||
-                    startTime >= band.timeScale.contextTo)) continue;
+                    startTime > band.timeScale.contextTo)) continue;
                 const box = activityFootprint(activity, band,
                     {toPixel: value => bandTimeToPixel(timeline, sceneIndex, band, value)}, scene.width, timeline.getTextWidth.bind(timeline));
                 const {x, end, width, textWidth, labelLeft, occupiedWidth} = box;
@@ -287,7 +299,13 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 if (Number.isFinite(end) && band.uncertaintyOpacity !== undefined &&
                     (activity.data.lateststart || activity.data.earliestend) && activity.render.opacity === undefined)
                     activity.render.opacity = Math.max(0, Math.min(1, Number(band.uncertaintyOpacity)));
-                const row = packer.add(x, x + occupiedWidth);
+                let footprint=occupiedWidth;
+                if(perspective) {
+                    activity.focusLabel=activityLabelMetrics(activity,band,scene.width,timeline.getTextWidth.bind(timeline));
+                    band.trackIncrement=Math.max(band.trackIncrement,activity.focusLabel.height+8);
+                    footprint=width+activity.focusLabel.width+12;
+                }
+                const row = packer.add(x,x+footprint);
                 if (timeline.ob_measureLayout) continue;
                 Object.assign(activity, {
                     x, original_x: x, x_relative: x + width / 2, width, total_width: occupiedWidth,

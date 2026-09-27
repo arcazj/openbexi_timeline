@@ -14,6 +14,10 @@ connect to a Java server for progressive loading and managed datasets.
   links in a responsive panel. Drag its divider or use the keyboard to resize it.
 - **Keep navigating while data loads:** connected views prioritize visible
   records, buffer neighboring intervals, and show loading, retry and coverage states.
+- **Find activity quickly:** search centers a match, previous/next buttons navigate
+  through activity, and Auto scale adapts the time axis to data density.
+- **Explore in 3D:** compact bars share rows, full labels remain readable, and
+  the selected activity glows without changing size.
 
 ## Screenshots
 
@@ -47,17 +51,17 @@ locally and the supplied JSON datasets work without a Java data server.
 <!-- LIVE_DEMOS:START -->
 ## Live demos
 
-Start the local server with [Quick start](#quick-start), then choose a demo. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files.
+Open a demo directly on GitHub Pages; no installation or Java server is needed. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files. For local use, follow [Quick start](#quick-start).
 
 | Demo | What it shows | Resources |
 | --- | --- | --- |
-| [Operations sample](http://localhost:8780/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](json/test-data/default-dataset.json) · [Model](models/demos/default-dataset.json) · [Screenshot](docs/ui/overview/default-dataset-desktop.png) |
-| [Dinosaurs](http://localhost:8780/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](json/test-data/dinausaurs.json) · [Model](models/demos/dinausaurs.json) · [Screenshot](docs/ui/overview/dinausaurs-desktop.png) |
-| [Satellite ephemeris](http://localhost:8780/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](json/test-data/ephemeris.json) · [Model](models/demos/ephemeris.json) · [Screenshot](docs/ui/overview/ephemeris-desktop.png) |
-| [JFK chronology](http://localhost:8780/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](json/test-data/jfk.json) · [Model](models/demos/jfk.json) · [Screenshot](docs/ui/overview/jfk-desktop.png) |
-| [Claude Monet](http://localhost:8780/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](json/test-data/monet.json) · [Model](models/demos/monet.json) · [Screenshot](docs/ui/overview/monet-desktop.png) |
-| [Religious history](http://localhost:8780/demos.html?demo=religions) | BCE/CE dates, duration and event bands, and overview context. | [Data](json/test-data/religions.json) · [Model](models/demos/religions.json) · [Screenshot](docs/ui/overview/religions-desktop.png) |
-| [Space exploration](http://localhost:8780/demos.html?demo=space_exploration) | A month-scale view with a yearly overview of the supplied space-history events. | [Data](json/test-data/space_exploration.json) · [Model](models/demos/space_exploration.json) · [Screenshot](docs/ui/overview/space_exploration-desktop.png) |
+| [Operations sample](https://arcazj.github.io/openbexi_timeline/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](json/test-data/default-dataset.json) · [Model](models/demos/default-dataset.json) · [Screenshot](docs/ui/overview/default-dataset-desktop.png) |
+| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](json/test-data/dinausaurs.json) · [Model](models/demos/dinausaurs.json) · [Screenshot](docs/ui/overview/dinausaurs-desktop.png) |
+| [Satellite ephemeris](https://arcazj.github.io/openbexi_timeline/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](json/test-data/ephemeris.json) · [Model](models/demos/ephemeris.json) · [Screenshot](docs/ui/overview/ephemeris-desktop.png) |
+| [JFK chronology](https://arcazj.github.io/openbexi_timeline/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](json/test-data/jfk.json) · [Model](models/demos/jfk.json) · [Screenshot](docs/ui/overview/jfk-desktop.png) |
+| [Claude Monet](https://arcazj.github.io/openbexi_timeline/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](json/test-data/monet.json) · [Model](models/demos/monet.json) · [Screenshot](docs/ui/overview/monet-desktop.png) |
+| [Religious history](https://arcazj.github.io/openbexi_timeline/demos.html?demo=religions) | BCE/CE dates, duration and event bands, and overview context. | [Data](json/test-data/religions.json) · [Model](models/demos/religions.json) · [Screenshot](docs/ui/overview/religions-desktop.png) |
+| [Space exploration](https://arcazj.github.io/openbexi_timeline/demos.html?demo=space_exploration) | A month-scale view with a yearly overview of the supplied space-history events. | [Data](json/test-data/space_exploration.json) · [Model](models/demos/space_exploration.json) · [Screenshot](docs/ui/overview/space_exploration-desktop.png) |
 
 Append `&view=table` or `&view=split` to a demo URL to open that view directly. See the [demo guide](docs/demos.md) for data formats, model options and hosting.
 <!-- LIVE_DEMOS:END -->
@@ -115,8 +119,8 @@ records, logs and screenshots out of shared files; see [privacy guidance](docs/p
 
 ## Copyright and Licensing
 
-**Current version: [2.0.0](https://github.com/arcazj/openbexi_timeline/releases/tag/v2.0.0)**, OpenBEXI Timeline 2.0.
-The [release notes](docs/release-2.0.md) describe the included changes, verified
+**Current version: [2.1.0](https://github.com/arcazj/openbexi_timeline/releases/tag/v2.1.0)**, OpenBEXI Timeline 2.1.
+The [release notes](docs/release-2.1.md) describe the included changes, verified
 checks and remaining scope. Create the reviewed source archive and its
 SHA-256 manifest in `dist/` with:
 

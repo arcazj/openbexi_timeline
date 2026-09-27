@@ -11,6 +11,8 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /** Opt-in, resumable file scan. A page never requires materializing a source file or archive. */
 final class ProgressiveSourceScan implements AutoCloseable {
@@ -100,8 +102,17 @@ final class ProgressiveSourceScan implements AutoCloseable {
         this.from = from; this.to = to; this.filter = filter;
         List<Directory> archives = new ArrayList<>();
         Set<Directory> preferred = new LinkedHashSet<>();
-        for (Object value : (JSONArray) configuration.get("startup configuration")) {
-            JSONObject item = (JSONObject) value;
+        List<JSONObject> sources = new ArrayList<>();
+        for (Object value : (JSONArray) configuration.get("startup configuration")) sources.add((JSONObject)value);
+        // A large unrelated archive must not delay a source named by the search.
+        // Keep every source so highlighting and coverage retain their semantics.
+        if (!query.isEmpty() && !query.equals("*")) {
+            try {
+                Pattern pattern = Pattern.compile(query.replace(";", "|").replace(" ", "|"));
+                sources.sort(Comparator.comparing(item -> !pattern.matcher(Objects.toString(item.get("namespace"), "")).find()));
+            } catch (PatternSyntaxException ignored) { /* MatchResults reports invalid expressions. */ }
+        }
+        for (JSONObject item : sources) {
             if (!"json_file".equals(item.get("type")) || "false".equals(String.valueOf(item.get("enable")))) continue;
             String model = String.valueOf(item.get("data_model")).replace('\\', '/');
             String namespace = Objects.toString(item.get("namespace"), "");

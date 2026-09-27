@@ -5,6 +5,7 @@ import {recordKey} from './openbexi_timeline_paging.js';
 import {filterLocalData} from './openbexi_timeline_filters.js';
 import {projectOverviewSessions} from './openbexi_timeline_overview.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
+import {TimelineExplorer} from './openbexi_timeline_explorer.js';
 
 const overview = band => band.name.includes('overview_');
 const instant = value => typeof value === 'number' ? value : Date.parse(value);
@@ -30,6 +31,7 @@ export class TimelineResults {
         this.gesture = false;
         this.scaleEngaged = false;
         this.pending = false;
+        this.explorer = new TimelineExplorer(this);
         if (timeline.staticData) this.prepare(timeline.staticData);
     }
 
@@ -58,6 +60,7 @@ export class TimelineResults {
                 finiteRange((Number.isFinite(center) ? center : Date.now()) - 43200000, (Number.isFinite(center) ? center : Date.now()) + 43200000);
         }
         this.snapshot = snapshot;
+        if(this.pendingSelection)this.selectRecord(this.pendingSelection);
         this.projection = projection;
         this.domain = domain;
         this.complete = metadata ? metadata.complete === true && instant(metadata.domain.from) <= domain.from &&
@@ -74,6 +77,23 @@ export class TimelineResults {
         // unpaginated bands are authoritative; the previous fullBands may be stale.
         return sceneBands.some(band=>!overview(band) && band.pageFromRow!==undefined) ?
             this.timeline.ob_viewport?.fullBands || sceneBands : sceneBands;
+    }
+
+    selectActivity(key) {
+        this.pendingSelection=null;
+        this.selectedKey=key;
+        this.selectionVersion=(this.selectionVersion || 0)+1;
+        this.selectionStarted=window.performance.now();
+    }
+
+    selectRecord(record) {
+        const entry=this.snapshot?.entries.find(entry=>entry.key===record.matchKey ||
+            String(entry.record.id)===String(record.id) && Date.parse(entry.record.start)===Date.parse(record.start) &&
+            (entry.record.namespace || '')===(record.namespace || record.data?.namespace || '') &&
+            (!record.sourceRecordKey || entry.record.sourceRecordKey===record.sourceRecordKey));
+        if(!entry) {this.pendingSelection=record;return;}
+        this.selectActivity(entry.key);
+        if(this.timeline.ob_viewport)this.timeline.ob_viewport.anchor=entry.key;
     }
 
     pruneRanges() {
@@ -104,10 +124,13 @@ export class TimelineResults {
     }
 
     request(patch = {}, delay = 0) {
+        this.explorer.changed(patch);
         const keys = Object.keys(patch);
         this.presentationUpdate = keys.length === 0 && Boolean(this.snapshot) &&
             (Boolean(this.timeline.staticData) || this.remoteMetadata?.query === this.state.query);
         if (keys.length) {
+            this.centerBounds=null;
+            this.cancelled=false;
             if (this.gesture) { this.captureRanges(); this.preserveVisible = true; }
             this.timeline.ob_scene?.[0]?.cancelPan?.();
         }
@@ -137,17 +160,23 @@ export class TimelineResults {
         const previous = this.committed;
         try {
             this.prepare(this.remoteData || timeline.staticData, this.remoteMetadata);
+            // Apply the search target before drawing so the first result appears
+            // centered in the same frame as its matching records.
+            this.explorer.centerSearchMatch({render:false});
             scene.ob_search_value = this.state.query;
             scene.sessions = this.projection;
             timeline.update_all_timelines(0, timeline.header, timeline.params, scene.bands, scene.model,
                 this.projection, scene.ob_camera_type || 'Orthographic');
+            this.centerBounds=null;
             this.remember();
             this.regroupRange = null;
             this.preserveVisible = false;
             this.pending = false;
             this.loading = false;
             this.updateUI();
+            this.explorer.schedule();
         } catch (error) {
+            this.centerBounds=null;
             if (previous) {
                 Object.assign(this, previous);
                 this.state = {...previous.state};
@@ -200,13 +229,13 @@ export class TimelineResults {
         }
         if (metadata.progressive) {
             this.domain = finiteRange(instant(metadata.domain.from), instant(metadata.domain.to));
-            this.navigationMap = this.map;
+            this.navigationMap = this.state.auto && metadata.complete && !this.gesture && !this.explorer.locked && !this.explorer.reading() ? null : this.map;
         } else this.navigationMap = null;
         this.request();
         return true;
     }
 
-    beginGesture() { this.gesture = true; this.overviewDefaultsFrozen=true; }
+    beginGesture() { this.explorer.interrupt();this.gesture = true; this.overviewDefaultsFrozen=true; }
     endGesture() {
         this.gesture = false;
         this.captureRanges();
@@ -214,6 +243,7 @@ export class TimelineResults {
         if (this.queued) { this.queued = false; this.request(); }
         if (this.resizeQueued) { this.resizeQueued = false; window.dispatchEvent(new Event('resize')); }
         this.updateUI();
+        this.explorer.schedule();
     }
 
     computeMap() {
@@ -223,6 +253,7 @@ export class TimelineResults {
         if (!(width > 0)) return;
         if (this.lastWidth !== width) this.navigationMap = null;
         this.lastWidth = width;
+        if (this.map && this.state.auto && (this.explorer.locked || this.explorer.reading())) this.navigationMap=this.map;
         if (this.navigationMap) {
             // Keep the pinned slopes during navigation, but use the current
             // loaded domain for zoom bounds after a distant calendar jump.
@@ -232,9 +263,18 @@ export class TimelineResults {
         if (!this.state.auto || !this.complete) { this.map = densityMap([], this.domain); return; }
         const records = this.projection.densityRecords;
         const bands = (timeline.ob_scene?.[0]?.bands || timeline.bands).filter(band => !overview(band));
-        this.map = chooseDensityMap(records, this.domain, this.state.ratio, candidate =>
-            measureCandidateLayout(timeline, this.projection, bands, candidate,
-                new Map(bands.map(band => [band.name, this.mappedRange(band.name, candidate)])), width));
+        const candidate = chooseDensityMap(records, this.domain, this.state.ratio, candidate => {
+            const packing=measureCandidateLayout(timeline, this.projection, bands, candidate,
+                new Map(bands.map(band => [band.name, this.mappedRange(band.name, candidate)])), width);
+            const quiet=candidate.segments.filter(segment=>!segment.density)
+                .reduce((sum,segment)=>sum+candidate.map(segment.to)-candidate.map(segment.from),0);
+            return packing+quiet*12;
+        });
+        // Keep small density changes from moving labels after every refresh.
+        const old=this.map;
+        const movement=old && candidate.segments.reduce((sum,s)=>sum+Math.abs(candidate.map(s.from)-old.map(s.from)),0)/candidate.segments.length;
+        if(!old || old.domain.from!==this.domain.from || old.domain.to!==this.domain.to || old.ratio>this.state.ratio ||
+            old.ratio===1 && candidate.ratio>1 || movement>.015) this.map=candidate;
     }
 
     belongs(record, band) {
@@ -270,6 +310,12 @@ export class TimelineResults {
             // Preserve authored focus until the user explicitly enters data-driven
             // scaling/navigation. The UI labels that initial model focus honestly.
             if (!this.scaleEngaged && band.timeScale) return;
+            if(this.centerBounds) {
+                const {from,to}=this.centerBounds;
+                const center=(this.map.map(from)+this.map.map(to))/2;
+                const span=Math.max(this.map.map(range.to)-this.map.map(range.from),(this.map.map(to)-this.map.map(from))*1.2);
+                range=finiteRange(this.map.inverse(center-span/2),this.map.inverse(center+span/2));
+            }
             this.ranges.set(band.name, range);
             band.timeScale = projectMap(this.map, range, width);
             // A retained navigation map preserves horizontal spacing across
@@ -279,12 +325,15 @@ export class TimelineResults {
             band.timeScale.contextTo = this.domain.to;
         }
         band.timeScale.axis = this.timeline.staticTimeAxis;
+        band.autoTicks = this.state.auto;
         band.intervalPixels = band.gregorianUnitLengths * width / (band.timeScale.to - band.timeScale.from);
         band.minDate = new Date(this.domain.from); band.maxDate = new Date(this.domain.to);
     }
 
-    navigate(range, fitVisible = false, {immediate = false} = {}) {
+    navigate(range, fitVisible = false, {immediate = false, automatic = false, centerBounds = null, render = true} = {}) {
         if (!Number.isFinite(range?.from) || !Number.isFinite(range?.to) || range.to<=range.from) return;
+        if(!automatic)this.explorer.interrupt();
+        this.centerBounds=centerBounds;
         const scene=this.timeline.ob_scene[0];
         scene.cancelPan?.();
         delete scene.ob_pan_time;
@@ -304,10 +353,10 @@ export class TimelineResults {
             this.visibleRanges.set(band.name,{...visible,offset,fraction});
         }
         this.pending = true;
-        this.request();
+        if(render)this.request();
         if (!this.timeline.staticData && this.remoteMetadata) {
             clearTimeout(this.navigationTimer);
-            this.navigationTimer=setTimeout(()=>this.timeline.load_data(0),immediate ? 0 : 150);
+            this.navigationTimer=setTimeout(()=>{this.navigationTimer=null;this.timeline.load_data(0);},immediate ? 0 : 150);
         }
     }
 
@@ -372,7 +421,7 @@ export class TimelineResults {
             this.captureRanges();
             const range=this.overviewRange(band,scene.width), map=densityMap([],range);
             const anchor=(range.from+range.to)/2;
-            this.overviewRanges.set(band.name,{...zoomMappedRange(map,range,anchor,factor,.5),manual:true});
+            this.overviewRanges.set(band.name,{...zoomMappedRange(map,range,anchor,factor,.5,{constrainToDomain:false}),manual:true});
             this.refreshOverview(band.name);
             return;
         }
@@ -391,7 +440,10 @@ export class TimelineResults {
                 (scene.getObjectByName(band.name)?.position.x || 0)) :
                 map.inverse(map.map(range.from) + fraction * (map.map(range.to) - map.map(range.from)));
         this.navigationMap = map;
-        this.navigate(zoomMappedRange(map, range, anchor, factor, fraction));
+        // Connected coverage is a cache window, not the archive boundary.
+        // Zooming out must be able to request a wider interval immediately.
+        this.navigate(zoomMappedRange(map, range, anchor, factor, fraction,
+            {constrainToDomain:!this.remoteMetadata?.progressive}));
     }
 
     mount() {
@@ -438,7 +490,10 @@ export class TimelineResults {
             t.ob_search_input.value = ''; t.ob_search_input.focus(); this.request({query: ''});
         });
         this.search.append(searchButton, t.ob_search_input, autoLabel);
-        this.toolbar.append(highlightLabel, modeLabel, this.fitButton, this.clearButton);
+        this.viewControls = node('span', undefined, {class:'ob_view_controls'});
+        this.viewControls.append(this.clearButton);
+        this.matchControls = [highlightLabel, modeLabel, this.fitButton, this.clearButton];
+        this.toolbar.append(highlightLabel, modeLabel, this.fitButton, this.viewControls);
         const zoomIn = button('+', () => this.zoom(0.8)), zoomOut = button('−', () => this.zoom(1.25));
         for (const [control,label] of [[zoomIn,'Zoom in'],[zoomOut,'Zoom out']]) {
             control.setAttribute('aria-label',label); control.title = label;
@@ -465,6 +520,9 @@ export class TimelineResults {
         this.feedback.append(this.details, this.status);
         this.retryButton = button('Retry', () => { this.retrying=true;this.timeline.load_data(0); });
         this.feedback.append(this.retryButton);
+        this.narrowButton = button('Narrow time window', () => this.zoom(0.5));
+        this.narrowButton.title = 'Halve the visible time range and load that interval.';
+        this.feedback.append(this.narrowButton);
         this.availableButton=button('Go to available interval',()=>{
             const available=this.remoteMetadata?.availableRange;
             if (!available) return;
@@ -474,10 +532,8 @@ export class TimelineResults {
         });
         this.availableButton.title='Navigate to an interval observed in the source. Your filters still apply; coverage may be partial.';
         this.feedback.append(this.availableButton);
-        this.strip = node('div', undefined, {class: 'ob_scaling_strip', 'aria-label': 'Adaptive time spacing'});
-        this.strip.title = 'Unequal tick spacing is intentional: equal screen distances need not represent equal elapsed times.';
         const titleSlot=node('div',undefined,{class:'ob_results_title_slot'}); titleSlot.append(t.ob_time_marker);
-        header.replaceChildren(nav, this.search, titleSlot, utilities, this.toolbar, this.feedback, this.strip);
+        header.replaceChildren(nav, this.search, titleSlot, utilities, this.toolbar, this.feedback);
         if (t.ob_marker) {
             t.ob_marker.classList.add('ob_results_marker');
             t.ob_marker.style.top = '0px';
@@ -496,15 +552,17 @@ export class TimelineResults {
         t.ob_timeline_panel.addEventListener('wheel', wheel, {passive: false});
         t.ob_timeline_body_frame.title = 'Scroll up to zoom in; scroll down to zoom out.';
         this.empty = node('div', undefined, {class: 'ob_results_empty', role: 'status'});
+        this.empty.hidden = true;
         this.empty.append(node('p', 'No matching events or sessions'), button('Edit search', () => t.ob_search_input.focus()),
             button('Clear search', () => this.clearButton.click()));
         t.ob_timeline_body_frame.append(this.empty);
-        this.busy = node('div', undefined, {class:'ob_timeline_loading'});
-        const loadingStatus = node('span', 'Loading events and sessions…', {role:'status', 'aria-live':'polite'});
-        loadingStatus.prepend(node('span', undefined, {class:'ob_loading_spinner', 'aria-hidden':'true'}));
-        this.cancelButton = button('Cancel loading', () => this.cancelLoad());
-        this.busy.append(loadingStatus, this.cancelButton);
-        t.ob_timeline_panel.append(this.busy);
+        t.ob_stop.tabIndex = 0;
+        t.ob_stop.setAttribute('role', 'button');
+        t.ob_stop.addEventListener('keydown', event => {
+            if ((event.key === 'Enter' || event.key === ' ') && t.ob_stop.getAttribute('aria-disabled') !== 'true') {
+                event.preventDefault(); t.ob_stop.click();
+            }
+        });
         for (const type of ['pointerdown', 'pointermove']) t.ob_timeline_panel.addEventListener(type, event => {
             t.ob_scene[0].panPointerX = event.clientX;
             t.ob_scene[0].panPointerTime = event.timeStamp;
@@ -519,8 +577,10 @@ export class TimelineResults {
             }
         }, true);
         const guard = event => {
-            if (!this.loading || this.busy.contains(event.target) || event.target === t.ob_stop || event.target === t.ob_help) return;
-            if (event.type === 'keydown' && event.key === 'Escape') { this.cancelLoad(); return; }
+            if ((this.loading || this.fetching) && event.type === 'keydown' && event.key === 'Escape') {
+                event.preventDefault(); this.cancelLoad(); return;
+            }
+            if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help) return;
             if (event.type === 'keydown' && event.key === 'Tab') return;
             event.preventDefault(); event.stopImmediatePropagation();
         };
@@ -530,6 +590,7 @@ export class TimelineResults {
         this.selectionNotice = node('div', undefined, {class: 'ob_selection_notice'});
         this.selectionNotice.append(node('span', 'Selection hidden by results filter '), button('Show context', () => this.request({mode: 'highlight'})));
         header.append(this.selectionNotice);
+        this.explorer.mount(header);
         this.updateUI();
     }
 
@@ -540,6 +601,7 @@ export class TimelineResults {
     }
 
     cancelLoad() {
+        this.explorer.interrupt();
         const t = this.timeline;
         t.ob_loader?.cancel();
         t.localDataAbort?.abort(); this.fetching=false;
@@ -557,12 +619,19 @@ export class TimelineResults {
     }
 
     updateLoadingUI() {
-        if (!this.busy) return;
+        if (!this.toolbar) return;
         const t = this.timeline, busy = Boolean(this.loading);
-        this.busy.hidden = !busy && !this.fetching;
-        this.busy.classList.toggle('ob_background_loading', !busy && Boolean(this.fetching));
-        const loadingHost = !busy && this.fetching ? this.feedback : t.ob_timeline_panel;
-        if (this.busy.parentElement !== loadingHost) loadingHost.append(this.busy);
+        const working = busy || Boolean(this.fetching);
+        t.ob_timeline_header.classList.toggle('ob_results_loading', working);
+        if (working) {
+            t.ob_stop.setAttribute('aria-label', 'Stop loading');
+            t.ob_stop.title = 'Stop loading (Esc)';
+            t.ob_stop.removeAttribute('aria-disabled');
+        } else {
+            t.ob_stop.removeAttribute('aria-label');
+            t.ob_stop.title = t.staticData ? 'Local dataset — no server connection required' : t.ob_stop.alt;
+            if (t.staticData) t.ob_stop.setAttribute('aria-disabled', 'true');
+        }
         t.ob_timeline_body_frame.setAttribute('aria-busy', String(busy));
         for (const area of [t.ob_timeline_body_frame, t.ob_views?.tablePanel, t.ob_timeline_right_panel, t.ob_viewport?.pager]) if (area) area.inert = busy;
         this.disabledControls ??= new Map();
@@ -582,8 +651,8 @@ export class TimelineResults {
         if (busy && !this.wasLoading) {
             this.focusBeforeLoad = document.activeElement;
             if (t.ob_timeline_panel.contains(this.focusBeforeLoad) || t.ob_timeline_right_panel?.contains(this.focusBeforeLoad))
-                this.cancelButton.focus({preventScroll:true});
-        } else if (!busy && this.wasLoading && document.activeElement === this.cancelButton) {
+                t.ob_stop.focus({preventScroll:true});
+        } else if (!busy && this.wasLoading && document.activeElement === t.ob_stop) {
             (this.focusBeforeLoad?.isConnected ? this.focusBeforeLoad : t.ob_search_input).focus({preventScroll:true});
         }
         this.wasLoading = busy;
@@ -626,16 +695,19 @@ export class TimelineResults {
         this.auto.disabled = this.mode.disabled = this.highlight.disabled = !this.supported;
         const active = Boolean(this.state.query.trim() ||
             (this.snapshot?.hasCondition && this.snapshot.query === this.state.query));
-        this.toolbar.hidden = !active;
+        this.toolbar.hidden = !this.supported && !active && !this.state.auto;
+        for (const control of this.matchControls) control.hidden = !active;
         t.ob_search_input.setAttribute('aria-invalid', this.error ? 'true' : 'false');
         const status = this.error ? 'Update failed — open details' : this.cancelled ? 'Loading cancelled' : this.fetching ? 'Loading more records…' : this.pending && !this.presentationUpdate ? (this.snapshot ? 'Updating…' : 'Loading timeline…') :
-            !this.supported ? 'Match controls unavailable' : !this.complete ? 'Partial data' :
+            !this.supported ? 'Match controls unavailable' : this.remoteMetadata?.loadLimited ? 'Data limit reached' : !this.complete ? 'Partial data' :
                 this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No matches' : '';
         this.status.textContent = status;
         this.status.classList.toggle('ob_update_failed', Boolean(this.error));
         this.status.setAttribute('role', this.error ? 'button' : 'status');
         this.status.tabIndex = this.error ? 0 : -1;
         this.retryButton.hidden = !this.error && !this.cancelled;
+        this.narrowButton.hidden = !this.remoteMetadata?.loadLimited;
+        this.narrowButton.disabled = this.pending || this.fetching;
         this.status.title = this.error || (!this.complete ? 'Coverage and source warnings are available in details.' : '');
         this.feedback.hidden = !active && !status;
         if (!active && !status) this.details.open = false;
@@ -662,33 +734,13 @@ export class TimelineResults {
         const noRecords=this.supported && this.snapshot?.counts.eligible.events===0 && this.snapshot?.counts.eligible.sessions===0;
         if (!t.staticData && !this.remoteMetadata && !this.error) this.summary.textContent='Loading timeline data';
         this.availableButton.hidden=!(noRecords && this.remoteMetadata?.availableRange);
-        if (noRecords && this.remoteMetadata && !this.error) {
+        if (noRecords && this.remoteMetadata && !this.error && !this.remoteMetadata.loadLimited) {
             this.status.textContent=this.fetching?'Looking for records in this interval…':this.complete?'No records in this interval':'No records loaded; coverage is partial';
             this.feedback.hidden=false;
         }
-        this.strip.hidden = !this.state.auto;
-        this.strip.replaceChildren();
-        if (this.state.auto && this.map) {
-            this.strip.append(node('span', this.complete ? 'Adaptive spacing ' : 'Uniform spacing (partial data) '));
-            const groups = [];
-            const visible = this.ranges.values().next().value || this.domain;
-            for (const original of this.map.segments) {
-                const segment = {...original, from: Math.max(visible.from, original.from), to: Math.min(visible.to, original.to)};
-                if (segment.to <= segment.from) continue;
-                const factor = Math.round(segment.factor * 10) / 10;
-                if (groups.at(-1)?.factor === factor) groups.at(-1).to = segment.to;
-                else groups.push({...segment, factor});
-            }
-            for (const segment of groups) {
-                const item = node('span', segment.factor + '×', {class: 'ob_scale_segment'});
-                item.style.flexGrow = String((this.map.map(segment.to) - this.map.map(segment.from)) * 1000000);
-                item.style.backgroundColor = segment.factor > 1 ? '#9ad3ca' : '#dfebed';
-                item.title = `${new Date(segment.from).toISOString()} — ${new Date(segment.to).toISOString()}: ${segment.factor}× relative slope`;
-                this.strip.append(item);
-            }
-        }
-        this.empty.hidden = !(this.state.mode === 'only' && this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length);
+        this.empty.hidden = true;
         this.selectionNotice.hidden = !this.selectedKey || this.projection?.displayedKeys.includes(this.selectedKey);
+        this.explorer.update();
         this.updateLoadingUI();
         this.layout();
     }
@@ -696,7 +748,7 @@ export class TimelineResults {
     layout() {
         if (!this.toolbar) return;
         const t = this.timeline, header = t.ob_timeline_header;
-        const height = header.offsetHeight || (t.width < 700 ? 160 : 108) + (this.state.auto ? 28 : 0);
+        const height = header.offsetHeight || (t.width < 700 ? 160 : 108);
         header.style.height = height + 'px';
         t.ob_timeline_body_frame.style.top = height + 'px';
         if (t.ob_views?.tablePanel) t.ob_views.tablePanel.style.top = height + 'px';

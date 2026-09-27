@@ -3,6 +3,24 @@
 const lengths = {MILLISECOND: 1, SECOND: 1000, MINUTE: 60000, HOUR: 3600000, DAY: 86400000, WEEK: 604800000};
 const maxTicks = 400;
 
+// Select labels using the local time-to-pixel slope, including compressed gaps.
+export function adaptiveTickSettings(duration, pixels, axis) {
+    const desired = duration / Math.max(1, pixels / 100);
+    if (axis?.kind === 'numeric') {
+        const value=desired/axis.millisecondsPerUnit, power=10**Math.floor(Math.log10(Math.max(Number.MIN_VALUE,value)));
+        return {unit:'NUMERIC',step:[1,2,5,10].find(n=>n*power>=value)*power};
+    }
+    const choices=[['MILLISECOND',1,1,'HH:mm:ss.SSS'],['MILLISECOND',10,1,'HH:mm:ss.SSS'],['MILLISECOND',100,1,'HH:mm:ss.SSS'],
+        ...[1,5,15,30].map(n=>['SECOND',n,1000,'HH:mm:ss']),
+        ...[1,5,15,30].map(n=>['MINUTE',n,60000,'MM/dd HH:mm']),
+        ...[1,3,6,12].map(n=>['HOUR',n,3600000,'MM/dd HH:mm']),
+        ['DAY',1,86400000,'MMM dd'],['DAY',2,86400000,'MMM dd'],['WEEK',1,604800000,'MMM dd'],
+        ...[1,3,6].map(n=>['MONTH',n,2629800000,'MMM yyyy']),
+        ...[1,2,5,10,25,50,100,500,1000,10000].map(n=>['YEAR',n,31557600000,'yyyy'])];
+    const [unit,step,,format]=choices.find(([,n,length])=>n*length>=desired) || choices.at(-1);
+    return {unit,step,format:format.replaceAll('MMM','mmm')};
+}
+
 export function secondaryTicks(scale, from, to) {
     const origin = new Date(scale.origin);
     const step = Number(scale.step);
@@ -61,6 +79,22 @@ function intervalTicks(from, to, settings, offsetMinutes, axis) {
 
 export function bandTicks(band, from, to, offsetMinutes = 0) {
     if (![from, to].every(Number.isFinite) || to < from) return [];
+    if (band.autoTicks && band.timeScale) {
+        const scale=band.timeScale, boundaries=[from,...(scale.adaptiveMap?.segments || []).flatMap(s=>[s.from,s.to])
+            .filter(t=>t>from && t<to),to];
+        const edges=[...new Set(boundaries)].sort((a,b)=>a-b), ticks=new Map();
+        // Adjacent bins with equal slope share calendar alignment and formatting.
+        const intervals=[];
+        for(let i=1;i<edges.length;i++) {
+            const a=edges[i-1],b=edges[i],pixels=Math.abs(scale.toPixel(b)-scale.toPixel(a));
+            const settings=adaptiveTickSettings(b-a,pixels,scale.axis),key=JSON.stringify(settings);
+            if(intervals.at(-1)?.key===key) intervals.at(-1).to=b;
+            else intervals.push({from:a,to:b,settings,key});
+        }
+        for(const interval of intervals) for(const time of intervalTicks(interval.from,interval.to,interval.settings,offsetMinutes,scale.axis))
+            ticks.set(time,{time,format:interval.settings.format});
+        return [...ticks.values()].sort((a,b)=>a.time-b.time);
+    }
     const settings = band.ticks || (band.tickMinutes ? {unit: 'MINUTE', step: band.tickMinutes} :
         {unit: band.intervalUnit || 'HOUR', step: 1});
     const result = new Map();

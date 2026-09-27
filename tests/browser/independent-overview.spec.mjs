@@ -24,6 +24,13 @@ for (const auto of [false,true]) test(`Wheel targets only the hovered plot, Auto
     let before=await state(page);
     const footer=await page.locator('.ob_docked_overview').first().boundingBox();
     await page.mouse.move(footer.x+footer.width*.3,footer.y+footer.height*.55);
+    // Start with zoom-out: the existing Overview span must not be its own limit.
+    await page.mouse.wheel(0,160);await ready(page);
+    let expanded=await state(page);
+    expect(expanded.overview.to-expanded.overview.from).toBeGreaterThan(before.overview.to-before.overview.from);
+    expect(expanded.main).toEqual(before.main);
+    expect(Math.abs(expanded.overview.to+expanded.overview.from-before.overview.to-before.overview.from)).toBeLessThan(2);
+    before=expanded;
     await page.mouse.wheel(0,-160);await ready(page);
     let after=await state(page);
     expect(after.main).toEqual(before.main);expect(after.auto).toBe(auto);expect(after.page).toBe(before.page);
