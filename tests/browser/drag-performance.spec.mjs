@@ -8,6 +8,12 @@ async function twoFrames(page) {
 }
 
 async function beginProbe(page, kind) {
+    // A loaded dataset can still have a pending toolbar-height measurement.
+    // Attach to the final DragControls after that initial layout settles.
+    await page.waitForFunction(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
+    });
     return page.evaluate(async kind => {
         const timeline = await (await import('/src/openbexi_demo.js')).demoReady;
         const scene = timeline.ob_scene[0];
@@ -110,6 +116,37 @@ async function drag(page, direction, kind = 'band') {
     return {direction, kind, held, released};
 }
 
+test('A real flick coasts visibly and a click on the title stops it immediately',async({page},testInfo)=>{
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.goto('/demos.html?demo=default-dataset');
+    await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
+    const point=await beginProbe(page,'band');expect(point).not.toBeNull();
+    await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,s=t.ob_scene[0];
+        window.flickSamples=[];
+        for(const type of ['dragstart','drag','dragend']) s.dragControls.addEventListener(type,e=>{
+            window.flickSamples.push({type,x:e.object.position.x,pointer:s.panPointerX,time:s.panPointerTime,
+                release:s.panReleaseTime,now:performance.now(),moving:s.ob_pan_frame!==undefined,
+                reduced:matchMedia('(prefers-reduced-motion: reduce)').matches});
+            if(type==='dragend') window.releaseX=s.getObjectByName(s.bands[0].name).position.x;
+        });
+    });
+    await page.mouse.move(point.x,point.y);await page.mouse.down();
+    await page.mouse.move(point.x+180,point.y,{steps:5});await page.mouse.up();
+    await testInfo.attach('pointer-timing',{body:JSON.stringify(await page.evaluate(()=>window.flickSamples),null,2),contentType:'application/json'});
+    await expect.poll(()=>page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,s=t.ob_scene[0];
+        return s.getObjectByName(s.bands[0].name).position.x-window.releaseX;
+    })).toBeGreaterThan(80);
+    await page.locator('.ob_results_title_slot').click();
+    const stopped=await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        return {time:t.ob_markerDate.getTime(),moving:t.ob_scene[0].ob_pan_frame!==undefined};
+    });
+    expect(stopped.moving).toBe(false);await page.waitForTimeout(250);
+    expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_markerDate.getTime())).toBe(stopped.time);
+});
+
 for (const demo of catalog.demos) test(`${demo.id}: horizontal drag reuses rendered content in both directions`, async ({page}, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'Drag work is measured once at the desktop viewport; resize has separate coverage.');
     const errors = [];
@@ -123,9 +160,11 @@ for (const demo of catalog.demos) test(`${demo.id}: horizontal drag reuses rende
     // Resizing reconstructs the scene; the time selected by a completed pan must
     // survive that later reconstruction instead of jumping to the old reference.
     const marker = reports.at(-1).released.marker;
+    const detailsOpen=await page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        return t.ob_timeline_right_panel.childElementCount>0 && t.ob_timeline_right_panel.style.visibility!=='hidden';});
     await page.setViewportSize({width: 1280, height: 800});
     await expect.poll(() => page.evaluate(async () =>
-        (await (await import('/src/openbexi_demo.js')).demoReady).width)).toBe(960);
+        (await (await import('/src/openbexi_demo.js')).demoReady).width)).toBe(detailsOpen?960:1280);
     await twoFrames(page);
     const resizedMarker = await page.evaluate(async () =>
         (await (await import('/src/openbexi_demo.js')).demoReady).ob_markerDate.getTime());

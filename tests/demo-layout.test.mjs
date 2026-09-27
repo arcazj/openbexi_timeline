@@ -17,7 +17,7 @@ async function createDemo(demo) {
     window.innerHeight = 900;
     // jsdom has no layout engine. Supply measured viewport/toolbar sizes; the
     // real scene, event handlers, view controller, and panel DOM remain in use.
-    const toolbarHeight = () => 40;
+    const toolbarHeight = () => window.innerWidth < 700 ? 260 : 112;
     const document = window.document;
     const workspace = document.getElementById('demo-workspace');
     Object.defineProperties(workspace, {
@@ -29,113 +29,78 @@ async function createDemo(demo) {
     document.head.appendChild(style);
     const module = await harness.importModule('src/openbexi_demo.js');
     const timeline = await module.demoReady;
-    Object.defineProperty(timeline.ob_timeline_header, 'offsetHeight', {get: () => 40});
+    Object.defineProperty(timeline.ob_timeline_header, 'offsetHeight', {get: toolbarHeight});
     async function resize(width, height) {
         window.innerWidth = width;
         window.innerHeight = height;
         window.dispatchEvent(new window.Event('resize'));
-        await new Promise(resolve => setTimeout(resolve, 140));
+        // Resize and descriptor observers share a debounce. Wait for the
+        // resulting layout instead of assuming a timer has already fired.
+        const deadline=Date.now()+5000;
+        do { await new Promise(resolve=>setTimeout(resolve,25)); }
+        while ((timeline.height!==height || timeline.ob_viewport.headerHeight!==toolbarHeight() ||
+            timeline.ob_results.pending || timeline.ob_results.resizeQueued) && Date.now()<deadline);
     }
     await resize(1600, 900);
     return {...harness, timeline, resize, workspace, toolbarHeight};
 }
 
-for (const demo of catalog.demos) test(demo.id + ': demo resize retains 75/25 slots, views, and event selection', async () => {
+for (const demo of catalog.demos) test(demo.id + ': bounded responsive views retain selection and data', async () => {
     const harness = await createDemo(demo);
     try {
-        const {window, timeline, workspace, resize, toolbarHeight} = harness;
-        const document = window.document;
-        const timelineSlot = document.getElementById('demo-timeline-slot');
-        const sideSlot = document.getElementById('demo-side-slot');
-        assert.equal(timeline.ob_timeline_panel.parentElement, timelineSlot);
-        assert.equal(timeline.ob_timeline_right_panel.parentElement, sideSlot);
-        assert.equal(window.getComputedStyle(workspace).gridTemplateColumns, 'minmax(0, 3fr) minmax(0, 1fr)');
-        assert.equal(window.getComputedStyle(document.body).overflow, 'hidden');
-        assert.equal(window.getComputedStyle(document.body).gridTemplateRows, 'minmax(0, 1fr)', 'Workspace fills the viewport without a page header');
-        assert.equal(document.querySelector('body > header'), null);
-        assert.equal(document.body.firstElementChild, workspace, 'Timeline toolbar starts at the top of the page');
-        const status = document.getElementById('demo-status');
-        assert.equal(status.dataset.state, 'ready');
-        assert.equal(window.getComputedStyle(status).clipPath, 'inset(50%)', 'Loaded record count is screen-reader only');
-        assert.equal(window.getComputedStyle(sideSlot).overflow, 'hidden');
-        assert.equal(timeline.ob_timeline_panel_resizer.hidden, true);
-        assert.equal(timeline.ob_timeline_header.onmousedown, null);
-        assert.equal(timeline.ob_timeline_right_panel.childElementCount, 0, 'Empty side slot stays reserved');
-        const toolbarViewport = timeline.ob_timeline_header.parentElement;
-        assert.equal(timeline.ob_timeline_header.style.height, '40px', 'Original toolbar height is retained');
-        assert.equal(window.getComputedStyle(timeline.ob_timeline_header).display, 'block', 'Toolbar does not wrap or reorder controls');
-        assert.equal(window.getComputedStyle(timeline.ob_calendar).position, 'absolute');
-        assert.equal(timeline.ob_calendar.style.left, '47px', 'Original control position is retained');
-        assert.equal(timeline.ob_search_input.style.left, '214px');
-        assert.equal(window.getComputedStyle(timeline.ob_views.controls).position, 'absolute');
-        assert.equal(window.getComputedStyle(timeline.ob_time_marker).position, 'absolute');
-        assert.equal(window.getComputedStyle(timeline.ob_time_marker).textAlign, 'center');
-        assert.notEqual(window.getComputedStyle(timeline.ob_marker).display, 'none', 'Original date marker is visible');
-        assert.equal(toolbarViewport.dataset.overflow, 'false');
-        for (const region of [timeline.ob_timeline_body_frame, timeline.ob_views.tablePanel,
-            timeline.ob_timeline_right_panel]) {
-            assert.equal(region.tabIndex, 0, 'Scroll regions remain reachable with the keyboard');
-            assert.equal(region.getAttribute('role'), 'region');
-            assert.ok(region.getAttribute('aria-label'));
+        const {window,timeline:t,workspace,resize,toolbarHeight}=harness;
+        const v=t.ob_viewport,document=window.document;
+        assert.equal(t.width,1600,'Closed panels leave the full browser width available');
+        assert.equal(t.height,900);
+        assert.equal(v.preference.fullWindow,true);
+        assert.equal(t.ob_timeline_panel.parentElement,document.getElementById('demo-timeline-slot'));
+        assert.equal(t.ob_timeline_right_panel.parentElement,document.getElementById('demo-side-slot'));
+        assert.equal(window.getComputedStyle(document.body).overflow,'hidden');
+        assert.equal(document.body.firstElementChild,workspace);
+        assert.equal(document.getElementById('demo-status').dataset.state,'ready');
+        assert.equal(t.ob_timeline_panel_resizer.hidden,true);
+        assert.equal(t.ob_timeline_header.onmousedown,null);
+        const search=[...t.ob_results.search.children];
+        const input=search.indexOf(t.ob_search_input);
+        assert.equal(search[input+1].getAttribute('aria-label'),'Zoom in');
+        assert.equal(search[input+2].getAttribute('aria-label'),'Zoom out');
+        for (const icon of [t.ob_filter,t.ob_view]) {
+            assert.ok(icon.previousElementSibling.classList.contains('ob_toolbar_separator'));
+            assert.equal(icon.previousElementSibling.getAttribute('aria-hidden'),'true');
         }
-
-        const first = timeline.staticData.events.find(event => !event.zone);
-        timeline.ob_open_descriptor(0, first);
-        const descriptor = timeline.ob_timeline_right_panel.firstElementChild;
-        const sessions = timeline.ob_scene[0].sessions;
-        const referenceTime = timeline.ob_scene.sync_time;
-        timeline.ob_timeline_body_frame.scrollTop = 36;
-        timeline.ob_views.tablePanel.scrollTop = 24;
-        timeline.ob_timeline_right_panel.scrollTop = 12;
-
-        for (const [width, height, mode] of [[1280, 800, 'timeline'], [801, 700, 'table'], [390, 844, 'split'], [320, 568, 'timeline']]) {
-            timeline.ob_views.setMode(mode);
-            await resize(width, height);
-            assert.equal(timeline.width, Math.floor(width * 0.75), 'Renderer fits the 75% timeline slot');
-            assert.equal(timeline.height, height - toolbarHeight(), 'Scene fills all viewport space below the original toolbar');
-            assert.equal(timeline.params[0].height, timeline.height);
-            assert.equal(timeline.ob_views.mode, mode);
-            assert.equal(timeline.ob_scene[0].sessions, sessions, 'Resize reuses current data');
-            assert.equal(timeline.ob_scene.sync_time, referenceTime, 'Resize keeps the selected time reference');
-            assert.equal(timeline.ob_timeline_right_panel.firstElementChild, descriptor, 'Selected descriptor survives resize');
-            assert.equal(timeline.ob_timeline_right_panel.style.visibility, 'visible');
-            assert.equal(timeline.ob_timeline_body_frame.scrollTop, 36);
-            assert.equal(timeline.ob_views.tablePanel.scrollTop, 24);
-            assert.equal(timeline.ob_timeline_right_panel.scrollTop, 12);
-            assert.equal(workspace.style.getPropertyValue('--demo-toolbar-height'), toolbarHeight() + 'px');
-            assert.equal(timeline.ob_timeline_header.style.height, '40px');
-            const narrowToolbar = timeline.width < 700;
-            assert.equal(toolbarViewport.dataset.overflow, String(narrowToolbar));
-            assert.equal(toolbarViewport.tabIndex, narrowToolbar ? 0 : -1, 'Narrow toolbar can be scrolled with the keyboard');
-            if (narrowToolbar) assert.equal(window.getComputedStyle(toolbarViewport).overflowX, 'auto');
-            assert.equal(window.getComputedStyle(timeline.ob_timeline_body_frame).overflow, 'auto', 'Dense timeline scrolls inside its slot');
-            assert.equal(window.getComputedStyle(timeline.ob_views.tablePanel).overflow, 'auto');
-            for (const region of [timeline.ob_timeline_body_frame, timeline.ob_views.tablePanel,
-                timeline.ob_timeline_right_panel, toolbarViewport]) {
-                assert.equal(window.getComputedStyle(region).getPropertyValue('scrollbar-width'), 'none',
-                    'Scrolling remains available without consuming space for scrollbar tracks');
+        const first=t.staticData.events.find(e=>!e.zone);
+        t.ob_open_descriptor(0,first);
+        const descriptor=t.ob_timeline_right_panel.firstElementChild;
+        const ids=t.ob_results.snapshot.entries.map(e=>e.key).join(',');
+        const time=t.ob_scene.sync_time;
+        for (const [width,height,mode] of [[1280,800,'timeline'],[801,700,'table'],[390,844,'split'],[320,568,'timeline']]) {
+            t.ob_views.setMode(mode); await resize(width,height);
+            const side=width>=900?Math.min(480,Math.max(320,Math.round(width*0.22))):0;
+            assert.equal(t.width,width-side);
+            assert.equal(t.height,height);
+            assert.equal(t.ob_scene[0].width,mode==='split'?Math.floor(t.width/2):t.width);
+            assert.equal(t.ob_scene.sync_time,time,'Selected time survives resize');
+            assert.equal(t.ob_results.snapshot.entries.map(e=>e.key).join(','),ids);
+            assert.equal(t.ob_timeline_right_panel.firstElementChild,descriptor);
+            assert.equal(t.ob_timeline_body_frame.scrollTop,0);
+            assert.equal(t.ob_timeline_body_frame.scrollLeft,0);
+            for (const region of [t.ob_timeline_body_frame,t.ob_views.tablePanel]) {
+                assert.equal(window.getComputedStyle(region).overflow,'hidden');
+                assert.equal(region.getAttribute('role'),'region');
             }
-            assert.equal(timeline.ob_views.tablePanel.hidden, mode === 'timeline');
-            assert.equal(timeline.ob_timeline_body_frame.hidden, mode === 'table');
-            if (mode === 'split') {
-                assert.equal(parseInt(timeline.ob_timeline_body_frame.style.width), Math.floor(timeline.width / 2));
-                assert.equal(parseInt(timeline.ob_views.tablePanel.style.width), timeline.width - Math.floor(timeline.width / 2));
-            }
+            assert.equal(v.headerHeight,toolbarHeight());
+            assert.ok(v.detailHeight+v.headerHeight+v.overviewHeight+v.pagerHeight<=height);
+            assert.equal(t.ob_views.tablePanel.hidden,mode==='timeline');
+            assert.equal(t.ob_timeline_body_frame.hidden,mode==='table');
+            assert.ok(v.pageIndex>=0 && v.pageIndex<v.pages.length);
         }
-        timeline.ob_remove_descriptor();
-        await resize(1440, 900);
-        assert.equal(timeline.ob_timeline_right_panel.childElementCount, 0);
-        assert.equal(timeline.ob_timeline_right_panel.style.visibility, 'hidden');
-        assert.equal(timeline.width, 1080, 'Closing a panel does not expand the timeline');
-
-        if (timeline.staticTimeAxis?.kind !== 'numeric') {
-            timeline.ob_calendar.click();
-            assert.ok(timeline.ob_timeline_right_panel.querySelector('.jsCalendar'));
-            await resize(390, 844);
-            assert.equal(timeline.ob_timeline_right_panel.parentElement, sideSlot);
-            assert.equal(timeline.ob_timeline_right_panel.style.visibility, 'visible');
-            assert.equal(window.getComputedStyle(timeline.ob_timeline_right_panel).overflow, 'auto');
-            assert.ok(timeline.ob_timeline_right_panel.querySelector('.jsCalendar'), 'Calendar remains in the reserved slot');
+        t.ob_remove_descriptor(); await resize(1440,900);
+        assert.equal(t.width,1440,'Closing a panel restores available width');
+        if (t.staticTimeAxis?.kind!=='numeric') {
+            t.ob_calendar.click(); await resize(390,844);
+            assert.ok(t.ob_timeline_right_panel.querySelector('.jsCalendar'));
+            assert.equal(v.overlay,true);
+            assert.equal(t.width,390);
         }
     } finally { harness.close(); }
 });

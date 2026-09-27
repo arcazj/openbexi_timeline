@@ -1,0 +1,52 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+    {
+      "id": "shared-id", "namespace": "earthquake", "start": "2026-09-12T10:00:00Z",
+      "data": {"title": "M 4.8 earthquake", "namespace": "earthquake"},
+      "render": {"image": "icon/ob_yellow_flag.png", "backgroundColor": "#F8DF09"}
+    },
+    {
+      "id": "shared-id", "namespace": "volcano", "start": "2026-09-12T10:00:00Z",
+      "data": {"title": "ORANGE - Kilauea", "namespace": "volcano"},
+      "render": {"color": "#ff8800"}
+    },
+    {
+      "id": "sitkin", "namespace": "volcano", "start": "2026-09-12T11:00:00Z", "end": "2026-09-12T11:30:00Z",
+      "data": {"title": "ORANGE - Great Sitkin", "namespace": "volcano"},
+      "render": {"color": "#ff8800"}
+    },
+    {
+      "id": "context-session", "namespace": "monitoring", "start": "2026-09-12T00:00:00Z", "end": "2026-09-13T00:00:00Z",
+      "data": {"title": "Observation window", "namespace": "monitoring", "kind": "session"},
+      "activities": [
+        {
+          "id": "shared-child", "namespace": "monitoring", "start": "2026-09-12T12:00:00Z", "end": "2026-09-12T12:05:00Z",
+          "data": {"title": "Ash observation", "namespace": "monitoring", "tags": ["volcano"]}, "render": {}
+        },
+        {
+          "id": "unmatched-child", "namespace": "monitoring", "start": "2026-09-12T12:10:00Z",
+          "data": {"title": "Equipment check", "namespace": "monitoring"}, "render": {}
+        }
+      ], "render": {}
+    },
+    {
+      "id": "direct-session", "namespace": "monitoring", "start": "2026-09-12T15:00:00Z", "end": "2026-09-12T16:00:00Z",
+      "data": {"title": "Volcano watch", "namespace": "monitoring", "kind": "session"},
+      "activities": [
+        {
+          "id": "shared-child", "namespace": "monitoring", "start": "2026-09-12T15:10:00Z",
+          "data": {"title": "Equipment check", "namespace": "monitoring"}, "render": {}
+        }
+      ], "render": {}
+    },
+    {
+      "id": "late", "namespace": "volcano", "start": "2026-09-12T23:00:00Z",
+      "data": {"title": "Late bulletin", "namespace": "volcano"}, "render": {}
+    },
+    {
+      "id": "zone", "zone": true, "start": "2026-09-11T00:00:00Z", "end": "2026-09-14T00:00:00Z",
+      "data": {"title": "Volcano monitoring period", "namespace": "volcano"}, "render": {"color": "yellow"}
+    }
+  ]
+}

@@ -32,28 +32,40 @@ function createPanel(timeline) {
     Object.assign(svg.style, {display: 'block', position: 'relative', touchAction: 'none', cursor: 'grab'});
     panel.appendChild(svg);
     timeline.ob_timeline_panel.appendChild(panel);
-    const background = svgElement('rect', {height: 20});
-    const mainAxis = {group: svgElement('g', {'data-overview-axis': 'main'}), ticks: new Map()};
     const heading = svgElement('g');
     const content = svgElement('g', {'data-overview-content': ''});
     const windows = svgElement('g');
     const overviewAxis = {group: svgElement('g', {'data-overview-axis': 'overview'}), ticks: new Map()};
-    svg.append(background, mainAxis.group, heading, content, windows, overviewAxis.group);
-    const state = {panel, svg, background, mainAxis, heading, content, windows, overviewAxis};
-    states.set(timeline, state);
+    // Match cues are appended above viewport shading in their own retained group.
+    const matches = svgElement('g', {'data-overview-matches': ''});
+    svg.append(heading, content, windows, matches, overviewAxis.group);
+    const state = {panel, svg, heading, content, windows, matches, overviewAxis};
+    const controls=document.createElement('div'); controls.className='ob_overview_controls';
+    for (const [label,title,action] of [
+        ['\u2190','Navigate earlier',()=>timeline.ob_results.panOverview(state.band.name,-.5)],
+        ['Fit context','Fit loaded context in Overview',()=>timeline.ob_results.fitOverview(state.band.name)],
+        ['\u2192','Navigate later',()=>timeline.ob_results.panOverview(state.band.name,.5)]]) {
+        const button=document.createElement('button');button.type='button';button.textContent=label;
+        button.title=title;button.setAttribute('aria-label',title);button.onclick=action;controls.append(button);
+    }
+    panel.append(controls);
+    panel.title='Scroll up to zoom in here; scroll down to zoom out here. Click or drag the plot to navigate the main view.';
     const move = x => {
         const mesh = timeline.ob_scene[state.index].getObjectByName(state.band.name);
         if (!mesh) return;
         timeline.move_band(state.index, state.band.name, x, mesh.position.y, mesh.position.z, true);
+        timeline.ob_loader?.navigationChanged();
         timeline.ob_render(state.index);
     };
     const commit = () => {
+        if (timeline.ob_results?.supported) timeline.ob_results.endGesture();
         timeline.reset_synced_time('new_view', state.index);
         timeline.load_data(state.index);
     };
     svg.addEventListener('pointerdown', event => {
         if (event.button !== 0) return;
         timeline.ob_scene[state.index].cancelPan?.();
+        timeline.ob_results?.beginGesture();
         const mesh = timeline.ob_scene[state.index].getObjectByName(state.band.name);
         if (!mesh) return;
         const rect = svg.getBoundingClientRect();
@@ -91,6 +103,7 @@ function createPanel(timeline) {
         state.drag = undefined;
         svg.style.cursor = 'grab';
         if (drag?.moved) move(drag.oldX);
+        timeline.ob_results?.endGesture();
     });
     svg.addEventListener('keydown', event => {
         if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
@@ -121,18 +134,22 @@ function syncAxis(axis, timeline, index, band, mesh, width, baseline) {
             axis.group.appendChild(tick.line);
         }
         attributes(tick.line, {x1: x, x2: x, y1: baseline - 12, y2: baseline - 9, stroke: band.dateColor || '#7c8991'});
-        const showLabel = x - lastLabel >= 48;
+        const label = formatTimelineValue(time, timeline.staticTimeAxis, format || 'HH:mm',
+            timeline.params[0].displayOffsetMinutes || 0);
+        const labelWidth = timeline.getTextWidth(label, '600 10px Arial', 0);
+        const labelX = Math.max(labelWidth / 2 + 1, Math.min(width - labelWidth / 2 - 1, x));
+        const left = labelX - labelWidth / 2;
+        const right = labelX + labelWidth / 2;
+        const showLabel = right <= width && left >= lastLabel + 8;
         if (showLabel) {
             if (!tick.label) {
                 tick.label = svgElement('text', {'font-size': 10});
                 axis.group.appendChild(tick.label);
             }
-            const label = formatTimelineValue(time, timeline.staticTimeAxis, format || 'HH:mm',
-                timeline.params[0].displayOffsetMinutes || 0);
-            attributes(tick.label, {x, y: baseline, fill: band.dateColor || '#7c8991',
-                'text-anchor': x < 25 ? 'start' : x > width - 25 ? 'end' : 'middle', display: 'inline'});
+            attributes(tick.label, {x:labelX, y: baseline, fill: '#233449', 'font-weight': 600,
+                'text-anchor': 'middle', display: 'inline'});
             if (tick.label.textContent !== label) tick.label.textContent = label;
-            lastLabel = x;
+            lastLabel = right;
         } else if (tick.label) attributes(tick.label, {display: 'none'});
     }
     for (const [key, tick] of axis.ticks) if (!used.has(key)) {
@@ -192,42 +209,55 @@ function contentBottom(scene, bands, lastMain) {
 /** Optional fixed footer for static timelines. Geometry is projected by the
  * normal Overview pipeline; this view never packs rows or changes the toolbar. */
 export function syncOverviewPanel(timeline, index) {
+    const overviews=(timeline.ob_scene?.[index]?.bands || []).filter(isOverview);
+    let panels=states.get(timeline);
+    if (!panels) { panels=new Map(); states.set(timeline,panels); }
+    const visible=new Set(overviews.map(b=>b.name));
+    for (const [name,state] of panels) if (!visible.has(name)) { state.panel.remove();panels.delete(name); }
+    const selected=timeline.ob_viewport?overviews:overviews.slice(-1);
+    selected.forEach((band,position)=>syncPanel(timeline,index,band,panels,position,selected.length));
+}
+
+function syncPanel(timeline, index, band, panels, position, count) {
     const scene = timeline.ob_scene?.[index];
     const bands = scene?.bands || [];
-    const band = bands.at(-1);
-    const active = timeline.staticData && timeline.params?.[0]?.dockOverview && band && isOverview(band) &&
+    const active = (timeline.staticData || timeline.ob_results?.remoteData || timeline.ob_viewport && Array.isArray(scene.sessions?.events)) && (timeline.ob_viewport || timeline.params?.[0]?.dockOverview) && band && isOverview(band) &&
         timeline.ob_views?.mode !== 'table' && scene.getObjectByName(band.name);
-    let state = states.get(timeline);
+    let state = panels.get(band.name);
     if (!active) {
         if (state) {
             state.panel.hidden = true;
             timeline.ob_timeline_panel.style.setProperty('--ob-overview-height', '0px');
-            timeline.ob_timeline_body.style.height = '';
-            timeline.ob_timeline_body.style.width = '';
-            timeline.ob_timeline_body.style.overflow = '';
+            if (!timeline.ob_viewport) {
+                timeline.ob_timeline_body.style.height = '';
+                timeline.ob_timeline_body.style.width = '';
+                timeline.ob_timeline_body.style.overflow = '';
+            }
         }
         return;
     }
-    if (!state) state = createPanel(timeline);
-    const main = bands.find(item => !isOverview(item));
+    if (!state) { state = createPanel(timeline); panels.set(band.name,state); }
+    const sourceName=band.overviewRegions?.[0]?.sourceBand || band.sourceBands?.[0];
+    const main = bands.find(item => item.name===sourceName) || bands.find(item => !isOverview(item));
     if (!main) return;
     const frame = timeline.ob_timeline_body_frame;
     const width = scene.width;
-    const viewportWidth = frame.clientWidth || (timeline.ob_views?.mode === 'split' ? Math.floor(width / 2) : width);
+    const viewportWidth = timeline.ob_viewport ? width : frame.clientWidth || (timeline.ob_views?.mode === 'split' ? Math.floor(width / 2) : width);
     const ratio = Number(timeline.params[0].overviewHeightRatio);
-    const height = 20 + (ratio > 0 && ratio < 0.5 ? Math.max(80, timeline.height * ratio) :
-        Math.max(80, Math.min(120, band.height)));
+    const height = timeline.ob_viewport ? timeline.ob_viewport.overviewHeight/count : (20 + (ratio > 0 && ratio < 0.5 ? Math.max(80, timeline.height * ratio) :
+        Math.max(80, Math.min(120, band.height))));
     const mesh = scene.getObjectByName(band.name);
     Object.assign(state, {index, band, width});
     state.panel.hidden = false;
-    styles(state.panel, {width: viewportWidth + 'px', height: height + 'px'});
+    styles(state.panel, {width: viewportWidth + 'px', height: height + 'px', bottom:(count-position-1)*height+'px'});
+    state.panel.dataset.overviewBand=band.name;
     const background = band.color || '#dfe7e9';
     if (state.backgroundColor !== background) {
         state.panel.style.background = background;
         state.backgroundColor = background;
     }
-    if (timeline.ob_timeline_panel.style.getPropertyValue('--ob-overview-height') !== height + 'px')
-        timeline.ob_timeline_panel.style.setProperty('--ob-overview-height', height + 'px');
+    if (timeline.ob_timeline_panel.style.getPropertyValue('--ob-overview-height') !== height*count + 'px')
+        timeline.ob_timeline_panel.style.setProperty('--ob-overview-height', height*count + 'px');
     const trailingHeight = [...bands].reverse().findIndex(item => !isOverview(item));
     const tail = bands.slice(bands.length - Math.max(1, trailingHeight)).reduce((sum, item) => sum + item.height, 0);
     const lastMain = [...bands].reverse().find(item => !isOverview(item));
@@ -237,8 +267,8 @@ export function syncOverviewPanel(timeline, index) {
     const contentBands = bands.slice(0, bands.indexOf(lastMain) + 1);
     // A footer can be a few pixels taller than the canvas tail it replaces.
     // Trim that unused space only when every row, label, and session box fits.
-    const cropHeight = contentBottom(scene, contentBands, lastMain) <= viewportHeight ?
-        Math.min(naturalHeight, viewportHeight) : naturalHeight;
+    const cropHeight = timeline.ob_viewport?.detailHeight ?? (contentBottom(scene, contentBands, lastMain) <= viewportHeight ?
+        Math.min(naturalHeight, viewportHeight) : naturalHeight);
     styles(timeline.ob_timeline_body, {height: cropHeight + 'px'});
     // Preserve the full canvas width so Split can scroll horizontally while the
     // wrapper clips only the old Overview at the bottom of the canvas.
@@ -246,20 +276,27 @@ export function syncOverviewPanel(timeline, index) {
     const svg = state.svg;
     attributes(svg, {viewBox: `0 0 ${width} ${height}`, width, height});
     styles(svg, {left: -(frame.scrollLeft || 0) + 'px'});
-    attributes(state.background, {width, fill: lastMain.color || '#eef1f2'});
-    const axisMesh = scene.getObjectByName(lastMain.name);
-    syncAxis(state.mainAxis, timeline, index, lastMain, axisMesh, width, 14);
     const visibleLeft = frame.scrollLeft || 0;
+    // Translate the retained projection, including its date axis, around the
+    // actual main interval. No records are repacked on pointer movement.
+    const mainMesh=scene.getObjectByName(main.name);
+    if (mainMesh) {
+        const left=visibleLeft-width/2-mainMesh.position.x;
+        const start=timeline.dateToBandPixelOffSet(index,band,timeline.pixelOffSetToBandDate(index,main,left));
+        const end=timeline.dateToBandPixelOffSet(index,band,timeline.pixelOffSetToBandDate(index,main,left+viewportWidth));
+        mesh.position.x=visibleLeft+viewportWidth/2-width/2-(start+end)/2;
+    }
     const regions = band.overviewRegions || [];
     const top = Math.max(...regions.map(region => region.y + region.height / 2), 0);
     const bottom = Math.min(...regions.map(region => region.y - region.height / 2), 0);
-    const contentTop = band.overviewLabel || band.showContextLabel === false ? 24 : 42;
+    const contentTop = 30;
     const scaleY = (height - contentTop - 20) / Math.max(1, top - bottom);
     const y = value => contentTop + (top - value) * scaleY;
     const key = projectionKey(band, width, height);
     if (!equalKey(state.projectionKey, key)) {
         state.projectionKey = key;
         state.content.replaceChildren();
+        state.matches.replaceChildren();
         state.heading.replaceChildren();
         state.windows.replaceChildren();
         state.windowNodes = new Map();
@@ -267,15 +304,16 @@ export function syncOverviewPanel(timeline, index) {
         const contentX = value => width / 2 + value;
         if (band.overviewLabel) {
             const labelWidth = band.overviewLabel.length * 5.5 + 8;
-            state.headingNodes.background = svgElement('rect', {y: 24, width: labelWidth, height: 16, fill: '#ffffff', 'fill-opacity': 0.8});
-            state.headingNodes.title = svgElement('text', {y: 35, fill: '#566871', 'font-size': 10,
+            state.headingNodes.background = svgElement('rect', {y: 4, width: labelWidth, height: 16, fill: '#ffffff', 'fill-opacity': 0.8});
+            state.headingNodes.title = svgElement('text', {y: 15, fill: '#566871', 'font-size': 10,
                 'text-anchor': 'end', 'data-overview-heading': 'title'}, band.overviewLabel);
             state.heading.append(state.headingNodes.background, state.headingNodes.title);
         } else if (band.showContextLabel !== false) {
-            state.headingNodes.title = svgElement('text', {y: 34, fill: '#566871', 'font-size': 11,
+            state.headingNodes.title = svgElement('text', {y: 16, fill: '#566871', 'font-size': 11,
                 'data-overview-heading': 'title'}, 'Overview');
-            const count = new Set((band.sessions || []).map(session => session.id)).size;
-            state.headingNodes.count = svgElement('text', {y: 34, fill: '#566871', 'font-size': 10,
+            const count = new Set((band.sessions || []).map(session => session.matchKey || session.id)).size;
+            state.headingRecordCount = count;
+            state.headingNodes.count = svgElement('text', {y: 16, fill: '#566871', 'font-size': 10,
                 'text-anchor': 'end', 'data-overview-heading': 'count'}, count + ' records / full context');
             state.heading.append(state.headingNodes.title, state.headingNodes.count);
         }
@@ -286,15 +324,37 @@ export function syncOverviewPanel(timeline, index) {
                 width: Math.max(0, right - left), height: Math.max(0.5, zone.overviewHeight * scaleY),
                 fill: zone.render?.color || '#f5c994', 'fill-opacity': zone.render?.opacity ?? 0.25, 'data-zone-id': zone.id}));
         }
+        const bins=new Map();
         for (const session of band.sessions || []) for (const activity of session.activities) {
-            const size = Math.max(0.65, activity.height * scaleY);
+            const size = Math.max(Number(band.overviewMarkerSize)||3, activity.height * scaleY);
+            const left=contentX(activity.x), right=left+activity.width, cy=y(activity.y);
+            // Only visually indistinguishable marks of the same source/color
+            // aggregate. All loaded records remain in the analysis and Data view.
+            const binKey=[activity.overviewSourceBand,activity.render?.color,activity.searchMatch,
+                activity.overviewDuration,Math.floor(Math.max(0,left)/3),Math.floor(Math.min(width,right)/3),Math.floor(cy/5)].join('|');
+            const existing=right>=0 && left<=width ? bins.get(binKey) : null;
+            if (existing) {
+                existing.count++;existing.element.setAttribute('data-record-count',existing.count);
+                existing.title.textContent=existing.count+' records in this mark; '+existing.sample+' (inspect records in Data/Table)';
+                continue;
+            }
             const common = {fill: activity.render?.color || '#707070', 'fill-opacity': activity.render?.opacity ?? 1, 'data-event-id': activity.id,
-                'data-source-band': activity.overviewSourceBand};
+                'data-source-band': activity.overviewSourceBand,'data-record-count':1,stroke:'#253746','stroke-width':0.35};
             const element = activity.overviewDuration ? svgElement('rect', {...common, x: contentX(activity.x),
                 y: y(activity.y) - size / 2, width: Math.max(0.5, activity.width), height: size}) :
                 svgElement('circle', {...common, cx: contentX(activity.x_relative), cy: y(activity.y), r: size / 2});
-            element.appendChild(svgElement('title', {}, activity.data?.title || ''));
+            const title=svgElement('title', {}, activity.data?.title || '');element.appendChild(title);
+            if(right>=0 && left<=width) bins.set(binKey,{element,title,count:1,sample:activity.data?.title || 'Record'});
             state.content.appendChild(element);
+            if (activity.searchMatch && timeline.ob_results?.state.highlight !== false) {
+                const match = svgElement('rect', {x: contentX(activity.x) - 2, y: y(activity.y) - Math.max(3, size / 2),
+                    width: Math.max(5, activity.width + 4), height: Math.max(6, size), rx: 2,
+                    fill: '#ffe400', 'fill-opacity': 0.35, stroke: '#614b00', 'stroke-width': 1,
+                    tabindex: 0, role: 'img', 'aria-label': 'Search match: ' + activity.data.title,
+                    'data-match-key': activity.matchKey});
+                match.appendChild(svgElement('title', {}, 'Search match: ' + activity.data.title));
+                state.matches.appendChild(match);
+            }
         }
         for (const region of regions) {
             const window = svgElement('rect', {y: y(region.y + region.height / 2), height: Math.max(0.5, region.height * scaleY),
@@ -314,10 +374,16 @@ export function syncOverviewPanel(timeline, index) {
     }
     // A pan translates one retained group; events and zones keep their DOM nodes.
     attributes(state.content, {transform: `translate(${mesh.position.x} 0)`});
+    attributes(state.matches, {transform: `translate(${mesh.position.x} 0)`});
     const heading = state.headingNodes;
     if (heading.background) attributes(heading.background, {x: visibleLeft + viewportWidth - (band.overviewLabel.length * 5.5 + 8) - 4});
     if (heading.title) attributes(heading.title, {x: band.overviewLabel ? visibleLeft + viewportWidth - 8 : visibleLeft + 8});
-    if (heading.count) attributes(heading.count, {x: visibleLeft + viewportWidth - 8});
+    if (heading.count) {
+        attributes(heading.count, {x: visibleLeft + viewportWidth - 8});
+        const label = state.headingRecordCount + (timeline.ob_results?.complete === false ?
+            ' loaded records / partial context' : ' records / full context');
+        if (heading.count.textContent !== label) heading.count.textContent = label;
+    }
     const x = value => width / 2 + mesh.position.x + value;
     for (const region of regions) {
         const source = bands.find(item => item.name === region.sourceBand);
@@ -329,7 +395,10 @@ export function syncOverviewPanel(timeline, index) {
         const left = (frame.scrollLeft || 0) - width / 2 - sourceMesh.position.x;
         const start = timeline.dateToBandPixelOffSet(index, band, timeline.pixelOffSetToBandDate(index, source, left));
         const end = timeline.dateToBandPixelOffSet(index, band, timeline.pixelOffSetToBandDate(index, source, left + viewportWidth));
-        attributes(nodes.window, {x: x(start), width: Math.max(0.5, end - start)});
+        const indicatorLeft=x(start),indicatorRight=x(end);
+        attributes(nodes.window, {x:Math.max(0,Math.min(width-2,indicatorLeft)), width:Math.max(2,Math.min(width,indicatorRight)-Math.max(0,indicatorLeft)),
+            'stroke-dasharray':indicatorLeft<-.001 || indicatorRight>width+.001?'4 2':'none',
+            'aria-label':indicatorLeft<-.001 || indicatorRight>width+.001?'Main view extends outside this Overview window':'Main view range'});
         nodes.handles.forEach((handle, edge) => attributes(handle, {x: x(edge ? end : start) - 3.5}));
     }
     syncAxis(state.overviewAxis, timeline, index, band, mesh, width, height - 4);

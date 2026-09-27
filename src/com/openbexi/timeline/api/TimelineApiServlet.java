@@ -59,6 +59,7 @@ public final class TimelineApiServlet extends HttpServlet {
         if (role < needed) throw new ApiException(role == 0 ? 401 : 403, "This operation requires " + (needed == 3 ? "administrator" : needed == 2 ? "writer" : "reader") + " access.");
     }
     @Override protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        com.openbexi.timeline.servlets.TimelineRequestLog diagnostics=com.openbexi.timeline.servlets.TimelineRequestLog.begin(request,response);
         response.setCharacterEncoding("UTF-8");
         response.setHeader("X-Content-Type-Options", "nosniff");
         response.setHeader("Cache-Control", "no-store");
@@ -82,6 +83,7 @@ public final class TimelineApiServlet extends HttpServlet {
             log("Timeline API request failed", e);
             problem(request, response, 500, "The request could not be completed. No partial edit was saved.");
         }
+        finally { diagnostics.finish(); }
     }
     private static void problem(HttpServletRequest request, HttpServletResponse response, int status, String detail) throws IOException {
         response.setStatus(status); response.setContentType("application/problem+json");
@@ -269,5 +271,6 @@ public final class TimelineApiServlet extends HttpServlet {
         }
         res.setStatus(status); res.setContentType("application/json");
         if (status != 204 && !req.getMethod().equals("HEAD") && body != null) res.getWriter().write(body.toString());
+        com.openbexi.timeline.servlets.TimelineRequestLog.begin(req,res).sent(req.getMethod().equals("HEAD")?null:body,"api-v1",false);
     }
 }

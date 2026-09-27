@@ -1,0 +1,22 @@
+{
+  "capturedAt": "2026-09-23T19:51:54.904Z",
+  "browser": "149.0.7827.55",
+  "platform": "win32",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "route": "/demos.html?demo=space_exploration",
+  "title": "Space exploration — OpenBEXI Timeline",
+  "records": 1287,
+  "webgl2": true,
+  "drawCalls": 128,
+  "dataset": "json/test-data/space_exploration.json",
+  "model": "models/demos/space_exploration.json",
+  "pageErrors": [],
+  "scope": "Existing local file-backed demo and legacy Settings; proposed Auto scale, Results, Fit matches and server configuration editor are not implemented.",
+  "screenshots": [
+    "timeline-desktop.png",
+    "settings-desktop.png"
+  ]
+}

@@ -24,8 +24,8 @@ SOFTWARE.
 */
 "use strict";
 export const modelSchema = validate21;
-const schema6 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/demo-model.schema.json","title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}}}}}};
-const schema7 = {"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"}}};
+const schema6 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/demo-model.schema.json","title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}}}}}};
+const schema7 = {"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."}}};
 const func2 = Object.prototype.hasOwnProperty;
 const schema8 = {"type":"string","minLength":1};
 const func3 = function ucs2length(str) {
@@ -410,14 +410,39 @@ vErrors.push(err19);
 errors++;
 }
 }
-}
-else {
-const err20 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data.dateAxisMode !== undefined){
+let data17 = data.dateAxisMode;
+if(!((data17 === "shared") || (data17 === "per-band"))){
+const err20 = {instancePath:instancePath+"/dateAxisMode",schemaPath:"#/properties/dateAxisMode/enum",keyword:"enum",params:{allowedValues: schema7.properties.dateAxisMode.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err20];
 }
 else {
 vErrors.push(err20);
+}
+errors++;
+}
+}
+if(data.fullWindow !== undefined){
+if(typeof data.fullWindow !== "boolean"){
+const err21 = {instancePath:instancePath+"/fullWindow",schemaPath:"#/properties/fullWindow/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err21];
+}
+else {
+vErrors.push(err21);
+}
+errors++;
+}
+}
+}
+else {
+const err22 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err22];
+}
+else {
+vErrors.push(err22);
 }
 errors++;
 }
@@ -1135,7 +1160,7 @@ validate33.errors = vErrors;
 return errors === 0;
 }
 
-const schema15 = {"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}}}};
+const schema15 = {"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}}}};
 const schema16 = {"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]};
 
 function validate60(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
@@ -2016,13 +2041,11 @@ vErrors.push(err33);
 errors++;
 }
 }
-if(data.overviewLabel !== undefined){
-let data36 = data.overviewLabel;
-const _errs58 = errors;
-let valid13 = false;
-const _errs59 = errors;
-if(typeof data36 !== "string"){
-const err34 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf/0/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.overviewContextRatio !== undefined){
+let data36 = data.overviewContextRatio;
+if((typeof data36 == "number") && (isFinite(data36))){
+if(data36 > 12 || isNaN(data36)){
+const err34 = {instancePath:instancePath+"/overviewContextRatio",schemaPath:"#/properties/overviewContextRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 12},message:"must be <= 12"};
 if(vErrors === null){
 vErrors = [err34];
 }
@@ -2031,12 +2054,8 @@ vErrors.push(err34);
 }
 errors++;
 }
-var _valid2 = _errs59 === errors;
-valid13 = valid13 || _valid2;
-if(!valid13){
-const _errs61 = errors;
-if(false !== data36){
-const err35 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf/1/const",keyword:"const",params:{allowedValue: false},message:"must be equal to constant"};
+if(data36 < 1 || isNaN(data36)){
+const err35 = {instancePath:instancePath+"/overviewContextRatio",schemaPath:"#/properties/overviewContextRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err35];
 }
@@ -2045,11 +2064,9 @@ vErrors.push(err35);
 }
 errors++;
 }
-var _valid2 = _errs61 === errors;
-valid13 = valid13 || _valid2;
 }
-if(!valid13){
-const err36 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf",keyword:"anyOf",params:{},message:"must match a schema in anyOf"};
+else {
+const err36 = {instancePath:instancePath+"/overviewContextRatio",schemaPath:"#/properties/overviewContextRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err36];
 }
@@ -2058,23 +2075,12 @@ vErrors.push(err36);
 }
 errors++;
 }
-else {
-errors = _errs58;
-if(vErrors !== null){
-if(_errs58){
-vErrors.length = _errs58;
 }
-else {
-vErrors = null;
-}
-}
-}
-}
-if(data.uncertaintyOpacity !== undefined){
-let data37 = data.uncertaintyOpacity;
+if(data.overviewMarkerSize !== undefined){
+let data37 = data.overviewMarkerSize;
 if((typeof data37 == "number") && (isFinite(data37))){
-if(data37 > 1 || isNaN(data37)){
-const err37 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data37 > 12 || isNaN(data37)){
+const err37 = {instancePath:instancePath+"/overviewMarkerSize",schemaPath:"#/properties/overviewMarkerSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 12},message:"must be <= 12"};
 if(vErrors === null){
 vErrors = [err37];
 }
@@ -2083,8 +2089,8 @@ vErrors.push(err37);
 }
 errors++;
 }
-if(data37 < 0 || isNaN(data37)){
-const err38 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(data37 < 1 || isNaN(data37)){
+const err38 = {instancePath:instancePath+"/overviewMarkerSize",schemaPath:"#/properties/overviewMarkerSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err38];
 }
@@ -2095,7 +2101,7 @@ errors++;
 }
 }
 else {
-const err39 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err39 = {instancePath:instancePath+"/overviewMarkerSize",schemaPath:"#/properties/overviewMarkerSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err39];
 }
@@ -2105,11 +2111,13 @@ vErrors.push(err39);
 errors++;
 }
 }
-if(data.scaleHeader !== undefined){
-let data38 = data.scaleHeader;
-if(data38 && typeof data38 == "object" && !Array.isArray(data38)){
-if(data38.label === undefined){
-const err40 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+if(data.overviewLabel !== undefined){
+let data38 = data.overviewLabel;
+const _errs62 = errors;
+let valid13 = false;
+const _errs63 = errors;
+if(typeof data38 !== "string"){
+const err40 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf/0/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err40];
 }
@@ -2118,9 +2126,12 @@ vErrors.push(err40);
 }
 errors++;
 }
-for(const key3 in data38){
-if(!(((((key3 === "label") || (key3 === "unit")) || (key3 === "height")) || (key3 === "color")) || (key3 === "textColor"))){
-const err41 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
+var _valid2 = _errs63 === errors;
+valid13 = valid13 || _valid2;
+if(!valid13){
+const _errs65 = errors;
+if(false !== data38){
+const err41 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf/1/const",keyword:"const",params:{allowedValue: false},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err41];
 }
@@ -2129,10 +2140,11 @@ vErrors.push(err41);
 }
 errors++;
 }
+var _valid2 = _errs65 === errors;
+valid13 = valid13 || _valid2;
 }
-if(data38.label !== undefined){
-if(typeof data38.label !== "string"){
-const err42 = {instancePath:instancePath+"/scaleHeader/label",schemaPath:"#/properties/scaleHeader/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(!valid13){
+const err42 = {instancePath:instancePath+"/overviewLabel",schemaPath:"#/properties/overviewLabel/anyOf",keyword:"anyOf",params:{},message:"must match a schema in anyOf"};
 if(vErrors === null){
 vErrors = [err42];
 }
@@ -2141,10 +2153,23 @@ vErrors.push(err42);
 }
 errors++;
 }
+else {
+errors = _errs62;
+if(vErrors !== null){
+if(_errs62){
+vErrors.length = _errs62;
 }
-if(data38.unit !== undefined){
-if(typeof data38.unit !== "string"){
-const err43 = {instancePath:instancePath+"/scaleHeader/unit",schemaPath:"#/properties/scaleHeader/properties/unit/type",keyword:"type",params:{type: "string"},message:"must be string"};
+else {
+vErrors = null;
+}
+}
+}
+}
+if(data.uncertaintyOpacity !== undefined){
+let data39 = data.uncertaintyOpacity;
+if((typeof data39 == "number") && (isFinite(data39))){
+if(data39 > 1 || isNaN(data39)){
+const err43 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -2153,28 +2178,8 @@ vErrors.push(err43);
 }
 errors++;
 }
-}
-if(data38.height !== undefined){
-if(!(validate27(data38.height, {instancePath:instancePath+"/scaleHeader/height",parentData:data38,parentDataProperty:"height",rootData}))){
-vErrors = vErrors === null ? validate27.errors : vErrors.concat(validate27.errors);
-errors = vErrors.length;
-}
-}
-if(data38.color !== undefined){
-if(!(validate23(data38.color, {instancePath:instancePath+"/scaleHeader/color",parentData:data38,parentDataProperty:"color",rootData}))){
-vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
-errors = vErrors.length;
-}
-}
-if(data38.textColor !== undefined){
-if(!(validate23(data38.textColor, {instancePath:instancePath+"/scaleHeader/textColor",parentData:data38,parentDataProperty:"textColor",rootData}))){
-vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
-errors = vErrors.length;
-}
-}
-}
-else {
-const err44 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data39 < 0 || isNaN(data39)){
+const err44 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err44];
 }
@@ -2184,11 +2189,8 @@ vErrors.push(err44);
 errors++;
 }
 }
-if(data.secondaryScale !== undefined){
-let data44 = data.secondaryScale;
-if(data44 && typeof data44 == "object" && !Array.isArray(data44)){
-if(data44.format === undefined){
-const err45 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "format"},message:"must have required property '"+"format"+"'"};
+else {
+const err45 = {instancePath:instancePath+"/uncertaintyOpacity",schemaPath:"#/properties/uncertaintyOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err45];
 }
@@ -2197,8 +2199,12 @@ vErrors.push(err45);
 }
 errors++;
 }
-if(data44.origin === undefined){
-const err46 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "origin"},message:"must have required property '"+"origin"+"'"};
+}
+if(data.scaleHeader !== undefined){
+let data40 = data.scaleHeader;
+if(data40 && typeof data40 == "object" && !Array.isArray(data40)){
+if(data40.label === undefined){
+const err46 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
 if(vErrors === null){
 vErrors = [err46];
 }
@@ -2207,8 +2213,9 @@ vErrors.push(err46);
 }
 errors++;
 }
-if(data44.step === undefined){
-const err47 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "step"},message:"must have required property '"+"step"+"'"};
+for(const key3 in data40){
+if(!(((((key3 === "label") || (key3 === "unit")) || (key3 === "height")) || (key3 === "color")) || (key3 === "textColor"))){
+const err47 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err47];
 }
@@ -2217,9 +2224,10 @@ vErrors.push(err47);
 }
 errors++;
 }
-for(const key4 in data44){
-if(!(func2.call(schema15.properties.secondaryScale.properties, key4))){
-const err48 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
+}
+if(data40.label !== undefined){
+if(typeof data40.label !== "string"){
+const err48 = {instancePath:instancePath+"/scaleHeader/label",schemaPath:"#/properties/scaleHeader/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err48];
 }
@@ -2229,9 +2237,9 @@ vErrors.push(err48);
 errors++;
 }
 }
-if(data44.format !== undefined){
-if("elapsedYears" !== data44.format){
-const err49 = {instancePath:instancePath+"/secondaryScale/format",schemaPath:"#/properties/secondaryScale/properties/format/const",keyword:"const",params:{allowedValue: "elapsedYears"},message:"must be equal to constant"};
+if(data40.unit !== undefined){
+if(typeof data40.unit !== "string"){
+const err49 = {instancePath:instancePath+"/scaleHeader/unit",schemaPath:"#/properties/scaleHeader/properties/unit/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err49];
 }
@@ -2241,22 +2249,27 @@ vErrors.push(err49);
 errors++;
 }
 }
-if(data44.origin !== undefined){
-if(!(validate25(data44.origin, {instancePath:instancePath+"/secondaryScale/origin",parentData:data44,parentDataProperty:"origin",rootData}))){
-vErrors = vErrors === null ? validate25.errors : vErrors.concat(validate25.errors);
-errors = vErrors.length;
-}
-}
-if(data44.step !== undefined){
-if(!(validate27(data44.step, {instancePath:instancePath+"/secondaryScale/step",parentData:data44,parentDataProperty:"step",rootData}))){
+if(data40.height !== undefined){
+if(!(validate27(data40.height, {instancePath:instancePath+"/scaleHeader/height",parentData:data40,parentDataProperty:"height",rootData}))){
 vErrors = vErrors === null ? validate27.errors : vErrors.concat(validate27.errors);
 errors = vErrors.length;
 }
 }
-if(data44.position !== undefined){
-let data48 = data44.position;
-if(!((data48 === "top") || (data48 === "bottom"))){
-const err50 = {instancePath:instancePath+"/secondaryScale/position",schemaPath:"#/properties/secondaryScale/properties/position/enum",keyword:"enum",params:{allowedValues: schema15.properties.secondaryScale.properties.position.enum},message:"must be equal to one of the allowed values"};
+if(data40.color !== undefined){
+if(!(validate23(data40.color, {instancePath:instancePath+"/scaleHeader/color",parentData:data40,parentDataProperty:"color",rootData}))){
+vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
+errors = vErrors.length;
+}
+}
+if(data40.textColor !== undefined){
+if(!(validate23(data40.textColor, {instancePath:instancePath+"/scaleHeader/textColor",parentData:data40,parentDataProperty:"textColor",rootData}))){
+vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
+errors = vErrors.length;
+}
+}
+}
+else {
+const err50 = {instancePath:instancePath+"/scaleHeader",schemaPath:"#/properties/scaleHeader/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err50];
 }
@@ -2266,27 +2279,11 @@ vErrors.push(err50);
 errors++;
 }
 }
-if(data44.height !== undefined){
-if(!(validate27(data44.height, {instancePath:instancePath+"/secondaryScale/height",parentData:data44,parentDataProperty:"height",rootData}))){
-vErrors = vErrors === null ? validate27.errors : vErrors.concat(validate27.errors);
-errors = vErrors.length;
-}
-}
-if(data44.color !== undefined){
-if(!(validate23(data44.color, {instancePath:instancePath+"/secondaryScale/color",parentData:data44,parentDataProperty:"color",rootData}))){
-vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
-errors = vErrors.length;
-}
-}
-if(data44.textColor !== undefined){
-if(!(validate23(data44.textColor, {instancePath:instancePath+"/secondaryScale/textColor",parentData:data44,parentDataProperty:"textColor",rootData}))){
-vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
-errors = vErrors.length;
-}
-}
-if(data44.suffix !== undefined){
-if(typeof data44.suffix !== "string"){
-const err51 = {instancePath:instancePath+"/secondaryScale/suffix",schemaPath:"#/properties/secondaryScale/properties/suffix/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.secondaryScale !== undefined){
+let data46 = data.secondaryScale;
+if(data46 && typeof data46 == "object" && !Array.isArray(data46)){
+if(data46.format === undefined){
+const err51 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "format"},message:"must have required property '"+"format"+"'"};
 if(vErrors === null){
 vErrors = [err51];
 }
@@ -2295,11 +2292,8 @@ vErrors.push(err51);
 }
 errors++;
 }
-}
-if(data44.min !== undefined){
-let data53 = data44.min;
-if(!((typeof data53 == "number") && (isFinite(data53)))){
-const err52 = {instancePath:instancePath+"/secondaryScale/min",schemaPath:"#/properties/secondaryScale/properties/min/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data46.origin === undefined){
+const err52 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "origin"},message:"must have required property '"+"origin"+"'"};
 if(vErrors === null){
 vErrors = [err52];
 }
@@ -2308,10 +2302,8 @@ vErrors.push(err52);
 }
 errors++;
 }
-}
-}
-else {
-const err53 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data46.step === undefined){
+const err53 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/required",keyword:"required",params:{missingProperty: "step"},message:"must have required property '"+"step"+"'"};
 if(vErrors === null){
 vErrors = [err53];
 }
@@ -2320,15 +2312,118 @@ vErrors.push(err53);
 }
 errors++;
 }
-}
-}
-else {
-const err54 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+for(const key4 in data46){
+if(!(func2.call(schema15.properties.secondaryScale.properties, key4))){
+const err54 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err54];
 }
 else {
 vErrors.push(err54);
+}
+errors++;
+}
+}
+if(data46.format !== undefined){
+if("elapsedYears" !== data46.format){
+const err55 = {instancePath:instancePath+"/secondaryScale/format",schemaPath:"#/properties/secondaryScale/properties/format/const",keyword:"const",params:{allowedValue: "elapsedYears"},message:"must be equal to constant"};
+if(vErrors === null){
+vErrors = [err55];
+}
+else {
+vErrors.push(err55);
+}
+errors++;
+}
+}
+if(data46.origin !== undefined){
+if(!(validate25(data46.origin, {instancePath:instancePath+"/secondaryScale/origin",parentData:data46,parentDataProperty:"origin",rootData}))){
+vErrors = vErrors === null ? validate25.errors : vErrors.concat(validate25.errors);
+errors = vErrors.length;
+}
+}
+if(data46.step !== undefined){
+if(!(validate27(data46.step, {instancePath:instancePath+"/secondaryScale/step",parentData:data46,parentDataProperty:"step",rootData}))){
+vErrors = vErrors === null ? validate27.errors : vErrors.concat(validate27.errors);
+errors = vErrors.length;
+}
+}
+if(data46.position !== undefined){
+let data50 = data46.position;
+if(!((data50 === "top") || (data50 === "bottom"))){
+const err56 = {instancePath:instancePath+"/secondaryScale/position",schemaPath:"#/properties/secondaryScale/properties/position/enum",keyword:"enum",params:{allowedValues: schema15.properties.secondaryScale.properties.position.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err56];
+}
+else {
+vErrors.push(err56);
+}
+errors++;
+}
+}
+if(data46.height !== undefined){
+if(!(validate27(data46.height, {instancePath:instancePath+"/secondaryScale/height",parentData:data46,parentDataProperty:"height",rootData}))){
+vErrors = vErrors === null ? validate27.errors : vErrors.concat(validate27.errors);
+errors = vErrors.length;
+}
+}
+if(data46.color !== undefined){
+if(!(validate23(data46.color, {instancePath:instancePath+"/secondaryScale/color",parentData:data46,parentDataProperty:"color",rootData}))){
+vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
+errors = vErrors.length;
+}
+}
+if(data46.textColor !== undefined){
+if(!(validate23(data46.textColor, {instancePath:instancePath+"/secondaryScale/textColor",parentData:data46,parentDataProperty:"textColor",rootData}))){
+vErrors = vErrors === null ? validate23.errors : vErrors.concat(validate23.errors);
+errors = vErrors.length;
+}
+}
+if(data46.suffix !== undefined){
+if(typeof data46.suffix !== "string"){
+const err57 = {instancePath:instancePath+"/secondaryScale/suffix",schemaPath:"#/properties/secondaryScale/properties/suffix/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err57];
+}
+else {
+vErrors.push(err57);
+}
+errors++;
+}
+}
+if(data46.min !== undefined){
+let data55 = data46.min;
+if(!((typeof data55 == "number") && (isFinite(data55)))){
+const err58 = {instancePath:instancePath+"/secondaryScale/min",schemaPath:"#/properties/secondaryScale/properties/min/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err58];
+}
+else {
+vErrors.push(err58);
+}
+errors++;
+}
+}
+}
+else {
+const err59 = {instancePath:instancePath+"/secondaryScale",schemaPath:"#/properties/secondaryScale/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err59];
+}
+else {
+vErrors.push(err59);
+}
+errors++;
+}
+}
+}
+else {
+const err60 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err60];
+}
+else {
+vErrors.push(err60);
 }
 errors++;
 }

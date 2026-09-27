@@ -27,20 +27,19 @@ export async function readDemoCatalog() {
 export function buildDemoReadme(catalog, baseURL = 'http://localhost:8780/') {
     const escape = text => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
     const lines = [
-        '<!-- LIVE_DEMOS:START -->', '## Live Demos', '',
-        'These are **local interactive demos**. Install dependencies with `npm install`, then run `npm run demo` and open a dataset using the links below. The default server listens only on your computer; these links are not public hosted demos.', '',
-        'Every dataset uses the same page, renderer, and Timeline / Table / vertical Split controls. Search works locally. Dataset selection, source format, bands, colors, highlights, and time scales come from [the JSON catalog](demos/catalog.json) and its model files.', '',
-        'Each demo starts with the original timeline toolbar, with no heading or dataset selector above it. The layout keeps 75% of the window width for the timeline views and reserves 25% for descriptors, the calendar, and other panels. Height adapts to the window with scrolling inside each area. Overview mirrors the normal layout with compact events, proportional session bars, and a visible-range highlight; model settings can magnify selected time intervals.', '',
-        '| Demo | Description | Configuration | Visual reference |',
-        '| --- | --- | --- | --- |'
+        '<!-- LIVE_DEMOS:START -->', '## Live demos', '',
+        'Start the local server with [Quick start](#quick-start), then choose a demo. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files.', '',
+        '| Demo | What it shows | Resources |',
+        '| --- | --- | --- |'
     ];
     for (const demo of catalog.demos) {
         const url = new URL('demos.html', baseURL);
         url.searchParams.set('demo', demo.id);
-        lines.push(`| [${escape(demo.title)}](${url.href}) | ${escape(demo.description)} | [Dataset](${demo.dataset}) · [Model](${demo.model}) | ${demo.reference ? '[PNG](' + demo.reference + ')' : 'Not supplied'} |`);
+        const resources = [`[Data](${demo.dataset})`, `[Model](${demo.model})`];
+        if (demo.reference) resources.push(`[Screenshot](${demo.reference})`);
+        lines.push(`| [${escape(demo.title)}](${url.href}) | ${escape(demo.description)} | ${resources.join(' · ')} |`);
     }
-    lines.push('', 'Append `&view=table` or `&view=split` to open that view directly. See the [demo guide](docs/demos.md) for source formats, model options, validation, and portable hosting instructions.', '',
-        'Regenerate this list after editing the catalog with `npm run demos:readme`. Run `npm run test:demos` to validate all catalog entries, data imports, scene geometry, view switching, and local HTTP links.', '<!-- LIVE_DEMOS:END -->');
+    lines.push('', 'Append `&view=table` or `&view=split` to a demo URL to open that view directly. See the [demo guide](docs/demos.md) for data formats, model options and hosting.', '<!-- LIVE_DEMOS:END -->');
     return lines.join('\n');
 }
 
@@ -53,7 +52,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     if (process.argv.includes('--check')) {
         if (original.match(marker)?.[0].replaceAll('\r\n', '\n') !== section) throw new Error('README demo section is stale. Run npm run demos:readme.');
     } else {
-        const next = marker.test(original) ? original.replace(marker, section) : original.replace('## Visualization Examples', section + '\n\n## Visualization Examples');
+        if (!marker.test(original)) throw new Error('README is missing the LIVE_DEMOS section markers.');
+        const next = original.replace(marker, section);
         await fs.writeFile(file, next);
         console.log('Updated README demos from ' + catalog.demos.length + ' catalog entries.');
     }

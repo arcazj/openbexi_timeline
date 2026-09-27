@@ -61,6 +61,15 @@ export class TimelineViews {
 
     setMode(mode) {
         if (!this.buttons.has(mode)) return;
+        if (mode === this.mode) return;
+        if (this.timeline.ob_viewport) {
+            const r=this.timeline.ob_results;
+            this.timeline.ob_scene[this.sceneIndex].cancelPan?.();
+            r.captureRanges(); this.mode=mode;
+            this.timeline.ob_viewport.measure();
+            r.pending=true; r.preserveVisible=false; r.visibleRanges.clear();
+            r.request(); this.applyLayout(); return;
+        }
         if (this.frame && this.mode !== "table") this.scrollPositions[this.mode] = this.frame.scrollLeft;
         this.mode = mode;
         this.applyLayout();
@@ -86,6 +95,13 @@ export class TimelineViews {
         timeline.ob_timeline_panel.dataset.viewMode = this.mode;
         for (const [mode, button] of this.buttons) {
             button.setAttribute("aria-pressed", String(mode === this.mode));
+        }
+        if (timeline.ob_viewport) {
+            frame.hidden=this.mode==='table'; this.tablePanel.hidden=this.mode==='timeline';
+            frame.scrollLeft=0; frame.scrollTop=0;
+            timeline.ob_viewport.layout();
+            if (this.mode!=='timeline' && this.dirty) this.renderTable();
+            this.layoutToolbar(); this.renderOverviewViewport(); return;
         }
         const height = scene.ob_height;
         const headerHeight = parseInt(timeline.ob_timeline_header.style.height, 10) || 40;
@@ -119,6 +135,7 @@ export class TimelineViews {
 
     layoutToolbar() {
         const timeline = this.timeline;
+        if (timeline.ob_results?.toolbar) { timeline.ob_results.layout(); this.layoutTimeMarker(); return; }
         const search = timeline.ob_search_input;
         const marker = timeline.ob_time_marker;
         if (!search || !marker) return;
@@ -148,55 +165,91 @@ export class TimelineViews {
     }
 
     renderTable() {
-        const timeline = this.timeline;
-        const scene = timeline.ob_scene[this.sceneIndex];
-        const table = document.createElement("table");
-        table.className = "ob_event_table";
-        const caption = table.createCaption();
-        const header = table.createTHead().insertRow();
-        for (const label of ["Title", "Start", "End", "Source", "Status"]) {
-            const cell = document.createElement("th");
-            cell.scope = "col";
-            cell.textContent = label;
-            header.appendChild(cell);
+        const t=this.timeline,scene=t.ob_scene[this.sceneIndex],vp=t.ob_viewport;
+        const active=document.activeElement;
+        const focused=this.tablePanel.contains(active)?{page:active.dataset.page,key:active.dataset.record}:null;
+        const entries=[];
+        const records=scene.sessions?.densityRecords || scene.sessions?.events;
+        for(const session of Array.isArray(records)?records:[]) {
+            if(!session || session.zone!==undefined) continue;
+            const activities=scene.sessions?.densityRecords?[session]:Array.isArray(session.activities)?session.activities:[session];
+            for(const activity of activities) if(activity?.data && activity.zone===undefined)
+                entries.push({activity,session,key:activity.matchKey || (activity.namespace || '')+':'+activity.id});
         }
-        const body = table.createTBody();
-        const events = scene.sessions?.events;
-        let count = 0;
-        // Use the same loaded response as the canvas; server filtering and search apply to both.
-        for (const session of Array.isArray(events) ? events : []) {
-            if (!session || session.zone !== undefined) continue;
-            const activities = Array.isArray(session.activities) ? session.activities : [session];
-            for (const activity of activities) {
-                if (!activity || activity.zone !== undefined || !activity.data) continue;
-                const data = activity.data;
-                const row = body.insertRow();
-                if (String(activity.render?.backgroundColor).toUpperCase() === "#F8DF09") {
-                    row.className = "ob_event_table_match";
-                }
-                const formatDate = value => value && timeline.formatEventDate ? timeline.formatEventDate(value) : value;
-                const values = [data.title, formatDate(activity.start), formatDate(activity.end),
-                    activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,
-                    data.status];
-                for (const value of values) {
-                    // Event data is text, never markup.
-                    row.insertCell().textContent = value === undefined || value === null || value === "" ? "\u2014" : String(value);
-                }
-                count++;
+        const table=document.createElement('table');table.className='ob_event_table';
+        const caption=table.createCaption(),header=table.createTHead().insertRow(),body=table.createTBody();
+        for(const label of ['Title','Start','End','Source','Status']) {
+            const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);
+        }
+        const render=({activity,session,key})=>{
+            const data=activity.data,row=body.insertRow();
+            if ((activity.searchMatch===true && t.ob_results?.state.highlight!==false) ||
+                (!t.ob_results?.supported && String(activity.render?.backgroundColor).toUpperCase()==='#F8DF09')) {
+                row.className='ob_event_table_match';row.setAttribute('aria-label','Search match: '+data.title);
             }
-        }
-        caption.textContent = count + (count === 1 ? " event" : " events");
-        if (count === 0) {
-            const empty = body.insertRow().insertCell();
-            empty.colSpan = 5;
-            empty.className = "ob_event_table_empty";
-            empty.textContent = "No events to display.";
-        }
-        const scrollTop = this.tablePanel.scrollTop;
-        const scrollLeft = this.tablePanel.scrollLeft;
+            const date=value=>value && t.formatEventDate?t.formatEventDate(value):value;
+            for(const value of [data.title,date(activity.start),date(activity.end),
+                activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,data.status]) {
+                const cell=row.insertCell();cell.textContent=value===undefined || value===null || value===''?'\u2014':String(value);
+                cell.title=cell.textContent;
+            }
+            if(vp) {
+                const button=document.createElement('button');button.type='button';button.className='ob_table_record';
+                button.textContent=data.title || 'Event details';button.title=button.textContent;button.dataset.record=key;
+                button.setAttribute('aria-label','Details: '+button.textContent);
+                button.onclick=()=>t.ob_open_descriptor(this.sceneIndex,activity);
+                row.cells[0].replaceChildren(button);
+            }
+            return row;
+        };
+        const count=entries.length;
+        caption.textContent=count+(count===1?' event':' events');
+        const oldScroll=[this.tablePanel.scrollTop,this.tablePanel.scrollLeft];
         this.tablePanel.replaceChildren(table);
-        this.tablePanel.scrollTop = scrollTop;
-        this.tablePanel.scrollLeft = scrollLeft;
-        this.dirty = false;
+        let from=0,to=count,pages=1;
+        if(vp && count) {
+            // All rows use one nowrap style; measure a real row before rendering
+            // only the current page. Record count does not increase DOM size.
+            const sample=render(entries[0]);
+            const rowHeight=Math.max(34,sample.getBoundingClientRect().height || 34);
+            const headerSpace=(caption.offsetHeight || 32)+(table.tHead.offsetHeight || 34);
+            const space=Math.max(1,vp.height-vp.headerHeight-headerSpace);
+            let capacity=Math.max(1,Math.floor(space/rowHeight));
+            if(count>capacity) capacity=Math.max(1,Math.floor((space-36)/rowHeight));
+            pages=Math.max(1,Math.ceil(count/capacity));
+            const anchor=this.tableAnchor?entries.findIndex(e=>e.key===this.tableAnchor):-1;
+            this.tablePage=Math.min(pages-1,Math.max(0,anchor>=0?Math.floor(anchor/capacity):(this.tablePage || 0)));
+            from=this.tablePage*capacity;to=Math.min(count,from+capacity);
+            this.tableAnchor=entries[from]?.key;
+            body.replaceChildren();
+        }
+        for(const entry of entries.slice(from,to)) render(entry);
+        if(!count) {
+            this.tablePage=0;this.tableAnchor=undefined;
+            const empty=body.insertRow().insertCell();empty.colSpan=5;empty.className='ob_event_table_empty';
+            empty.textContent='No events to display.';
+        }
+        if(vp && pages>1) {
+            const pager=document.createElement('nav');pager.className='ob_pagination ob_table_pagination';
+            pager.setAttribute('aria-label','Table pages');
+            const move=step=>{this.tablePage+=step;this.tableAnchor=undefined;this.renderTable();
+                const button=this.tablePanel.querySelector(step>0?'[data-page="next"]':'[data-page="previous"]');
+                (button?.disabled?this.tablePanel:button)?.focus();};
+            const previous=document.createElement('button');previous.type='button';previous.textContent='Previous';previous.dataset.page='previous';
+            previous.disabled=this.tablePage===0;previous.onclick=()=>move(-1);
+            const next=document.createElement('button');next.type='button';next.textContent='Next';next.dataset.page='next';
+            next.disabled=this.tablePage===pages-1;next.onclick=()=>move(1);
+            const status=document.createElement('span');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+            status.textContent='Page '+(this.tablePage+1)+' of '+pages+(t.ob_results.complete?'':' \u00b7 loaded scope');
+            pager.append(previous,status,next);this.tablePanel.append(pager);
+            caption.textContent='Showing '+(from+1)+'\u2013'+to+' of '+count+' events';
+        }
+        this.tablePanel.scrollTop=vp?0:oldScroll[0];this.tablePanel.scrollLeft=vp?0:oldScroll[1];
+        if(focused) {
+            const target=[...this.tablePanel.querySelectorAll('button')].find(button=>
+                focused.key?button.dataset.record===focused.key:button.dataset.page===focused.page);
+            (target && !target.disabled?target:this.tablePanel).focus({preventScroll:true});
+        }
+        this.dirty=false;
     }
 }

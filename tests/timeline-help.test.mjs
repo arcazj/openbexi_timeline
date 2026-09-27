@@ -74,8 +74,12 @@ test('Help renders configured resource groups and every catalog dataset with usa
         assert.ok(harness.requests.includes('/api/v1/health'), 'Help checks its own host for API availability');
         assert.equal(anchor(panel, 'Live API'), undefined, 'A static server 404 keeps Live API disabled');
         assert.deepEqual([...panel.querySelectorAll('.ob_help_resource_group > .ob_help_section_heading h3')].map(node => node.textContent),
-            ['Project', 'Developer docs', 'Guides']);
-        assert.match(panel.textContent, /Version 1\.1/);
+            ['Search, Results and Auto scale', 'Project', 'Developer docs', 'Guides', 'Test local data', 'Share this view', 'Current timeline']);
+        assert.equal(panel.querySelectorAll('details.ob_help_resource_group').length,7);
+        const section=panel.querySelector('details'); section.open=true;
+        section.dispatchEvent(new harness.window.Event('toggle'));
+        assert.equal(harness.timeline.helpSections.results,true);
+        assert.match(panel.textContent, /Version 2\.0\.0-rc\.1/);
         for (const resource of resources.sections.flatMap(section => section.links)) {
             if (resource.disabledReason) {
                 const disabled = button(panel, resource.label);
@@ -98,11 +102,24 @@ test('Help renders configured resource groups and every catalog dataset with usa
         assert.equal(selector.options.length, 7);
         assert.deepEqual([...selector.options].map(option => option.value), catalog.demos.map(demo => demo.id));
         assert.equal(selector.value, 'jfk');
-        assert.equal(anchor(panel, 'Open dataset').href, 'http://localhost/demos.html?demo=jfk');
+        assert.equal(anchor(panel, 'Open dataset'), undefined);
+        const opened=[]; harness.timeline.openDataset=url=>opened.push(url);
         selector.value = 'dinausaurs';
         selector.dispatchEvent(new harness.window.Event('change'));
-        assert.equal(anchor(panel, 'Open dataset').href, 'http://localhost/demos.html?demo=dinausaurs');
-        assert.doesNotMatch(anchor(panel, 'Open dataset').href, /PRIVATE/);
+        assert.deepEqual(opened,['http://localhost/demos.html?demo=dinausaurs']);
+        selector.dispatchEvent(new harness.window.Event('change'));
+        assert.equal(opened.length,1,'Repeated selection does not reload the same dataset');
+        assert.doesNotMatch(opened[0], /PRIVATE/);
+        harness.timeline.openDataset=()=>{throw new Error('Navigation unavailable');};
+        selector.value='monet'; selector.dispatchEvent(new harness.window.Event('change'));
+        assert.equal(selector.value,'dinausaurs'); assert.match(panel.textContent,/Unable to open dataset/);
+        harness.timeline.ob_remove_help(); delete harness.timeline.demoContext;
+        const standalone=await harness.open();
+        const available=standalone.querySelector('select[aria-label="Local dataset"]');
+        assert.equal(available.value,'','A standalone page does not pretend a catalog dataset is already open');
+        harness.timeline.openDataset=url=>opened.push(url);
+        available.value=catalog.demos[0].id;available.dispatchEvent(new harness.window.Event('change'));
+        assert.equal(opened.at(-1),'http://localhost/demos.html?demo='+catalog.demos[0].id);
     } finally { harness.close(); }
 });
 

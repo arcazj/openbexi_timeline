@@ -1,3 +1,4 @@
+import {allTableRows} from './helpers/table-pages.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTimelineHarness} from './helpers/timeline-dom.mjs';
@@ -104,13 +105,14 @@ test('Religions uses historical context with tenfold detail and calendar-aligned
         const {bandTicks} = await harness.importModule('src/openbexi_timeline_ticks.js');
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/religions.json', {dataset: 'json/test-data/religions.json'});
-        const main = timeline.ob_scene[0].bands.find(band => !band.name.includes('overview_'));
+        const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
         const overview = timeline.ob_scene[0].bands.find(band => band.name.includes('overview_'));
         const year = value => { const date = new Date(0); date.setUTCFullYear(value, 0, 1); return date.getTime(); };
         assert.equal(main.timeScale.from, year(-365));
         assert.equal(main.timeScale.to, year(36));
-        assert.equal(overview.timeScale.from, year(-1310));
-        assert.equal(overview.timeScale.to, year(255));
+        assert.equal(overview.timeScale.to-overview.timeScale.from,year(255)-year(-1310),
+            'The authored context duration is preserved even when Overview precedes its source band');
+        assert.equal(overview.timeScale.to+overview.timeScale.from,main.timeScale.to+main.timeScale.from);
         const oneBCE = main.timeScale.toPixel(year(0)) / timeline.ob_scene[0].width + 0.5;
         assert.ok(oneBCE > 0.49 && oneBCE < 0.52, 'The era boundary sits near the reference midpoint');
         near((main.timeScale.toPixel(year(10)) - main.timeScale.toPixel(year(5))) / (year(10) - year(5)) /
@@ -131,19 +133,17 @@ test('JFK combines a two-hour detail view with month, day and nested half-hour c
         const {bandTicks} = await harness.importModule('src/openbexi_timeline_ticks.js');
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/jfk.json', {dataset: 'json/test-data/jfk.json'});
-        const main = timeline.ob_scene[0].bands.find(band => !band.name.includes('overview_'));
+        const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
         const overview = timeline.ob_scene[0].bands.find(band => band.name.includes('overview_'));
         const local = (date, hour) => Date.parse(date + 'T' + hour + ':00-06:00');
         assert.equal(main.timeScale.from, local('1963-11-22', '12:00'));
         assert.equal(main.timeScale.to, local('1963-11-22', '14:00'));
         const width = (from, to) => overview.timeScale.toPixel(local('1963-11-22', to)) - overview.timeScale.toPixel(local('1963-11-22', from));
-        near(width('12:00', '12:30') / width('10:00', '10:30'), 3, 'The highlighted hour is expanded inside the day context');
+        near(width('12:00', '12:30') / width('10:00', '10:30'), 1, 'The overview uses uniform real-time spacing');
         const mainTicks = bandTicks(main, main.timeScale.from, main.timeScale.to, -360);
         assert.equal(mainTicks[1].time - mainTicks[0].time, 5 * minute, 'The main chart retains five-minute ticks');
         const ticks = bandTicks(overview, overview.timeScale.from, overview.timeScale.to, -360);
-        assert.ok(ticks.some(tick => tick.time === local('1963-09-01', '00:00') && tick.format === 'yyyy-MM'));
-        assert.ok(ticks.some(tick => tick.time === local('1963-11-22', '10:00') && tick.format === 'HH:mm'));
-        assert.ok(ticks.some(tick => tick.time === local('1963-11-22', '12:30') && tick.format === 'HH:mm'));
+        assert.ok(ticks.length > 2 && ticks.every(tick => tick.format === 'yyyy-MM'));
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 130);
     } finally { harness.close(); }
 });
@@ -157,7 +157,7 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/dinausaurs.json', {dataset: 'json/test-data/dinausaurs.json'});
         const scene = timeline.ob_scene[0];
-        const main = scene.bands.find(band => !band.name.includes('overview_'));
+        const main = (timeline.ob_viewport?.fullBands || scene.bands).find(band => !band.name.includes('overview_'));
         const overview = scene.bands.find(band => band.name.includes('overview_'));
         const ma = value => -value * timeline.staticTimeAxis.millisecondsPerUnit;
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 224);
@@ -188,7 +188,8 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         const ticks = bandTicks(main, main.timeScale.from, main.timeScale.to);
         assert.deepEqual(Array.from(ticks, tick => timeline.formatEventDate(tick.time)),
             ['165 Ma', '160 Ma', '155 Ma', '150 Ma', '145 Ma', '140 Ma', '135 Ma', '130 Ma', '125 Ma', '120 Ma', '115 Ma']);
-        assert.equal(timeline.ob_calendar.hidden, true, 'A numeric axis has no calendar control');
+        assert.equal(timeline.ob_calendar.hidden, false, 'The complete toolbar remains visible');
+        assert.equal(timeline.ob_calendar.getAttribute('aria-disabled'), 'true', 'A calendar is unavailable on a numeric axis');
         assert.ok(timeline.ob_timeline_panel.querySelector('.ob_docked_overview'), 'Overview remains docked below scrollable rows');
         const originalPosition = main.timeScale.toPixel(ma(150));
         scene.width /= 2;
@@ -203,7 +204,7 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         near(main.timeScale.toPixel(ma(130)), originalPosition / 2, 'Navigation does not convert internal timestamps twice');
         near(main.timeScale.toTime(main.timeScale.toPixel(ma(100))), ma(100), 'Numeric positions remain invertible after navigation');
         timeline.ob_views.setMode('table');
-        assert.equal(timeline.ob_views.tablePanel.querySelectorAll('tbody tr').length, 224);
+        assert.equal(allTableRows(timeline.ob_views).length, 224);
     } finally { harness.close(); }
 });
 
@@ -214,15 +215,15 @@ test('Operations keeps every record while the initial context shows the 48 refer
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 1008);
-        assert.equal(timeline.ob_scene[0].sessions.events.filter(event => !event.zone).length, 1008);
-        const main = timeline.ob_scene[0].bands.find(band => !band.name.includes('overview_'));
+        assert.equal(timeline.ob_scene[0].sessions.densityRecords.length, 1008);
+        const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
         const overview = timeline.ob_scene[0].bands.find(band => band.name.includes('overview_'));
         assert.equal(main.sessions.length, 48, 'The day context controls layout without deleting the other 960 records');
-        assert.equal(overview.sessions.length, 48, 'Overview uses the same complete day context');
+        assert.equal(overview.sessions.length, 1008, 'Overview includes every record in the complete loaded analysis domain');
         assert.equal(main.timeScale.from, time('08:00'));
         assert.equal(main.timeScale.to, time('17:00'));
-        assert.equal(overview.timeScale.from, time('00:00'));
-        assert.equal(overview.timeScale.to, time('00:00') + day);
+        assert.equal(overview.timeScale.from, time('00:30'));
+        assert.equal(overview.timeScale.to, time('00:30')+86400000, 'The authored day span stays centered; Fit context reaches the full history');
         const tied = main.sessions.filter(session => Date.parse(session.start) === time('12:10'));
         assert.deepEqual(Array.from(tied, session => session.data.title), [
             'Link verification 29', 'Signal acquisition 15', 'Quality checkpoint 08', 'Clock alignment 36', 'Archive checksum 22'
@@ -235,7 +236,7 @@ test('Operations keeps every record while the initial context shows the 48 refer
         assert.ok(packet.total_width < packet.width + timeline.getTextWidth(packet.data.title, main.fontSize + ' ' + main.fontFamily, 6),
             'Labels above bars share horizontal space rather than being appended to the duration');
         timeline.ob_views.setMode('table');
-        assert.equal(timeline.ob_views.tablePanel.querySelectorAll('tbody tr').length, 1008, 'The complete dataset remains accessible');
+        assert.equal(allTableRows(timeline.ob_views).length, 1008, 'The complete dataset remains accessible');
     } finally { harness.close(); }
 });
 
@@ -247,9 +248,10 @@ test('Changing the context day exposes surrounding records without another datas
         await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         timeline.ob_scene.sync_time += day;
         rebuild(timeline);
-        const main = timeline.ob_scene[0].bands.find(band => !band.name.includes('overview_'));
-        assert.equal(main.sessions.length, 16);
-        assert.ok(main.sessions.every(session => session.start.startsWith('2026-09-13')));
+        const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
+        assert.equal(main.sessions.length, 4, 'Four real parent sessions remain as containers');
+        assert.equal(main.sessions.flatMap(session => session.activities).length, 12, 'All twelve children remain visible');
+        assert.ok(main.sessions.flatMap(session => session.activities).every(activity => activity.start.startsWith('2026-09-13')));
         assert.equal(main.timeScale.contextFrom, time('00:00') + day);
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 1008);
         assert.equal(harness.requests.length, 2);
@@ -263,7 +265,7 @@ test('A nonlinear main view projects real dates into the uniform Overview and hi
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         const scene = timeline.ob_scene[0];
-        const main = scene.bands.find(band => !band.name.includes('overview_'));
+        const main = (timeline.ob_viewport?.fullBands || scene.bands).find(band => !band.name.includes('overview_'));
         const overview = scene.bands.find(band => band.name.includes('overview_'));
         for (const session of overview.sessions) for (const activity of session.activities) {
             near(activity.pixelOffSetStart, overview.timeScale.toPixel(Date.parse(activity.start)), 'Overview places actual start times');

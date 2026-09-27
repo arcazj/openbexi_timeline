@@ -1,6 +1,7 @@
 {
   "params": [
     {
+      "fullWindow": true,
       "name": "ob_demo",
       "title": "Space exploration",
       "date": "2020-01-02T00:00:00Z",

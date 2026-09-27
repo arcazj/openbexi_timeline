@@ -45,25 +45,30 @@ function meshSize(mesh, axis) {
 
 function assertProjection(timeline) {
     const scene = timeline.ob_scene[0];
-    const mainBands = scene.bands.filter(band => !isOverview(band));
+    const mainBands = (timeline.ob_viewport?.fullBands || scene.bands).filter(band => !isOverview(band));
     const overviewBands = scene.bands.filter(isOverview);
     assert.ok(overviewBands.length, 'At least one Overview is enabled');
     for (const overview of overviewBands) {
         const sources = overview.sourceBands ? mainBands.filter(band => overview.sourceBands.includes(band.name)) : mainBands;
-        const count = sources.reduce((sum, band) => sum + activities(band).length, 0);
+        const fullScope = timeline.ob_results?.supported;
+        const count = sources.reduce((sum, band) => sum + (fullScope ? timeline.ob_results.projection.densityRecords.filter(record =>
+            timeline.ob_results.belongs(record, band)).length : activities(band).length), 0);
         const projected = activities(overview);
         assert.equal(projected.length, count, 'Overview contains the same activity occurrences as the main bands');
         for (const source of sources) {
             const originals = activities(source);
             const copies = projected.filter(activity => activity.overviewSourceBand === source.name);
-            assert.deepEqual(copies.map(activity => activity.id), originals.map(activity => activity.id),
+            if (!fullScope) assert.deepEqual(copies.map(activity => activity.id), originals.map(activity => activity.id),
                 'Source grouping, order, and ids survive projection');
+            else assert.ok(originals.every(activity => copies.some(copy => copy.matchKey === activity.matchKey)),
+                'The full-scope overview includes every rendered detail activity');
             for (const [index, copy] of copies.entries()) {
-                const original = originals[index];
+                const original = fullScope ? originals.find(activity => activity.matchKey === copy.matchKey) : originals[index];
+                if (!original) continue;
                 assert.notEqual(copy, original, 'Projection does not mutate the normal view');
                 near(copy.overviewSourceY, original.y, 'Source row position is retained');
                 assert.ok(copy.overviewScaleY > 0 && Number.isFinite(copy.overviewScaleY));
-                if (index) near(copy.y - copies[0].y,
+                if (index && !fullScope) near(copy.y - copies[0].y,
                     (original.y - originals[0].y) * copy.overviewScaleY, 'Relative row positions are preserved');
                 assert.equal(copy.start, original.start);
                 assert.equal(copy.end, original.end);
@@ -133,7 +138,7 @@ test('Fitting Overview to occupied rows expands sparse layouts while preserving 
         });
         const sources = [source('main-a', 800, [330, 306, 270], 96), source('main-b', 400, [100, 76], 48)];
         const originals = structuredClone(sources);
-        const overview = {name: 'overview_all', height: 180, fontSizeInt: 10,
+        const overview = {name: 'overview_all', height: 180, fontSizeInt: 10,fitRows:false,
             gregorianUnitLengths: 1000, intervalPixels: 2, intervalUnitPos: 'BOTTOM'};
         const timeline = {ob_scene: [{bands: [...sources, overview]}]};
         projectOverviewSessions(timeline, 0);
@@ -182,7 +187,7 @@ test('Religious-history Overviews retain their configured source chronology and 
         const {mainBands, overviewBands} = assertProjection(timeline);
         assert.equal(mainBands.length, 2);
         assert.equal(overviewBands.length, 2);
-        assert.ok(isOverview(timeline.ob_scene[0].bands[0]), 'This model deliberately puts Overview before normal bands');
+        assert.ok(isOverview(timeline.bands[0]), 'Authored overview order remains available in the model');
         assert.ok(mainBands.every(band => band.filter?.field === 'namespace'));
         assert.ok(activities(mainBands[0]).every(activity => activity.data.namespace === mainBands[0].filter.equals));
         assert.ok(activities(mainBands[1]).every(activity => activity.data.namespace === mainBands[1].filter.equals));
@@ -209,6 +214,7 @@ test('Static search and repeated Overview toggles keep the miniature synchronize
             {id: 'c', start: '2026-09-12T13:30:00Z', data: {title: 'Different title'}}
         ]}));
         timeline.ob_views.setMode('split');
+        timeline.ob_results.request({mode:'only'});
         for (const [query, expected] of [['Match', 2], ['no-such-event', 0], ['', 3]]) {
             timeline.ob_search_input.value = query;
             timeline.ob_search_input.dispatchEvent(new harness.window.KeyboardEvent('keydown', {key: 'Enter'}));
@@ -249,7 +255,7 @@ test('The visible-range highlight follows band panning and the actual Split view
             const end = main.timeScale.toTime(left + frame.clientWidth - mainX);
             const overviewStart = overview.timeScale.toPixel(start);
             const overviewEnd = overview.timeScale.toPixel(end);
-            near(meshSize(mesh, 'x'), overviewEnd - overviewStart,
+            near(meshSize(mesh, 'x'), Math.max(0.25,overviewEnd - overviewStart),
                 'Highlight width reflects visible dates across the nested Overview focus');
             near(mesh.position.x, (overviewStart + overviewEnd) / 2,
                 'Highlight center follows the mapped visible dates after panning');

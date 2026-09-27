@@ -51,6 +51,11 @@ export function buildTimelineShareURL(timeline, {baseURL, demoId} = {}) {
     const search = searchValue(timeline.ob_scene?.[0]?.ob_search_value);
     if (search) page.searchParams.set('search', search);
     page.searchParams.set('overview', timeline.ob_visible_view ? '1' : '0');
+    const results = timeline.ob_results;
+    if (results?.state.mode === 'only') page.searchParams.set('results', 'only');
+    if (results?.state.highlight === false) page.searchParams.set('highlight', '0');
+    if (results?.state.auto) page.searchParams.set('auto', '1');
+    if (results && results.state.ratio !== 8) page.searchParams.set('ratio', String(results.state.ratio));
     return page.href;
 }
 
@@ -77,10 +82,23 @@ export function applyTimelineShareState(timeline, query) {
     if (query.has('search')) {
         scene.ob_search_value = searchValue(query.get('search'));
         if (timeline.ob_search_input) timeline.ob_search_input.value = scene.ob_search_value;
-        scene.sessions = searchTimelineData(timeline.staticData, scene.ob_search_value);
+        if (!timeline.ob_results) scene.sessions = searchTimelineData(timeline.staticData, scene.ob_search_value);
         changed = true;
     }
-    if (changed) timeline.update_all_timelines(0, timeline.header, timeline.params, scene.bands,
+    const results = timeline.ob_results;
+    if (results && ['results','highlight','auto','ratio'].some(key => query.has(key))) changed = true;
+    if (changed && results) {
+        if (time !== undefined) { results.ranges.clear(); results.scaleEngaged = false; }
+        results.state.query = scene.ob_search_value || '';
+        if (['only','highlight'].includes(query.get('results'))) results.state.mode = query.get('results');
+        if (['0','1'].includes(query.get('highlight'))) results.state.highlight = query.get('highlight') === '1';
+        if (['0','1'].includes(query.get('auto'))) { results.state.auto = query.get('auto') === '1'; results.scaleEngaged = true; }
+        const ratio = Number(query.get('ratio'));
+        if (query.has('ratio') && Number.isFinite(ratio) && ratio >= 1 && ratio <= 16) results.state.ratio = ratio;
+        results.navigationMap = null;
+        results.commit();
+    }
+    else if (changed) timeline.update_all_timelines(0, timeline.header, timeline.params, scene.bands,
         scene.model, scene.sessions, scene.ob_camera_type);
     const view = query.get('view');
     if (views.has(view)) {
@@ -105,7 +123,7 @@ export function getTimelineDiagnostics(timeline, sceneIndex = 0) {
     const reference = currentTime(timeline);
     const formatted = value => value && (timeline.formatEventDate?.(value) || value);
     const events = timeline.staticData?.events || scene.sessions?.events || [];
-    const filtered = scene.sessions?.events || [];
+    const filtered = scene.sessions?.densityRecords || scene.sessions?.events || [];
     const recordCount = records => records.filter(event => !event.zone).length;
     const range = (from, to) => ({from: formatted(iso(from)), to: formatted(iso(to))});
     return {
@@ -118,7 +136,8 @@ export function getTimelineDiagnostics(timeline, sceneIndex = 0) {
         reference: {time: reference, label: formatted(reference)},
         timeAxis: axis?.kind === 'numeric' ? {kind: 'numeric', unit: axis.unit,
             direction: finite(axis.direction), millisecondsPerUnit: finite(axis.millisecondsPerUnit)} : {kind: 'calendar'},
-        counts: {records: recordCount(events), matchingRecords: recordCount(filtered),
+        counts: {records: recordCount(events), matchingRecords: timeline.ob_results?.snapshot?.hasCondition ?
+            timeline.ob_results.snapshot.matchingKeys.length : recordCount(filtered),
             zones: events.filter(event => event.zone).length, bands: scene.bands?.length || 0},
         searchActive: Boolean(scene.ob_search_value),
         viewport: {width: finite(scene.width), height: finite(scene.ob_height),

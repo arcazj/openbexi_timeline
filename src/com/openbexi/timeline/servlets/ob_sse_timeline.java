@@ -45,13 +45,12 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
     public void doGet(HttpServletRequest req, HttpServletResponse resp) {
         resp.setCharacterEncoding("UTF-8");
         // Read parameters
-        _data_configuration.setConfiguration(req);
+        data_configuration _data_configuration = this._data_configuration.forRequest(req);
         String ob_request = req.getParameter("ob_request");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
 
         Logger logger = Logger.getLogger("");
-        logger.info("GET - startDate=" + startDate + " - endDate=" + endDate);
 
         // Common handler instantiation
         ob_handle_http_requests handler = new ob_handle_http_requests(req, resp, _data_configuration);
@@ -95,6 +94,12 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getParameter("ob_request")==null) {
+            new ob_handle_http_requests(req,resp,_data_configuration.forRequest(req))
+                    .jsonError(req,resp,400,"Missing timeline operation.");
+            return;
+        }
+        doGet(req,resp);
     }
 
     @Override
@@ -127,7 +132,10 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.service(req, resp);
+        TimelineRequestLog log=TimelineRequestLog.begin(req,resp);
+        try { super.service(req, resp); }
+        catch(ServletException | IOException | RuntimeException error) { log.failure("failed");throw error; }
+        finally { log.finish(); }
     }
 
     @Override

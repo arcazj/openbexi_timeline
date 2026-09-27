@@ -18,6 +18,18 @@ public class ob_handle_http_requests {
     Logger logger = Logger.getLogger("");
 
     public ob_handle_http_requests(HttpServletRequest req, HttpServletResponse resp, data_configuration configuration) {
+        configuration.diagnostics=TimelineRequestLog.begin(req,resp);
+    }
+
+    public void jsonError(HttpServletRequest req,HttpServletResponse resp,int status,String message) {
+        if (resp.isCommitted()) {TimelineRequestLog.begin(req,resp).failure("failed");return;}
+        resp.resetBuffer();resp.setStatus(status);
+        boolean stream="text/event-stream".equals(req.getHeader("accept"));
+        resp.setContentType(stream?"text/event-stream;charset=UTF-8":"application/json;charset=UTF-8");
+        var body=new org.json.simple.JSONObject(java.util.Map.of("error",message));
+        try {resp.getWriter().write(stream?"data:"+body+"\n\n":body.toJSONString());resp.getWriter().flush();}
+        catch(java.io.IOException ignored) { }
+        TimelineRequestLog.begin(req,resp).sent(body,"unknown",false);
     }
 
     public HttpServletResponse ob_handle_header(HttpServletRequest req, HttpServletResponse resp) {
@@ -26,6 +38,7 @@ public class ob_handle_http_requests {
         resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
         resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
+        resp.addHeader("Access-Control-Expose-Headers", "X-Request-ID");
         resp.addHeader("Accept-Encoding", "gzip, compress, br");
 
         // Determine content type based on the "accept" header
@@ -46,13 +59,14 @@ public class ob_handle_http_requests {
         String event_id = req.getParameter("event_id");
         String start = req.getParameter("start");
         String namespace = req.getParameter("namespace");
-        logger.info("POST readDescriptor - id=" + event_id);
 
         try {
             event_descriptor descriptor = new event_descriptor(event_id, null, start, null,
                     null, namespace, null, null, null, null,
                     null, null, configuration);
             Object json = descriptor.read(event_id);
+            if (json instanceof org.json.simple.JSONObject body && "not_found".equals(body.get("descriptorStatus")))
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             PrintWriter respWriter = resp.getWriter();
 
             if ("text/event-stream".equals(req.getHeader("accept"))) {
@@ -67,13 +81,22 @@ public class ob_handle_http_requests {
             }
 
             respWriter.flush();
+            configuration.diagnostics.sent(json,configuration.getType(0),false);
 
             if (respWriter.checkError()) {
                 //logger.info("Client disconnected");
             }
         } catch (Exception e) {
-            logger.severe(e.getMessage());
-            // Consider a more specific handling strategy for different exception types
+            resp.setStatus(e instanceof IllegalArgumentException ? 400 : 500);
+            resp.setContentType("application/json;charset=UTF-8");
+            String message = resp.getStatus() == 400 ? "Invalid descriptor identity or start date." : "Cannot read descriptor data.";
+            try {
+                var body = new org.json.simple.JSONObject(java.util.Map.of("event_descriptor", new JSONArray(), "error", message));
+                PrintWriter writer = resp.getWriter();
+                writer.write("text/event-stream".equals(req.getHeader("accept")) ? "data:" + body + "\n\n" : body.toJSONString());
+                writer.flush();
+                configuration.diagnostics.sent(body, "json_file", false);
+            } catch (java.io.IOException ignored) { configuration.diagnostics.failure("failed"); }
         }
     }
 
@@ -83,9 +106,6 @@ public class ob_handle_http_requests {
             Object json = null;
             HttpSession session = req.getSession();
             String connector_type = configuration.getType(0);
-            logger.info("POST addEvent - " +
-                    "startDate=" + configuration.getConfiguration().get("startDate") +
-                    " - endDate=" + configuration.getConfiguration().get("endDate"));
             JSONArray eventJson = new JSONArray();
             eventJson.add("title:" + configuration.getConfiguration().get("title"));
             eventJson.add("startEvent:" + configuration.getConfiguration().get("startEvent"));
@@ -128,7 +148,7 @@ public class ob_handle_http_requests {
                 }
             }
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            TimelineRequestLog.begin(req,resp).failure("failed");
         }
     }
 
@@ -136,9 +156,6 @@ public class ob_handle_http_requests {
                                          data_configuration configuration) {
         try {
             String connector_type = configuration.getType(0);
-            logger.info("POST " + configuration.getConfiguration().get("request") +
-                    " - ob_filter_name=" + configuration.getConfiguration().get("filterName") +
-                    " - ob_user=" + configuration.getConfiguration().get("userName"));
             Object json = null;
             if (connector_type.equals("json_file")) {
                 json_files_manager json_files_manager;
@@ -200,8 +217,9 @@ public class ob_handle_http_requests {
                         (String) configuration.getConfiguration().get("sortBy"),
                         (String) configuration.getConfiguration().get("filter"));
             }
+            if (json==null) throw new IllegalStateException("Missing filter response.");
             PrintWriter out = resp.getWriter();
-            if (req.getHeader("accept").equals("text/event-stream")) {
+            if ("text/event-stream".equals(req.getHeader("accept"))) {
                 out.write("data:" + json + "\n\n");
                 out.write("retry: 1000000000\n\n");
                 out.flush();
@@ -210,8 +228,9 @@ public class ob_handle_http_requests {
                     out.write(json.toString());
                 out.flush();
             }
+            configuration.diagnostics.sent(json,connector_type,false);
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            jsonError(req,resp,500,"Cannot read or update timeline filters.");
         }
     }
 
@@ -219,7 +238,7 @@ public class ob_handle_http_requests {
                                                data_configuration configuration) {
         try {
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            TimelineRequestLog.begin(req,resp).failure("failed");
         }
     }
 
@@ -227,20 +246,13 @@ public class ob_handle_http_requests {
                                           data_configuration configuration) {
         try {
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            TimelineRequestLog.begin(req,resp).failure("failed");
         }
     }
 
     public void ob_handle_test_requests(HttpServletRequest req, HttpServletResponse resp) {
         try {
             PrintWriter out = resp.getWriter();
-            String result = "";
-            Enumeration<String> names = req.getHeaderNames();
-            while (names.hasMoreElements()) {
-                String name = names.nextElement();
-                result += name + ":" + req.getHeader(name) + "; ";
-            }
-            logger.info(result);
 
             test_timeline tests = new test_timeline();
             String simpleJson = tests.getSimpleJsonData();
@@ -248,7 +260,7 @@ public class ob_handle_http_requests {
             out.flush();
 
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            TimelineRequestLog.begin(req,resp).failure("failed");
         }
     }
 
@@ -256,23 +268,19 @@ public class ob_handle_http_requests {
         try {
             HttpSession session = req.getSession();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-            String startDate = null, endDate = null;
-            try {
-                startDate = simpleDateFormat.format(new Date(req.getParameter("startDate")));
-                endDate = simpleDateFormat.format(new Date(req.getParameter("endDate")));
-            } catch (Exception e) {
-                startDate = simpleDateFormat.format(new Date());
-                endDate = simpleDateFormat.format(new Date(req.getParameter("endDate")));
-            }
+            if (req.getParameter("startDate")==null || req.getParameter("endDate")==null)
+                throw new IllegalArgumentException("Missing time range.");
+            String startDate = simpleDateFormat.format(new Date(MatchResults.time(req.getParameter("startDate"))));
+            String endDate = simpleDateFormat.format(new Date(MatchResults.time(req.getParameter("endDate"))));
 
             Object json = null;
             String connector_type = configuration.getType(0);
 
             if (connector_type.equals("json_file")) {
                 json_files_manager json_files_manager = new json_files_manager(resp, session, configuration);
-                if (!req.getHeader("accept").equals("text/event-stream"))
+                if (!"text/event-stream".equals(req.getHeader("accept")))
                     json = json_files_manager.getData(json_files_manager.get_filter(),
                             (String) configuration.getConfiguration().get("scene"));
                 ob_handle_flush(req, resp, configuration, json, json_files_manager);
@@ -284,20 +292,21 @@ public class ob_handle_http_requests {
                                 (String) configuration.getConfiguration().get("search"),
                                 (String) configuration.getConfiguration().get("filter"),
                                 "GET", resp, session, configuration);
-                if (!req.getHeader("accept").equals("text/event-stream"))
+                if (!"text/event-stream".equals(req.getHeader("accept")))
                     json = db_mongo_manager.getData(db_mongo_manager.get_filter(),
                             (String) configuration.getConfiguration().get("scene"));
                 ob_handle_flush(req, resp, configuration, json, db_mongo_manager);
             }
         } catch (Exception e) {
-            // Handle or log the exception
+            jsonError(req,resp,e instanceof IllegalArgumentException?400:500,
+                    e instanceof IllegalArgumentException?"Invalid timeline time range.":"Cannot read timeline data.");
         }
     }
 
     public void ob_handle_flush(HttpServletRequest req, HttpServletResponse resp, data_configuration configuration,
                                 Object json, Object db_manager) {
         try {
-            if (req.getHeader("accept").equals("text/event-stream")) {
+            if ("text/event-stream".equals(req.getHeader("accept"))) {
                 if (db_manager instanceof json_files_manager) {
                     json_files_watcher json_files_watcher =
                             new json_files_watcher((json_files_manager) db_manager,
@@ -313,8 +322,10 @@ public class ob_handle_http_requests {
             } else {
                 resp.getWriter().write(json.toString());
                 resp.getWriter().flush();
+                configuration.diagnostics.sent(json,configuration.getType(0),false);
             }
         } catch (Exception e) {
+            jsonError(req,resp,500,"Cannot produce a timeline response.");
         }
     }
 }

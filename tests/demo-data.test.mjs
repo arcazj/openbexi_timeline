@@ -1,3 +1,4 @@
+import {allTableRows} from './helpers/table-pages.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -28,7 +29,7 @@ for (const demo of catalog.demos) test(demo.id + ': load and build real scene ge
         const canvas = timeline.ob_scene[0].ob_renderer.domElement;
         const camera = timeline.ob_scene[0].ob_camera;
         timeline.ob_views.setMode('table');
-        assert.equal(timeline.ob_views.tablePanel.querySelectorAll('tbody tr').length, demo.recordCount);
+        assert.equal(allTableRows(timeline.ob_views).length, demo.recordCount);
         timeline.ob_views.setMode('split');
         assert.equal(timeline.ob_timeline_body_frame.hidden, false);
         assert.equal(timeline.ob_views.tablePanel.hidden, false);
@@ -44,6 +45,7 @@ for (const demo of catalog.demos) test(demo.id + ': load and build real scene ge
         assert.ok(result.events.filter(event => !event.zone).length < demo.recordCount);
         assert.equal(searchTimelineData(timeline.staticData, 'no-such-event-xyz').events.filter(event => !event.zone).length, 0);
         timeline.ob_views.setMode('split');
+        timeline.ob_results.request({mode: 'only'});
         timeline.ob_search_input.value = 'no-such-event-xyz';
         timeline.ob_search_input.dispatchEvent(new harness.window.KeyboardEvent('keydown', {key: 'Enter'}));
         await new Promise(resolve => setTimeout(resolve, 20));

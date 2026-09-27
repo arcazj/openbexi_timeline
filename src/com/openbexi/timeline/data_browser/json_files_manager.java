@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class json_files_manager extends data_manager {
+    private JSONObject pendingMatchResponse;
 
     public json_files_manager(HttpServletResponse response,
                               HttpSession session, data_configuration configuration) {
@@ -79,6 +80,15 @@ public class json_files_manager extends data_manager {
      * @return data according a range of time.
      */
     public Object getData(String filter, String ob_scene) {
+        if ("1".equals(_data_configuration.getConfiguration().get("matchProtocol"))) {
+            if ("1".equals(_data_configuration.getConfiguration().get("progressive")))
+                return ProgressiveSourceScan.read(_data_configuration.getConfiguration(), _currentStartDateL, _currentEndDateL,
+                        events -> _include.isEmpty() && _exclude.isEmpty() ? events : filterEvents(events, _include, _exclude));
+            if (pendingMatchResponse != null) {
+                JSONObject response = pendingMatchResponse; pendingMatchResponse = null; return response;
+            }
+            return getMatchData(ob_scene);
+        }
         Date t1 = new Date();
         JSONParser parser = new JSONParser();
         Object events;
@@ -159,6 +169,21 @@ public class json_files_manager extends data_manager {
 
     }
 
+    /** A bounded inventory of the configured source roots includes long sessions
+     * stored before the requested date partitions. Incomplete scans never claim
+     * authoritative counts, density, or fit bounds. No source file is rewritten. */
+    private Object getMatchData(String scene) {
+        try {
+            JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
+            return new MatchSourceScan(_currentStartDateL, _currentEndDateL,
+                    events -> _include.isEmpty() && _exclude.isEmpty() ? events : filterEvents(events, _include, _exclude))
+                    .read(configurations, _search, scene);
+        } catch (Exception error) {
+            return MatchResults.failure(_search, scene, _currentStartDateL, _currentEndDateL,
+                    "Cannot read the configured analysis scope; retaining the previous view.");
+        }
+    }
+
     @Override
     boolean sendData(Object data) {
         if (_response == null) return false;
@@ -180,6 +205,10 @@ public class json_files_manager extends data_manager {
             respWriter.write("retry: 1000000000\n\n");
             respWriter.flush();
             boolean error = respWriter.checkError();
+            if (_data_configuration.diagnostics != null) {
+                if (error) _data_configuration.diagnostics.failure("disconnected");
+                else _data_configuration.diagnostics.sent(data,"json_file",true);
+            }
             if (error) {
                 return false;
             }
@@ -257,6 +286,14 @@ public class json_files_manager extends data_manager {
     }
 
     public boolean checkIfJsonFilesChanged() throws Exception {
+        if ("1".equals(_data_configuration.getConfiguration().get("matchProtocol"))) {
+            JSONObject response = (JSONObject) getMatchData(String.valueOf(_data_configuration.getConfiguration().get("scene")));
+            String checksum = ((JSONObject) response.get("timelineMatch")).toJSONString();
+            if (checksum.equals(_checksum)) return false;
+            _checksum = checksum;
+            pendingMatchResponse = response;
+            return true;
+        }
 
         String checksum = "";
         // Build file list according date range

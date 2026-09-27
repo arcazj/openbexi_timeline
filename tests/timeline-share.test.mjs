@@ -21,7 +21,7 @@ test('Share links round-trip numeric Ma time, view, search and overview without 
     try {
         const originalDate = timeline.params[0].date;
         const targetTime = new Date(-130 * timeline.staticTimeAxis.millisecondsPerUnit).toISOString();
-        const query = new URLSearchParams({view: 'split', time: targetTime, search: 'Tyrannosaurus', overview: '0'});
+        const query = new URLSearchParams({view: 'split', time: targetTime, search: 'Tyrannosaurus', overview: '0', results: 'only'});
         applyTimelineShareState(timeline, query);
         assert.equal(timeline.ob_scene.sync_time, Date.parse(targetTime));
         assert.equal(timeline.formatEventDate(timeline.ob_markerDate), '130 Ma');
@@ -92,6 +92,20 @@ test('Links remove credentials, fragments and all unapproved query parameters', 
         timeline.data = 'https://backend/private?token=secret';
         assert.equal(buildTimelineShareURL(timeline, {baseURL}), 'https://example.org/project/demos.html');
     } finally { harness.close(); }
+});
+
+test('Public links preserve highlighting independently from matches-only visibility', async () => {
+    const {harness,timeline,buildTimelineShareURL,applyTimelineShareState}=await fixture('monet');
+    try {
+        timeline.ob_results.state.highlight=false;
+        timeline.ob_results.state.mode='only';
+        const query=new URL(buildTimelineShareURL(timeline)).searchParams;
+        assert.equal(query.get('highlight'),'0');assert.equal(query.get('results'),'only');
+        timeline.ob_results.state.highlight=true;timeline.ob_results.state.mode='highlight';
+        applyTimelineShareState(timeline,query);
+        assert.equal(timeline.ob_results.highlight.checked,false);
+        assert.equal(timeline.ob_results.mode.checked,true);
+    } finally {harness.close();}
 });
 
 test('Diagnostics expose useful aggregate presentation state without private data or URLs', async () => {

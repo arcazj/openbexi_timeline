@@ -8,7 +8,7 @@
       "description": "Sessions, milestones, source colors, and maintenance and verification windows.",
       "dataset": "json/test-data/default-dataset.json",
       "model": "models/demos/default-dataset.json",
-      "reference": "json/test-data/default-dataset.png",
+      "reference": "docs/ui/overview/default-dataset-desktop.png",
       "recordCount": 1008
     },
     {
@@ -17,7 +17,7 @@
       "description": "Dinosaur lifespans on a numeric axis measured in millions of years ago.",
       "dataset": "json/test-data/dinausaurs.json",
       "model": "models/demos/dinausaurs.json",
-      "reference": null,
+      "reference": "docs/ui/overview/dinausaurs-desktop.png",
       "recordCount": 224
     },
     {
@@ -26,7 +26,7 @@
       "description": "Orbital visibility sessions grouped by satellite.",
       "dataset": "json/test-data/ephemeris.json",
       "model": "models/demos/ephemeris.json",
-      "reference": null,
+      "reference": "docs/ui/overview/ephemeris-desktop.png",
       "recordCount": 127
     },
     {
@@ -35,7 +35,7 @@
       "description": "A minute-scale historical chronology with highlighted reference windows.",
       "dataset": "json/test-data/jfk.json",
       "model": "models/demos/jfk.json",
-      "reference": "json/test-data/jfk.png",
+      "reference": "docs/ui/overview/jfk-desktop.png",
       "recordCount": 130
     },
     {
@@ -44,7 +44,7 @@
       "description": "Life events, painting periods, original colors, and a secondary age scale.",
       "dataset": "json/test-data/monet.json",
       "model": "models/demos/monet.json",
-      "reference": "json/test-data/monet.png",
+      "reference": "docs/ui/overview/monet-desktop.png",
       "recordCount": 27
     },
     {
@@ -53,7 +53,7 @@
       "description": "BCE/CE dates, duration and event bands, and overview context.",
       "dataset": "json/test-data/religions.json",
       "model": "models/demos/religions.json",
-      "reference": "json/test-data/religions.png",
+      "reference": "docs/ui/overview/religions-desktop.png",
       "recordCount": 730
     },
     {
@@ -62,7 +62,7 @@
       "description": "A month-scale view with a yearly overview of the supplied space-history events.",
       "dataset": "json/test-data/space_exploration.json",
       "model": "models/demos/space_exploration.json",
-      "reference": "doc/openbexi_timeline_space_exploration.PNG",
+      "reference": "docs/ui/overview/space_exploration-desktop.png",
       "recordCount": 1287
     }
   ]

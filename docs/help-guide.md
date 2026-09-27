@@ -1,23 +1,29 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 1.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
 - Use **Timeline**, **Table**, or **Split** on the main toolbar to change the presentation. Split places the chart beside the event table.
-- Select an event to open its description and source details in the right panel. Live demos reserve 75% of the window for the views and 25% for panels.
+- Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
 - Search the loaded records using the toolbar search field. File-backed demos keep the complete dataset available even when the initial chart displays a smaller date range.
-- Drag the timeline to navigate through time. When a model provides a docked Overview, its highlighted window shows the visible range; move that window to navigate while keeping the wider context in view.
-- Scroll within the chart, table, or panel to reach additional rows. Live demos hide native scrollbar tracks without removing scrolling.
+- Drag the timeline to navigate through time. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
+- Use row pagination to browse records that do not fit vertically. The timeline fills the browser window by default and recalculates page capacity when resized; long panel content can scroll independently.
 - Use the return-to-reference control to restore the model's initial date. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
 
 The Help panel collects project resources and local demo choices. The local demos run from files and do not require a Java data service. They do not offer server login, saved server filters, or event creation.
 
-In **Help**, select a local dataset and choose **Open dataset** to load its default view. **Reset reference view** returns the current local demo to its model's initial date, Timeline view, default Overview setting, and first row, and clears the search.
+In **Help**, selecting a local dataset immediately loads its default view. **Reset reference view** returns the current local demo to its model's initial date, Timeline view, default Overview setting, and first row, and clears the search.
 
 In **Share**, choose **Copy link** to copy the current local demo's dataset, time, view, search, and Overview setting. A localhost link works on a computer running the demo server at that address. Copying puts the link on your clipboard; it does not publish the data or send a message. Server-backed timelines share the page address without private server settings.
 
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
+
+Calendar month arrows browse dates without moving the timeline. Select a day to
+load that interval. If loading fails, the red **Update failed — open details**
+control opens the reason; Retry or navigate to resume. Loaded records stay visible.
+Multi-band views share one top date axis by default. A model can explicitly request
+separate axes with `params.dateAxisMode: "per-band"`.
 
 ## Design
 
