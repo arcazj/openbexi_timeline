@@ -159,12 +159,12 @@ function syncAxis(axis, timeline, index, band, mesh, width, baseline) {
     }
 }
 
-function projectionKey(band, width, height) {
+function projectionKey(band, width, height, highlight) {
     // Projected arrays are replaced by normal layout/search/rebuild operations.
     // Include topology and rendered values too, so an in-place edit cannot leave
     // stale miniature geometry. This inexpensive scan never reads DOM layout.
     const key = [band, band.timeScale, band.sessions, band.zones, band.overviewRegions, width, height,
-        band.overviewLabel, band.showContextLabel, band.viewportHandles];
+        band.overviewLabel, band.showContextLabel, band.viewportHandles, highlight];
     for (const region of band.overviewRegions || []) key.push(region, region.sourceBand, region.y, region.height);
     for (const zone of band.zones || []) key.push(zone, zone.id, zone.start, zone.end, zone.overviewY,
         zone.overviewHeight, zone.render?.color, zone.render?.opacity);
@@ -172,7 +172,7 @@ function projectionKey(band, width, height) {
         key.push(session, session.id, session.activities);
         for (const activity of session.activities) key.push(activity, activity.id, activity.data?.title,
             activity.x, activity.x_relative, activity.y, activity.width, activity.height, activity.overviewDuration,
-            activity.overviewSourceBand, activity.render?.color, activity.render?.opacity);
+            activity.overviewSourceBand, activity.render?.color, activity.render?.opacity, activity.searchMatch);
     }
     return key;
 }
@@ -225,6 +225,8 @@ function syncPanel(timeline, index, band, panels, position, count) {
         timeline.ob_views?.mode !== 'table' && scene.getObjectByName(band.name);
     let state = panels.get(band.name);
     if (!active) {
+        const mesh=scene?.getObjectByName(band.name);
+        if(mesh)mesh.visible=true;
         if (state) {
             state.panel.hidden = true;
             timeline.ob_timeline_panel.style.setProperty('--ob-overview-height', '0px');
@@ -247,6 +249,9 @@ function syncPanel(timeline, index, band, panels, position, count) {
     const height = timeline.ob_viewport ? timeline.ob_viewport.overviewHeight/count : (20 + (ratio > 0 && ratio < 0.5 ? Math.max(80, timeline.height * ratio) :
         Math.max(80, Math.min(120, band.height))));
     const mesh = scene.getObjectByName(band.name);
+    // The docked panel owns this overview. A tilted camera can otherwise
+    // expose a second copy from the canvas below the main bands.
+    mesh.visible=false;
     Object.assign(state, {index, band, width});
     state.panel.hidden = false;
     styles(state.panel, {width: viewportWidth + 'px', height: height + 'px', bottom:(count-position-1)*height+'px'});
@@ -289,10 +294,13 @@ function syncPanel(timeline, index, band, panels, position, count) {
     const regions = band.overviewRegions || [];
     const top = Math.max(...regions.map(region => region.y + region.height / 2), 0);
     const bottom = Math.min(...regions.map(region => region.y - region.height / 2), 0);
-    const contentTop = 30;
+    const searchActive=Boolean(timeline.ob_results?.state.query.trim());
+    const stackedHeading=searchActive && viewportWidth<600;
+    const contentTop = stackedHeading ? 50 : 30;
     const scaleY = (height - contentTop - 20) / Math.max(1, top - bottom);
     const y = value => contentTop + (top - value) * scaleY;
-    const key = projectionKey(band, width, height);
+    const highlight=searchActive && timeline.ob_results?.state.highlight !== false;
+    const key = projectionKey(band, width, height, highlight);
     if (!equalKey(state.projectionKey, key)) {
         state.projectionKey = key;
         state.content.replaceChildren();
@@ -325,7 +333,9 @@ function syncPanel(timeline, index, band, panels, position, count) {
                 fill: zone.render?.color || '#f5c994', 'fill-opacity': zone.render?.opacity ?? 0.25, 'data-zone-id': zone.id}));
         }
         const bins=new Map();
+        const matchingKeys=new Set();
         for (const session of band.sessions || []) for (const activity of session.activities) {
+            if(activity.searchMatch)matchingKeys.add(activity.matchKey || activity.id);
             const size = Math.max(Number(band.overviewMarkerSize)||3, activity.height * scaleY);
             const left=contentX(activity.x), right=left+activity.width, cy=y(activity.y);
             // Only visually indistinguishable marks of the same source/color
@@ -336,26 +346,37 @@ function syncPanel(timeline, index, band, panels, position, count) {
             if (existing) {
                 existing.count++;existing.element.setAttribute('data-record-count',existing.count);
                 existing.title.textContent=existing.count+' records in this mark; '+existing.sample+' (inspect records in Data/Table)';
+                if(existing.match) {
+                    const label=existing.count+' search matches: '+existing.sample;
+                    existing.match.setAttribute('aria-label',label);existing.match.querySelector('title').textContent=label;
+                }
                 continue;
             }
-            const common = {fill: activity.render?.color || '#707070', 'fill-opacity': activity.render?.opacity ?? 1, 'data-event-id': activity.id,
+            const opacity=(activity.render?.opacity ?? 1)*(highlight && !activity.searchMatch ? .25 : 1);
+            const common = {fill: activity.render?.color || '#707070', 'fill-opacity': opacity, 'data-event-id': activity.id,
+                'data-search-match':Boolean(activity.searchMatch),
                 'data-source-band': activity.overviewSourceBand,'data-record-count':1,stroke:'#253746','stroke-width':0.35};
             const element = activity.overviewDuration ? svgElement('rect', {...common, x: contentX(activity.x),
                 y: y(activity.y) - size / 2, width: Math.max(0.5, activity.width), height: size}) :
                 svgElement('circle', {...common, cx: contentX(activity.x_relative), cy: y(activity.y), r: size / 2});
             const title=svgElement('title', {}, activity.data?.title || '');element.appendChild(title);
-            if(right>=0 && left<=width) bins.set(binKey,{element,title,count:1,sample:activity.data?.title || 'Record'});
+            const mark={element,title,count:1,sample:activity.data?.title || 'Record'};
+            if(right>=0 && left<=width) bins.set(binKey,mark);
             state.content.appendChild(element);
-            if (activity.searchMatch && timeline.ob_results?.state.highlight !== false) {
-                const match = svgElement('rect', {x: contentX(activity.x) - 2, y: y(activity.y) - Math.max(3, size / 2),
-                    width: Math.max(5, activity.width + 4), height: Math.max(6, size), rx: 2,
-                    fill: '#ffe400', 'fill-opacity': 0.35, stroke: '#614b00', 'stroke-width': 1,
+            if (activity.searchMatch && highlight) {
+                const matchStyle={fill:'#ffe04b','fill-opacity':.95,stroke:'#783800','stroke-width':2,
                     tabindex: 0, role: 'img', 'aria-label': 'Search match: ' + activity.data.title,
-                    'data-match-key': activity.matchKey});
+                    'data-match-key':activity.matchKey};
+                const match = activity.overviewDuration ? svgElement('rect', {...matchStyle,
+                    x:contentX(activity.x)-3,y:y(activity.y)-Math.max(5,size/2+2),
+                    width:Math.max(10,activity.width+6),height:Math.max(10,size+4),rx:3}) :
+                    svgElement('circle',{...matchStyle,cx:contentX(activity.x_relative),cy:y(activity.y),r:Math.max(6,size/2+2)});
                 match.appendChild(svgElement('title', {}, 'Search match: ' + activity.data.title));
+                mark.match=match;
                 state.matches.appendChild(match);
             }
         }
+        state.headingMatchCount=matchingKeys.size;
         for (const region of regions) {
             const window = svgElement('rect', {y: y(region.y + region.height / 2), height: Math.max(0.5, region.height * scaleY),
                 fill: '#ffffff', 'fill-opacity': 0.08, stroke: '#536872', 'stroke-width': 1, 'data-overview-window': region.sourceBand});
@@ -379,8 +400,10 @@ function syncPanel(timeline, index, band, panels, position, count) {
     if (heading.background) attributes(heading.background, {x: visibleLeft + viewportWidth - (band.overviewLabel.length * 5.5 + 8) - 4});
     if (heading.title) attributes(heading.title, {x: band.overviewLabel ? visibleLeft + viewportWidth - 8 : visibleLeft + 8});
     if (heading.count) {
-        attributes(heading.count, {x: visibleLeft + viewportWidth - 8});
-        const label = state.headingRecordCount + (timeline.ob_results?.complete === false ?
+        attributes(heading.count, {x: visibleLeft + viewportWidth - 8,y:stackedHeading?44:16,fill:highlight?'#783800':'#566871',
+            'font-weight':highlight?'bold':'normal','font-size':highlight?11:10});
+        const matches=searchActive?state.headingMatchCount+(state.headingMatchCount===1?' match · ':' matches · '):'';
+        const label = matches+state.headingRecordCount + (timeline.ob_results?.complete === false ?
             ' loaded records / partial context' : ' records / full context');
         if (heading.count.textContent !== label) heading.count.textContent = label;
     }

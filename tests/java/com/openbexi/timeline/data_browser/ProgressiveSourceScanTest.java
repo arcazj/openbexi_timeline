@@ -32,6 +32,30 @@ class ProgressiveSourceScanTest {
     private JSONObject request(JSONObject config) { return (JSONObject)new json_files_manager(null,null,new data_configuration(config)).getData("","0"); }
     private JSONObject meta(JSONObject page) { return (JSONObject)page.get("timelineMatch"); }
 
+    @Test void searchNamedSourcePrecedesDenseSourcesWithoutDroppingTheirContext() throws Exception {
+        JSONArray earthquakes=new JSONArray();
+        for(int i=0;i<800;i++) earthquakes.add(record("quake-"+i,"2026-09-12T12:00:00Z",null));
+        write("earthquake/2026/09/12/current.json",earthquakes);
+        JSONArray volcanoes=new JSONArray();volcanoes.add(record("Great Sitkin","2026-09-12T12:00:00Z",null));
+        write("volcano/2026/09/12/current.json",volcanoes);
+        JSONObject config=configuration();JSONArray sources=new JSONArray();
+        for(String namespace:List.of("earthquake","volcano")) sources.add(new JSONObject(Map.of(
+                "type","json_file","enable",true,"namespace",namespace,
+                "data_model",temporary.resolve(namespace+"/yyyy/mm/dd").toString())));
+        config.put("startup configuration",sources);config.put("search","volcano");
+        JSONArray collected=new JSONArray();JSONObject page;int pages=0;
+        do {
+            page=request(config);assertNull(meta(page).get("error"));
+            collected.addAll((JSONArray)page.get("events"));
+            config.put("cursor",meta(page).get("nextCursor"));assertTrue(++pages<40);
+        } while(config.get("cursor")!=null);
+        assertEquals(801,collected.size());
+        assertEquals("Great Sitkin",((JSONObject)collected.get(0)).get("id"));
+        assertEquals(true,((JSONObject)collected.get(0)).get("searchMatch"));
+        assertEquals(false,((JSONObject)collected.get(1)).get("searchMatch"));
+        assertEquals(true,meta(page).get("complete"));
+    }
+
     @Test void streamsDenseFilesBeforeReadingTheArchiveAndResumesWithoutGapsOrDuplicates() throws Exception {
         JSONArray records=new JSONArray();
         for(int i=0;i<1800;i++) records.add(record("current-"+i,"2026-09-12T12:00:00Z",null));

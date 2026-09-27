@@ -29,6 +29,11 @@ npx playwright show-report
 
 - Every catalog entry loads its expected number of records without uncaught errors
   and renders actual WebGL geometry.
+- Search, previous/next activity, view locking and Resync exercise local and
+  connected records. Selected activities glow without changing their size;
+  compact 3D labels remain readable through rotation and resizing.
+- Startup checks cover explicit HTML models, YAML configuration, a missing
+  model setting, offline/time-limited discovery, and explicit model errors.
 - The timeline fills the window, reserving space for an open panel on wide screens
   and keeping the toolbar accessible above overlays on narrow screens.
 - Timeline and vertical Split with Help have reviewed screenshot baselines at both
@@ -84,7 +89,7 @@ screenshot comparisons passed without updating the reviewed baselines.
 
 The release also passed 146 JavaScript tests and Maven verification with 54
 executed tests and 34 existing environment-dependent skips. See the
-[release validation record](release-2.0.md), [current captures](ui/overview/README.md)
+[release validation record](release-2.1.md), [current captures](ui/overview/README.md)
 and [descriptor scenarios](ui/navigation-details/README.md).
 
 ## Review intentional visual changes

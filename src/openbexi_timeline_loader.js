@@ -23,6 +23,7 @@ function covers(entries, range) {
 const overlaps = (a,b) => a.from<b.to && a.to>b.from;
 const bufferWarning='Neighbor loading paused at the cache limit; visible records retain priority.';
 const scanWarning='Neighbor loading paused at the scan limit; navigate to that interval to continue.';
+const loadedWarning='Loaded-data limit reached; coverage is partial. Narrow the time window to continue.';
 const recordIn = (record,range) => Date.parse(record.start)<=range.to &&
     Date.parse(record.end || record.start)>=range.from || record.activities?.some(item=>recordIn(item,range));
 
@@ -92,12 +93,15 @@ export class TimelineLoader {
                 const done=covers(previous,range);
                 entry={...range,events,characters:JSON.stringify(events).length,done,complete:done,pages:0,served:0,
                     metadata:previous.find(item=>overlaps(item,range) && item.metadata)?.metadata};
+                if (entry.metadata) entry.metadata={...entry.metadata,warnings:(entry.metadata.warnings || [])
+                    .filter(warning=>![bufferWarning,scanWarning,loadedWarning].includes(warning))};
             }
             entry.purpose=overlaps(range,visible)?'visible':range.to<=visible.from?'past-prefetch':'future-prefetch';
-            if (entry.paused && entry.purpose==='visible') {
+            if (entry.paused && entry.purpose==='visible' && (!entry.limitRange ||
+                entry.limitRange.from!==visible.from || entry.limitRange.to!==visible.to)) {
                 entry.paused=false;entry.done=false;entry.pages=0;
                 if (entry.metadata) entry.metadata={...entry.metadata,warnings:(entry.metadata.warnings || []).filter(warning=>warning!==entry.pauseReason)};
-                entry.pauseReason=null;
+                entry.pauseReason=null;entry.limitRange=null;
             }
             wanted.push(entry);
         }
@@ -228,8 +232,17 @@ export class TimelineLoader {
                     .sort((a,b)=>Math.abs(b.from-this.center)-Math.abs(a.from-this.center))) {
                     this.pauseBuffer(neighbor,true);overBudget=exceeds();if (!overBudget) break;
                 }
-                if (overBudget)
-                    throw new Error('Loaded-data limit reached. Narrow the time window to continue.');
+                if (overBudget) {
+                    // Capacity is a bounded, partial result, not a failed
+                    // connection. Release the response's newest cursor and all
+                    // remaining scans, retaining the last accepted records.
+                    if (metadata.nextCursor) {request.searchParams.set('cursor',metadata.nextCursor);this.cursorURLs.set(entry,request.href);}
+                    entry.metadata=metadata;
+                    this.pauseBuffer(entry,false,loadedWarning);entry.limitRange={...this.visible};
+                    for (const pending of this.cache) this.abandon(pending);
+                    this.publish(generation,count,true);
+                    break;
+                }
                 Object.assign(entry,{events,characters,metadata,cursor:metadata.nextCursor,done:!metadata.nextCursor,
                     complete:metadata.complete===true,pages:entry.pages+1,served:++this.sequence});
                 if (entry.cursor) {request.searchParams.set('cursor',entry.cursor);this.cursorURLs.set(entry,request.href);}
@@ -237,7 +250,7 @@ export class TimelineLoader {
                 this.publish(generation,count,json.events.length>0);
                 await new Promise(resolve=>setTimeout(resolve,0));
             }
-            if (current()) {this.running=false;r.fetching=false;r.updateUI();this.schedule(input);}
+            if (current()) {this.running=false;r.fetching=false;r.updateUI();r.explorer.schedule();this.schedule(input);}
         } catch (error) {
             if (!current()) return;
             this.running=false;r.fetching=false;
@@ -252,13 +265,28 @@ export class TimelineLoader {
         const events=merge(this.cache.flatMap(item=>item.events));
         const combined={...metadata,progressive:true,revision:`${generation}:${count}`,
             complete:this.cache.every(item=>item.done && item.complete),
+            loadLimited:this.cache.some(item=>item.limitRange && overlaps(item,this.visible)),
+            coverage:this.cache.map(item=>({from:item.from,to:item.to,complete:item.done && item.complete,
+                state:item.limitRange?'limited':item.paused?'paused':item.done?(item.complete?'complete':'partial'):'loading'})),
             domain:{from:new Date(Math.min(...this.cache.map(item=>item.from))).toISOString(),
                 to:new Date(Math.max(...this.cache.map(item=>item.to))).toISOString()},
             availableRange:this.cache.map(item=>item.metadata?.availableRange).find(Boolean),
             warnings:[...new Set(this.cache.flatMap(item=>item.metadata?.warnings || []))]};
-        if (changed || !r.remoteMetadata) r.acceptRemote(parseTimelineData(JSON.stringify({events,timelineMatch:combined})),combined);
-        else {r.remoteMetadata=combined;r.complete=combined.complete;r.updateUI();}
+        if (changed || !r.remoteMetadata || r.remoteMetadata.query!==combined.query)
+            r.acceptRemote(parseTimelineData(JSON.stringify({events,timelineMatch:combined})),combined);
+        else {
+            const completed=!r.complete && combined.complete;
+            r.remoteMetadata=combined;r.complete=combined.complete;
+            if(completed && r.state.auto) {r.navigationMap=null;r.request();}
+            else r.updateUI();
+        }
+        r.explorer?.schedule();
     }
 
-    schedule(input) {clearTimeout(this.poll);this.poll=setTimeout(()=>this.load(input,{refresh:true}),30000);}
+    schedule(input) {
+        clearTimeout(this.poll);
+        // Refreshing the same full interval would repeat the scan every 30s.
+        // Query changes and navigation start loading normally.
+        if (!this.cache.some(item=>item.limitRange)) this.poll=setTimeout(()=>this.load(input,{refresh:true}),30000);
+    }
 }

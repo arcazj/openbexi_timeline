@@ -179,7 +179,11 @@ export class TimelineViewport {
         this.pageIndex=pageForAnchor(this.pages,bands,this.anchor,this.pageIndex);
         const detail=pageBands(bands,this.pages[this.pageIndex],this.detailHeight);
         this.continued=detail.flatMap(b=>b.sessions.filter(s=>s.pageContinued).map(s=>s.data?.title || s.id));
-        const first=detail[0]?.sessions.flatMap(s=>s.activities).sort((a,b)=>a.row-b.row)[0];
+        const activities=detail.flatMap(band=>band.sessions.flatMap(session=>session.activities));
+        const selected=activities.find(activity=>recordKey(activity)===this.timeline.ob_results?.selectedKey);
+        const first=selected || detail[0]?.sessions.flatMap(s=>s.activities).sort((a,b)=>a.row-b.row)[0];
+        // Keep the selected activity on screen when 3D titles or a resize
+        // change the number of rows that fit on each page.
         this.anchor=first?recordKey(first):undefined;
         const overview=bands.filter(b=>b.name.includes('overview_'));
         const overviewHeight=this.overviewHeight || Math.min(80,this.detailHeight/4);

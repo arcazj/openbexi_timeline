@@ -79,7 +79,9 @@ test('Help renders configured resource groups and every catalog dataset with usa
         const section=panel.querySelector('details'); section.open=true;
         section.dispatchEvent(new harness.window.Event('toggle'));
         assert.equal(harness.timeline.helpSections.results,true);
-        assert.match(panel.textContent, /Version 2\.0\.0-rc\.1/);
+        const pkg=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8'));
+        assert.equal(resources.version,pkg.version,'Help identifies the current application release');
+        assert.ok(panel.textContent.includes('Version '+pkg.version));
         for (const resource of resources.sections.flatMap(section => section.links)) {
             if (resource.disabledReason) {
                 const disabled = button(panel, resource.label);

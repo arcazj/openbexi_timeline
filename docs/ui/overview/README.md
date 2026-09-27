@@ -1,4 +1,4 @@
-# Current UI captures: centered Overview and connected startup
+# Current UI captures: version 2.1
 
 These PNGs are captures of the actual Chromium/WebGL application on Windows,
 using public catalog data or explicitly synthetic connected records. They are
@@ -45,10 +45,7 @@ review the matching `split-help` capture as well. The catalog's
 `reference` fields point here; `npm run demos:readme` regenerates the Live Demos
 table without restoring historical references.
 
-This workstation used the installed Chromium 149.0.7827.55 headless shell with
-SwiftShader through `PLAYWRIGHT_CHROMIUM_EXECUTABLE`, rather than the lockfile's
-managed browser revision. The 2.0 release also compares these baselines with the
-locked Chromium 153 headless shell. Screenshots are visual evidence; the interaction tests
+Version 2.1 captures and baselines use the lockfile-managed Chromium 153 headless shell with SwiftShader. Screenshots are visual evidence; the interaction tests
 separately check main pointer anchoring, centered context, manual Overview zoom,
 Auto scale, resizing and normal panel scrolling. GPU/browser differences can
 affect pixel comparisons. No private records or deployment pages are pictured.

@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.0.0
+ *     OpenBEXI Timeline version 2.1.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -26,6 +26,8 @@ import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
+import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
+import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
 import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability} from './openbexi_timeline_filters.js';
@@ -90,7 +92,7 @@ class ResourceTracker {
     }
 }
 
-function OB_TIMELINE() {
+function OB_TIMELINE(options = {}) {
 
     const ob_texture = new Map();
     const namespace = "";
@@ -1170,9 +1172,12 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.ob_open_descriptor = function (index, record) {
         if (!record) return;
+        if(record.cluster) {this.ob_results?.explorer.expandCluster(record.cluster);return;}
+        this.ob_results?.explorer.interrupt();
         if (record.matchKey && this.ob_results) {
-            this.ob_results.selectedKey=record.matchKey;
+            this.ob_results.selectActivity(record.matchKey);
             this.ob_results.updateUI();
+            this.ob_render(index);
         }
         this.ob_remove_help();this.ob_remove_calendar();this.ob_remove_setting();
         this.ob_remove_sorting();this.ob_remove_login();
@@ -1304,6 +1309,7 @@ function OB_TIMELINE() {
             this.ob_sync = document.createElement("IMG");
             this.ob_sync.className = "ob_sync";
             this.ob_sync.alt = "Go to current time";
+            this.ob_sync.title = "Resync — center the current date and time";
             this.ob_sync.style.left = "89px";
             this.ob_sync.style.height = 32 + "px";
             this.ob_sync.style.width = 32 + "px";
@@ -1313,6 +1319,18 @@ function OB_TIMELINE() {
                     clearInterval(that2.ob_scene[ob_scene_index].ob_interval_move);
                 that2.moving = false;
                 that2.first_sync = undefined;
+                clearInterval(that2.ob_interval_clock);
+                const results=that2.ob_results,scene=that2.ob_scene[ob_scene_index];
+                if(results?.supported) {
+                    scene.cancelPan?.();results.captureRanges();
+                    const range=results.visibleRanges.values().next().value || results.ranges.values().next().value || results.domain;
+                    const now=Date.now(),span=range.to-range.from;
+                    results.explorer.interrupt();results.explorer.suppressed=true;results.explorer.message='';
+                    results.navigationMap=null;
+                    results.navigate({from:now-span/2,to:now+span/2},true,{immediate:true,centerBounds:{from:now,to:now}});
+                    return;
+                }
+                that2.date='current_time';
                 that2.reset_synced_time("new_sync", ob_scene_index);
                 that2.update_scene(ob_scene_index, that2.header, that2.params, that2.ob_scene[ob_scene_index].bands,
                     that2.ob_scene[ob_scene_index].model, that2.ob_scene[ob_scene_index].sessions,
@@ -1436,6 +1454,7 @@ function OB_TIMELINE() {
             this.ob_3d = document.createElement("IMG");
             this.ob_3d.className = "ob_3d";
             this.ob_3d.alt = "2D or 3D view";
+            this.ob_3d.title = "2D or 3D view — in 3D, Shift + drag rotates the view";
             this.ob_3d.style.zIndex = "10";
             this.ob_3d.style.height = 32 + "px";
             this.ob_3d.style.width = 32 + "px";
@@ -1590,7 +1609,6 @@ function OB_TIMELINE() {
             }
             this.ob_view.style.visibility = this.ob_visible_view ? "visible" : "hidden";
             this.ob_no_view.style.visibility = this.ob_visible_view ? "hidden" : "visible";
-            this.ob_sync.title = "Return to the model's reference date";
         }
         for (const icon of this.ob_timeline_header.querySelectorAll('img')) {
             if (!icon.onclick) continue;
@@ -2846,9 +2864,10 @@ function OB_TIMELINE() {
         //console.log("OB_TIMELINE.prototype.ob_render(ob_render_index=" + ob_scene_index + ")");
         this.ob_render_index = ob_scene_index;
         updateOverviewViewport(this, ob_scene_index);
+        syncOverviewPanel(this, ob_scene_index);
+        this.ob_activity_focus?.sync(ob_scene_index);
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
-        syncOverviewPanel(this, ob_scene_index);
     };
 
     OB_TIMELINE.prototype.get_backgroundColor = function () {
@@ -3012,6 +3031,7 @@ function OB_TIMELINE() {
                     ob_timeline.ob_scene_init(ob_scene_index);
                     if (ob_timeline.ob_viewport) ob_timeline.ob_scene[ob_scene_index].width=ob_timeline.ob_viewport.plotWidth;
                     ob_timeline.set_bands(ob_scene_index);
+                    ob_timeline.ob_scene[ob_scene_index].ob_camera_type = camera;
                     if (ob_timeline.ob_results?.supported) {
                         ob_timeline.ob_results.computeMap();
                         for (const band of ob_timeline.ob_scene[ob_scene_index].bands)
@@ -3026,7 +3046,6 @@ function OB_TIMELINE() {
                         ob_timeline.add_line_current_time(ob_scene_index,
                             new Date(ob_timeline.get_current_time()), "rgb(243,23,51)");
                     ob_timeline.center_bands(ob_scene_index);
-                    ob_timeline.ob_scene[ob_scene_index].ob_camera_type = camera;
                     ob_timeline.ob_start_clock(ob_scene_index);
                     if (ob_timeline.ob_scene[ob_scene_index].show_calendar)
                         ob_timeline.ob_create_calendar(ob_scene_index,
@@ -3323,6 +3342,10 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.createSegment = function (ob_scene_index, band, incrementPixelOffSet) {
         const heightMaxHalf = band.heightMax / 2;
+        if(this.ob_scene[ob_scene_index].ob_camera_type==='Perspective') {
+            this.add_segment(ob_scene_index,band.name,incrementPixelOffSet,heightMaxHalf,5,band.heightMax,band.dateColor,true);
+            return;
+        }
         this.add_segment(ob_scene_index, band.name, incrementPixelOffSet, heightMaxHalf, 5, band.heightMax, band.dateColor, false);
         this.add_segment(ob_scene_index, band.name, incrementPixelOffSet + 0.15, heightMaxHalf, 5, band.heightMax, band.color, false);
     };
@@ -3339,6 +3362,9 @@ function OB_TIMELINE() {
         label.backgroundColor = '#f7f9fc';
         label.fontSize = 48;
         label.userData.dateLabel = true;
+        if(this.ob_scene[ob_scene_index].ob_camera_type==='Perspective') {
+            label.material.depthTest=false;label.material.depthWrite=false;label.renderOrder=40;
+        }
         if (this.staticData && band.secondaryScale && !band.secondaryScale.step) {
             const time = this.pixelOffSetToBandDate(ob_scene_index, band, incrementPixelOffSet);
             const secondary = formatTimelineDate(time, band.secondaryScale.format, 0, band.secondaryScale.origin);
@@ -3935,6 +3961,8 @@ function OB_TIMELINE() {
     OB_TIMELINE.prototype.create_sessions = function (ob_scene_index, ob_set_sessions, regex) {
         if (ob_scene_index === undefined) ob_scene_index = 0;
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
+        this.ob_activity_focus ??= new TimelineActivityFocus(this);
+        this.ob_activity_focus.begin(ob_scene_index);
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             const band = this.ob_scene[ob_scene_index].bands[i];
@@ -3995,15 +4023,17 @@ function OB_TIMELINE() {
                         parent?.add(outline);
                     }
 
+                    let activityMesh;
                     if (activity.pixelOffSetEnd === undefined || isNaN(parseInt(activity.pixelOffSetEnd))) {
-                        this.add_event(ob_scene_index, band.name, activity, eventColor, image, textBackgroundColor,
+                        activityMesh=this.add_event(ob_scene_index, band.name, activity, eventColor, image, textBackgroundColor,
                             fontSizeInt, fontStyle, fontWeight, textColor, fontFamily, true,
                             this.ob_scene[ob_scene_index].font_align);
                     } else {
-                        this.add_session(ob_scene_index, band.name, activity, sessionColor, texture, image,
+                        activityMesh=this.add_session(ob_scene_index, band.name, activity, sessionColor, texture, image,
                             textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily,
                             this.ob_scene[ob_scene_index].font_align);
                     }
+                    this.ob_activity_focus.register(activityMesh,band);
                 }
 
                 // Create one container for each session's activities.
@@ -4273,6 +4303,8 @@ function OB_TIMELINE() {
 
     OB_TIMELINE.prototype.add_segment = function (ob_scene_index, band_name, x, y, z, size, color, dashed) {
         try {
+            const perspectiveGrid=dashed && this.ob_scene[ob_scene_index].ob_camera_type==='Perspective';
+            if(perspectiveGrid)z=1.8;
             // Validate inputs to prevent unexpected behavior
             if (isNaN(x) || isNaN(y) || isNaN(z) || isNaN(size)) {
                 //console.error("Invalid coordinates or size provided.");
@@ -4296,7 +4328,9 @@ function OB_TIMELINE() {
                 return;
             }
 
-            const material = this.track[ob_scene_index](new THREE.LineDashedMaterial({
+            const material = this.track[ob_scene_index](perspectiveGrid?new THREE.LineBasicMaterial({
+                color,transparent:true,opacity:.16,depthWrite:false
+            }):new THREE.LineDashedMaterial({
                 color: color,
                 dashSize: 2,
                 gapSize: 4,
@@ -4923,12 +4957,9 @@ function OB_TIMELINE() {
             );
             scene.add(scene.ob_camera);
         } else {
-            // A front-facing, long-lens perspective preserves readable labels
-            // and the same complete plot bounds as the orthographic view.
-            // Depth remains visible without the former steep side distortion.
+            // An oblique board with shaded bars; selection never changes depth.
             const fieldOfView = 30;
             const distance = Math.max(1, scene.ob_height) / (2 * Math.tan(THREE.MathUtils.degToRad(fieldOfView / 2)));
-            const frontDepth = 32;
             scene.ob_camera = this.track[ob_scene_index](
                 new THREE.PerspectiveCamera(
                     fieldOfView,
@@ -4937,18 +4968,12 @@ function OB_TIMELINE() {
                     Math.max(scene.ob_far || 50000, distance * 4)
                 )
             );
-            scene.ob_camera.position.set(0, scene.ob_height / 2, distance + frontDepth);
             scene.add(scene.ob_camera);
-            scene.ob_camera.lookAt(0, scene.ob_height / 2, 0);
-            /*scene.add(this.track[ob_scene_index](new THREE.AmbientLight(0xf0f0f0)));
-
-            const light = this.track[ob_scene_index](new THREE.SpotLight(0xffffff, 1.5));
-            light.position.set(0, 1500, 200);
-            light.castShadow = true;
-            light.shadow.bias = -0.000222;
-            light.shadow.mapSize.width = 1024;
-            light.shadow.mapSize.height = 1024;
-            scene.add(light);*/
+            positionActivityCamera(this,ob_scene_index);
+            scene.add(this.track[ob_scene_index](new THREE.AmbientLight(0xffffff,1.5)));
+            const light=this.track[ob_scene_index](new THREE.DirectionalLight(0xffffff,1.8));
+            light.position.set(-scene.width/2,scene.ob_height,scene.ob_height);
+            scene.add(light);
         }
 
         // Set all listeners
@@ -5371,18 +5396,32 @@ function OB_TIMELINE() {
         return this;
     };
 
-    OB_TIMELINE.prototype.loadModel = async function (model, options = {}) {
-        const response = await fetch(model);
-        if (!response.ok) throw new Error(`Model HTTP error: ${response.status}`);
-        const data = await response.json();
+    OB_TIMELINE.prototype.loadModel = function (model, options = {}) {
+        return this.modelStartup.load(model,options);
+    };
+
+    OB_TIMELINE.prototype.validateModel = function (data, model) {
         if (data.dataSource) validateDemoModel(data, {label: String(model)});
         if (!data.params?.[0] || !data.bands?.length) throw new Error('Invalid timeline model');
+    };
+
+    OB_TIMELINE.prototype.applyModel = async function (data, options = {}) {
         this.params = data.params;
         this.bands = data.bands;
+        const useLocalData=()=>{
+            this.staticData={dateTimeFormat:'iso8601',events:[]};
+            if(['current_time','Date.now()'].includes(this.params[0].date))this.params[0].date=new Date().toISOString();
+        };
+        if(options.offline) {
+            useLocalData();
+            this.formatEventDate=value=>formatTimelineValue(value,null,'yyyy-MM-dd HH:mm');
+            this.initializeTimeline();
+            return this;
+        }
         if (data.dataSource) {
             const dataset = options.dataset || data.dataSource.url;
             if (!dataset) throw new Error('The model needs a dataset URL');
-            this.staticData = {dateTimeFormat:'iso8601',events:[]};
+            useLocalData();
             this.staticTimeAxis = data.dataSource.time;
             if (this.staticTimeAxis?.kind === "numeric") this.params[0].date = new Date(timelineValueToTime(this.params[0].date, this.staticTimeAxis)).toISOString();
             this.formatEventDate = value => formatTimelineValue(value, this.staticTimeAxis, "yyyy-MM-dd HH:mm", this.params[0].displayOffsetMinutes || 0);
@@ -5396,14 +5435,14 @@ function OB_TIMELINE() {
             return this.loadLocalData();
         } else {
             this.params[0].title ||= "Timeline report";
-            const configured = options.providerUrl || this.params[0].data;
+            const configured = options.providerUrl || this.params[0].data || options.defaultProviderUrl;
             if (configured && /\.json(?:[?#]|$)/i.test(configured)) {
-                this.staticData = {dateTimeFormat:'iso8601',events:[]};
+                useLocalData();
                 this.formatEventDate = value => formatTimelineValue(value, null, 'yyyy-MM-dd HH:mm');
                 this.params[0].data = '';
                 this.initializeTimeline(); this.localSource={url:configured,config:{}};
                 return this.loadLocalData();
-            } else this.params[0].data = configured || await this.updateURL();
+            } else this.params[0].data = configured;
         }
         this.initializeTimeline();
         return this;
@@ -5416,6 +5455,8 @@ function OB_TIMELINE() {
     };
 
     OB_TIMELINE.prototype.initializeTimeline = function () {
+        if(this.modelStartup?.initializedModel)return;
+        this.modelStartup?.initialized();
         // Initialization logic here
         this.ob_init();
         this.ob_results = new TimelineResults(this);
@@ -5442,6 +5483,7 @@ function OB_TIMELINE() {
             this.update_all_timelines(0, this.header, this.params, this.ob_scene[0].bands,
                 this.ob_scene[0].model, this.ob_scene[0].sessions, this.camera || "Orthographic");
             this.ob_results.remember();
+            this.modelStartup?.complete();
             return;
         }
         this.update_scene(this.ob_scene_index, null, this.params,
@@ -5456,7 +5498,9 @@ function OB_TIMELINE() {
             this.update_all_timelines(0, this.header, this.params, this.ob_scene[0].bands,
                 this.ob_scene[0].model, this.ob_scene[0].sessions, this.camera || 'Orthographic');
         }
+        this.modelStartup?.complete();
     };
+    this.modelStartup=new TimelineModelStartup(this,options);
 }
 
 // Export the OB_TIMELINE constructor function

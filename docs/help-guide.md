@@ -1,15 +1,18 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
 - Use **Timeline**, **Table**, or **Split** on the main toolbar to change the presentation. Split places the chart beside the event table.
 - Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
-- Search the loaded records using the toolbar search field. File-backed demos keep the complete dataset available even when the initial chart displays a smaller date range.
+- Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
+- **Lock current view** is followed by **Find previous activity** and **Find next activity**. These controls are available before searching and with Auto scale on or off. During a search, **Clear search** sits immediately before Lock current view. The activity buttons respect the active search and filters and center the result they find.
 - Drag the timeline to navigate through time. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
+- Previous/next activity centers the result while preserving the current time span, widening only when needed for the activity's duration. A gold glow marks the result without enlarging its bar, icon or text, changing its depth, or adding rows. Reduced-motion settings disable the brief brightness pulse.
+- **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Full titles use the model's font size and remain readable as you rotate. Activities share compact rows when space allows; extra pages appear only when the records and readable titles cannot fit. Hold **Shift** while dragging to rotate; regular dragging moves through time.
 - Use row pagination to browse records that do not fit vertically. The timeline fills the browser window by default and recalculates page capacity when resized; long panel content can scroll independently.
-- Use the return-to-reference control to restore the model's initial date. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
+- Use **Resync** (Go to current time) to center the current date and time. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
 
 The Help panel collects project resources and local demo choices. The local demos run from files and do not require a Java data service. They do not offer server login, saved server filters, or event creation.
 
@@ -22,8 +25,48 @@ In **Diagnostics**, use **Refresh** for current view, scale, and record-count in
 Calendar month arrows browse dates without moving the timeline. Select a day to
 load that interval. If loading fails, the red **Update failed — open details**
 control opens the reason; Retry or navigate to resume. Loaded records stay visible.
+Loading status appears in the toolbar; its Stop control or Escape cancels loading.
+The startup plot stays clear. A no-results panel appears only after an active search finishes without a result in the visible interval.
 Multi-band views share one top date axis by default. A model can explicitly request
 separate axes with `params.dateAxisMode: "per-band"`.
+
+## Auto scale and exploration
+
+**Auto scale** gives busy intervals more space and compresses quiet intervals.
+Axis labels choose suitable units from milliseconds to years. Numeric timelines
+keep their declared units. Overview always uses uniform time spacing.
+
+- **Search details** or **Timeline details** lists the loading and completion
+  state of each retained interval. Incomplete coverage does not mean that no
+  events occurred.
+- If a completed interval contains no relevant activity, Auto scale looks for
+  earlier activity. **Lock current view**, dragging and reading Data prevent this
+  automatic movement. **Resync** keeps the view at now even when only historical
+  records are available. Turning Auto scale off restores ordinary spacing.
+- A new search centers its first result once. Later batches keep the chosen view.
+  If no match is loaded, connected searches inspect nearby past and future
+  intervals and center the first result while preserving the current time span.
+  **Find previous activity** and **Find next activity** search backward and forward
+  without moving the plot until a result arrives; **Cancel search** retains the view.
+- Overview emphasizes search matches with larger yellow markers, dark outlines
+  and a match count; other records fade while Highlight matches is enabled.
+  Scroll down over Overview to widen its time range and up to narrow it. Both
+  directions update Overview's labels and keep the main time range unchanged.
+- Dense point events form clickable groups with event and warning counts. Use
+  **Event groups** to expand them with a keyboard. Table and Overview retain the
+  original records. Selected events, pinned records, durations, sessions, and
+  records with `priority` or `severity` set to `high`, `critical` or `emergency`
+  remain individual. Warning counts use `status` or `severity` values containing
+  `warning`, `warn` or `alert`.
+- Focus the timeline and use Left/Right to pan, Plus/Minus to zoom, and
+  Alt+Left/Right to move between matches. Automatic moves are immediate, with no
+  animation; the existing reduced-motion preference also disables coasting.
+
+Connected searches inspect at most eight expanding intervals, 32 response pages
+and 20 seconds. They stop at the first page containing relevant activity and
+release unused cursors. A result from an incomplete scan is earlier/later activity,
+not a claim that it is the nearest event in the entire archive. If nothing is
+found within those bounds, choose a date or adjust the filters to continue.
 
 ## Design
 

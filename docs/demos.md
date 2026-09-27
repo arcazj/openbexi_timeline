@@ -7,11 +7,53 @@ npm install
 npm run demo
 ```
 
-Open a dataset from the [README demo links](../README.md#live-demos), or open <http://localhost:8780/demos.html> for the default demo. Every demo begins with the original timeline toolbar; there is no page heading, description, or dataset selector above it. Use the same Timeline, Table, Split, search, overview, calendar, and camera controls as the main timeline. Split places the timeline on the left and the table on the right. The return-to-reference control restores the model's initial date. File-backed demos are read-only; server login, saved server filters, and event creation are not shown. Numeric axes have no calendar control.
+Open a dataset from the [README demo links](../README.md#live-demos), or open <http://localhost:8780/demos.html> for the default demo. Every demo begins with the original timeline toolbar; there is no page heading, description, or dataset selector above it. Use the same Timeline, Table, Split, search, overview, calendar, and camera controls as the main timeline. Split places the timeline on the left and the table on the right. Resync centers the current date and time; Help's Reset reference view restores the model's initial date. File-backed demos are read-only; server login, saved server filters, and event creation are not shown. Numeric axes have no calendar control.
 
 The file server binds to `127.0.0.1`; it does not publish the project. Change the port with `npm run demo -- --port 8788`. A link can select a view, for example `demos.html?demo=monet&view=split`.
 
 ## Catalog and models
+
+### Choosing a model at startup
+
+Timeline startup uses **explicit HTML model → server YAML model → built-in default**.
+Existing pages can keep their model selection:
+
+```javascript
+const ob_timeline = new OB_TIMELINE();
+ob_timeline.loadModel("models/regular_timeline_earthquake.json");
+```
+
+An explicit call skips server configuration discovery. Models with a local JSON data
+source continue to work on a static host without the Java backend.
+
+To use the server configuration, keep `new OB_TIMELINE()` and omit the `loadModel(...)`
+call. The browser requests `openbexi_timeline/config` under the application's root.
+The server reads the top-level `model` field from the YAML selected by `-data_conf`:
+
+```yaml
+model: models/regular_timeline_earthquake.json
+data_sources:
+  # Existing source definitions remain here.
+```
+
+Relative YAML model paths resolve from the application root, including deployments
+under a context path. The endpoint returns only the model path and data-service URL;
+the YAML file remains private. Restart the server after changing this setting.
+
+If YAML omits `model` or leaves it empty, the browser creates a default model with a
+main timeline, time axis and Overview, using the server's data service. If configuration
+is unavailable, startup falls back after at most 1.5 seconds to an empty standalone
+timeline. The default model is built in JavaScript and needs no model file. An explicitly
+selected HTML or YAML model that fails to load displays an error containing its path.
+
+Use `await ob_timeline.ready` to wait for the view to initialize. `loadModel(...)`
+also returns a promise and retains its existing local-data loading behavior. Each
+instance initializes once; delayed configuration replies cannot replace an explicit
+selection. For an integration that prepares a model asynchronously, construct with
+`new OB_TIMELINE({autoStart: false})`, then call `loadModel(...)` or the existing manual
+initialization method when ready.
+
+### Demo catalog
 
 `demos/catalog.json` is the source for URL-based dataset selection and the generated README table. Its paths are relative to the repository root (`basePath` resolves from the catalog). Each entry provides `id`, `title`, `description`, `dataset`, `model`, `recordCount` (the expected number of records, excluding zones), and an optional `reference` PNG. The shared loader, renderer, and page contain no demo IDs or dataset-specific branches.
 
@@ -106,4 +148,25 @@ Structural validation covers dimensions, colors, band options, time units, ratio
 
 ## Hosting portability
 
-The page and its assets use relative paths and can be served under a subdirectory. A static host must include the HTML, `src`, `css`, `icon`, `models/demos`, `demos`, `json/test-data`, reference images, and the browser dependencies referenced by the import map (`three`, `three-spritetext`, and `simple-jscalendar` under `node_modules`). No Java backend or data service is required. To publish public links, first deploy those assets and then generate the README URLs against the chosen public base URL; the current README deliberately uses the local server.
+The [public gallery](https://arcazj.github.io/openbexi_timeline/) runs all seven demos on GitHub Pages. Its relative asset paths support the repository subdirectory. These demos use public JSON files and work without a Java backend or data service.
+
+Build and verify the same static site locally:
+
+```sh
+npm ci
+npm run pages:build
+npx playwright install chromium --only-shell
+npm run pages:verify
+```
+
+`pages:build` writes `dist/pages` using the reviewed public-file manifest and the exact browser dependency files referenced by the import map. It includes their license notices, help, public models, datasets and reference images. Server configuration, runtime files and local data are excluded. The generated gallery is `index.html`; `version.json` records the release and commit.
+
+The [Pages workflow](../.github/workflows/pages.yml) runs on pushes to `master`. It validates all seven demos at desktop and narrow sizes under `/openbexi_timeline/`, then deploys the tested artifact. Repository **Settings > Pages > Source** must be **GitHub Actions**. The README demo table is generated with the public Pages URL; local use remains available through `npm run demo`.
+
+After deployment, check the actual public site with:
+
+```sh
+npm run pages:verify -- --url https://arcazj.github.io/openbexi_timeline/ --commit YOUR_COMMIT_SHA
+```
+
+This checks the deployed commit, assets, record counts, Timeline/Table/Split views, search, previous/next navigation, auto scaling, Overview zoom, 3D and Help. It fails on JavaScript errors or failed asset requests.

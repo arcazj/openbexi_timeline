@@ -3,6 +3,7 @@ package com.openbexi.timeline.server;
 import com.openbexi.timeline.data_browser.data_sources;
 import com.openbexi.timeline.servlets.ob_ajax_timeline;
 import com.openbexi.timeline.servlets.ob_sse_timeline;
+import com.openbexi.timeline.servlets.TimelineConfigServlet;
 import com.openbexi.timeline.api.TimelineApiServlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -215,6 +216,10 @@ public class openbexi_timeline implements Runnable {
         }
         if (_data_conf != null && ob_timeline_context != null)
             ob_timeline_context.addParameter("data_conf", _data_conf);
+
+        Tomcat.addServlet(ob_timeline_context, "timeline_config", new TimelineConfigServlet(
+                mode==ob_mode.secure_sse?"/openbexi_timeline_sse/sessions":"/openbexi_timeline/sessions"));
+        ob_timeline_context.addServletMappingDecoded("/openbexi_timeline/config", "timeline_config");
 
         Tomcat.addServlet(ob_timeline_context, "api_v1", new TimelineApiServlet()).setLoadOnStartup(1);
         ob_timeline_context.addServletMappingDecoded("/api/v1/*", "api_v1");

@@ -24,11 +24,11 @@ export async function readDemoCatalog() {
     return catalog;
 }
 
-export function buildDemoReadme(catalog, baseURL = 'http://localhost:8780/') {
+export function buildDemoReadme(catalog, baseURL = 'https://arcazj.github.io/openbexi_timeline/') {
     const escape = text => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
     const lines = [
         '<!-- LIVE_DEMOS:START -->', '## Live demos', '',
-        'Start the local server with [Quick start](#quick-start), then choose a demo. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files.', '',
+        'Open a demo directly on GitHub Pages; no installation or Java server is needed. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files. For local use, follow [Quick start](#quick-start).', '',
         '| Demo | What it shows | Resources |',
         '| --- | --- | --- |'
     ];

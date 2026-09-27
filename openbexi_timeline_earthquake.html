@@ -37,7 +37,7 @@
     // Initialize the timeline
     const ob_timeline = new OB_TIMELINE();
 
-    // Load model
+    // Explicit model takes priority. Omit this call to use server YAML or the built-in default.
     ob_timeline.loadModel("models/regular_timeline_earthquake.json");
 
 </script>

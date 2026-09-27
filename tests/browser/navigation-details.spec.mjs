@@ -7,7 +7,9 @@ async function ready(page) {
         return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;})).toBe(true);
 }
 async function centered(page) {
-    const windows=await page.locator('.ob_docked_overview [data-overview-window]').evaluateAll(nodes=>nodes.map(node=>{
+    // Query and measure in one browser task; a layout refresh can replace SVG
+    // nodes between locator resolution and evaluation.
+    const windows=await page.evaluate(()=>[...document.querySelectorAll('.ob_docked_overview [data-overview-window]')].map(node=>{
         const box=node.getBoundingClientRect(),plot=node.closest('.ob_docked_overview').getBoundingClientRect();
         return {delta:Math.abs(box.x+box.width/2-plot.x-plot.width/2),width:box.width,available:plot.width};
     }));

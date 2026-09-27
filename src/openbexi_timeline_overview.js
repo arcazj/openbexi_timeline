@@ -111,6 +111,7 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
     const scene = timeline.ob_scene[sceneIndex];
     const track = timeline.track[sceneIndex];
     scene.overviewViewports = [];
+    const highlight=Boolean(timeline.ob_results?.state.query.trim()) && timeline.ob_results?.state.highlight !== false;
     for (const band of scene.bands.filter(isOverview)) {
         const parent = scene.getObjectByName(band.name);
         if (!parent) continue;
@@ -140,7 +141,7 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
             if (session.activities.length > 1) box(session.width, session.height, session.x_relative, session.y,
                 session.render?.color || '#999999', 0.2, 'overviewSession', session);
             for (const activity of activities) {
-                const opacity = Number(activity.render.opacity ?? 1);
+                const opacity = Number(activity.render.opacity ?? 1)*(highlight && !activity.searchMatch ? .25 : 1);
                 const mesh = box(activity.overviewDuration ? activity.width : activity.height, activity.height,
                     activity.x_relative, activity.y, activity.render.color,
                     Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1, 'overviewActivity', activity);
@@ -148,16 +149,15 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
                 if (!activity.overviewDuration) {
                     mesh.geometry = track(new THREE.CircleGeometry(Math.max(0.25, activity.size), 10));
                 }
-                if (activity.searchMatch && timeline.ob_results?.state.highlight !== false) {
-                    const halo = box(Math.max(4, activity.width) + 3, Math.max(4, activity.height) + 3,
-                        activity.x_relative, activity.y, '#ffe400', 1, 'overviewMatch', activity);
+                if (activity.searchMatch && highlight) {
+                    const halo = box(Math.max(10, activity.width + 6), Math.max(10, activity.height + 4),
+                        activity.x_relative, activity.y, '#ffe04b', .95, 'overviewMatch', activity);
+                    if(!activity.overviewDuration)halo.geometry=track(new THREE.CircleGeometry(Math.max(6,activity.size+2),16));
                     halo.position.z = 11;
-                    halo.material.opacity = 0.35;
-                    halo.material.transparent = true;
                     halo.material.depthTest = false;
                     halo.renderOrder = 10;
                     const edge = track(new THREE.LineSegments(track(new THREE.EdgesGeometry(halo.geometry)),
-                        track(new THREE.LineBasicMaterial({color: '#614b00', depthTest: false}))));
+                        track(new THREE.LineBasicMaterial({color: '#783800', depthTest: false}))));
                     edge.raycast = () => {}; halo.add(edge);
                 }
             }

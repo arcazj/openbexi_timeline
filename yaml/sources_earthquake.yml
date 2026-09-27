@@ -1,3 +1,5 @@
+model: models/regular_timeline_earthquake.json
+
 data_sources:
   - namespace: "earthquake"
     type: "json_file"

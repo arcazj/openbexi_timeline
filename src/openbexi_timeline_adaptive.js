@@ -54,7 +54,7 @@ export function densityMap(records, domain, ratio = 1, bins = ADAPTIVE_LIMITS.bi
         }
         return from + (low + (value - units[low]) * total / weights[low]) * step;
     };
-    const segments = weights.map((factor, i) => ({from: from + i * step, to: i === bins - 1 ? to : from + (i + 1) * step, factor}));
+    const segments = weights.map((factor, i) => ({from: from + i * step, to: i === bins - 1 ? to : from + (i + 1) * step, factor, density:densities[i]}));
     return {domain, ratio: maximum ? ratio : 1, segments, map, inverse};
 }
 
@@ -89,15 +89,16 @@ export function zoomRange(range, domain, anchor, factor, fraction = 0.5) {
 }
 
 // Zoom in mapped coordinates: the real time under the pointer stays under it.
-export function zoomMappedRange(map, range, anchor, factor, fraction = 0.5) {
+export function zoomMappedRange(map, range, anchor, factor, fraction = 0.5, {constrainToDomain = true} = {}) {
     if (!Number.isFinite(factor) || factor <= 0) throw new Error('Invalid zoom factor.');
-    const low = map.map(map.domain.from), high = map.map(map.domain.to);
+    const domain = constrainToDomain ? map.domain : {from:-ADAPTIVE_LIMITS.maximumDate,to:ADAPTIVE_LIMITS.maximumDate};
+    const low = map.map(domain.from), high = map.map(domain.to);
     const oldSpan = map.map(range.to) - map.map(range.from);
     let span = Math.min(high - low, oldSpan * factor);
     let from = Math.max(low, Math.min(high - span, map.map(anchor) - span * fraction));
     let result = {from: map.inverse(from), to: map.inverse(from + span)};
     if (result.to - result.from < ADAPTIVE_LIMITS.minimumSpan)
-        result = zoomRange(range, map.domain, anchor, ADAPTIVE_LIMITS.minimumSpan / (range.to - range.from), fraction);
+        result = zoomRange(range, domain, anchor, ADAPTIVE_LIMITS.minimumSpan / (range.to - range.from), fraction);
     return result;
 }
 

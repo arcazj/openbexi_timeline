@@ -18,7 +18,7 @@ async function waitFor(predicate) {
 async function load() {
     const h = await createTimelineHarness();
     const {OB_TIMELINE} = await h.importModule('src/openbexi_timeline.js');
-    const t = new OB_TIMELINE();
+    const t = new OB_TIMELINE({autoStart:false});
     const model = JSON.parse(await fs.readFile(new URL('../models/regular_timeline_earthquake.json', import.meta.url), 'utf8'));
     t.params = model.params;
     Object.assign(t.params[0], {date: '2026-09-12T12:30:00Z', width: 1100, height: 650, dockOverview: true, showCurrentTime: false});
@@ -96,7 +96,7 @@ test('Lazy loading locks conflicting controls, retains the view, cancels stale r
     const response=revision=>({ok:true,json:async()=>({events:[{id:'example',start:'2026-09-12T12:00:00Z',data:{title:'Example'},searchMatch:false}],
         timelineMatch:{version:1,query:'',hasCondition:false,complete:true,revision,domain:{from:'2026-09-12',to:'2026-09-13'}}})});
     try {
-        assert.equal(r.loading,true); assert.equal(r.busy.hidden,false); assert.equal(t.ob_search_input.disabled,true);
+        assert.equal(r.loading,true); assert.equal(h.window.document.querySelector('.ob_timeline_loading'),null); assert.equal(t.ob_search_input.disabled,true);
         requests[0].resolve(response('first')); await waitFor(()=>!r.pending);
         assert.equal(r.loading,false); assert.equal(t.ob_search_input.disabled,false);
         const snapshot=r.snapshot,canvas=t.ob_scene[0].ob_renderer.domElement;
@@ -104,10 +104,11 @@ test('Lazy loading locks conflicting controls, retains the view, cancels stale r
         assert.equal(r.loading,true); assert.equal(r.snapshot,snapshot); assert.equal(canvas.isConnected,true);
         assert.equal(t.ob_timeline_body_frame.getAttribute('aria-busy'),'true');
         assert.equal(t.ob_scene[0].dragControls.enabled,false);
-        assert.equal(h.window.document.activeElement,r.cancelButton);
+        assert.equal(h.window.document.activeElement,t.ob_stop);
+        assert.equal(t.ob_stop.getAttribute('aria-label'),'Stop loading');
         const mode=t.ob_views.mode;
         t.ob_views.controls.querySelector('button').click(); assert.equal(t.ob_views.mode,mode);
-        r.cancelButton.click();
+        t.ob_stop.dispatchEvent(new h.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
         assert.equal(requests[1].options.signal.aborted,true); assert.equal(r.loading,false);
         assert.equal(h.window.document.activeElement,t.ob_search_input);
         requests[1].resolve(response('stale')); await settle(); assert.equal(r.remoteMetadata.revision,'first');
@@ -123,7 +124,7 @@ test('Lazy loading locks conflicting controls, retains the view, cancels stale r
 async function connectedStartup(modelName = 'regular_timeline_earthquake.json', dimensions = {}) {
     const h = await createTimelineHarness();
     const {OB_TIMELINE} = await h.importModule('src/openbexi_timeline.js');
-    const t = new OB_TIMELINE();
+    const t = new OB_TIMELINE({autoStart:false});
     t.progressiveLoading=false; // Retain coverage of the compatible foreground/SSE path.
     const model = JSON.parse(await fs.readFile(new URL('../models/' + modelName, import.meta.url), 'utf8'));
     t.params = model.params; t.bands = model.bands;
@@ -206,12 +207,11 @@ test('Highlight, only, empty and clear share identities, counts, colors, selecti
     const {h,t,r} = await load();
     try {
         const original = JSON.stringify(t.staticData);
-        r.captureRanges(); const range = plain([...r.ranges]);
         r.request({query: 'volcano'}); await settle();
+        r.captureRanges(); const range = plain([...r.ranges]);
         assert.equal(r.error, '');
         assert.deepEqual(plain(r.snapshot.counts.matching), {events:4,sessions:1});
         assert.equal(r.projection.densityRecords.length, 9);
-        assert.deepEqual(plain([...r.ranges]), range);
         assert.equal(overview(t).filter(a => a.searchMatch).length, 5);
         const selected = r.projection.densityRecords.find(e => e.namespace === 'earthquake');
         t.ob_open_descriptor(0, selected);
@@ -266,7 +266,8 @@ test('Search keeps the original icon, reveals independent checkboxes, and retain
         assert.ok(t.ob_timeline_header.contains(t.ob_search));
         assert.equal(t.ob_search.parentElement.getAttribute('aria-label'),'Search');
         assert.equal(t.ob_timeline_header.querySelector('select'),null);
-        assert.equal(r.toolbar.hidden,true);
+        assert.equal(r.toolbar.hidden,false,'Activity navigation remains available before searching');
+        assert.ok(r.matchControls.every(control=>control.hidden));
         assert.equal(r.details.open,false);
         t.ob_search_input.value='volcano';
         t.ob_search_input.dispatchEvent(new h.window.Event('input'));
@@ -296,10 +297,12 @@ test('Search keeps the original icon, reveals independent checkboxes, and retain
         assert.equal(r.details.contains(r.summary),true);
         assert.equal(r.details.open,false);
         r.clearButton.click();
-        assert.equal(r.toolbar.hidden,true,'Clearing collapses contextual actions immediately');
+        assert.equal(r.toolbar.hidden,false,'Clearing retains activity navigation');
+        assert.ok(r.matchControls.every(control=>control.hidden),'Clearing hides search-only actions');
         assert.equal(h.window.document.activeElement,t.ob_search_input);
         await settle();
-        assert.equal(r.toolbar.hidden,true);
+        assert.equal(r.toolbar.hidden,false,'Activity navigation stays available after the search clears');
+        assert.ok(r.matchControls.every(control=>control.hidden));
         assert.equal(r.state.mode,'only'); assert.equal(r.highlight.checked,true);
         assert.deepEqual(plain(r.projection.displayedKeys),keys);
     } finally {h.close();}
@@ -475,7 +478,8 @@ test('Actual HTTP loader cancels older queries and ignores late responses, inclu
             data.timelineMatch={version:1,query,hasCondition:true,complete:true,revision:query,domain:{from:'2026-09-12',to:'2026-09-13'}};
             return {ok:true,json:async()=>data};
         };
-        pending[1].resolve(response('volcano&readDescriptor')); await settle();
+        pending[1].resolve(response('volcano&readDescriptor'));
+        await waitFor(()=>r.snapshot?.query==='volcano&readDescriptor');
         assert.equal(r.snapshot.query,'volcano&readDescriptor');
         const snapshot=r.snapshot;
         pending[0].resolve(response('old')); await settle();

@@ -7,12 +7,15 @@ export const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.u
 const types = {'.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
     '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.md': 'text/plain', '.ico': 'image/x-icon'};
 
-export function createDemoServer(root = projectRoot) {
+export function createDemoServer(root = projectRoot, basePath = '/') {
+    if (!basePath.startsWith('/') || !basePath.endsWith('/')) throw new Error('Base path must start and end with /.');
     return http.createServer(async (request, response) => {
         if (!['GET', 'HEAD'].includes(request.method)) { response.writeHead(405).end(); return; }
         try {
             const url = new URL(request.url, 'http://localhost');
-            const pathname = decodeURIComponent(url.pathname === '/' ? '/demos.html' : url.pathname);
+            if (!url.pathname.startsWith(basePath)) { response.writeHead(404).end('File unavailable'); return; }
+            const relativeURL = url.pathname.slice(basePath.length);
+            const pathname = decodeURIComponent('/' + (relativeURL || 'demos.html'));
             const file = path.resolve(root, '.' + pathname);
             const relative = path.relative(root, file);
             if (relative.startsWith('..') || path.isAbsolute(relative) || relative.split(/[\\/]/).some(part => part.startsWith('.'))) {

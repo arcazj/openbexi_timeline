@@ -11,7 +11,7 @@ async function waitFor(predicate) {
 async function setup(connected=false) {
     const h=await createTimelineHarness({calendar:true});h.window.innerWidth=1100;h.window.innerHeight=700;
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-    const t=new OB_TIMELINE(),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
     t.params=model.params;t.bands=model.bands;
     Object.assign(t.params[0],{data:connected?'http://localhost/sessions':'',date:'2026-09-12T12:30:00Z',showCurrentTime:false,
         displayOffsetMinutes:120,fullWindow:true});

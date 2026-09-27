@@ -62,9 +62,12 @@ async function setup(page,{holdBackground=false}={}) {
             return route.fulfill({status:503,json:{error:'Synthetic service unavailable'}});}
         const from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
         const when=new Date((from+to)/2).toISOString(),id=control.phase+'-'+when;
-        return route.fulfill({json:{events:[{id,namespace:'sample',start:when,searchMatch:false,
-            data:{title:control.phase+' sample activity'},render:{color:'#2878b5'}}],timelineMatch:{version:1,progressive:true,
-            query:'',hasCondition:false,complete:true,nextCursor:null,revision:id,
+        const event={id,namespace:'sample',start:when,searchMatch:false,
+            data:{title:control.phase+' sample activity'},render:{color:'#2878b5'}};
+        const overflow=url.searchParams.has('cursor');
+        const nextCursor=control.extraPage && !purpose.endsWith('prefetch')?'overflow':null;
+        return route.fulfill({json:{events:overflow?Array.from({length:4},(_,index)=>({...event,id:id+'-'+index})):[event],timelineMatch:{version:1,progressive:true,
+            query:'',hasCondition:false,complete:!nextCursor,nextCursor:overflow?'overflow-next':nextCursor,revision:id,
             domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}}});
     });
     await page.goto(origin+'/demos.html?demo=default-dataset');
@@ -144,6 +147,34 @@ test('A failed calendar load displays a red accessible action and a real drag re
         const after=await state(page);
         expect(after.range.from).toBeLessThan(before.range.from);expect(control.requests.length).toBeGreaterThan(count);
         expect(after.error).toBe('');await expect(page.locator('.ob_update_failed')).toHaveCount(0);
+        expect(errors).toEqual([]);
+    } finally {await control.close();}
+});
+
+test('A full data cache keeps visible records and offers a working narrow-window action',async({page})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const control=await setup(page);
+    try {
+        control.extraPage=true;
+        await page.evaluate(async()=>{
+            const t=await(await import('/src/openbexi_demo.js')).demoReady;
+            t.ob_loader.limits.records=3;
+            await t.ob_loader.load(t.ob_loader.input,{refresh:true});
+        });
+        await expect(page.locator('.ob_results_status')).toHaveText('Data limit reached');
+        await expect(page.locator('.ob_update_failed')).toHaveCount(0);
+        await expect(page.getByRole('button',{name:'Retry',exact:true})).toBeHidden();
+        const narrow=page.getByRole('button',{name:'Narrow time window',exact:true});
+        await expect(narrow).toBeVisible();await expect(narrow).toBeEnabled();
+        await visibleRecord(page,'initial-');
+        const before=await state(page);
+        control.extraPage=false;
+        await narrow.click();
+        await expect(narrow).toBeHidden();
+        await expect.poll(async()=>(await state(page)).fetching).toBe(false);
+        const after=await state(page);
+        expect(after.range.to-after.range.from).toBeCloseTo((before.range.to-before.range.from)/2,0);
+        expect(after.error).toBe('');await visibleRecord(page,'initial-');
         expect(errors).toEqual([]);
     } finally {await control.close();}
 });

@@ -79,7 +79,9 @@ test('First connected batch is visible and interactive while the next batch wait
     await page.waitForFunction(async()=>{const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
         return r.snapshot?.counts.eligible.events===30 && !r.pending;});
     await expect.poll(()=>Boolean(nextPage)).toBe(true);
-    await expect(page.locator('.ob_timeline_loading')).toBeVisible();
+    await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
+    await expect(page.locator('.ob_results_status')).toContainText('Loading more records');
+    await expect(page.getByRole('button',{name:'Stop loading',exact:true})).toBeVisible();
     await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
     await page.getByAltText('Sorting and filtering',{exact:true}).click();await ready(page);
     await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('series');
@@ -88,9 +90,6 @@ test('First connected batch is visible and interactive while the next batch wait
         return t.ob_viewport.fullBands.filter(b=>!b.name.includes('overview_')).length;})).toBe(3);
     await expect(page.locator('[data-overview-axis="main"]')).toHaveCount(0);
     await expect(page.locator('[data-overview-heading="count"]')).toContainText('partial context');
-    const indicator=await page.locator('.ob_timeline_loading').boundingBox();
-    const header=await page.locator('.ob_results_header').boundingBox();
-    expect(indicator.y+indicator.height).toBeLessThanOrEqual(header.y+header.height+1);
     await capture(page,'progressive-series',info);
     await reply(nextPage,20,60,null);
     await page.waitForFunction(async()=>{const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
