@@ -54,6 +54,8 @@ abstract class data_manager {
 
         if (startDate != null) {
             _currentStartDate = startDate.replaceAll("'", "");
+        }
+        if (endDate != null) {
             _currentEndDate = endDate.replaceAll("'", "");
         }
 
@@ -83,11 +85,15 @@ abstract class data_manager {
         // set time zone to default
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        try {
-            _currentStartDateL = new Date(_currentStartDate).getTime();
-            _currentEndDateL = new Date(_currentEndDate).getTime();
-        } catch (Exception e) {
-            log(e.getMessage(), "err");
+        // Settings/filter requests have no date range and must not parse null dates.
+        if (_currentStartDate != null && _currentEndDate != null) {
+            try {
+                _currentStartDateL = MatchResults.time(_currentStartDate);
+                _currentEndDateL = MatchResults.time(_currentEndDate);
+                if (_currentEndDateL<=_currentStartDateL) throw new IllegalArgumentException("Invalid timeline time range.");
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid timeline time range.",e);
+            }
         }
     }
 

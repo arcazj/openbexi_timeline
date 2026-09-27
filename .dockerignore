@@ -1,5 +1,6 @@
 .git
 .idea
+*.iml
 node_modules
 target
 out
@@ -9,3 +10,21 @@ tomcat*
 .env*
 *.log
 lib
+
+# Include only generic runtime assets from a working tree.
+.local-private
+img.png
+dist
+filters/*
+!filters/README.md
+src/descriptor4*.js
+json/*_reports.json
+models/*
+!models/demos
+!models/regular_timeline.json
+!models/regular_timeline_earthquake.json
+*.html
+!demos.html
+!openbexi_test_timeline.html
+!openbexi_timeline.html
+!openbexi_timeline_earthquake.html

@@ -44,11 +44,20 @@ test('Schema errors name the exact field for unsupported options, dimensions and
     rejectsAt(operations, model => delete model.params[0].width, '$.params[0].width', /required/);
     rejectsAt(operations, model => model.params[0].width = 0, '$.params[0].width');
     rejectsAt(operations, model => model.params[0].overviewHeightRatio = 1, '$.params[0].overviewHeightRatio');
+    rejectsAt(operations, model => model.params[0].dateAxisMode = 'sometimes', '$.params[0].dateAxisMode');
     rejectsAt(operations, model => model.bands[0].ticks = {unit: 'MINUTE', step: 0}, '$.bands[0].ticks.step');
     rejectsAt(operations, model => model.bands[0].focus.magnification = 0, '$.bands[0].focus.magnification');
     rejectsAt(operations, model => model.bands[0].height = '-50%', '$.bands[0].height');
     rejectsAt(operations, model => model.dataSource.format = 'csv', '$.dataSource.format');
     rejectsAt(dinosaurs, model => model.dataSource.time.direction = 0, '$.dataSource.time.direction');
+});
+
+test('Models can explicitly request separate date axes without changing the shared default', () => {
+    for (const dateAxisMode of ['shared', 'per-band']) {
+        const model = structuredClone(operations);
+        model.params[0].dateAxisMode = dateAxisMode;
+        assert.equal(validateDemoModel(model), model);
+    }
 });
 
 test('Calendar and numeric ranges reject invalid dates and reversed axis direction before rendering', () => {

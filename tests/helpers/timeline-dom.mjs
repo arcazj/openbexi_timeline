@@ -65,10 +65,10 @@ export async function createTimelineHarness(options = {}) {
     const modules = new Map();
     async function load(file) {
         file = path.resolve(root, file);
-        if (!modules.has(file)) modules.set(file, new vm.SourceTextModule(await fs.readFile(file, 'utf8'), {
+        if (!modules.has(file)) modules.set(file, fs.readFile(file, 'utf8').then(source => new vm.SourceTextModule(source, {
             context, identifier: file,
             initializeImportMeta(meta) { meta.url = new URL(path.relative(root, file).replaceAll('\\', '/'), 'http://localhost/').href; }
-        }));
+        })));
         return modules.get(file);
     }
     async function importModule(file) {

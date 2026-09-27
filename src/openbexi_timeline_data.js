@@ -1,5 +1,8 @@
 // Shared, model-driven import and layout helpers for file-backed timelines.
 import {prepareBandScale, bandTimeToPixel} from './openbexi_timeline_scale.js';
+import {createStaticSearchMatcher} from './openbexi_timeline_matches.js';
+import {activityFootprint, createRowPacker, projectMap} from './openbexi_timeline_adaptive.js';
+import {recordKey, rowHeader, dateAxisHeight, configureDateAxes} from './openbexi_timeline_paging.js';
 
 export const TIME_UNITS = {
     MILLISECOND: 1, SECOND: 1000, MINUTE: 60000, HOUR: 3600000,
@@ -87,14 +90,23 @@ export function parseTimelineData(text, source = {}) {
     const usedIds = new Set();
     const normalize = (record, index, zone = false) => {
         const data = {...record.data};
+        delete data.sourceRecordKey;
+        // Legacy grouping fields can be at the top level. Preserve arbitrary
+        // metadata, rather than a deployment-specific list of allowed fields.
+        for (const [key, value] of Object.entries(record)) {
+            if (!['data','activities','render','start','end','id','ID','zone','searchMatch','deletedAt','sourceRecordKey'].includes(key) && data[key] === undefined)
+                data[key] = value;
+        }
         const title = String(field(record, fields.title || ["data.title", "title"], "Untitled"));
         const start = timelineValueToTime(record.start, source.time);
         const end = timelineValueToTime(record.end, source.time);
         if (!Number.isFinite(start)) throw new Error("Invalid start date for " + title);
         if (record.end && !Number.isFinite(end)) throw new Error("Invalid end date for " + title);
         if (Number.isFinite(end) && end < start) throw new Error("End precedes start for " + title);
-        let id = String(field(record, fields.id || ["id", "ID"], "record-" + index));
-        if (usedIds.has(id)) id += "-" + index;
+        const sourceRecordKey=typeof record.sourceRecordKey==='string' && record.sourceRecordKey ? record.sourceRecordKey : null;
+        let id = sourceRecordKey ? (Object.hasOwn(record,'id') ? record.id : record.ID ?? null) :
+            String(field(record, fields.id || ["id", "ID"], "record-" + index));
+        if (!payload.timelineMatch && !sourceRecordKey && usedIds.has(id)) id += "-" + index;
         usedIds.add(id);
         const render = {...record.render};
         const color = field(record, fields.color || ["render.color", "color"], source.iconColors?.[record.icon]);
@@ -110,11 +122,13 @@ export function parseTimelineData(text, source = {}) {
             if (record.end !== undefined) data.endValue = record.end;
         }
         // Retain source metadata for local descriptions without loading remote images.
-        for (const key of ["kind", "parentSessionId", "link", "image", "lateststart", "earliestend"]) {
+        for (const key of ["kind", "type", "sessionType", "eventType", "parentSessionId", "link", "image", "lateststart", "earliestend"]) {
             if (record[key] !== undefined) data[key] = record[key];
         }
         const duration = source.format !== "simile-xml" || record.isduration === "true";
         const event = {id, start: new Date(start).toISOString(), data, namespace, render};
+        if (sourceRecordKey) event.sourceRecordKey=sourceRecordKey;
+        if (typeof record.searchMatch === 'boolean') event.searchMatch = record.searchMatch;
         if (Number.isFinite(end) && (duration || zone)) event.end = new Date(end).toISOString();
         else if (Number.isFinite(end)) data.latestEnd = new Date(end).toISOString();
         if (zone || record.zone !== undefined) {
@@ -132,10 +146,11 @@ export function parseTimelineData(text, source = {}) {
 }
 
 export function searchTimelineData(dataset, search = "") {
-    const query = search.trim().toLocaleLowerCase();
-    const events = dataset.events.filter(event => event.zone || !query ||
-        JSON.stringify(event.data).toLocaleLowerCase().includes(query) ||
-        event.activities?.some(activity => JSON.stringify(activity.data).toLocaleLowerCase().includes(query)));
+    const matcher = createStaticSearchMatcher(search);
+    // Preserve the current UI's filtering and complete child lists until Results
+    // controls are integrated. The new snapshot API records direct matches only.
+    const events = dataset.events.filter(event => event.zone || !matcher.hasCondition ||
+        matcher.matches(event) || event.activities?.some(activity => matcher.matches(activity)));
     return {dateTimeFormat: dataset.dateTimeFormat, events: structuredClone(events)};
 }
 
@@ -144,16 +159,43 @@ export function prepareStaticBands(timeline, sceneIndex) {
     const bands = [];
     for (const template of timeline.bands) {
         if (template.name.includes("overview_") && !timeline.ob_visible_view) continue;
-        const values = template.groupBy ? [...new Set(timeline.staticData.events.filter(event => !event.zone)
-            .map(event => field(event, template.groupBy, "Other")))].sort() : [null];
+        const isOverview = template.name.includes('overview_');
+        const sortBy = timeline.ob_sortBy ?? template.model?.[0]?.sortBy ?? 'NONE';
+        const groupBy = isOverview ? undefined : timeline.ob_sortBy !== undefined ?
+            (sortBy === 'NONE' ? undefined : sortBy) : template.groupBy || (sortBy === 'NONE' ? undefined : sortBy);
+        const projection = timeline.ob_results?.projection;
+        const scope = projection?.densityRecords || timeline.staticData.events;
+        // Children use their own category when present and inherit the parent's
+        // category otherwise. Keep identities shared with results and Overview.
+        const groupValues = new Map();
+        const collect = (records, inherited = 'Other') => {
+            for (const record of records) {
+                const value = field(record, groupBy || '', field(record.data, groupBy || '', inherited));
+                const category = value === '' || value == null ? inherited : String(value);
+                groupValues.set(recordKey(record), category);
+                collect(record.activities || [], category);
+            }
+        };
+        if (groupBy) collect(projection?.events || timeline.staticData.events);
+        let values = groupBy ? [...new Set(scope.filter(event => !event.zone)
+            .map(event => groupValues.get(recordKey(event)) || 'Other'))].sort() : [null];
+        // Retain a finite empty plot/axis when every generated group disappears.
+        if (!values.length) values = [null];
         for (const [index, value] of values.entries()) {
             const band = structuredClone(template);
+            band.sourceBand = template.name;
+            band.groupBy = groupBy;
+            band.groupValues = groupValues;
             band.name = template.name + (value === null ? "" : "_" + index);
             band.groupValue = value;
             band.layout_name = value === null ? "NONE" : String(value);
             band.layouts = [];
             band.layouts.max_name_length = value === null ? 0 : String(value).length;
-            band.model = [{sortBy: "NONE"}];
+            band.model = [{...template.model?.[0],sortBy}];
+            if (value!==null && groupBy==='namespace') {
+                for (const property of ['color','textColor','dateColor'])
+                    band[property]=timeline.get_source_property?.(sceneIndex,value,property,band[property]) ?? band[property];
+            } else if (value!==null && index%2 && template.model?.[0]?.alternateColor) band.color=template.model[0].alternateColor;
             band.height = (String(template.height).endsWith("%") ? timeline.height * parseFloat(template.height) / 100 : Number(template.height)) / values.length;
             band.gregorianUnitLengths = TIME_UNITS[band.intervalUnit];
             if (!band.gregorianUnitLengths || !(Number(band.intervalPixels) > 0)) throw new Error("Invalid band time scale: " + band.name);
@@ -166,7 +208,9 @@ export function prepareStaticBands(timeline, sceneIndex) {
             band.sessionHeight = band.sessionHeight || 7;
             band.defaultEventSize = band.defaultEventSize || (band.name.includes("overview_") ? 1 : 3);
             band.subIntervalPixels = "NONE";
-            band.multiples = 3;
+            // A full-width drag plus its bounded coast must stay inside the
+            // prepared drawing area until the gesture can be recentered.
+            band.multiples = 7;
             band.width = scene.width * band.multiples;
             band.minWidth = scene.width;
             band.minViewOffset = -scene.width / 2;
@@ -177,9 +221,16 @@ export function prepareStaticBands(timeline, sceneIndex) {
             band.z = 0;
             band.depth = 0;
             prepareBandScale(timeline, sceneIndex, band);
+            if (!isOverview && timeline.ob_results?.regroupRange) {
+                timeline.ob_results.ranges.set(band.name, {...timeline.ob_results.regroupRange});
+                timeline.ob_results.visibleRanges.delete(band.name);
+            }
+            timeline.ob_results?.applyScale(band, scene.width);
             bands.push(band);
         }
     }
+    configureDateAxes(bands, timeline.params[0].dateAxisMode);
+    for (const band of bands) band.topPadding = rowHeader(band);
     scene.bands = bands;
     scene.minDate = bands[0].minDate;
     scene.maxDate = bands[0].maxDate;
@@ -187,11 +238,13 @@ export function prepareStaticBands(timeline, sceneIndex) {
 
 export function layoutStaticSessions(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
+    const copyRecord = record => timeline.ob_measureLayout ? {...record, render:{...record.render}} : structuredClone(record);
     for (const band of scene.bands) {
         band.zones = [];
         band.sessions = [];
         if (band.name.includes("overview_")) continue;
-        const rowEnds = [];
+        const countActivities = record => 1 + (record.activities || []).reduce((sum, child) => sum + countActivities(child), 0);
+        const packer = createRowPacker(scene.sessions.events.reduce((sum, record) => sum + countActivities(record), 0));
         const aboveLabels = band.labelPosition === 'above';
         const anchoredLabels = aboveLabels || band.labelPosition === 'inside';
         const orderedEvents = [...scene.sessions.events].sort((a, b) => {
@@ -206,33 +259,36 @@ export function layoutStaticSessions(timeline, sceneIndex) {
         for (const event of orderedEvents) {
             if (event.zone) { band.zones.push(event); continue; }
             if (band.filter && field(event, band.filter.field) !== band.filter.equals) continue;
-            if (band.groupBy && field(event, band.groupBy, "Other") !== band.groupValue) continue;
             if (band.eventKind === "duration" && !event.end) continue;
             if (band.eventKind === "event" && event.end) continue;
-            const session = structuredClone(event);
-            session.activities = session.activities || [structuredClone(event)];
+            const session = copyRecord(event);
+            if (timeline.ob_results?.supported) {
+                const flatten = record => {
+                    const own = copyRecord(record); delete own.activities;
+                    const showOwn = !record.structuralContext && (!record.activities?.length || record.searchMatch);
+                    return [...(showOwn ? [own] : []), ...(record.activities || []).flatMap(flatten)];
+                };
+                session.activities = flatten(event);
+            } else session.activities = session.activities || [structuredClone(event)];
             const activities = [];
             for (const activity of session.activities) {
+                if (band.groupBy && (band.groupValues.get(recordKey(activity)) || 'Other') !== band.groupValue) continue;
                 const startTime = parseTimelineDate(activity.start);
                 const endTime = parseTimelineDate(activity.end);
                 if (band.timeScale && ((Number.isFinite(endTime) ? endTime : startTime) < band.timeScale.contextFrom ||
                     startTime >= band.timeScale.contextTo)) continue;
-                const x = bandTimeToPixel(timeline, sceneIndex, band, activity.start);
-                const end = bandTimeToPixel(timeline, sceneIndex, band, activity.end);
-                const width = Number.isFinite(end) ? end - x : 0;
-                if (!band.timeScale && (x + width < -scene.width * 1.5 || x > scene.width * 1.5)) continue;
-                const textWidth = timeline.getTextWidth(activity.data.title, band.fontSize + " " + band.fontFamily, 6);
+                const box = activityFootprint(activity, band,
+                    {toPixel: value => bandTimeToPixel(timeline, sceneIndex, band, value)}, scene.width, timeline.getTextWidth.bind(timeline));
+                const {x, end, width, textWidth, labelLeft, occupiedWidth} = box;
+                if ((!band.timeScale || timeline.ob_results?.scaleEngaged) &&
+                    (x + occupiedWidth < -band.width / 2 || x > band.width / 2)) continue;
                 const anchoredDuration = anchoredLabels && Number.isFinite(end);
                 const durationLabelAbove = aboveLabels && anchoredDuration;
                 if (Number.isFinite(end) && band.uncertaintyOpacity !== undefined &&
                     (activity.data.lateststart || activity.data.earliestend) && activity.render.opacity === undefined)
                     activity.render.opacity = Math.max(0, Math.min(1, Number(band.uncertaintyOpacity)));
-                const labelLeft = anchoredDuration ?
-                    (end >= -scene.width / 2 ? Math.max(x, -scene.width / 2 + 6) : x) : x + width + 6;
-                const occupiedWidth = anchoredDuration ? Math.max(width, labelLeft - x + textWidth) : width + textWidth + 12;
-                let row = rowEnds.findIndex(right => right + 12 < x);
-                if (row < 0) row = rowEnds.length;
-                rowEnds[row] = x + occupiedWidth;
+                const row = packer.add(x, x + occupiedWidth);
+                if (timeline.ob_measureLayout) continue;
                 Object.assign(activity, {
                     x, original_x: x, x_relative: x + width / 2, width, total_width: occupiedWidth,
                     pixelOffSetStart: x, pixelOffSetEnd: end, height: band.sessionHeight,
@@ -248,9 +304,17 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 band.sessions.push(session);
             }
         }
-        band.height = Math.max(band.height, rowEnds.length * band.trackIncrement +
-            (band.topPadding ?? band.fontSizeInt * 2) + band.fontSizeInt);
+        band.occupiedRows = packer.count;
+        band.zoneHeaderHeight = band.zones.some(zone => zone.data?.title && zone.render?.labelPosition !== 'bottom') ? 20 : 0;
+        band.topPadding = rowHeader(band);
+        band.height = Math.max(band.height, packer.count * band.trackIncrement +
+            (band.topPadding ?? band.fontSizeInt * 2) + band.fontSizeInt + dateAxisHeight(band));
     }
+    if (timeline.ob_measureLayout) return;
+    positionPackedBands(scene);
+}
+
+export function positionPackedBands(scene) {
     scene.ob_height = scene.bands.reduce((height, band) => height + band.height, 0);
     let top = scene.ob_height;
     for (const band of scene.bands) {
@@ -275,4 +339,17 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 y: (bottom + top) / 2, height: top - bottom + band.trackIncrement});
         }
     }
+}
+
+// Candidate evaluation runs the actual grouping, label and duration layout on
+// detached bands. It never creates Three.js resources or changes the live scene.
+export function measureCandidateLayout(timeline, projection, bands, map, ranges, width) {
+    const probe = Object.create(timeline);
+    probe.ob_measureLayout = true;
+    probe.ob_results = {supported: true, scaleEngaged: true};
+    probe.ob_scene = [{width, sessions: projection, bands: bands.map(band => ({...band,
+        timeScale: projectMap(map, ranges.get(band.name) || map.domain, width)}))}];
+    probe.ob_scene.sync_time = timeline.ob_scene.sync_time;
+    layoutStaticSessions(probe, 0);
+    return probe.ob_scene[0].bands.reduce((score, band) => score + band.occupiedRows * band.trackIncrement, 0);
 }

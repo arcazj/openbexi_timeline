@@ -49,7 +49,9 @@
         "fontSize": {"$ref": "#/definitions/positive"}, "fontFamily": {"$ref": "#/definitions/text"},
         "data": {"type": "string"}, "overview": {"type": "boolean"}, "dockOverview": {"type": "boolean"},
         "overviewHeightRatio": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
-        "showCurrentTime": {"type": "boolean"}
+        "showCurrentTime": {"type": "boolean"},
+        "dateAxisMode": {"enum": ["shared", "per-band"], "default": "shared", "description": "shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},
+        "fullWindow": {"type": "boolean", "default": true, "description": "Fill available browser space; false uses custom geometry bounded by the viewport."}
       }
     },
     "dataSource": {
@@ -112,6 +114,8 @@
         "filter": {"type": "object", "additionalProperties": false, "required": ["field", "equals"], "properties": {"field": {"$ref": "#/definitions/path"}, "equals": {"type": ["string", "number", "boolean", "null"]}}},
         "sourceBands": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/text"}},
         "fitRows": {"type": "boolean"}, "showContextLabel": {"type": "boolean"}, "viewportHandles": {"type": "boolean"},
+        "overviewContextRatio": {"type":"number","minimum":1,"maximum":12},
+        "overviewMarkerSize": {"type":"number","minimum":1,"maximum":12},
         "overviewLabel": {"anyOf": [{"type": "string"}, {"const": false}]},
         "uncertaintyOpacity": {"type": "number", "minimum": 0, "maximum": 1},
         "scaleHeader": {

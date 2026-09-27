@@ -1,0 +1,303 @@
+{
+  "capturedAt": "2026-09-23T21:10:18.438Z",
+  "browser": "149.0.7827.55",
+  "platform": "win32",
+  "scope": "Actual application using checked-in mixed-hazard fixture and hazard band model. Browser interactions and WebGL are real. This capture does not claim a deployed live hazard source.",
+  "fixture": "tests/fixtures/mixed-hazard-matches.json",
+  "checks": [
+    "Real WebGL2 drawing",
+    "Shared 4-event/1-session match counts",
+    "Five overview cues including late offscreen match",
+    "Mode and Auto preserve real range",
+    "Fit includes late match",
+    "Negative wheel zooms in",
+    "Empty state visible",
+    "Phone controls fit viewport",
+    "Dense fixture occupied rows: 148 uniform, 40 adaptive",
+    "Catalog load: default-dataset",
+    "Catalog load: dinausaurs",
+    "Catalog load: ephemeris",
+    "Catalog load: jfk",
+    "Catalog load: monet",
+    "Catalog load: religions",
+    "Catalog load: space_exploration"
+  ],
+  "errors": [],
+  "captures": [
+    {
+      "name": "hazards-no-search.png",
+      "query": "",
+      "mode": "highlight",
+      "auto": false,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 0,
+          "sessions": 0
+        }
+      },
+      "range": {
+        "from": 1789212312000,
+        "to": 1789220088000
+      },
+      "overviewMatches": 0,
+      "webgl2": true,
+      "drawCalls": 38,
+      "error": ""
+    },
+    {
+      "name": "hazards-highlight.png",
+      "query": "volcano",
+      "mode": "highlight",
+      "auto": false,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789212312000,
+        "to": 1789220088000
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 50,
+      "error": ""
+    },
+    {
+      "name": "hazards-only.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": false,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789212312000,
+        "to": 1789220088000
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 41,
+      "error": ""
+    },
+    {
+      "name": "hazards-auto.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789212312000,
+        "to": 1789220088000
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 41,
+      "error": ""
+    },
+    {
+      "name": "hazards-fit.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789203312000,
+        "to": 1789257600000
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 94,
+      "error": ""
+    },
+    {
+      "name": "hazards-zoom.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789209877019.0442,
+        "to": 1789247752471.4338
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 80,
+      "error": ""
+    },
+    {
+      "name": "hazards-empty.png",
+      "query": "no-such-event",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 0,
+          "sessions": 0
+        }
+      },
+      "range": {
+        "from": 1789209877019,
+        "to": 1789247752471
+      },
+      "overviewMatches": 0,
+      "webgl2": true,
+      "drawCalls": 55,
+      "error": ""
+    },
+    {
+      "name": "hazards-phone.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789209877019,
+        "to": 1789247752471
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 86,
+      "error": ""
+    },
+    {
+      "name": "hazards-settings.png",
+      "query": "volcano",
+      "mode": "only",
+      "auto": true,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 7,
+          "sessions": 2
+        },
+        "matching": {
+          "events": 4,
+          "sessions": 1
+        }
+      },
+      "range": {
+        "from": 1789209877019,
+        "to": 1789247752471
+      },
+      "overviewMatches": 5,
+      "webgl2": true,
+      "drawCalls": 80,
+      "error": ""
+    },
+    {
+      "name": "dense-uniform.png",
+      "query": "",
+      "mode": "highlight",
+      "auto": false,
+      "ratio": 1,
+      "counts": {
+        "eligible": {
+          "events": 150,
+          "sessions": 0
+        },
+        "matching": {
+          "events": 0,
+          "sessions": 0
+        }
+      },
+      "range": {
+        "from": 1789171200000,
+        "to": 1789257600000
+      },
+      "overviewMatches": 0,
+      "webgl2": true,
+      "drawCalls": 619,
+      "error": ""
+    },
+    {
+      "name": "dense-adaptive.png",
+      "query": "",
+      "mode": "highlight",
+      "auto": true,
+      "ratio": 8,
+      "counts": {
+        "eligible": {
+          "events": 150,
+          "sessions": 0
+        },
+        "matching": {
+          "events": 0,
+          "sessions": 0
+        }
+      },
+      "range": {
+        "from": 1789171200000,
+        "to": 1789257600000
+      },
+      "overviewMatches": 0,
+      "webgl2": true,
+      "drawCalls": 595,
+      "error": ""
+    }
+  ]
+}

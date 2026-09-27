@@ -1,0 +1,38 @@
+{
+  "measuredAt": "2026-09-23T20:59:07.751Z",
+  "node": "v24.13.0",
+  "platform": "win32",
+  "scope": "CPU candidate layout, approximate 7px text measurement, one band, 1080px width, 64 bins, ratios 1/2/4/8. Five measured runs after one warmup. Heap delta is not a peak or retained-memory measurement.",
+  "cases": [
+    {
+      "records": 250,
+      "uniformOccupiedHeight": 8000,
+      "adaptiveOccupiedHeight": 6240,
+      "ratio": 8,
+      "warmupMs": 4.440199999999997,
+      "medianMs": 2.3729000000000013,
+      "p95Ms": 4.7032000000000025,
+      "observedHeapDeltaBytes": 574720
+    },
+    {
+      "records": 1000,
+      "uniformOccupiedHeight": 32000,
+      "adaptiveOccupiedHeight": 24448,
+      "ratio": 8,
+      "warmupMs": 12.401499999999999,
+      "medianMs": 10.859700000000004,
+      "p95Ms": 11.706999999999994,
+      "observedHeapDeltaBytes": -2230432
+    },
+    {
+      "records": 5000,
+      "uniformOccupiedHeight": 160000,
+      "adaptiveOccupiedHeight": 126560,
+      "ratio": 8,
+      "warmupMs": 83.1969,
+      "medianMs": 72.79540000000003,
+      "p95Ms": 84.10309999999998,
+      "observedHeapDeltaBytes": 2830480
+    }
+  ]
+}

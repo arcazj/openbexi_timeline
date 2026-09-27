@@ -36,6 +36,16 @@ public class openbexi_timeline implements Runnable {
     private final Logger _logger = Logger.getLogger("");
     private final String _data_conf;
     private final String _port;
+    private static boolean logConfigured;
+
+    private static synchronized void configureLog(Logger logger) {
+        if(logConfigured) return;
+        try {
+            FileHandler handler=new FileHandler("tomcat/catalina.out",true);
+            handler.setFormatter(new SimpleFormatter());handler.setLevel(Level.FINEST);handler.setEncoding("UTF-8");
+            logger.addHandler(handler);logConfigured=true;
+        } catch(IOException error) { logger.warning("Cannot open timeline log file; console logging remains active."); }
+    }
 
     openbexi_timeline(ob_mode mode, String data_conf, String port) {
         _ob_mode = mode;
@@ -118,18 +128,10 @@ public class openbexi_timeline implements Runnable {
     }
 
     private void start(ob_mode mode) throws LifecycleException {
-        // Set log
-        FileHandler fileHandler = null;
-        try {
-            fileHandler = new FileHandler("tomcat/catalina.out", true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            fileHandler.setLevel(Level.FINEST);
-            fileHandler.setEncoding("UTF-8");
-
-        } catch (IOException e) {
-            _logger.severe(e.getMessage());
-        }
-        _logger.addHandler(fileHandler);
+        final WebUiAddress ui;
+        try { ui=WebUiAddress.read(_data_conf); }
+        catch(IOException | RuntimeException error) { throw new LifecycleException("Cannot read web_ui configuration.",error); }
+        configureLog(_logger);
 
         Tomcat tomcat = new Tomcat();
         Service service = tomcat.getService();
@@ -152,7 +154,7 @@ public class openbexi_timeline implements Runnable {
             tomcat.getConnector();
 
             //Context ctx = tomcat.addContext("", null);
-            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext(ui.contextPath(), new File(".").getAbsolutePath());
 
             Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
@@ -170,7 +172,7 @@ public class openbexi_timeline implements Runnable {
             tomcat.setConnector(httpsConnector);
 
             //Context ctx = tomcat.addContext("", null);
-            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext(ui.contextPath(), new File(".").getAbsolutePath());
 
             Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
@@ -184,7 +186,7 @@ public class openbexi_timeline implements Runnable {
             tomcat.setPort(Integer.parseInt(_port));
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
-            ob_timeline_context = tomcat.addWebapp("/", ".");
+            ob_timeline_context = tomcat.addWebapp(ui.contextPath(), ".");
             Tomcat.addServlet(ob_timeline_context, "publicAssets", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "publicAssets");
         }
@@ -202,7 +204,7 @@ public class openbexi_timeline implements Runnable {
             service.addConnector(httpsConnector);
             tomcat.setConnector(httpsConnector);
 
-            ob_timeline_context = tomcat.addContext("/", new File(".").getAbsolutePath());
+            ob_timeline_context = tomcat.addContext(ui.contextPath(), new File(".").getAbsolutePath());
 
             Tomcat.addServlet(ob_timeline_context, "default", new PublicAssetServlet());
             ob_timeline_context.addServletMappingDecoded("/", "default");
@@ -225,6 +227,16 @@ public class openbexi_timeline implements Runnable {
         ob_timeline_context.addMimeMapping("mjs", "application/javascript");
 
         tomcat.start();
+        Connector listener=tomcat.getConnector();
+        if(listener.getState().isAvailable() && ob_timeline_context.getState().isAvailable()) {
+            _logger.info("Timeline service ready: scheme="+listener.getScheme()+" port="+listener.getLocalPort()+
+                    " context="+ui.contextPath()+" route="+(mode==ob_mode.secure_sse?"/openbexi_timeline_sse/sessions":"/openbexi_timeline/sessions"));
+            try {
+                ui.readyUrl(listener.getScheme(),Integer.parseInt(_port),listener.getLocalPort())
+                        .ifPresent(address->_logger.info("Web UI ready: "+address));
+                if(ui.entryPage().isBlank()) _logger.info("Set web_ui.entry_page and web_ui.port in the local configuration to print the launch URL.");
+            } catch(IllegalArgumentException error) { _logger.warning("Web UI address is invalid; review web_ui configuration."); }
+        }
 
     }
 }

@@ -14,8 +14,10 @@ import java.net.URL;
 
 public class CrucibleInfoExtractor {
     public static void main(String[] args) {
-        // URL to the resource you want to access
-        String baseUrl = "https://vmit-teamforge.socit.intelsat.com:8440/fisheye/graph/GNS";
+        if (args.length != 1 || args[0].isBlank()) {
+            throw new IllegalArgumentException("Usage: CrucibleInfoExtractor <base-url>");
+        }
+        String baseUrl = args[0];
 
         // Start the recursive extraction process
         extractInfoRecursively(baseUrl);

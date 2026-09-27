@@ -27,11 +27,12 @@ function sourceExtent(source, fitRows) {
 // layout, so grouping, overlapping sessions and search results cannot drift apart.
 export function projectOverviewSessions(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
-    const sources = scene.bands.filter(band => !isOverview(band));
+    const sources = (timeline.ob_viewport?.fullBands || scene.bands).filter(band => !isOverview(band));
     scene.overviewViewports = [];
     for (const overview of scene.bands.filter(isOverview)) {
-        const projectedSources = overview.sourceBands ? sources.filter(source => overview.sourceBands.includes(source.name)) : sources;
-        const extents = projectedSources.map(source => sourceExtent(source, overview.fitRows));
+        const projectedSources = overview.sourceBands ? sources.filter(source =>
+            overview.sourceBands.includes(source.name) || overview.sourceBands.includes(source.sourceBand)) : sources;
+        const extents = projectedSources.map(source => sourceExtent(source, overview.fitRows !== false));
         const totalHeight = extents.reduce((height, extent) => height + extent.top - extent.bottom, 0);
         overview.sessions = [];
         overview.zones = [];
@@ -50,7 +51,22 @@ export function projectOverviewSessions(timeline, sceneIndex) {
             const scaleX = timePerPixel(source) / timePerPixel(overview);
             const mapY = y => center + (y - sourceCenter) * scaleY;
             overview.overviewRegions.push({sourceBand: source.name, y: center, height, scaleX});
-            for (const session of source.sessions || []) {
+            let sourceSessions = source.sessions || [];
+            if (timeline.ob_results?.supported) {
+                const laidOut = new Map(sourceSessions.flatMap(session => session.activities.map(activity => [activity.matchKey, activity])));
+                const records = timeline.ob_results.projection.densityRecords.filter(record => timeline.ob_results.belongs(record, source));
+                sourceSessions = records.map((record, recordIndex) => {
+                    const start = timeline.dateToBandPixelOffSet(sceneIndex, source, record.start);
+                    const end = record.end === undefined ? NaN : timeline.dateToBandPixelOffSet(sceneIndex, source, record.end);
+                    const known = laidOut.get(record.matchKey);
+                    const activity = {...record, pixelOffSetStart: start, pixelOffSetEnd: end,
+                        size: source.defaultEventSize || 3, height: source.sessionHeight || 7,
+                        y: known?.y ?? extent.top - Math.min(source.trackIncrement / 2, (extent.top - extent.bottom) / 2) -
+                            (recordIndex % Math.max(1, Math.floor((extent.top - extent.bottom) / source.trackIncrement))) * source.trackIncrement};
+                    return {...record, y: activity.y, height: source.trackIncrement, activities: [activity]};
+                });
+            }
+            for (const session of sourceSessions) {
                 const activities = session.activities.map(activity => {
                     const duration = Number.isFinite(activity.pixelOffSetEnd);
                     const customScale = source.timeScale || overview.timeScale;
@@ -132,10 +148,22 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
                 if (!activity.overviewDuration) {
                     mesh.geometry = track(new THREE.CircleGeometry(Math.max(0.25, activity.size), 10));
                 }
+                if (activity.searchMatch && timeline.ob_results?.state.highlight !== false) {
+                    const halo = box(Math.max(4, activity.width) + 3, Math.max(4, activity.height) + 3,
+                        activity.x_relative, activity.y, '#ffe400', 1, 'overviewMatch', activity);
+                    halo.position.z = 11;
+                    halo.material.opacity = 0.35;
+                    halo.material.transparent = true;
+                    halo.material.depthTest = false;
+                    halo.renderOrder = 10;
+                    const edge = track(new THREE.LineSegments(track(new THREE.EdgesGeometry(halo.geometry)),
+                        track(new THREE.LineBasicMaterial({color: '#614b00', depthTest: false}))));
+                    edge.raycast = () => {}; halo.add(edge);
+                }
             }
         }
         if (band.showContextLabel) {
-            const labels = ['Overview', new Set(band.sessions.map(session => session.id)).size + ' records / full context'];
+            const labels = ['Overview', new Set(band.sessions.map(session => session.matchKey || session.id)).size + ' records / full context'];
             for (const [index, label] of labels.entries()) {
                 const textWidth = timeline.getTextWidth(label, '10px ' + band.fontFamily, 0);
                 const x = index ? scene.width / 2 - textWidth / 2 - 8 : -scene.width / 2 + textWidth / 2 + 8;

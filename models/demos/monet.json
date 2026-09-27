@@ -1,6 +1,7 @@
 {
   "params": [
     {
+      "fullWindow": true,
       "name": "ob_demo",
       "title": "Claude Monet",
       "date": "1870-01-01T00:00:00Z",

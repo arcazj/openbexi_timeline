@@ -81,6 +81,17 @@ async function copyText(input, status) {
 }
 
 export function createTimelineHelp(timeline, sceneIndex = 0) {
+    const fold = (section, key, open = false) => {
+        const details = element('details', section.className);
+        const summary = element('summary', 'ob_help_section_heading');
+        const heading = section.querySelector('h3');
+        if (heading) summary.append(heading);
+        details.append(summary, ...section.childNodes);
+        timeline.helpSections ??= {};
+        details.open = timeline.helpSections[key] ?? open;
+        details.addEventListener('toggle', () => { timeline.helpSections[key] = details.open; });
+        return details;
+    };
     const panel = element('section', 'ob_help_panel');
     panel.id = timeline.name + '_help';
     panel.setAttribute('aria-label', 'Help and sharing');
@@ -130,6 +141,15 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
     });
 
     const help = sections[0];
+    const resultsHelp = element('section', 'ob_help_resource_group');
+    resultsHelp.append(element('h3', '', 'Search, Results and Auto scale'),
+        element('p', '', 'Search reveals a compact row of controls. Highlight matches adds emphasis in the timeline and overview; turning it off preserves the records and their source colors. The separate Show only matches checkbox hides nonmatching records and compacts rows. Search details contains counts for the analysis range, coverage information, and source warnings.'),
+        element('p', '', 'Fit matches changes the visible time range to include all matching timestamps. Auto scale changes time spacing while keeping the visible endpoints. Its strip shows the relative slope; equal screen distances may represent different elapsed times.'),
+        element('p', '', 'Scroll up to zoom in and down to zoom out in the plot under the pointer. Main zoom preserves the time under the pointer. Overview zoom keeps the visible-window indicator centered and changes only its context span. Its arrows, clicks and drags navigate the main view; Fit context includes the loaded range around the centered indicator. Zoom buttons control the main view. Settings contains the maximum adaptive ratio.'),
+        element('p', '', 'Dragging continues briefly after release and slows to a stop. New navigation cancels that movement, and reduced-motion preferences disable it.'),
+        element('p', '', 'Use Previous and Next below the plot or table to browse packed records. Resizing recalculates pages while keeping the time range. Settings > Timeline Info switches between the full browser window and a saved custom frame; these display preferences do not modify connected configuration files.'),
+        element('p', '', 'Partial provider coverage uses uniform spacing and disables exact Fit matches. Providers without matching metadata keep their existing search behavior.'));
+    help.append(fold(resultsHelp, 'results'));
     const loading = element('p', 'ob_help_note', 'Loading Help resources…');
     loading.setAttribute('role', 'status');
     help.append(loading);
@@ -156,26 +176,40 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
                     }).catch(() => {}).finally(() => clearTimeout(timeout));
                 }
             }
-            group.append(links); help.append(group);
+            group.append(links); help.append(fold(group, section.title));
         }
         const datasetGroup = element('section', 'ob_help_resource_group ob_help_datasets');
         datasetGroup.append(element('h3', '', 'Test local data'));
         const selector = element('select');
         selector.setAttribute('aria-label', 'Local dataset');
+        const currentDataset = catalog.demos.find(demo => demo.id === timeline.demoContext?.id)?.id || '';
+        if (!currentDataset) {
+            const placeholder = element('option', '', 'Choose a dataset');
+            placeholder.value = ''; placeholder.disabled = true; selector.append(placeholder);
+        }
         for (const demo of catalog.demos) {
             const option = element('option', '', demo.title);
             option.value = demo.id;
             selector.append(option);
         }
-        selector.value = timeline.demoContext?.id || catalog.demos[0]?.id || '';
-        const open = action('Open dataset', 'folder', 'a');
+        selector.value = currentDataset;
+        let selected = selector.value;
+        const datasetStatus = element('p', 'ob_help_note');
+        datasetStatus.setAttribute('role', 'status');
         const updateDataset = () => {
+            if (!selector.value || selector.value === selected) return;
             const url = new URL('demos.html', rootURL);
             url.searchParams.set('demo', selector.value);
-            open.href = url.href;
+            try {
+                datasetStatus.textContent = 'Opening selected dataset…';
+                (timeline.openDataset || (address => window.location.assign(address)))(url.href);
+                selected = selector.value;
+            } catch (error) {
+                selector.value = selected;
+                datasetStatus.textContent = 'Unable to open dataset: ' + error.message;
+            }
         };
         selector.addEventListener('change', updateDataset);
-        updateDataset();
         const reset = action('Reset reference view', 'reset');
         reset.disabled = !timeline.staticData;
         if (reset.disabled) reset.title = 'Reference reset is available for local datasets.';
@@ -191,8 +225,8 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
             resetStatus.textContent = 'Reference view restored.';
         });
         const controls = element('div', 'ob_help_actions');
-        controls.append(selector, open, reset);
-        datasetGroup.append(controls, resetStatus); help.append(datasetGroup);
+        controls.append(selector, reset);
+        datasetGroup.append(controls, datasetStatus, resetStatus); help.append(fold(datasetGroup, 'datasets', true));
     }).catch(error => { loading.textContent = error.message; });
 
     const share = sections[1];
@@ -230,6 +264,11 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
     const diagnosticActions = element('div', 'ob_help_actions');
     diagnosticActions.append(refresh, copyReport);
     diagnostics.append(report, diagnosticActions, diagnosticStatus);
+    for (const [section, key] of [[share,'share'],[diagnostics,'diagnostics']]) {
+        const content = element('section','ob_help_resource_group');
+        content.append(...section.childNodes);
+        section.append(fold(content,key,true));
+    }
     selectTab(0);
     return panel;
 }

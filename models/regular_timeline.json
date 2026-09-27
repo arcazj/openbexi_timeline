@@ -1,6 +1,7 @@
 {
   "params": [
     {
+      "fullWindow": true,
       "name": "ob_timeline_2",
       "title": "Timeline report",
       "date": "current_time",

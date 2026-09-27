@@ -1,6 +1,7 @@
 {
   "params": [
     {
+      "fullWindow": true,
       "name": "ob_demo",
       "title": "JFK chronology",
       "date": "1963-11-22T19:00:00Z",

@@ -45,7 +45,7 @@ ob_ajax_timeline extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 
-        _data_configuration.setConfiguration(req);
+        data_configuration _data_configuration = this._data_configuration.forRequest(req);
         resp.setCharacterEncoding("UTF-8");
         String startDate = req.getParameter("startDate");
 
@@ -74,7 +74,7 @@ ob_ajax_timeline extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Read parameters
-        _data_configuration.setConfiguration(req);
+        data_configuration _data_configuration = this._data_configuration.forRequest(req);
         String ob_request = req.getParameter("ob_request");
         Logger logger = Logger.getLogger("");
 
@@ -84,7 +84,7 @@ ob_ajax_timeline extends HttpServlet {
         // Assuming ob_handle_header should be called for any valid ob_request
         handler.ob_handle_header(req, resp);
 
-        switch (ob_request) {
+        switch (ob_request==null?"":ob_request) {
             case "readDescriptor":
                 handler.ob_handle_descriptor_request(req, resp, _data_configuration);
                 break;
@@ -99,10 +99,7 @@ ob_ajax_timeline extends HttpServlet {
                 handler.ob_handle_filter_request(req, resp, _data_configuration);
                 break;
             default:
-                // Handle unknown or null ob_request
-                if (ob_request != null) {
-                    logger.warning("Unhandled request type: " + ob_request);
-                }
+                handler.jsonError(req,resp,400,"Unsupported timeline operation.");
                 break;
         }
 
@@ -130,7 +127,10 @@ ob_ajax_timeline extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.service(req, resp);
+        TimelineRequestLog log=TimelineRequestLog.begin(req,resp);
+        try { super.service(req, resp); }
+        catch(ServletException | IOException | RuntimeException error) { log.failure("failed");throw error; }
+        finally { log.finish(); }
     }
 
     @Override

@@ -6,9 +6,10 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.nio.file.*;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.*;
 
 public class event_descriptor {
     private final String _event_id;
@@ -25,7 +26,7 @@ public class event_descriptor {
     private final String _type;
     private final String _platform;
     private JSONObject _data_configuration_node;
-    private Object _data;
+    private final JSONArray _configurations;
 
     public event_descriptor(String event_id, String original_start, String start, String original_end, String end,
                             String namespace, String title, String type, String status, String priority, String tolerance,
@@ -43,6 +44,7 @@ public class event_descriptor {
         _type = type;
         _platform = platform;
         JSONArray configurations = (JSONArray) data_configuration.getConfiguration().get("startup configuration");
+        _configurations = configurations;
         _data_configuration_node = (JSONObject) data_configuration.getConfiguration(0);
         for (int d = 1; d < configurations.size(); d++) {
             if (data_configuration.getConfiguration(d).get("namespace").equals(namespace))
@@ -57,33 +59,25 @@ public class event_descriptor {
      * @return absolute file descriptor name.
      */
     public File get_file() {
-        // set time zone to default
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat year = new SimpleDateFormat("yyyy");
-        SimpleDateFormat month = new SimpleDateFormat("MM");
-        SimpleDateFormat day = new SimpleDateFormat("dd");
-
-        String yearS = year.format(new Date(_start));
-        String monthS = month.format(new Date(_start));
-        String dayS = day.format(new Date(_start));
-
-        String buildFile = (String) _data_configuration_node.get("data_model");
-        buildFile = buildFile.replace(".json", "");
-        buildFile = buildFile.replace("/yyyy", "/" + yearS);
-        buildFile = buildFile.replace("/mm", "/" + monthS);
-        buildFile = buildFile.replace("/dd", "/" + dayS);
-
-        buildFile = buildFile +
-                File.separator + "descriptors" + File.separator + _event_id + ".json";
-
-        return new File(buildFile);
+        return descriptorPath(_data_configuration_node).toFile();
     }
 
-    /**
-     * if descriptor exist return true.
-     */
-    private boolean exist() {
-        return _file.exists();
+    private Path descriptorPath(JSONObject source) {
+        if (_event_id.isBlank() || _event_id.equals("null") || _event_id.equals("undefined") ||
+                _event_id.equals(".") || _event_id.equals("..") || _event_id.matches(".*[\\\\/:\\x00-\\x1f].*"))
+            throw new IllegalArgumentException("Invalid record identity.");
+        if (_start == null || _start.isBlank()) throw new IllegalArgumentException("Missing record start date.");
+        var date = Instant.ofEpochMilli(MatchResults.time(_start)).atZone(ZoneOffset.UTC);
+        String model = Objects.toString(source.get("data_model"), "").replace('\\', '/');
+        if (model.isBlank()) throw new IllegalArgumentException("Missing source model.");
+        if (model.endsWith(".json")) model = model.substring(0, model.length() - 5);
+        model = model.replace("/yyyy", String.format("/%04d", date.getYear()))
+                .replace("/mm", String.format("/%02d", date.getMonthValue()))
+                .replace("/dd", String.format("/%02d", date.getDayOfMonth()));
+        Path directory = Path.of(model).toAbsolutePath().normalize().resolve("descriptors");
+        Path file = directory.resolve(_event_id + ".json").normalize();
+        if (!file.getParent().equals(directory)) throw new IllegalArgumentException("Invalid descriptor path.");
+        return file;
     }
 
     /**
@@ -134,35 +128,39 @@ public class event_descriptor {
     /**
      * Read descriptor according event id requested by the client
      */
-    public Object read(String event_id) {
-        JSONParser parser = new JSONParser();
-
-        String jsonObjectMerged = "{\n" +
-                "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"event_descriptor\": [\n";
-
-        if (_file.exists()) {
-            try {
-                Reader reader = new FileReader(_file);
-                Object events = parser.parse(reader);
-                JSONObject jsonObject = (JSONObject) events;
-                JSONArray data = (JSONArray) jsonObject.get("event_descriptor");
-                jsonObjectMerged += data.toJSONString().replaceAll("\\[|\\]", "").replaceAll("\\\\/", "/") + ",";
-                reader.close();
-            } catch (IOException e) {
-                _data = getDummyDescriptorJson("no event descriptor found for " + _event_id);
-            } catch (ParseException e) {
-                _data = getDummyDescriptorJson("Cannot parse event descriptor for " + _event_id);
-            }
+    public Object read(String event_id) throws IOException {
+        List<JSONObject> sources = new ArrayList<>();
+        sources.add(_data_configuration_node);
+        for (Object value : _configurations) if (value != _data_configuration_node) sources.add((JSONObject)value);
+        Set<Path> seen = new HashSet<>();
+        for (JSONObject source : sources) {
+            if ("false".equals(String.valueOf(source.get("enable"))) ||
+                    source.get("type") != null && !"json_file".equals(source.get("type"))) continue;
+            Path file = descriptorPath(source);
+            if (!seen.add(file) || !Files.exists(file)) continue;
+            if (!file.toRealPath().startsWith(file.getParent().toRealPath()))
+                throw new IOException("Descriptor path leaves its configured directory.");
+            if (Files.size(file) > 8L * 1024 * 1024) throw new IOException("Descriptor exceeds the size limit.");
+            try (Reader reader = Files.newBufferedReader(file)) {
+                JSONObject body = (JSONObject)new JSONParser().parse(reader);
+                if (!(body.get("event_descriptor") instanceof JSONArray entries))
+                    throw new IOException("Invalid descriptor response.");
+                JSONArray selected = new JSONArray();
+                for (Object value : entries) {
+                    if (!(value instanceof JSONObject entry)) throw new IOException("Invalid descriptor record.");
+                    String identity = Objects.toString(entry.get("id"), Objects.toString(entry.get("ID"), _event_id));
+                    String namespace = MatchResults.namespace(entry, Objects.toString(source.get("namespace"), ""));
+                    if (identity.equals(_event_id) && (_namespace == null || _namespace.isBlank() || namespace.equals(_namespace)))
+                        selected.add(entry);
+                }
+                if (!selected.isEmpty()) {
+                    JSONObject result = new JSONObject(body);
+                    result.put("event_descriptor", selected);
+                    return result;
+                }
+            } catch (ParseException | ClassCastException error) { throw new IOException("Cannot parse descriptor data.", error); }
         }
-
-        jsonObjectMerged += "]}";
-        try {
-            _data = parser.parse(jsonObjectMerged);
-        } catch (ParseException e) {
-            _data = getDummyDescriptorJson("Cannot parse event descriptor for " + _event_id);
-        }
-        return _data;
+        return new JSONObject(Map.of("event_descriptor", new JSONArray(), "descriptorStatus", "not_found"));
     }
 
     /**

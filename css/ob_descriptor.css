@@ -66,3 +66,44 @@ td.ob_descriptor_td2 {
 
 
 
+.ob_record_details { box-sizing: border-box; width: 100%; padding: 16px; }
+.ob_record_details h2 { font-size: 16px; overflow-wrap: anywhere; }
+.ob_record_details .ob_descriptor_table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.ob_record_details th { width: 28%; text-align: left; vertical-align: top; padding: 5px 8px 5px 0; }
+.ob_record_details .ob_descriptor_table td { vertical-align: top; padding: 5px 0; white-space: pre-wrap; }
+.ob_descriptor_value, .ob_descriptor_description { overflow-wrap: anywhere; white-space: pre-wrap; }
+.ob_record_details pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font: inherit; }
+.ob_descriptor_description table { width: 100%; table-layout: fixed; }
+.ob_descriptor_status { font-size: 12px; }
+
+.ob_descriptor_resizer {
+    position: absolute;
+    width: 10px;
+    z-index: 100001;
+    cursor: col-resize;
+    touch-action: none;
+    user-select: none;
+    background: transparent;
+}
+.ob_descriptor_resizer[hidden] { display: none; }
+.ob_descriptor_resizer::before {
+    content: '';
+    position: absolute;
+    inset: 0 4px;
+    background: #8298aa;
+}
+.ob_descriptor_resizer::after {
+    content: '';
+    position: absolute;
+    top: calc(50% - 22px);
+    left: 2px;
+    width: 6px;
+    height: 44px;
+    border: 1px solid #647d91;
+    border-radius: 4px;
+    background: #d6e2ec;
+}
+.ob_descriptor_resizer:hover::before,
+.ob_descriptor_resizer:focus-visible::before { background: #1767a4; }
+.ob_descriptor_resizer:focus-visible { outline: 2px solid #1767a4; outline-offset: 1px; }
+.ob_resizing_descriptor, .ob_resizing_descriptor * { cursor: col-resize !important; user-select: none !important; }

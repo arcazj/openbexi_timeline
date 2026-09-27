@@ -21,7 +21,8 @@ export default defineConfig({
         reducedMotion: 'reduce',
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
-        launchOptions: {args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']}
+        launchOptions: {executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+            args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']}
     },
     projects: [
         {name: 'desktop', use: {viewport: {width: 1440, height: 900}}},

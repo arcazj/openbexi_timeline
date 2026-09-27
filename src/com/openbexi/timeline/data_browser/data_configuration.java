@@ -17,6 +17,7 @@ import java.util.*;
  */
 public class data_configuration {
     JSONObject configuration;
+    public com.openbexi.timeline.servlets.TimelineRequestLog diagnostics;
 
     public data_configuration(JSONObject configuration) {
         this.configuration = configuration;
@@ -45,6 +46,17 @@ public class data_configuration {
         return configuration;
     }
 
+    /** Each HTTP request or SSE stream owns its query and filters. */
+    public data_configuration forRequest(HttpServletRequest request) {
+        try {
+            data_configuration copy = new data_configuration((JSONObject) new JSONParser().parse(configuration.toJSONString()));
+            copy.setConfiguration(request);
+            return copy;
+        } catch (ParseException error) {
+            throw new IllegalStateException("Cannot copy server configuration", error);
+        }
+    }
+
     public void setConfiguration(HttpServletRequest req) {
         getConfiguration().put("userName", req.getParameter("userName"));
         getConfiguration().put("request", req.getParameter("ob_request"));
@@ -52,6 +64,10 @@ public class data_configuration {
         getConfiguration().put("startDate", req.getParameter("startDate"));
         getConfiguration().put("endDate", req.getParameter("endDate"));
         getConfiguration().put("search", req.getParameter("search"));
+        getConfiguration().put("matchProtocol", req.getParameter("matchProtocol"));
+        getConfiguration().put("progressive", req.getParameter("progressive"));
+        getConfiguration().put("cursor", req.getParameter("cursor"));
+        getConfiguration().put("cancel", req.getParameter("cancel"));
         String ob_filter = req.getParameter("filter");
         if (ob_filter != null)
             ob_filter = ob_filter.replaceAll("_PIPE_", "|")

@@ -1,6 +1,7 @@
 {
   "params": [
     {
+      "fullWindow": true,
       "name": "ob_demo",
       "title": "Dinosaurs",
       "date": 140,

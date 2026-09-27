@@ -20,8 +20,10 @@ Each model in `models/demos` uses the existing `params` and `bands` structure, p
 | Model option | Meaning |
 | --- | --- |
 | `params.date` | Initial reference date; numeric-axis models use a value in their declared unit. |
+| `params.dateAxisMode` | `"shared"` (default) shows one date axis at the top of the current page, including grouped and paginated bands. Use `"per-band"` for models whose bands need separate date axes; each band then honors `intervalUnitPos: "TOP"` or `"BOTTOM"`. Overview keeps its separate context axis. |
 | `params.overview` | Whether overview bands are initially shown. |
-| `params.dockOverview` | Keep a trailing Overview visible below independently scrolling timeline rows. |
+| `params.dockOverview` | Legacy docking preference; version 2 keeps enabled overviews in bounded footers below paginated rows. |
+| `params.fullWindow` | Defaults to `true`. Fill available browser space; set `false` for custom model geometry. A saved Timeline Info preference takes precedence. |
 | `params.overviewHeightRatio` | Optional fraction of the timeline height reserved for its docked Overview, such as `0.22`. |
 | `params.displayOffsetMinutes`, `params.timeZoneLabel` | Explicit display offset and label, independent of the browser's local time zone. |
 | `params.showCurrentTime` | Set to `false` for historical datasets. |
@@ -33,10 +35,10 @@ Each model in `models/demos` uses the existing `params` and `bands` structure, p
 | Zone `render.height`, `render.verticalAlign` | Optional strip height and `top` alignment; otherwise the zone spans the band. |
 | Zone `render.labelPosition` | Set to `bottom` to place the highlight caption below event rows. |
 | `dataSource.time` | Optional numeric axis: `kind: "numeric"`, `unit`, `millisecondsPerUnit`, `direction`, and optional `approximatePrefixes`. The internal coordinate conversion is not a claim that numeric values are calendar dates. |
-| Band `height`, `color`, `SessionColor`, `eventColor`, `dateColor` | Band proportions and visual styling. Bands grow when additional rows are needed. |
+| Band `height`, `color`, `SessionColor`, `eventColor`, `dateColor` | Band proportions and visual styling. Packed rows are divided into pages when available height is exceeded. |
 | Band `intervalUnit`, `intervalPixels`, `dateFormat` | Time scale and tick labels. Supported units run from milliseconds through centuries. |
-| Band `range`, `context` | Optional `{from, to}` dates, or values in the declared numeric unit, for the initial visible range and the wider set of records laid out in both normal view and Overview. These ranges follow navigation and resize with the viewport. |
-| Band `focus` | Optional `{from, to, magnification, ticks}` or an array of those objects to expand selected intervals. Overlapping magnifications multiply, allowing an hour to be expanded within an already expanded day. Each Overview can define its own scale. |
+| Band `range`, `context` | Optional `{from, to}` dates, or values in the declared numeric unit, for the initial visible range and wider layout context. An Overview's authored range initializes its zoom span; its center follows the main interval. |
+| Band `focus` | Optional `{from, to, magnification, ticks}` or an array of those objects to expand selected intervals in the main view. Overlapping magnifications multiply. Overview uses a linear axis so its indicator represents actual timestamps. |
 | Band `ticks`, focus `ticks` | `{unit, step, format}` tick configuration. Calendar units such as `YEAR` and `MONTH` align to calendar boundaries; `HOUR` and `MINUTE` support finer detail. `NUMERIC` uses the declared axis unit, such as a `20` Ma step. `format` overrides the band date format for those ticks. |
 | Band `tickMinutes`, focus `tickMinutes` | Compatible shorthand for minute-based tick spacing. |
 | Band `labelPosition`, `topPadding` | Duration labels can use `above` or `inside`; top padding controls room above the first row. |
@@ -45,29 +47,42 @@ Each model in `models/demos` uses the existing `params` and `bands` structure, p
 | Band `eventKind` | Optional `duration` or `event` selection. |
 | Overview `sourceBands` | Optional array of normal band names to project. When omitted, Overview includes all normal bands. |
 | Overview `overviewLabel` | Optional compact label, such as `Magnified overview`. |
+| Overview `overviewContextRatio` | Initial span relative to the main window when no range/context is authored; defaults to `4`, bounded from `1` to `12` and capped by the loaded domain. |
+| Overview `overviewMarkerSize` | Minimum mark thickness in CSS pixels, from `1` to `12`; defaults to `3`. This does not lengthen a session's duration. |
 | Band `secondaryScale` | A second tick scale. With `step`, an `elapsedYears` scale anchors each tick to the `origin` anniversary; `height`, `color`, `textColor`, and `suffix` style its strip. |
 | Band `scaleHeader` | Optional in-chart scale annotation with `label`, `unit`, `height`, `color`, and `textColor`. It does not change the main toolbar. |
 | Band `uncertaintyOpacity` | Optional opacity for durations with retained Simile uncertainty metadata; original date bounds remain unchanged. |
-| Overview `fitRows` | Fits the completed normal-view rows into the miniature without including unused band height or repacking events. |
+| Overview `fitRows` | Defaults to `true`: fits completed normal-view rows into the miniature without including unused band height or repacking events. Set `false` to retain the legacy proportional layout. |
 | Overview `showContextLabel`, `viewportHandles` | `showContextLabel: false` hides the default title/count; `viewportHandles: true` adds handles for panning the visible time range. |
 
 The loader preserves descriptions as text. Legacy image and link references remain metadata; remote images are not needed to render a demo. Simile point events with uncertain end dates remain points unless `isDuration="true"`. BCE dates and years below 100 are interpreted explicitly, avoiding JavaScript's shorthand-year parsing. Numeric approximate values retain their source notation in event metadata.
 
 ## Responsive layout and Overview
 
-The demo page reserves 75% of the available width for Timeline, Table, or Split and 25% for event details, the calendar, or other panels. The panel space remains reserved when closed, including on narrow windows. Height follows the window below the original toolbar; dense timeline rows, tables, and panel contents scroll within their own areas. The toolbar keeps its original layout and scrolls horizontally on narrow windows.
+The demo page fills the available browser window. Event/session rows and table records use compact page controls when needed, without plot scrollbars. Open panels dock on wide windows and overlay on narrow windows. The toolbar wraps; Settings > Timeline Info supports full-window or custom sizing. Requested custom geometry is preserved during smaller resizes.
 
 Overview projects the normal bands' completed layout into a miniature, retaining event colors, session durations, row order, groups, and highlighted intervals. Point events become compact dots and duration events remain horizontal bars. Each source band has a visible-time-range highlight that follows panning and the Timeline/Split viewport. Search, grouping, refresh, and Overview toggles use the same loaded data and layout; models do not need dataset-specific JavaScript.
 
+Wheel zoom affects only the plot under the pointer. Main zoom anchors its timestamp;
+Overview zoom preserves the centered indicator and changes its linear context span.
+Overview's context follows main navigation while preserving its chosen duration,
+with a minimum span large enough to show the main interval. Its arrows, clicks
+and drags navigate the main view. **Fit context** includes the loaded domain
+around that center. Narrow overlay panels end above Overview so they cannot
+cover its indicator. The default footer allocation is
+20% of available height, capped at 180 pixels per Overview; explicit layout
+settings still apply. Dense overlapping marks aggregate with counts in their
+tooltips, while all eligible source records remain available for analysis.
+
 ## Reference images and source formats
 
-The models use the provided PNGs for band colors, event/duration styles, highlighted windows, and focus scales. JFK opens at 12:00-14:00 UTC-06:00 with five-minute ticks and the shot/time-of-death interval. Its Overview compresses the preceding months, expands the selected day, and further expands 12:00-13:00 through nested focus settings. Religions separates the Jewish and Christian chronologies using source namespace metadata; its main scale expands the first century relative to BCE history, with a wider magnified context in each Overview. Space exploration uses the existing documentation PNG.
+The original reference PNGs informed band colors, event/duration styles, highlighted windows and main-view focus scales. The catalog now links to [current application captures](ui/overview/README.md). JFK opens at 12:00-14:00 UTC-06:00 with five-minute ticks and the shot/time-of-death interval; its Overview shows the authored wider context on a linear axis. Religions separates the Jewish and Christian chronologies using source namespace metadata; its main scale expands the first century relative to BCE history, with a wider linear context in each Overview. Space exploration derives its initial Overview range from the main view and available records.
 
-Monet uses a uniform 1824–1916 main range with decade ticks, a gold age strip aligned to the November 14, 1840 birth date, and compact event rows with duration labels above thin bars. Its fixed Overview spans 1824–1929 with five-year ticks and a visible-range window. All 27 source records remain loaded, including events outside the initial main range. The scale header, age strip, uncertainty styling, and Overview row fitting are model options shared by the renderer.
+Monet uses a uniform 1824–1916 main range with decade ticks, a gold age strip aligned to the November 14, 1840 birth date, and compact event rows with duration labels above thin bars. Its Overview uses the 105-year span specified by its context, centered on the main interval, with five-year ticks. All 27 source records remain loaded, including events outside the initial main range. The scale header, age strip, uncertainty styling, and Overview row fitting are model options shared by the renderer.
 
 Operations opens September 12 from 08:00 to 17:00 UTC, with extra space around 12:10–13:20 and a uniform full-day Overview. Its 48 records for that day keep their source colors and both highlight zones. All 1,008 records remain loaded and available through the table, search, and date navigation. These choices come from the model's range, context, focus, and label settings; the shared renderer has no Operations-specific branches.
 
-Dinosaurs opens at 165–115 Ma, centered on 140 Ma, with a 4× horizontal scale and 5 Ma ticks. Its fixed Overview retains the full 240–40 Ma context, from older ages on the left to younger ages on the right, covering all 224 source records spanning 228–65 Ma. Labels sit above compact duration bars, and the Overview fits the completed event rows into its available height. All event details remain available through navigation, scrolling, search, and the table.
+Dinosaurs opens at 165–115 Ma, centered on 140 Ma, with a 4× horizontal scale and 5 Ma ticks. Its fixed Overview retains the full 240–40 Ma context, from older ages on the left to younger ages on the right, covering all 224 source records spanning 228–65 Ma. Labels sit above compact duration bars, and the Overview fits the completed event rows into its available height. All event details remain available through navigation, pagination, search, and the table.
 
 The supplied `jfk.json`, `monet.json`, `religions.json`, and `dinausaurs.json` contain legacy XML despite their suffix. Their catalog models declare `simile-xml`. The ephemeris file's trailing comma was removed so its contents are valid JSON. `default-dataset.json` is a snapshot with a `records` array and separate `zones`. The dinosaurs source uses millions of years ago, not calendar years; its model declares a descending numeric axis. The supplied filename `dinausaurs.json` is retained.
 
@@ -79,7 +94,7 @@ The supplied `jfk.json`, `monet.json`, `religions.json`, and `dinausaurs.json` c
 4. Run `npm run demos:validate` and `npm run test:demos`, then inspect the demo in a browser against its reference image.
 5. Run `npm run test:browser` for Chromium/WebGL layout and screenshot checks. For a new demo, review and add its screenshots using the [browser regression guide](browser-tests.md).
 
-Validation rejects missing datasets/models/references, duplicate IDs, omitted dataset files, invalid dates, and stale README links. The unit suite builds actual Three.js scene geometry and exercises the DOM, with GPU rendering and text measurement stubbed. The browser suite additionally renders all catalog demos using Chromium's actual layout engine and WebGL, comparing reviewed normal/Split screenshots at two window sizes and checking Overview, panels, hidden scrollbar tracks, keyboard scrolling, and resize behavior. Intentional visual changes require baseline review.
+Validation rejects missing datasets/models/references, duplicate IDs, omitted dataset files, invalid dates, and stale README links. The unit suite builds actual Three.js scene geometry and exercises the DOM, with GPU rendering and text measurement stubbed. The browser suite additionally renders all catalog demos using Chromium's actual layout engine and WebGL, comparing reviewed normal/Split screenshots at two window sizes and checking Overview, panels, bounded viewport geometry, keyboard pagination, and resize behavior. Intentional visual changes require baseline review.
 
 ## Model validation
 

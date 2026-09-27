@@ -72,7 +72,7 @@ for (const demo of ['default-dataset', 'dinausaurs']) test(`${demo}: drag batche
         assert.equal(clock.pending, 1, 'A burst of pointer moves requests only one frame');
         assert.equal(harness.renderCount, renders, 'Pointer handlers leave rendering to the frame');
         // Releasing before the animation frame must still apply the final input.
-        clock.advance(100);
+        clock.advance(300);
         controls.dispatchEvent({type: 'dragend', object: band});
         assert.equal(clock.pending, 0, 'Release flushes and cancels the queued drag frame');
         assert.equal(band.position.x, 35);
@@ -89,7 +89,7 @@ for (const demo of ['default-dataset', 'dinausaurs']) test(`${demo}: drag batche
         scene.dragControls.dispatchEvent({type: 'dragstart', object: moved});
         moved.position.x = -scene.width * 4;
         scene.dragControls.dispatchEvent({type: 'drag', object: moved});
-        clock.advance(100);
+        clock.advance(300);
         scene.dragControls.dispatchEvent({type: 'dragend', object: moved});
         const farTime = timeline.ob_markerDate.getTime();
         assert.equal(loads, 1, 'Leaving the prepared context refreshes once');
@@ -121,15 +121,21 @@ test('Static pan inertia follows frames and stops for another gesture or an expl
         gesture();
         assert.equal(clock.pending, 1);
         let previous = band.position.x, frames = 0;
-        while (clock.pending && frames++ < 60) {
+        while (clock.pending && frames++ < 120) {
             const renders = harness.renderCount;
             clock.frame();
             assert.equal(harness.renderCount, renders + 1, 'Coasting renders once per frame');
             assert.ok(band.position.x > previous && Number.isFinite(band.position.x));
             previous = band.position.x;
         }
-        assert.ok(frames < 60, 'Inertia decays to a stop');
+        assert.ok(frames > 30 && frames < 120, 'Inertia decays to a stop within two seconds');
         assert.equal(scene.ob_pan_frame, undefined);
+        gesture();
+        const delayedStart=band.position.x;
+        clock.advance(300);
+        clock.frame();
+        assert.ok(band.position.x>delayedStart && clock.pending>0,
+            'A brief rendering delay must not discard a recent flick');
         gesture();
         clock.advance(1000);
         clock.frame();
@@ -139,6 +145,9 @@ test('Static pan inertia follows frames and stops for another gesture or an expl
         assert.equal(clock.pending, 0, 'A new gesture cancels the old animation immediately');
         controls.dispatchEvent({type: 'dragend', object: band});
         assert.equal(clock.pending, 0, 'A click does not start a pan');
+        gesture();
+        harness.window.document.dispatchEvent(new harness.window.MouseEvent('pointerdown', {bubbles:true}));
+        assert.equal(clock.pending, 0, 'A click outside the plot also stops coasting');
         gesture();
         const overview = timeline.ob_timeline_panel.querySelector('.ob_docked_overview svg');
         overview.dispatchEvent(new harness.window.MouseEvent('pointerdown', {button: 0, clientX: 600}));
