@@ -1,3 +1,4 @@
+import {renderingFor} from './openbexi_timeline_rendering.js';
 import {formatTimelineValue} from './openbexi_timeline_data.js';
 import {bandTicks} from './openbexi_timeline_ticks.js';
 
@@ -22,11 +23,12 @@ const styles = (element, values) => {
 const equalKey = (a, b) => a?.length === b.length && b.every((value, index) => Object.is(value, a[index]));
 
 function createPanel(timeline) {
+    const config=renderingFor(timeline).overview, interaction=renderingFor(timeline).interaction, labels=renderingFor(timeline).controls;
     const panel = document.createElement('div');
     panel.className = 'ob_docked_overview';
     panel.setAttribute('aria-label', 'Timeline Overview');
     Object.assign(panel.style, {position: 'absolute', left: '0px', bottom: '0px', overflow: 'hidden',
-        zIndex: '11', boxSizing: 'border-box', borderTop: '1px solid #aab8bf'});
+        zIndex: '11', boxSizing: 'border-box', borderTop: '1px solid '+config.borderColor});
     const svg = svgElement('svg', {tabindex: '0', role: 'group',
         'aria-label': 'Overview. Click to choose a time, drag to pan, or use the left and right arrow keys.'});
     Object.assign(svg.style, {display: 'block', position: 'relative', touchAction: 'none', cursor: 'grab'});
@@ -42,9 +44,9 @@ function createPanel(timeline) {
     const state = {panel, svg, heading, content, windows, matches, overviewAxis};
     const controls=document.createElement('div'); controls.className='ob_overview_controls';
     for (const [label,title,action] of [
-        ['\u2190','Navigate earlier',()=>timeline.ob_results.panOverview(state.band.name,-.5)],
-        ['Fit context','Fit loaded context in Overview',()=>timeline.ob_results.fitOverview(state.band.name)],
-        ['\u2192','Navigate later',()=>timeline.ob_results.panOverview(state.band.name,.5)]]) {
+        [labels.previousOverviewLabel,labels.previousOverviewTitle,()=>timeline.ob_results.panOverview(state.band.name,-interaction.overviewPanFraction)],
+        [labels.fitOverviewLabel,labels.fitOverviewTitle,()=>timeline.ob_results.fitOverview(state.band.name)],
+        [labels.nextOverviewLabel,labels.nextOverviewTitle,()=>timeline.ob_results.panOverview(state.band.name,interaction.overviewPanFraction)]]) {
         const button=document.createElement('button');button.type='button';button.textContent=label;
         button.title=title;button.setAttribute('aria-label',title);button.onclick=action;controls.append(button);
     }
@@ -109,13 +111,14 @@ function createPanel(timeline) {
         if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
         const mesh = timeline.ob_scene[state.index].getObjectByName(state.band.name);
-        move(mesh.position.x + state.width / 10 * (event.key === 'ArrowLeft' ? 1 : -1));
+        move(mesh.position.x + state.width * interaction.overviewKeyboardFraction * (event.key === 'ArrowLeft' ? 1 : -1));
         commit();
     });
     return state;
 }
 
 function syncAxis(axis, timeline, index, band, mesh, width, baseline) {
+    const config=renderingFor(timeline).overview;
     styles(axis.group, {display: mesh ? '' : 'none'});
     if (!mesh) return;
     const start = timeline.pixelOffSetToBandDate(index, band, -width / 2 - mesh.position.x).getTime();
@@ -136,17 +139,17 @@ function syncAxis(axis, timeline, index, band, mesh, width, baseline) {
         attributes(tick.line, {x1: x, x2: x, y1: baseline - 12, y2: baseline - 9, stroke: band.dateColor || '#7c8991'});
         const label = formatTimelineValue(time, timeline.staticTimeAxis, format || 'HH:mm',
             timeline.params[0].displayOffsetMinutes || 0);
-        const labelWidth = timeline.getTextWidth(label, '600 10px Arial', 0);
+        const labelWidth = timeline.getTextWidth(label, '600 '+config.axisFontSize+'px Arial', 0);
         const labelX = Math.max(labelWidth / 2 + 1, Math.min(width - labelWidth / 2 - 1, x));
         const left = labelX - labelWidth / 2;
         const right = labelX + labelWidth / 2;
         const showLabel = right <= width && left >= lastLabel + 8;
         if (showLabel) {
             if (!tick.label) {
-                tick.label = svgElement('text', {'font-size': 10});
+                tick.label = svgElement('text', {'font-size': config.axisFontSize});
                 axis.group.appendChild(tick.label);
             }
-            attributes(tick.label, {x:labelX, y: baseline, fill: '#233449', 'font-weight': 600,
+            attributes(tick.label, {x:labelX, y: baseline, fill: renderingFor(timeline).axis.textColor, 'font-weight': 600,
                 'text-anchor': 'middle', display: 'inline'});
             if (tick.label.textContent !== label) tick.label.textContent = label;
             lastLabel = right;
@@ -219,6 +222,7 @@ export function syncOverviewPanel(timeline, index) {
 }
 
 function syncPanel(timeline, index, band, panels, position, count) {
+    const config=renderingFor(timeline).overview;
     const scene = timeline.ob_scene?.[index];
     const bands = scene?.bands || [];
     const active = (timeline.staticData || timeline.ob_results?.remoteData || timeline.ob_viewport && Array.isArray(scene.sessions?.events)) && (timeline.ob_viewport || timeline.params?.[0]?.dockOverview) && band && isOverview(band) &&
@@ -301,6 +305,7 @@ function syncPanel(timeline, index, band, panels, position, count) {
     const y = value => contentTop + (top - value) * scaleY;
     const highlight=searchActive && timeline.ob_results?.state.highlight !== false;
     const key = projectionKey(band, width, height, highlight);
+    key.push(config);
     if (!equalKey(state.projectionKey, key)) {
         state.projectionKey = key;
         state.content.replaceChildren();
@@ -313,15 +318,15 @@ function syncPanel(timeline, index, band, panels, position, count) {
         if (band.overviewLabel) {
             const labelWidth = band.overviewLabel.length * 5.5 + 8;
             state.headingNodes.background = svgElement('rect', {y: 4, width: labelWidth, height: 16, fill: '#ffffff', 'fill-opacity': 0.8});
-            state.headingNodes.title = svgElement('text', {y: 15, fill: '#566871', 'font-size': 10,
+            state.headingNodes.title = svgElement('text', {y: 15, fill: config.headingColor, 'font-size': config.countFontSize,
                 'text-anchor': 'end', 'data-overview-heading': 'title'}, band.overviewLabel);
             state.heading.append(state.headingNodes.background, state.headingNodes.title);
         } else if (band.showContextLabel !== false) {
-            state.headingNodes.title = svgElement('text', {y: 16, fill: '#566871', 'font-size': 11,
+            state.headingNodes.title = svgElement('text', {y: 16, fill: config.headingColor, 'font-size': config.headingFontSize,
                 'data-overview-heading': 'title'}, 'Overview');
             const count = new Set((band.sessions || []).map(session => session.matchKey || session.id)).size;
             state.headingRecordCount = count;
-            state.headingNodes.count = svgElement('text', {y: 16, fill: '#566871', 'font-size': 10,
+            state.headingNodes.count = svgElement('text', {y: 16, fill: config.headingColor, 'font-size': config.countFontSize,
                 'text-anchor': 'end', 'data-overview-heading': 'count'}, count + ' records / full context');
             state.heading.append(state.headingNodes.title, state.headingNodes.count);
         }
@@ -352,10 +357,10 @@ function syncPanel(timeline, index, band, panels, position, count) {
                 }
                 continue;
             }
-            const opacity=(activity.render?.opacity ?? 1)*(highlight && !activity.searchMatch ? .25 : 1);
+            const opacity=(activity.render?.opacity ?? 1)*(highlight && !activity.searchMatch ? config.dimmedOpacity : 1);
             const common = {fill: activity.render?.color || '#707070', 'fill-opacity': opacity, 'data-event-id': activity.id,
                 'data-search-match':Boolean(activity.searchMatch),
-                'data-source-band': activity.overviewSourceBand,'data-record-count':1,stroke:'#253746','stroke-width':0.35};
+                'data-source-band': activity.overviewSourceBand,'data-record-count':1,stroke:config.markerStroke,'stroke-width':config.markerStrokeWidth};
             const element = activity.overviewDuration ? svgElement('rect', {...common, x: contentX(activity.x),
                 y: y(activity.y) - size / 2, width: Math.max(0.5, activity.width), height: size}) :
                 svgElement('circle', {...common, cx: contentX(activity.x_relative), cy: y(activity.y), r: size / 2});
@@ -364,7 +369,7 @@ function syncPanel(timeline, index, band, panels, position, count) {
             if(right>=0 && left<=width) bins.set(binKey,mark);
             state.content.appendChild(element);
             if (activity.searchMatch && highlight) {
-                const matchStyle={fill:'#ffe04b','fill-opacity':.95,stroke:'#783800','stroke-width':2,
+                const matchStyle={fill:config.matchColor,'fill-opacity':config.matchOpacity,stroke:config.matchStroke,'stroke-width':config.matchStrokeWidth,
                     tabindex: 0, role: 'img', 'aria-label': 'Search match: ' + activity.data.title,
                     'data-match-key':activity.matchKey};
                 const match = activity.overviewDuration ? svgElement('rect', {...matchStyle,
@@ -379,13 +384,13 @@ function syncPanel(timeline, index, band, panels, position, count) {
         state.headingMatchCount=matchingKeys.size;
         for (const region of regions) {
             const window = svgElement('rect', {y: y(region.y + region.height / 2), height: Math.max(0.5, region.height * scaleY),
-                fill: '#ffffff', 'fill-opacity': 0.08, stroke: '#536872', 'stroke-width': 1, 'data-overview-window': region.sourceBand});
+                fill: config.viewportColor, 'fill-opacity': config.viewportOpacity, stroke: config.viewportStroke, 'stroke-width': config.viewportStrokeWidth, 'data-overview-window': region.sourceBand});
             state.windows.appendChild(window);
             const handles = [];
             if (band.viewportHandles) for (let edge = 0; edge < 2; edge++) {
-                const handleHeight = Math.min(48, region.height * scaleY);
-                const handle = svgElement('rect', {y: y(region.y) - handleHeight / 2, width: 7, height: handleHeight,
-                    rx: 1, fill: '#eff8ff', stroke: '#4d89ae', 'stroke-width': 0.8, 'data-overview-handle': region.sourceBand});
+                const handleHeight = Math.min(config.handleMaxHeight, region.height * scaleY);
+                const handle = svgElement('rect', {y: y(region.y) - handleHeight / 2, width: config.handleWidth, height: handleHeight,
+                    rx: 1, fill: config.handleColor, stroke: config.handleStroke, 'stroke-width': 0.8, 'data-overview-handle': region.sourceBand});
                 handle.appendChild(svgElement('title', {}, 'Drag to pan the visible time range'));
                 state.windows.appendChild(handle);
                 handles.push(handle);
@@ -400,8 +405,8 @@ function syncPanel(timeline, index, band, panels, position, count) {
     if (heading.background) attributes(heading.background, {x: visibleLeft + viewportWidth - (band.overviewLabel.length * 5.5 + 8) - 4});
     if (heading.title) attributes(heading.title, {x: band.overviewLabel ? visibleLeft + viewportWidth - 8 : visibleLeft + 8});
     if (heading.count) {
-        attributes(heading.count, {x: visibleLeft + viewportWidth - 8,y:stackedHeading?44:16,fill:highlight?'#783800':'#566871',
-            'font-weight':highlight?'bold':'normal','font-size':highlight?11:10});
+        attributes(heading.count, {x: visibleLeft + viewportWidth - 8,y:stackedHeading?44:16,fill:highlight?config.matchStroke:config.headingColor,
+            'font-weight':highlight?'bold':'normal','font-size':highlight?config.headingFontSize:config.countFontSize});
         const matches=searchActive?state.headingMatchCount+(state.headingMatchCount===1?' match · ':' matches · '):'';
         const label = matches+state.headingRecordCount + (timeline.ob_results?.complete === false ?
             ' loaded records / partial context' : ' records / full context');
@@ -422,7 +427,7 @@ function syncPanel(timeline, index, band, panels, position, count) {
         attributes(nodes.window, {x:Math.max(0,Math.min(width-2,indicatorLeft)), width:Math.max(2,Math.min(width,indicatorRight)-Math.max(0,indicatorLeft)),
             'stroke-dasharray':indicatorLeft<-.001 || indicatorRight>width+.001?'4 2':'none',
             'aria-label':indicatorLeft<-.001 || indicatorRight>width+.001?'Main view extends outside this Overview window':'Main view range'});
-        nodes.handles.forEach((handle, edge) => attributes(handle, {x: x(edge ? end : start) - 3.5}));
+        nodes.handles.forEach((handle, edge) => attributes(handle, {x: x(edge ? end : start) - config.handleWidth/2}));
     }
     syncAxis(state.overviewAxis, timeline, index, band, mesh, width, height - 4);
 }

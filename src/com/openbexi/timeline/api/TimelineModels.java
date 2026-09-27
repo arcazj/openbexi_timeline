@@ -26,6 +26,7 @@ public final class TimelineModels {
             schemaErrors(e, errors);
             throw new ApiException(422, String.join("; ", errors));
         }
+        validateRendering(model);
         JSONObject axis = TimelineRecords.axis(model);
         boolean numeric = TimelineRecords.numeric(axis);
         List<String> errors = new ArrayList<>();
@@ -88,6 +89,20 @@ public final class TimelineModels {
         }
         if (!errors.isEmpty()) throw new ApiException(422, String.join("; ", errors));
         return model;
+    }
+
+    static void validateRendering(JSONObject model) {
+        JSONObject rendering = model.optJSONObject("rendering");
+        if (rendering == null) return;
+        JSONObject activity = rendering.optJSONObject("activity");
+        if (activity != null && activity.optDouble("labelMinWidth", 80) > activity.optDouble("labelMaxWidth", 360))
+            throw new ApiException(422, "$.rendering.activity.labelMinWidth must not exceed labelMaxWidth");
+        JSONObject table = rendering.optJSONObject("table");
+        if (table != null && table.optJSONArray("columns") != null) {
+            boolean visible = false;
+            for (Object column : table.getJSONArray("columns")) visible |= ((JSONObject)column).optBoolean("visible", true);
+            if (!visible) throw new ApiException(422, "$.rendering.table.columns must contain a visible column");
+        }
     }
 
     private static boolean overview(JSONObject band) { return band.getString("name").contains("overview_"); }

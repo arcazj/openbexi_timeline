@@ -1,3 +1,4 @@
+import {renderingFor} from './openbexi_timeline_rendering.js';
 import {packPages, pageBands, pageForAnchor, recordKey} from './openbexi_timeline_paging.js';
 
 const styles = (element, values) => {
@@ -27,15 +28,15 @@ export class TimelineViewport {
     }
 
     measure() {
-        const t=this.timeline, host=t.layoutHost;
+        const t=this.timeline, host=t.layoutHost, config=renderingFor(t).layout;
         const width=Math.max(1,host?.clientWidth || window.innerWidth || 1000);
         const height=Math.max(1,host?.clientHeight || window.innerHeight || 700);
         this.panelOpen=Boolean(t.ob_timeline_right_panel?.children.length && t.ob_timeline_right_panel.style.visibility !== 'hidden');
-        this.overlay=this.panelOpen && width<900;
+        this.overlay=this.panelOpen && width<config.sidebarBreakpoint;
         this.descriptorOpen=this.panelOpen && Boolean(t.ob_timeline_right_panel.querySelector('.ob_descriptor, .ob_record_details, .ob_static_description'));
         this.sideLimits=this.overlay ? {min:Math.min(260,Math.max(1,width-48)),max:Math.max(1,width-48)} :
-            {min:320,max:Math.max(320,Math.min(Math.round(width*0.6),width-420))};
-        const defaultWidth=Math.min(width,480,Math.max(320,Math.round(width*0.22)));
+            {min:config.sidebarMinimum,max:Math.max(config.sidebarMinimum,Math.min(Math.round(width*config.sidebarMaximumRatio),width-config.minimumPlotWidth))};
+        const defaultWidth=Math.min(width,config.sidebarDefaultMaximum,Math.max(config.sidebarMinimum,Math.round(width*config.sidebarDefaultRatio)));
         const requestedWidth=this.descriptorOpen && Number.isFinite(this.preference.descriptorWidth) ? this.preference.descriptorWidth : defaultWidth;
         this.sideWidth=this.panelOpen ? this.descriptorOpen ? this.clampSideWidth(requestedWidth) : defaultWidth : 0;
         const usableWidth=width-(this.overlay?0:this.sideWidth);
@@ -47,9 +48,9 @@ export class TimelineViewport {
         this.headerHeight=t.ob_timeline_header?.offsetHeight || (this.width<700?200:108);
         const ratio=Number(t.params[0].overviewHeightRatio)||0.2;
         const overviews=t.ob_visible_view ? t.bands.filter(b=>b.name.includes('overview_')).length : 0;
-        this.overviewHeight=overviews ? Math.max(0,Math.min(180*overviews,
-            Math.floor(this.height*ratio)*overviews,this.height-this.headerHeight-100)):0;
-        this.plotWidth=t.ob_views?.mode==='split'?Math.max(1,Math.floor(this.width/2)):this.width;
+        this.overviewHeight=overviews ? Math.max(0,Math.min(config.overviewMaxHeight*overviews,
+            Math.floor(this.height*ratio)*overviews,this.height-this.headerHeight-config.minimumDetailHeight)):0;
+        this.plotWidth=t.ob_views?.mode==='split'?Math.max(1,Math.floor(this.width*config.splitRatio)):this.width;
         this.availableHeight=Math.max(1,this.height-this.headerHeight-this.overviewHeight);
         Object.assign(t,{width:this.width,height:this.height,top:this.top,left:this.left});
         return this.layoutSignature();
@@ -88,7 +89,8 @@ export class TimelineViewport {
         panel.after(divider);
         const prepare=()=>{t.ob_scene[0]?.cancelPan?.();t.ob_results?.captureRanges();this.measure();};
         divider.addEventListener('keydown',event=>{
-            const step=event.shiftKey?50:20;
+            const preferences=renderingFor(t).interaction;
+            const step=event.shiftKey?preferences.resizeLargeStep:preferences.resizeStep;
             const values={ArrowLeft:this.sideWidth+step,ArrowRight:this.sideWidth-step,Home:this.sideLimits?.min,End:this.sideLimits?.max};
             if (!(event.key in values)) return;
             event.preventDefault();event.stopPropagation();prepare();this.setDescriptorWidth(values[event.key],true);

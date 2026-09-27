@@ -6,10 +6,14 @@ commercial agreement cannot replace them. The source release excludes
 package lock and Maven descriptor specify dependencies to install separately.
 
 The direct browser dependencies are Three.js, three-spritetext, and
-simple-jscalendar. Their installed packages contain MIT license notices; retain
+simple-jscalendar, and the YAML parser used by the model editor. Their installed packages contain license notices; retain
 those complete notices when distributing a build that bundles them. A build
 also needs the notices for transitive and copied dependencies, not just these
-three package names. Preserve existing source headers and asset attribution.
+package names. Preserve existing source headers and asset attribution.
+
+The editor vendors the browser modules from `yaml` 2.8.3 under
+`src/vendor/yaml/`, including its complete ISC `LICENSE`. The lockfile pins the
+source package. Pages and source packaging include these modules and that notice.
 
 The Java dependencies and overrides are listed in [pom.xml](../pom.xml).
 Inspect resolved dependencies and each artifact's POM/license files before

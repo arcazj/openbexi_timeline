@@ -39,7 +39,9 @@ try {
     const version=await json('version.json');
     if(option('--commit')) assert.equal(version.commit,option('--commit'),'Deployed commit');
     const catalog=await json('demos/catalog.json');
-    const resources=['index.html','docs/help-guide.html','help/resources.json',...catalog.demos.flatMap(d=>[d.dataset,d.model,d.reference].filter(Boolean))];
+    const resources=['index.html','docs/help-guide.html','help/resources.json','openbexi_timeline_model.html',
+        'openbexi_timeline_model_preview.html','schemas/legacy-model.schema.json','src/vendor/yaml/index.js',
+        'src/vendor/yaml/LICENSE',...catalog.demos.flatMap(d=>[d.dataset,d.model,d.reference].filter(Boolean))];
     for(const resource of resources) assert.equal((await fetch(new URL(resource,baseURL))).status,200,resource);
     for(const viewport of [{width:1440,height:900},{width:800,height:700}]) {
         for(const demo of catalog.demos) {
@@ -81,9 +83,17 @@ try {
             await page.getByRole('button',{name:'Help',exact:true}).click();
             await expect(page.getByRole('heading',{name:'Help and sharing'})).toBeVisible();
             await expect(page.getByRole('combobox',{name:'Local dataset'})).toHaveValue(demo.id);
+            await page.goto(new URL('openbexi_timeline_model.html?model='+encodeURIComponent(demo.model),baseURL).href);
+            await expect(page.locator('#preview-host')).toHaveAttribute('data-state','ready',{timeout:45000});
+            await expect(page.locator('#preview-state')).toContainText(`${demo.recordCount} records`);
+            const revision=await page.locator('#preview-host').getAttribute('data-revision');
+            await page.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Preview '+demo.title);
+            await expect.poll(()=>page.locator('#preview-host').getAttribute('data-revision'),{timeout:30000}).not.toBe(revision);
+            await expect(page.locator('#preview-state')).toContainText('Preview '+demo.title);
+            await expect(page.locator('#errors')).toBeHidden();
             assert.deepEqual(errors,[],`${demo.id}: browser errors or missing assets`);
             results.push({demo:demo.id,width:viewport.width,records:initial.records,status:'passed'});
-            console.log(`PASS ${demo.id} (${viewport.width}px): assets, views, search, navigation, scaling, 3D, Help`);
+            console.log(`PASS ${demo.id} (${viewport.width}px): assets, views, search, navigation, scaling, 3D, Help, live model editor`);
             await context.close();
         }
     }

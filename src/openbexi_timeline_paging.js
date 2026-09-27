@@ -1,7 +1,8 @@
+import {bandRendering} from './openbexi_timeline_rendering.js';
 /** Paginate packed rows, without changing records or horizontal coordinates. */
 export const recordKey = record => record.matchKey || `${record.namespace || ''}:${record.sourceRecordKey || record.id}`;
 const isOverview = band => band.name.includes('overview_');
-export const dateAxisHeight = band => band.showDateAxis === false ? 0 : Math.max(28, (band.fontSizeInt || 12) + 16);
+export const dateAxisHeight = band => band.showDateAxis === false ? 0 : Math.max(bandRendering(band).axis.minimumHeight, (band.fontSizeInt || 12) + bandRendering(band).axis.verticalPadding);
 export function configureDateAxes(bands, mode = 'shared') {
     let first = true;
     for (const band of bands) {
@@ -16,7 +17,7 @@ export function configureDateAxes(bands, mode = 'shared') {
 }
 export const rowHeader = band => Math.max(band.topPadding ?? band.fontSizeInt * 2,
     (band.fontSizeInt || 12) * 2 + (band.scaleHeader?.height || 0) + (band.secondaryScale?.height || 0) +
-    (band.groupBy ? 24 : 0) + (band.zoneHeaderHeight || 0) +
+    (band.groupBy ? bandRendering(band).axis.groupHeaderHeight : 0) + (band.zoneHeaderHeight || 0) +
     (band.intervalUnitPos === 'TOP' ? dateAxisHeight(band) : 0));
 
 export function packPages(bands, availableHeight) {

@@ -1,11 +1,12 @@
+import {bandRendering} from './openbexi_timeline_rendering.js';
 // Calendar-aware ticks shared by the canvas and docked Overview axes.
 // Each magnified interval can select its own tick unit and label format.
 const lengths = {MILLISECOND: 1, SECOND: 1000, MINUTE: 60000, HOUR: 3600000, DAY: 86400000, WEEK: 604800000};
 const maxTicks = 400;
 
 // Select labels using the local time-to-pixel slope, including compressed gaps.
-export function adaptiveTickSettings(duration, pixels, axis) {
-    const desired = duration / Math.max(1, pixels / 100);
+export function adaptiveTickSettings(duration, pixels, axis, targetPixels = 100) {
+    const desired = duration / Math.max(1, pixels / targetPixels);
     if (axis?.kind === 'numeric') {
         const value=desired/axis.millisecondsPerUnit, power=10**Math.floor(Math.log10(Math.max(Number.MIN_VALUE,value)));
         return {unit:'NUMERIC',step:[1,2,5,10].find(n=>n*power>=value)*power};
@@ -87,7 +88,7 @@ export function bandTicks(band, from, to, offsetMinutes = 0) {
         const intervals=[];
         for(let i=1;i<edges.length;i++) {
             const a=edges[i-1],b=edges[i],pixels=Math.abs(scale.toPixel(b)-scale.toPixel(a));
-            const settings=adaptiveTickSettings(b-a,pixels,scale.axis),key=JSON.stringify(settings);
+            const settings=adaptiveTickSettings(b-a,pixels,scale.axis,bandRendering(band).axis.targetTickPixels),key=JSON.stringify(settings);
             if(intervals.at(-1)?.key===key) intervals.at(-1).to=b;
             else intervals.push({from:a,to:b,settings,key});
         }

@@ -1,3 +1,4 @@
+import {renderingFor} from './openbexi_timeline_rendering.js';
 import {createStaticMatchSnapshot, createProviderMatchSnapshot, projectMatchSnapshot} from './openbexi_timeline_matches.js';
 import {ADAPTIVE_LIMITS, finiteRange, fitRange, densityMap, chooseDensityMap, projectMap, zoomMappedRange} from './openbexi_timeline_adaptive.js';
 import {measureCandidateLayout} from './openbexi_timeline_data.js';
@@ -20,7 +21,8 @@ const button = (label, action) => { const element = node('button', label, {type:
 export class TimelineResults {
     constructor(timeline) {
         this.timeline = timeline;
-        this.state = {query: '', mode: 'highlight', highlight: true, auto: false, ratio: 8};
+        const preferences=renderingFor(timeline).interaction;
+        this.state = {query: '', mode: preferences.searchMode, highlight: preferences.highlight, auto: preferences.autoScale, ratio: preferences.adaptiveRatio};
         this.ranges = new Map();
         this.visibleRanges = new Map();
         this.overviewRanges = new Map();
@@ -494,7 +496,7 @@ export class TimelineResults {
         this.viewControls.append(this.clearButton);
         this.matchControls = [highlightLabel, modeLabel, this.fitButton, this.clearButton];
         this.toolbar.append(highlightLabel, modeLabel, this.fitButton, this.viewControls);
-        const zoomIn = button('+', () => this.zoom(0.8)), zoomOut = button('−', () => this.zoom(1.25));
+        const zoomIn = button('+', () => this.zoom(renderingFor(this.timeline).interaction.zoomInFactor)), zoomOut = button('−', () => this.zoom(renderingFor(this.timeline).interaction.zoomOutFactor));
         for (const [control,label] of [[zoomIn,'Zoom in'],[zoomOut,'Zoom out']]) {
             control.setAttribute('aria-label',label); control.title = label;
         }

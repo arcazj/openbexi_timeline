@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.1.0
+ *     OpenBEXI Timeline version 2.2.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -21,19 +21,21 @@
  */
 
 import * as THREE from 'three';
+import {resolveRendering, validateRendering, renderingFor, applyRenderingTheme} from './openbexi_timeline_rendering.js';
 import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
+import {openModelEditor} from './openbexi_timeline_model_link.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
 import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability} from './openbexi_timeline_filters.js';
 import {TimelineViewport} from './openbexi_timeline_viewport.js';
 import {createTimelineHelp} from './openbexi_timeline_help.js';
-import {validateDemoModel} from './openbexi_timeline_model_validation.js';
+import {validateDemoModel, validateLegacyModel} from './openbexi_timeline_model_validation.js';
 import {projectOverviewSessions, renderOverviewSessions, updateOverviewViewport} from './openbexi_timeline_overview.js';
 import {bandTimeToPixel, bandPixelToTime} from './openbexi_timeline_scale.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
@@ -848,6 +850,11 @@ function OB_TIMELINE(options = {}) {
             const closeSettings=document.createElement('button'); closeSettings.type='button'; closeSettings.textContent='Close';
             closeSettings.setAttribute('aria-label','Close settings'); closeSettings.onclick=()=>this.ob_remove_setting();
             div.querySelector('.ob_panel_heading').append(closeSettings);
+            const modelEditor=document.createElement('button'); modelEditor.type='button';
+            modelEditor.className='ob_model_editor_launch'; modelEditor.textContent='Model and YAML editor';
+            modelEditor.title='Edit the active model with a live preview';
+            modelEditor.addEventListener('click',()=>openModelEditor(this));
+            div.querySelector('.ob_panel_heading').after(modelEditor);
             this.ob_results?.mountSettings(div);
             this.ob_viewport?.mountSettings(div);
             document.getElementById(this.name + "_start").value = now.toISOString().slice(0, 16);
@@ -2443,6 +2450,7 @@ function OB_TIMELINE(options = {}) {
         const defaultColor = this.get_source_property(ob_scene_index, 0, "color", "#000000") // Black
         this.backgroundColor = this.backgroundColor || scene.bands[0]?.color;
         scene.bands.forEach((band, i) => { // Correctly using 'i' in forEach
+            band._rendering = renderingFor(this);
             const useLayouts = band.layouts !== undefined && i < band.layouts.length;
             const layoutIndex = useLayouts ? band.layouts[i] : undefined;
 
@@ -2692,7 +2700,7 @@ function OB_TIMELINE(options = {}) {
                     const fontSize = zone.render.labelFontSize || 12;
                     const labelWidth = this.getTextWidth(zone.data.title, fontSize + 'px ' + this.fontFamily, 0);
                     const topInset = (band.intervalUnitPos === 'TOP' ? dateAxisHeight(band) : 0) +
-                        (band.scaleHeader?.height || 0) + (band.secondaryScale?.height || 0) + (band.groupBy ? 24 : 0);
+                        (band.scaleHeader?.height || 0) + (band.secondaryScale?.height || 0) + (band.groupBy ? renderingFor(this).axis.groupHeaderHeight : 0);
                     const labelY = zone.render.labelPosition === 'bottom' ? -height / 2 + 36 :
                         Math.min(height / 2 - 20, band.height / 2 - mesh.position.y - topInset - fontSize / 2 - 5);
                     this.add_text_sprite(ob_scene_index, mesh, zone.data.title,
@@ -3309,24 +3317,24 @@ function OB_TIMELINE(options = {}) {
                 group.add(mesh);
             };
             const sharedAxisHeight = band.dateAxisMode === 'shared' ? dateAxisHeight(band) : 0;
-            let top = band.height / 2 - (band.groupBy ? 24 : 0) - sharedAxisHeight;
+            let top = band.height / 2 - (band.groupBy ? renderingFor(this).axis.groupHeaderHeight : 0) - sharedAxisHeight;
             if (header) {
                 const height = header.height || 38;
-                strip(height, top, header.color || '#edf0f1', 'scaleHeader');
+                strip(height, top, header.color || renderingFor(this).axis.scaleHeaderColor, 'scaleHeader');
                 const labelWidth = this.getTextWidth(header.label || '', '11px ' + band.fontFamily, 0);
                 text(header.label || '', -scene.width / 2 + labelWidth / 2 + 18, top - height / 2,
-                    header.textColor || '#397a9c', 'scaleHeaderLabel');
-                text(header.unit || '', 0, top - height / 2, header.textColor || '#397a9c', 'scaleHeaderUnit');
+                    header.textColor || renderingFor(this).axis.scaleHeaderText, 'scaleHeaderLabel');
+                text(header.unit || '', 0, top - height / 2, header.textColor || renderingFor(this).axis.scaleHeaderText, 'scaleHeaderUnit');
                 top -= height;
             }
             if (secondary) {
                 const height = secondary.height || 25;
-                strip(height, top, secondary.color || '#ffd58a', 'secondaryScaleStrip');
+                strip(height, top, secondary.color || renderingFor(this).axis.secondaryColor, 'secondaryScaleStrip');
                 const from = this.pixelOffSetToBandDate(index, band, -band.width / 2).getTime();
                 const to = this.pixelOffSetToBandDate(index, band, band.width / 2).getTime();
                 for (const tick of secondaryTicks(secondary, from, to)) {
                     const x = this.dateToBandPixelOffSet(index, band, tick.time);
-                    text(tick.label, x, top - height / 2, secondary.textColor || '#704308', 'secondaryScaleLabel');
+                    text(tick.label, x, top - height / 2, secondary.textColor || renderingFor(this).axis.secondaryText, 'secondaryScaleLabel');
                 }
                 top -= height;
             }
@@ -3334,9 +3342,9 @@ function OB_TIMELINE(options = {}) {
             if (!axisHeight) continue;
             const axisTop = sharedAxisHeight ? band.height / 2 :
                 band.intervalUnitPos === 'TOP' ? top : -band.height / 2 + axisHeight;
-            strip(axisHeight, axisTop, '#f7f9fc', 'dateAxis');
+            strip(axisHeight, axisTop, renderingFor(this).axis.background, 'dateAxis');
             const boundary = band.intervalUnitPos === 'TOP' ? axisTop - axisHeight : axisTop;
-            strip(1, boundary, '#8090a0', 'dateAxisSeparator');
+            strip(1, boundary, renderingFor(this).axis.separatorColor, 'dateAxisSeparator');
         }
     };
 
@@ -3356,10 +3364,10 @@ function OB_TIMELINE(options = {}) {
             this.pixelOffSetToDateText(ob_scene_index, incrementPixelOffSet, band.gregorianUnitLengths, band.intervalPixels, band.intervalUnit, band.dateFormat);
         const textX = incrementPixelOffSet - (band.fontSizeInt / 2) + 6;
         const textY = this.calculateTextYPosition(band);
-        this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 24, false, Math.max(12, band.fontSizeInt),
-            band.fontStyle, 'bold', '#233449', band.fontFamily);
+        this.add_text_sprite(ob_scene_index, ob_band, text, textX, textY, 24, false, Math.max(renderingFor(this).axis.minimumFontSize, band.fontSizeInt),
+            band.fontStyle, 'bold', renderingFor(this).axis.textColor, band.fontFamily);
         const label = ob_band.children.at(-1);
-        label.backgroundColor = '#f7f9fc';
+        label.backgroundColor = renderingFor(this).axis.background;
         label.fontSize = 48;
         label.userData.dateLabel = true;
         if(this.ob_scene[ob_scene_index].ob_camera_type==='Perspective') {
@@ -3378,7 +3386,7 @@ function OB_TIMELINE(options = {}) {
         if (band.dateAxisMode === 'shared') return heightMaxHalf - dateAxisHeight(band) / 2;
         if (band.intervalUnitPos === "TOP") {
             return heightMaxHalf - (band.scaleHeader?.height || 0) - (band.secondaryScale?.height || 0) -
-                (band.groupBy ? 24 : 0) - dateAxisHeight(band) / 2;
+                (band.groupBy ? renderingFor(this).axis.groupHeaderHeight : 0) - dateAxisHeight(band) / 2;
         }
         return -parseInt(band.heightMax) / 2 + dateAxisHeight(band) / 2;
     };
@@ -4889,7 +4897,7 @@ function OB_TIMELINE(options = {}) {
                 this.resTracker[s] = new ResourceTracker();
                 this.track[s] = this.resTracker[s].track.bind(this.resTracker[s]);
                 this.ob_scene[s] = this.track[s](new THREE.Scene());
-                this.ob_scene[s].background = new THREE.Color(0xf7f9fc);
+                this.ob_scene[s].background = new THREE.Color(renderingFor(this).theme.sceneBackground);
                 this.ob_scene[s].objects = [];
                 this.ob_scene[s].ready = true;
                 //this.ob_scene[s].group = new THREE.Group();
@@ -4926,6 +4934,7 @@ function OB_TIMELINE(options = {}) {
         this.ob_scene[ob_scene_index].ob_renderer.setSize(this.ob_scene[ob_scene_index].width, this.ob_scene[ob_scene_index].ob_height);
         // Restore the split viewport after a scene rebuild has attached the canvas again.
         this.ob_views.applyLayout();
+        applyRenderingTheme(this);
     };
 
     OB_TIMELINE.prototype.ob_set_camera = function (ob_scene_index) {
@@ -4958,7 +4967,7 @@ function OB_TIMELINE(options = {}) {
             scene.add(scene.ob_camera);
         } else {
             // An oblique board with shaded bars; selection never changes depth.
-            const fieldOfView = 30;
+            const fieldOfView = renderingFor(this).camera.fieldOfView;
             const distance = Math.max(1, scene.ob_height) / (2 * Math.tan(THREE.MathUtils.degToRad(fieldOfView / 2)));
             scene.ob_camera = this.track[ob_scene_index](
                 new THREE.PerspectiveCamera(
@@ -4970,8 +4979,8 @@ function OB_TIMELINE(options = {}) {
             );
             scene.add(scene.ob_camera);
             positionActivityCamera(this,ob_scene_index);
-            scene.add(this.track[ob_scene_index](new THREE.AmbientLight(0xffffff,1.5)));
-            const light=this.track[ob_scene_index](new THREE.DirectionalLight(0xffffff,1.8));
+            scene.add(this.track[ob_scene_index](new THREE.AmbientLight(renderingFor(this).camera.ambientColor,renderingFor(this).camera.ambientIntensity)));
+            const light=this.track[ob_scene_index](new THREE.DirectionalLight(renderingFor(this).camera.directionalColor,renderingFor(this).camera.directionalIntensity));
             light.position.set(-scene.width/2,scene.ob_height,scene.ob_height);
             scene.add(light);
         }
@@ -5401,13 +5410,18 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.validateModel = function (data, model) {
+        validateRendering(data.rendering);
         if (data.dataSource) validateDemoModel(data, {label: String(model)});
+        else validateLegacyModel(data, {label: String(model)});
         if (!data.params?.[0] || !data.bands?.length) throw new Error('Invalid timeline model');
     };
 
     OB_TIMELINE.prototype.applyModel = async function (data, options = {}) {
-        this.params = data.params;
-        this.bands = data.bands;
+        this.modelDocument = structuredClone(data);
+        this.rendering = resolveRendering(data.rendering);
+        this.params = structuredClone(data.params);
+        this.bands = structuredClone(data.bands);
+        this.params[0].camera ??= this.rendering.camera.mode;
         const useLocalData=()=>{
             this.staticData={dateTimeFormat:'iso8601',events:[]};
             if(['current_time','Date.now()'].includes(this.params[0].date))this.params[0].date=new Date().toISOString();

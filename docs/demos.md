@@ -59,6 +59,14 @@ initialization method when ready.
 
 Each model in `models/demos` uses the existing `params` and `bands` structure, plus `dataSource`. The presence of `dataSource` enables the shared file-backed loader; existing server models continue to use their server connection.
 
+Both demo and provider models also accept the optional root `rendering` object.
+Its 92 settings cover theme, axes, Overview, camera, activity appearance, layout,
+interactions, controls and table columns. Omitted settings keep the established
+defaults. The [rendering inventory](model-rendering-inventory.md) lists every
+setting and its precedence. Open **Settings → Model and YAML editor** to edit
+these properties and preview the actual timeline as you type; see the
+[editor guide](model-editor.md) for import/export and server file management.
+
 | Model option | Meaning |
 | --- | --- |
 | `params.date` | Initial reference date; numeric-axis models use a value in their declared unit. |
@@ -159,9 +167,9 @@ npx playwright install chromium --only-shell
 npm run pages:verify
 ```
 
-`pages:build` writes `dist/pages` using the reviewed public-file manifest and the exact browser dependency files referenced by the import map. It includes their license notices, help, public models, datasets and reference images. Server configuration, runtime files and local data are excluded. The generated gallery is `index.html`; `version.json` records the release and commit.
+`pages:build` writes `dist/pages` using the reviewed public-file manifest and the exact browser dependency files referenced by the import map. It includes their license notices, help, public models, datasets, reference images and the Model and YAML editor with its live preview. Server configuration, runtime files and local data are excluded. The generated gallery is `index.html`; `version.json` records the release and commit.
 
-The [Pages workflow](../.github/workflows/pages.yml) runs on pushes to `master`. It validates all seven demos at desktop and narrow sizes under `/openbexi_timeline/`, then deploys the tested artifact. Repository **Settings > Pages > Source** must be **GitHub Actions**. The README demo table is generated with the public Pages URL; local use remains available through `npm run demo`.
+The [Pages workflow](../.github/workflows/pages.yml) runs on pushes to `master`. It validates all seven demos and live model previews at desktop and narrow sizes under `/openbexi_timeline/`, then deploys the tested artifact. Repository **Settings > Pages > Source** must be **GitHub Actions**. The README demo table is generated with the public Pages URL; local use remains available through `npm run demo`.
 
 After deployment, check the actual public site with:
 

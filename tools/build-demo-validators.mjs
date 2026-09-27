@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ajv = new Ajv({allErrors: true, strict: true, allowUnionTypes: true, inlineRefs: false,
     code: {source: true, esm: true, lines: true}, unicodeRegExp: false});
 const exports = {};
-for (const [name, file] of [['modelSchema', 'demo-model'], ['catalogSchema', 'demo-catalog']]) {
+for (const [name, file] of [['modelSchema', 'demo-model'], ['legacySchema', 'legacy-model'], ['catalogSchema', 'demo-catalog']]) {
     const schema = JSON.parse(await fs.readFile(path.join(root, 'schemas', file + '.schema.json'), 'utf8'));
     ajv.addSchema(schema);
     exports[name] = schema.$id;

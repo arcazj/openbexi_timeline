@@ -14,7 +14,10 @@ const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 const payload=[];
 for(const file of files) {
     if(typeof file!=='string' || path.isAbsolute(file) || /[\x00-\x1f]/.test(file) || file.includes('\\') || file.split('/').some(p=>!p || p==='.' || p==='..') ||
-        /(^|\/)(?:node_modules|target|out|dist|\.git|\.idea|\.local-private|tomcat)(\/|$)/i.test(file) ||
+        /(^|\/)(?:node_modules|target|out|\.git|\.idea|\.local-private|tomcat)(\/|$)/i.test(file) ||
+        // The reviewed YAML parser ships its browser modules in a vendor dist
+        // directory. Only those explicit JavaScript entries may use that name.
+        (/(^|\/)dist(\/|$)/i.test(file) && !/^src\/vendor\/yaml\/dist\/(?:[a-z0-9_.-]+\/)*[a-z0-9_-]+\.js$/i.test(file)) ||
         /\.(?:iml|jks|p12|pfx|key|jar|class|log)$/i.test(file)) throw new Error('Disallowed public-file entry: '+file);
     const source=path.resolve(root,file),real=await fs.realpath(source),stat=await fs.lstat(source);
     if(!inside(root,real) || real!==source || !stat.isFile() || stat.isSymbolicLink()) throw new Error('Not a regular public source file: '+file);

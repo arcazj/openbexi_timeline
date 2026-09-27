@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -67,6 +67,20 @@ and 20 seconds. They stop at the first page containing relevant activity and
 release unused cursors. A result from an incomplete scan is earlier/later activity,
 not a claim that it is the nearest event in the entire archive. If nothing is
 found within those bounds, choose a date or adjust the filters to continue.
+
+## Model and YAML editor
+
+Open **Settings → Model and YAML editor** to edit the current model with color
+pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes
+refresh a live timeline preview; invalid changes keep the last valid preview.
+The preview starts with your current date, search, view and camera.
+
+Use import/export on GitHub Pages or a local static server. **Apply to original
+timeline** reloads the original page with your draft once; save or export the
+file to keep the change. An authenticated Java server also supports file
+creation, editing, renaming and deletion. YAML deployment changes require a
+server restart. See the [editor guide](model-editor.md) and
+[rendering settings inventory](model-rendering-inventory.md).
 
 ## Design
 

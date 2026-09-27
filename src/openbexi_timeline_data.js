@@ -1,3 +1,4 @@
+import {renderingFor} from './openbexi_timeline_rendering.js';
 // Shared, model-driven import and layout helpers for file-backed timelines.
 import {prepareBandScale, bandTimeToPixel} from './openbexi_timeline_scale.js';
 import {createStaticSearchMatcher} from './openbexi_timeline_matches.js';
@@ -186,6 +187,7 @@ export function prepareStaticBands(timeline, sceneIndex) {
         if (!values.length) values = [null];
         for (const [index, value] of values.entries()) {
             const band = structuredClone(template);
+            band._rendering = renderingFor(timeline);
             band.sourceBand = template.name;
             band.groupBy = groupBy;
             band.groupValues = groupValues;
@@ -205,9 +207,9 @@ export function prepareStaticBands(timeline, sceneIndex) {
             band.trackIncrement = band.trackIncrement || (band.name.includes("overview_") ? 4 : 24);
             band.fontSizeInt = parseInt(band.fontSize) || timeline.fontSizeInt;
             band.fontSize = band.fontSizeInt + "px";
-            band.fontFamily = timeline.fontFamily;
-            band.fontStyle = "normal";
-            band.fontWeight = "normal";
+            band.fontFamily = template.fontFamily || timeline.fontFamily;
+            band.fontStyle = template.fontStyle || timeline.params?.[0]?.fontStyle || "normal";
+            band.fontWeight = template.fontWeight || timeline.params?.[0]?.fontWeight || "normal";
             band.sessionHeight = band.sessionHeight || 7;
             band.defaultEventSize = band.defaultEventSize || (band.name.includes("overview_") ? 1 : 3);
             band.subIntervalPixels = "NONE";

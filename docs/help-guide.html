@@ -35,6 +35,7 @@
   </nav>
   <nav class="contents" aria-label="Guide sections">
     <a href="#user-manual">User manual</a>
+    <a href="#model-and-yaml-editor">Model and YAML editor</a>
     <a href="#design">Design</a>
     <a href="#data-design">Data design</a>
     <a href="#architecture">Architecture</a>
@@ -42,7 +43,7 @@
     <a href="#deployment">Deployment</a>
   </nav>
 <h1 id="openbexi-timeline-help">OpenBEXI Timeline help</h1>
-<p>These notes describe the version 2.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the <a href="../README.md">README</a> for the demo catalog and the <a href="demos.md">demo configuration guide</a> for all model options.</p>
+<p>These notes describe the version 2.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the <a href="../README.md">README</a> for the demo catalog and the <a href="demos.md">demo configuration guide</a> for all model options.</p>
 <h2 id="user-manual">User manual</h2>
 <ul>
 <li>Use <strong>Timeline</strong>, <strong>Table</strong>, or <strong>Split</strong> on the main toolbar to change the presentation. Split places the chart beside the event table.</li>
@@ -72,6 +73,9 @@
 <li>Focus the timeline and use Left/Right to pan, Plus/Minus to zoom, or Alt+Left/Right for matches. Automatic moves do not animate; reduced-motion preferences disable coasting.</li>
 </ul>
 <p>Connected searches inspect up to eight expanding intervals, 32 pages and 20 seconds. They show the first relevant result found, which may not be the nearest event in an incomplete archive. <strong>Timeline details</strong> lists completed, loading, partial and limited intervals.</p>
+<h2 id="model-and-yaml-editor">Model and YAML editor</h2>
+<p>Open <strong>Settings → Model and YAML editor</strong> to edit the current model with color pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes refresh a live timeline preview; invalid changes keep the last valid preview. The preview starts with your current date, search, view and camera.</p>
+<p>Use import/export on GitHub Pages or a local static server. <strong>Apply to original timeline</strong> reloads the original page with your draft once; save or export the file to keep the change. An authenticated Java server also supports file creation, editing, renaming and deletion. YAML deployment changes require a server restart. See the <a href="model-editor.md">editor guide</a> and <a href="model-rendering-inventory.md">rendering settings inventory</a>.</p>
 <h2 id="design">Design</h2>
 <p>Every demo uses the same toolbar, loader, chart renderer, table, and responsive layout. Models define the differences in appearance: band heights and colors, event and duration styles, highlighted intervals, tick labels, initial range, and expanded focus intervals. Text above the toolbar is omitted so that the chart uses the available window height.</p>
 <p>Overview projects the rows already laid out in the normal view. It preserves event colors, relative row order, sessions, groups, and zones. A model can keep Overview below the scrolling rows, use a wider time range, and fit those rows into a compact miniature.</p>

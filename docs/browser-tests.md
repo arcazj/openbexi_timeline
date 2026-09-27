@@ -74,23 +74,24 @@ npx playwright show-report
   Separate explorer checks mock only health, dataset discovery, and event responses
   to verify query encoding, response status, and safe text rendering. The Java API
   integration tests exercise the actual server and persistence.
+- The Model and YAML editor previews every demo with the actual renderer. Checks
+  cover live property edits, invalid drafts, import/export, undo/redo, YAML
+  preservation, delayed loads, preview cleanup, camera settings and applying
+  changes to the originating timeline. Java tests cover authenticated server-file
+  CRUD, validation, persistence, conflicts and references.
 
 The regular `npm run test:demos` suite also exercises all seven demos' responsive
 layout, and covers detailed scale/projection and panel behavior in the DOM harness.
 
-The 2026-09-27 release checkpoint uses the locked Chromium 153 headless shell.
-The suite has 79 enabled checks and seven duplicate narrow drag cases that are
-intentionally skipped. The full run found a short-frame-delay flick regression;
-the corrected behavior passed focused navigation checks. A separate initial-layout
-race in the drag probe was fixed by waiting for the pending layout and toolbar
-measurement before attaching listeners. The affected drag and flick cases then
-passed three repetitions each, without arbitrary startup sleeps. All 14 catalog
-screenshot comparisons passed without updating the reviewed baselines.
+The 2.2 release checkpoint uses the locked Chromium 153 headless shell.
+The suite contains 163 enabled checks and seven duplicate narrow drag cases that
+are intentionally skipped. The 28 catalog screenshot comparisons retain the
+reviewed 2.1 baselines because default rendering remains compatible.
 
-The release also passed 146 JavaScript tests and Maven verification with 54
-executed tests and 34 existing environment-dependent skips. See the
-[release validation record](release-2.1.md), [current captures](ui/overview/README.md)
-and [descriptor scenarios](ui/navigation-details/README.md).
+The release also includes 212 JavaScript tests and 68 Java tests, with 34 existing
+environment-dependent Java skips. See the [release validation record](release-2.2.md),
+[current captures](ui/overview/README.md) and
+[descriptor scenarios](ui/navigation-details/README.md).
 
 ## Review intentional visual changes
 
