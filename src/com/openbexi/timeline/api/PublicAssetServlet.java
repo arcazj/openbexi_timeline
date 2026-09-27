@@ -40,7 +40,9 @@ public final class PublicAssetServlet extends HttpServlet {
             return ROOT_DOCUMENTS.contains(filename) || Set.of("html", "png", "jpg", "jpeg", "svg", "ico").contains(extension);
         String folder = relative.getName(0).toString();
         return switch (folder) {
-            case "src" -> relative.getNameCount() == 2 && Set.of("js", "mjs").contains(extension);
+            case "src" -> (relative.getNameCount() == 2 ||
+                    (relative.getNameCount() > 3 && relative.getName(1).toString().equals("vendor") && relative.getName(2).toString().equals("yaml")))
+                    && (Set.of("js", "mjs").contains(extension) || filename.equals("LICENSE"));
             case "node_modules", "icon", "css" -> BROWSER_EXTENSIONS.contains(extension);
             case "models", "demos", "help", "schemas" -> extension.equals("json");
             case "json" -> relative.getNameCount() > 2 && relative.getName(1).toString().equals("test-data")

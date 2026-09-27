@@ -12,6 +12,13 @@ async function settle(page) {
     await page.waitForFunction(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;
         return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;});
     await page.waitForTimeout(180);
+    // Resizing can finish after the toolbar settles. Await the actual host
+    // dimensions before recording geometry for the assertions below.
+    await page.waitForFunction(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,v=t.ob_viewport;
+        const width=t.layoutHost.clientWidth-(v.panelOpen && !v.overlay?v.sideWidth:0);
+        return !t.ob_results.pending && t.width===width && t.height===t.layoutHost.clientHeight;
+    });
 }
 
 async function staysInsideSidePanel(locator, sideBox) {

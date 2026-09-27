@@ -71,6 +71,30 @@ test('Visible records render before later pages; prefetch stays interactive, mer
     } finally {f.close();}
 });
 
+test('Loading before a navigation render requests the intended range and keeps it centered',async()=>{
+    const f=await connected();const {t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        batch(requests[1],['current']);await waitFor(()=>requests.length===3);batch(requests[2],[]);
+        await waitFor(()=>requests.length===4);batch(requests[3],[]);await waitFor(()=>!r.fetching && !r.pending);
+        r.captureRanges();
+        const before=r.visibleRanges.values().next().value,shift=2*86400000;
+        const target={from:before.from-shift,to:before.to-shift},next=requests.length;
+        r.navigate(target,true,{automatic:true,immediate:true});
+        // A display update can postpone drawing until after the navigation load.
+        r.request({mode:'only'},50);
+        t.load_data(0);
+        assert.ok(requests[next],'Navigation must request its destination before drawing it');
+        const url=new URL(requests[next].url);
+        assert.equal(Date.parse(url.searchParams.get('startDate')),target.from);
+        assert.equal(Date.parse(url.searchParams.get('endDate')),target.to);
+        batch(requests[next],['destination']);
+        await waitFor(()=>!r.pending && r.snapshot.entries.some(entry=>entry.record.id==='destination'));
+        r.captureRanges();const visible=r.visibleRanges.values().next().value;
+        assert.equal(visible.from,target.from);assert.equal(visible.to,target.to);
+    } finally {f.close();}
+});
+
 test('Changing query abandons old cursors and an empty response retries without losing the visible records',async()=>{
     const f=await connected();const {t,r,requests,settings}=f;
     try {

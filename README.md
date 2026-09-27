@@ -18,6 +18,9 @@ connect to a Java server for progressive loading and managed datasets.
   through activity, and Auto scale adapts the time axis to data density.
 - **Explore in 3D:** compact bars share rows, full labels remain readable, and
   the selected activity glows without changing size.
+- **Customize with a live preview:** open the Model and YAML editor from Settings
+  to adjust colors, typography, axes, layout and controls, then import or export
+  your configuration. Connected administrators can also manage server files.
 
 ## Screenshots
 
@@ -117,10 +120,15 @@ Use the [demo guide](docs/demos.md) to add datasets and models, and the
 reproduction steps and a public or synthetic example. Keep private configuration,
 records, logs and screenshots out of shared files; see [privacy guidance](docs/privacy.md).
 
+Open **Settings → Model and YAML editor** to edit configuration with a live
+timeline preview, color pickers and field choices. The [editor guide](docs/model-editor.md)
+explains local import/export, server file CRUD, and applying a draft. The
+[rendering inventory](docs/model-rendering-inventory.md) lists model settings and defaults.
+
 ## Copyright and Licensing
 
-**Current version: [2.1.0](https://github.com/arcazj/openbexi_timeline/releases/tag/v2.1.0)**, OpenBEXI Timeline 2.1.
-The [release notes](docs/release-2.1.md) describe the included changes, verified
+**Current version: [2.2.0](https://github.com/arcazj/openbexi_timeline/releases/tag/v2.2.0)**, OpenBEXI Timeline 2.2.
+The [release notes](docs/release-2.2.md) describe the included changes, verified
 checks and remaining scope. Create the reviewed source archive and its
 SHA-256 manifest in `dist/` with:
 

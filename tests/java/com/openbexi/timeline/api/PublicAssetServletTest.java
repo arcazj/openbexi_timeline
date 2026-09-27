@@ -25,7 +25,7 @@ class PublicAssetServletTest {
 
     @BeforeAll void start() throws Exception {
         root = Files.createDirectory(temporary.resolve("site"));
-        for (String path : List.of("demos.html", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
+        for (String path : List.of("demos.html", "openbexi_timeline_model.html", "openbexi_timeline_model_preview.html", "src/vendor/yaml/index.js", "src/vendor/yaml/parse/parser.js", "src/vendor/yaml/LICENSE", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
                 "models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) file(path, "public");
         for (String path : List.of(".git/config", ".env", "pom.xml", "package-lock.json", "yaml/credentials.yml", "json/sources_default.json",
                 "target/classes/Secret.class", "src/com/example/Secret.java", "tests/java/Secret.java", "tools/internal.js", "private.json", "icon/.secret.png")) file(path, "private");
@@ -53,7 +53,7 @@ class PublicAssetServletTest {
                 .method(method, HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
     }
     @Test void browserAssetsAndDocumentationRemainUsableWithCorrectMimeTypes() throws Exception {
-        for (String path : List.of("", "demos.html", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
+        for (String path : List.of("", "demos.html", "openbexi_timeline_model.html", "openbexi_timeline_model_preview.html", "src/vendor/yaml/index.js", "src/vendor/yaml/parse/parser.js", "src/vendor/yaml/LICENSE", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
                 "models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) {
             HttpResponse<String> result = request("GET", path);
             assertEquals(200, result.statusCode(), path); assertEquals("public", result.body());

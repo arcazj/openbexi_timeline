@@ -13,6 +13,7 @@ import java.util.*;
 /** Versioned resource API, deliberately independent of the legacy mutable request configuration. */
 public final class TimelineApiServlet extends HttpServlet {
     private TimelineRepository repository;
+    private TimelineConfigFiles configFiles;
     private Path root;
     private String adminToken, writeToken, readToken;
     private Set<String> corsOrigins;
@@ -34,6 +35,10 @@ public final class TimelineApiServlet extends HttpServlet {
     }
     private void configure(Path root, Path data, String admin, String writer, String reader, String origins) throws IOException {
         this.root = root.toRealPath(); repository = new TimelineRepository(root, data);
+        String configured = setting("openbexi.api.configRoots", "OPENBEXI_CONFIG_ROOTS", "");
+        List<Path> configurationRoots = configured.isBlank() ? List.of() : Arrays.stream(configured.split(java.util.regex.Pattern.quote(File.pathSeparator)))
+                .filter(value -> !value.isBlank()).map(Paths::get).toList();
+        configFiles = new TimelineConfigFiles(root, data.resolve("config-files"), configurationRoots);
         adminToken = token(admin); writeToken = token(writer); readToken = token(reader);
         corsOrigins = origins == null || origins.isBlank() ? Set.of() : Set.copyOf(Arrays.asList(origins.trim().split("\\s*,\\s*")));
     }
@@ -101,6 +106,29 @@ public final class TimelineApiServlet extends HttpServlet {
         String path = Optional.ofNullable(req.getPathInfo()).orElse("");
         String[] parts = path.replaceFirst("^/", "").split("/", -1);
         String method = req.getMethod(); boolean get = method.equals("GET") || method.equals("HEAD");
+        if (parts[0].equals("config-files")) {
+            require(role, 3);
+            if (parts.length == 1) {
+                if (get) { send(req, res, 200, new JSONObject().put("items", configFiles.list()), null); return; }
+                if (!method.equals("POST")) methodNotAllowed(res, "GET, HEAD, POST");
+                JSONObject created = configFiles.create(body(req));
+                res.setHeader("Location", "/api/v1/config-files/" + created.getString("id"));
+                send(req, res, 201, created, TimelineConfigFiles.etag(created)); return;
+            }
+            if (parts.length != 2) throw new ApiException(404, "Configuration document not found.");
+            if (get) {
+                JSONObject document = configFiles.read(parts[1]);
+                send(req, res, 200, document, TimelineConfigFiles.etag(document)); return;
+            }
+            if (method.equals("PUT")) {
+                JSONObject document = configFiles.update(parts[1], req.getHeader("If-Match"), body(req));
+                send(req, res, 200, document, TimelineConfigFiles.etag(document)); return;
+            }
+            if (method.equals("DELETE")) {
+                configFiles.delete(parts[1], req.getHeader("If-Match")); send(req, res, 204, null, null); return;
+            }
+            methodNotAllowed(res, "GET, HEAD, PUT, DELETE");
+        }
         if (parts.length == 1 && (parts[0].isEmpty() || parts[0].equals("health"))) {
             readOnly(get, res);
             send(req, res, 200, new JSONObject().put("status", "ok").put("apiVersion", "1")

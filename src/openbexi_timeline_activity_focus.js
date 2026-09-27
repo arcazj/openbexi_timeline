@@ -1,10 +1,11 @@
+import {renderingFor, bandRendering, RENDERING_DEFAULTS} from './openbexi_timeline_rendering.js';
 import * as THREE from 'three';
 import {recordKey} from './openbexi_timeline_paging.js';
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-export const activityLabelWidth=width=>Math.max(80,Math.min(360,width-24));
-const defaultOrbit={yaw:-.42,pitch:.22};
+export const activityLabelWidth=(width,settings=RENDERING_DEFAULTS.activity)=>Math.max(settings.labelMinWidth,Math.min(settings.labelMaxWidth,width-settings.labelHorizontalPadding));
+const defaultOrbit=timeline=>({yaw:renderingFor(timeline).camera.yaw,pitch:renderingFor(timeline).camera.pitch});
 
 // Use the model's typography for every activity, including the selected one.
 export function activityLabelMetrics(record,band,width,measure) {
@@ -13,8 +14,8 @@ export function activityLabelMetrics(record,band,width,measure) {
     const fontWeight=record.searchMatch?'bold':record.render?.fontWeight || band.fontWeight || 'normal';
     const fontStyle=record.render?.fontStyle || band.fontStyle || 'normal';
     const font=`${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-    const title=String(record.data?.title || ''),maxWidth=activityLabelWidth(width);
-    const textWidth=measure(title,font,0),lineHeight=Math.ceil(fontSize*1.25);
+    const title=String(record.data?.title || ''),maxWidth=activityLabelWidth(width,bandRendering(band).activity);
+    const textWidth=measure(title,font,0),lineHeight=Math.ceil(fontSize*bandRendering(band).activity.lineHeight);
     let lines=1,line='';
     if(textWidth>maxWidth) for(const word of title.split(/\s+/)) {
         const candidate=line?line+' '+word:word;
@@ -28,10 +29,10 @@ export function activityLabelMetrics(record,band,width,measure) {
 
 export function positionActivityCamera(timeline,index) {
     const scene=timeline.ob_scene[index],camera=scene.ob_camera;
-    const {yaw,pitch}=timeline.ob_activity_focus?.orbit || defaultOrbit;
+    const {yaw,pitch}=timeline.ob_activity_focus?.orbit || defaultOrbit(timeline);
     const target=new THREE.Vector3(0,scene.ob_height/2,0);
     const direction=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
-    camera.position.copy(target).add(direction);camera.lookAt(target);camera.rotateZ(-.12);
+    camera.position.copy(target).add(direction);camera.lookAt(target);camera.rotateZ(renderingFor(timeline).camera.roll);
     const inverse=camera.quaternion.clone().invert(),tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),tanH=tanV*camera.aspect;
     let distance=1;
     // Fit the board at its oblique angle without changing the time scale.
@@ -60,11 +61,11 @@ export class TimelineActivityFocus {
                 const scene=this.timeline.ob_scene[this.index];
                 if(!event.shiftKey || event.button!==0 || !scene.ob_camera?.isPerspectiveCamera)return;
                 event.preventDefault();event.stopImmediatePropagation();scene.cancelPan?.();
-                const start={x:event.clientX,y:event.clientY,...(this.orbit || defaultOrbit)};
+                const start={x:event.clientX,y:event.clientY,...(this.orbit || defaultOrbit(this.timeline))};
                 const move=e=>{
                     e.preventDefault();e.stopImmediatePropagation();
-                    this.orbit={yaw:clamp(start.yaw+(e.clientX-start.x)*.002,-.65,.65),
-                        pitch:clamp(start.pitch+(e.clientY-start.y)*.002,.06,.46)};
+                    this.orbit={yaw:clamp(start.yaw+(e.clientX-start.x)*renderingFor(this.timeline).camera.rotationSensitivity,-.65,.65),
+                        pitch:clamp(start.pitch+(e.clientY-start.y)*renderingFor(this.timeline).camera.rotationSensitivity,.06,.46)};
                     positionActivityCamera(this.timeline,this.index);this.timeline.ob_render(this.index);
                 };
                 const finish=e=>{
@@ -82,6 +83,7 @@ export class TimelineActivityFocus {
     register(mesh,band) {
         if(!mesh)return;
         const t=this.timeline,scene=t.ob_scene[this.index],track=t.track[this.index],record=mesh.data;
+        const style=renderingFor(t).activity;
         const key=recordKey(record),base=mesh.position.z;
         const parent=scene.getObjectByName(band.name),perspective=scene.ob_camera_type==='Perspective';
         const size=mesh.geometry.parameters;
@@ -90,28 +92,28 @@ export class TimelineActivityFocus {
             if(mesh.geometry.type==='SphereGeometry')mesh.geometry=track(new THREE.BoxGeometry(width,height,8));
             const material=mesh.material;
             mesh.material=track(new THREE.MeshPhongMaterial({color:material.color,map:material.map,envMap:material.envMap,
-                transparent:material.transparent,opacity:material.opacity,shininess:24}));
+                transparent:material.transparent,opacity:material.opacity,shininess:style.shininess}));
             if(material.map && mesh.geometry.type==='PlaneGeometry') {
                 const support=track(new THREE.Mesh(track(new THREE.BoxGeometry(width,height,6)),
-                    track(new THREE.MeshPhongMaterial({color:record.render?.color || band.eventColor || '#5899bd',shininess:24}))));
+                    track(new THREE.MeshPhongMaterial({color:record.render?.color || band.eventColor || '#5899bd',shininess:style.shininess}))));
                 support.position.z=-3;support.raycast=()=>{};mesh.add(support);
             }
             const shadow=track(new THREE.Mesh(track(new THREE.PlaneGeometry(width+3,height+3)),
-                track(new THREE.MeshBasicMaterial({color:'#17363d',transparent:true,opacity:.16,depthWrite:false}))));
+                track(new THREE.MeshBasicMaterial({color:style.shadowColor,transparent:true,opacity:style.shadowOpacity,depthWrite:false}))));
             shadow.position.set(record.x_relative+3,record.y-3,1.5);shadow.raycast=()=>{};parent?.add(shadow);
             const row=band.name+'|'+record.row;
             if(!this.rows.has(row)) {
                 this.rows.add(row);
                 const lane=track(new THREE.Mesh(track(new THREE.PlaneGeometry(band.width,Math.max(height+4,band.trackIncrement*.55))),
-                    track(new THREE.MeshBasicMaterial({color:record.render?.color || band.eventColor || '#5899bd',transparent:true,opacity:.08,depthWrite:false}))));
+                    track(new THREE.MeshBasicMaterial({color:record.render?.color || band.eventColor || '#5899bd',transparent:true,opacity:style.laneOpacity,depthWrite:false}))));
                 lane.position.set(0,record.y,1);lane.raycast=()=>{};lane.userData.activityTrack=true;parent?.add(lane);
             }
         }
         const glow=track(new THREE.Mesh(track(new THREE.PlaneGeometry(width+6,height+6)),
-            track(new THREE.MeshBasicMaterial({color:'#ffca28',transparent:true,opacity:.22,depthTest:false,depthWrite:false}))));
+            track(new THREE.MeshBasicMaterial({color:style.glowColor,transparent:true,opacity:style.glowOpacity,depthTest:false,depthWrite:false}))));
         glow.position.z=6;glow.renderOrder=30;glow.raycast=()=>{};glow.userData.activitySelection=key;mesh.add(glow);
         const outline=track(new THREE.LineSegments(track(new THREE.EdgesGeometry(glow.geometry)),
-            track(new THREE.LineBasicMaterial({color:'#ae5b00',depthTest:false,depthWrite:false}))));
+            track(new THREE.LineBasicMaterial({color:style.glowOutline,depthTest:false,depthWrite:false}))));
         outline.raycast=()=>{};glow.add(outline);
         mesh.userData.activityKey=key;
         const sprites=mesh.children.filter(child=>child.isSprite),sprite=sprites[0];
@@ -139,10 +141,11 @@ export class TimelineActivityFocus {
     sync(index) {
         if(index!==this.index || !this.layer)return;
         const t=this.timeline,scene=t.ob_scene[index],camera=scene.ob_camera,r=t.ob_results;
+        const style=renderingFor(t).activity;
         if(!camera)return;
         const perspective=camera.isPerspectiveCamera,selected=r?.selectedKey;
         const now=window.performance.now(),elapsed=now-(r?.selectionStarted ?? -Infinity);
-        const progress=reducedMotion()?1:clamp(elapsed/850,0,1);
+        const progress=reducedMotion() || style.transitionMs===0?1:clamp(elapsed/style.transitionMs,0,1);
         const width=scene.width,canvasHeight=scene.ob_height;
         const height=t.ob_viewport?.detailHeight || t.ob_timeline_body_frame.clientHeight || canvasHeight;
         this.layer.style.width=width+'px';this.layer.style.height=height+'px';
@@ -152,7 +155,7 @@ export class TimelineActivityFocus {
         for(const item of this.items) {
             const active=selected===item.key;
             // Selection changes brightness only: geometry and depth stay fixed.
-            item.glow.visible=active;item.glow.material.opacity=.22+(active && progress<1?.12*Math.sin(progress*Math.PI):0);
+            item.glow.visible=active;item.glow.material.opacity=Math.min(1,style.glowOpacity+(active && progress<1?style.glowPulse*Math.sin(progress*Math.PI):0));
             for(const sprite of item.sprites)sprite.visible=!(perspective || active);
         }
         scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
@@ -170,22 +173,22 @@ export class TimelineActivityFocus {
             if(point.z<-1 || point.z>1)continue;
             const x=clamp((point.x+1)*width/2,8,width-8),y=clamp((1-point.y)*canvasHeight/2,8,height-8);
             const label=this.label(item);shown.add(item.id);
-            label.hidden=false;label.style.maxWidth=perspective?activityLabelWidth(width)+'px':'none';
+            label.hidden=false;label.style.maxWidth=perspective?activityLabelWidth(width,style)+'px':'none';
             const {fontSize,fontFamily,fontWeight,fontStyle,lineHeight}=item.metrics;
             Object.assign(label.style,{fontSize:fontSize+'px',fontFamily,fontWeight,fontStyle,lineHeight:lineHeight+'px'});
             label.style.color=item.textColor;
-            label.style.backgroundColor=item.record.searchMatch && r?.state.highlight!==false?'#fff6bd':perspective?item.background:'transparent';
+            label.style.backgroundColor=item.record.searchMatch && r?.state.highlight!==false?style.matchBackground:perspective?item.background:'transparent';
             label.classList.toggle('ob_activity_selected',active);
             label.classList.toggle('ob_activity_match',Boolean(item.record.searchMatch && r?.state.highlight!==false));
             label.setAttribute('aria-current',active?'true':'false');
             if(active && label.selectionVersion!==r.selectionVersion) {
                 label.selectionVersion=r.selectionVersion;
                 label.getAnimations?.().forEach(animation=>animation.cancel());
-                if(!reducedMotion() && elapsed<900)label.animate?.([
+                if(!reducedMotion() && style.transitionMs>0 && elapsed<style.transitionMs+50)label.animate?.([
                     {filter:'drop-shadow(0 0 4px #ffba0070)'},
                     {filter:'drop-shadow(0 0 4px #ffba00ff)'},
                     {filter:'drop-shadow(0 0 4px #ffba0070)'}
-                ],{duration:850,iterations:1});
+                ],{duration:style.transitionMs,iterations:1});
             }
             const boxWidth=label.offsetWidth || item.metrics.width;
             const boxHeight=label.offsetHeight || item.metrics.height;
@@ -213,7 +216,7 @@ export class TimelineActivityFocus {
             const line=document.createElementNS('http://www.w3.org/2000/svg','path');
             const endX=clamp(item.x,left,left+item.width),endY=clamp(item.y,top,top+item.height);
             line.setAttribute('d',`M ${item.x} ${item.y} L ${endX} ${endY}`);
-            line.setAttribute('stroke',item.active?'#9c5900':'#507585');line.setAttribute('stroke-width',item.active?'2':'1');
+            line.setAttribute('stroke',item.active?style.selectedLeaderColor:style.leaderColor);line.setAttribute('stroke-width',item.active?'2':'1');
             this.leaders.append(line);
         }
         if(selected && progress<1 && !this.frame && window.requestAnimationFrame) {

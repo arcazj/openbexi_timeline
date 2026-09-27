@@ -32,6 +32,8 @@ System properties `openbexi.api.root`, `openbexi.api.dataDir`, and development-o
 | `/api/v1/datasets/{id}` | GET, HEAD, PATCH, DELETE | Metadata, capabilities, rename, deletion |
 | `/api/v1/models` | GET, HEAD | Discover dataset model links |
 | `/api/v1/models/{id}` | GET, HEAD, PUT | Read or replace a dataset's model |
+| `/api/v1/config-files` | GET, HEAD, POST | Administrator lists or creates standalone model/YAML documents |
+| `/api/v1/config-files/{id}` | GET, HEAD, PUT, DELETE | Administrator reads, saves, renames or deletes a configuration file |
 | `/api/v1/datasets/{id}/events` | GET, HEAD, POST | Query all records, including zones; create a record |
 | `/api/v1/datasets/{id}/events/{recordId}` | GET, HEAD, PUT, PATCH, DELETE | Individual record operations |
 | `/api/v1/datasets/{id}/sessions` | GET, HEAD, POST | Duration records, activities, or explicit `data.kind: "session"` |
@@ -57,6 +59,30 @@ Event/session collections accept `from`, `to`, `search`, `namespace`, `kind`, `f
 Anonymous list responses contain only bundled examples. Authenticated roles also see managed datasets. Capabilities describe storage support, not the current caller's authorization. Read-only examples reject writes with 405; they are never silently modified.
 
 ## Revisions and error handling
+
+### Configuration documents
+
+The [Model and YAML editor](model-editor.md) uses `/config-files`. These documents
+are independent of datasets; deleting a configuration document never deletes
+events or sessions. All operations, including reads, require administrator access.
+New documents are real files in `<API data directory>/config-files`. Register
+existing directories explicitly with `OPENBEXI_CONFIG_ROOTS` (platform path
+separator) or `openbexi.api.configRoots`. Directory roots must not overlap.
+
+POST and PUT accept `{name, kind, text}` where `kind` is `model` or `yaml` and
+`name` is a simple filename. Documents return `id`, `name`, `kind`, `text`,
+`location`, `writable` and `restartRequired`; collection items omit `text`.
+Use the response `ETag` as `If-Match` for PUT/DELETE. Renaming requires unchanged
+content and returns a new ID. Save content edits before renaming.
+
+Model syntax/schema validation and YAML safe parsing happen before atomic writes.
+YAML comments and unknown keys are preserved because the original validated text
+is saved. Known source structures, duplicate keys and unsafe tags are checked.
+Reference conflicts block rename/delete with 409. Server YAML changes require a
+restart. The ordinary public configuration endpoint continues to expose only model
+and data URLs, and public asset serving continues to block deployment YAML.
+
+### Dataset revisions
 
 Read a dataset, model, collection, or record and retain its `ETag` response header. Every edit to existing data, including a POST into an existing collection, requires that exact value as `If-Match`. Missing preconditions return 428; a stale version returns 412. Fetch again and reconcile the edit. One whole-dataset revision covers metadata, model, events, and filters, so concurrent writes cannot overwrite one another unnoticed. `If-None-Match` supports conditional GET/HEAD.
 

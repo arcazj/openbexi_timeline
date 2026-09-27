@@ -1,4 +1,6 @@
-import {modelSchema, catalogSchema} from './openbexi_timeline_schema_validators.js';
+import {modelSchema, legacySchema, catalogSchema} from './openbexi_timeline_schema_validators.js';
+
+import {validateRendering} from './openbexi_timeline_rendering.js';
 
 function jsonPath(pointer) {
     return '$' + (pointer || '').split('/').slice(1).map(part => {
@@ -38,6 +40,7 @@ export function validateDemoModel(value, {label = 'model'} = {}) {
     const issues = schemaIssues(modelSchema, value);
     if (issues.length) throw new DemoValidationError(label, issues);
     const issue = (path, message) => issues.push({path, message});
+    try {validateRendering(value.rendering);} catch(error) {issues.push(...error.issues);}
     const axis = value.dataSource.time;
     const numeric = axis?.kind === 'numeric';
     const toTime = (date, path) => {
@@ -113,5 +116,19 @@ export function validateDemoCatalog(value, {label = 'catalog'} = {}) {
         ids.add(demo.id);
     });
     if (issues.length) throw new DemoValidationError(label, issues);
+    return value;
+}
+
+/** Legacy/provider models preserve extension keys while validating known fields. */
+export function validateLegacyModel(value, {label = 'model'} = {}) {
+    const issues=schemaIssues(legacySchema,value);
+    if(issues.length)throw new DemoValidationError(label,issues);
+    try {validateRendering(value.rendering);} catch(error) {issues.push(...error.issues);}
+    const names=new Set();
+    value.bands.forEach((band,index)=>{
+        if(names.has(band.name))issues.push({path:'$.bands['+index+'].name',message:'must be unique'});
+        names.add(band.name);
+    });
+    if(issues.length)throw new DemoValidationError(label,issues);
     return value;
 }

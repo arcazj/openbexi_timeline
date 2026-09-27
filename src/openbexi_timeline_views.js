@@ -1,3 +1,4 @@
+import {renderingFor} from './openbexi_timeline_rendering.js';
 /** Timeline presentation controls. The WebGL scene stays intact when switching views. */
 export class TimelineViews {
     constructor(timeline) {
@@ -22,7 +23,8 @@ export class TimelineViews {
             table: "M3 4h18v16H3z M3 9h18 M3 14h18 M9 4v16",
             split: "M3 4h18v16H3z M12 4v16 M5.5 8h4 M7 12h3 M5.5 16h3 M14.5 8h4 M14.5 12h4 M14.5 16h4"
         };
-        for (const [mode, label] of [["timeline", "Timeline"], ["table", "Table"], ["split", "Split"]]) {
+        const labels=renderingFor(timeline).controls;
+        for (const [mode, label] of [["timeline", labels.timelineLabel], ["table", labels.tableLabel], ["split", labels.splitLabel]]) {
             const button = document.createElement("button");
             button.type = "button";
             button.setAttribute("aria-label", label);
@@ -105,7 +107,7 @@ export class TimelineViews {
         }
         const height = scene.ob_height;
         const headerHeight = parseInt(timeline.ob_timeline_header.style.height, 10) || 40;
-        const splitWidth = Math.floor(scene.width / 2);
+        const splitWidth = Math.floor(scene.width * renderingFor(this.timeline).layout.splitRatio);
         const split = this.mode === "split";
         frame.hidden = this.mode === "table";
         // A scrollable viewport preserves canvas dimensions, camera, zoom and drag coordinates.
@@ -155,7 +157,7 @@ export class TimelineViews {
         const scene = timeline.ob_scene[this.sceneIndex];
         const marker = timeline.ob_marker;
         if (!this.frame || !marker || !scene) return;
-        const width = this.frame.clientWidth || (this.mode === "split" ? Math.floor(scene.width / 2) : scene.width);
+        const width = this.frame.clientWidth || (this.mode === "split" ? Math.floor(scene.width * renderingFor(this.timeline).layout.splitRatio) : scene.width);
         const mainBand = scene.bands?.find(band => !band.name.includes('overview_'));
         const referenceOffset = mainBand?.timeScale ?
             timeline.dateToBandPixelOffSet(this.sceneIndex, mainBand, timeline.ob_scene.sync_time) : 0;
@@ -178,8 +180,10 @@ export class TimelineViews {
         }
         const table=document.createElement('table');table.className='ob_event_table';
         const caption=table.createCaption(),header=table.createTHead().insertRow(),body=table.createTBody();
-        for(const label of ['Title','Start','End','Source','Status']) {
-            const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);
+        const columns=renderingFor(t).table.columns.filter(column=>column.visible!==false);
+        for(const column of columns) {
+            const cell=document.createElement('th');cell.scope='col';cell.textContent=column.label;
+            if(column.width)cell.style.width=column.width+'px';header.append(cell);
         }
         const render=({activity,session,key})=>{
             const data=activity.data,row=body.insertRow();
@@ -188,8 +192,11 @@ export class TimelineViews {
                 row.className='ob_event_table_match';row.setAttribute('aria-label','Search match: '+data.title);
             }
             const date=value=>value && t.formatEventDate?t.formatEventDate(value):value;
-            for(const value of [data.title,date(activity.start),date(activity.end),
-                activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,data.status]) {
+            const values={title:data.title,start:date(activity.start),end:date(activity.end),
+                source:activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,
+                status:data.status,description:data.description,id:activity.id};
+            for(const column of columns) {
+                const value=values[column.field];
                 const cell=row.insertCell();cell.textContent=value===undefined || value===null || value===''?'\u2014':String(value);
                 cell.title=cell.textContent;
             }
@@ -198,7 +205,10 @@ export class TimelineViews {
                 button.textContent=data.title || 'Event details';button.title=button.textContent;button.dataset.record=key;
                 button.setAttribute('aria-label','Details: '+button.textContent);
                 button.onclick=()=>t.ob_open_descriptor(this.sceneIndex,activity);
-                row.cells[0].replaceChildren(button);
+                const titleColumn=columns.findIndex(column=>column.field==='title');
+                if(titleColumn>=0)row.cells[titleColumn].replaceChildren(button);
+                else {row.tabIndex=0;row.setAttribute('aria-label','Details: '+button.textContent);
+                    row.onclick=button.onclick;row.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();button.onclick();}};}
             }
             return row;
         };
@@ -226,8 +236,8 @@ export class TimelineViews {
         for(const entry of entries.slice(from,to)) render(entry);
         if(!count) {
             this.tablePage=0;this.tableAnchor=undefined;
-            const empty=body.insertRow().insertCell();empty.colSpan=5;empty.className='ob_event_table_empty';
-            empty.textContent='No events to display.';
+            const empty=body.insertRow().insertCell();empty.colSpan=columns.length;empty.className='ob_event_table_empty';
+            empty.textContent=renderingFor(t).table.emptyText;
         }
         if(vp && pages>1) {
             const pager=document.createElement('nav');pager.className='ob_pagination ob_table_pagination';

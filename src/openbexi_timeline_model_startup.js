@@ -1,5 +1,7 @@
+import {takeEditorModel} from './openbexi_timeline_model_link.js';
 const applicationRoot=new URL('../',import.meta.url);
 let defaultId=0;
+let instanceId=0;
 
 // Each timeline owns a fresh model; navigation must not mutate another instance.
 export function buildDefaultModel() {
@@ -15,6 +17,10 @@ export function buildDefaultModel() {
 export class TimelineModelStartup {
     constructor(timeline,options={}) {
         this.timeline=timeline;this.options=options;this.generation=0;
+        const ordinal=++instanceId;
+        // Construction order is stable on reload; dynamic hosts can supply a stable explicit key.
+        timeline.modelInstanceId=typeof options.instanceId==='string' && options.instanceId.trim() ?
+            'named:'+options.instanceId : 'instance:'+ordinal;
         timeline.ready=new Promise((resolve,reject)=>{this.resolve=resolve;this.reject=reject;});
         // Errors are also visible in the page; callers can still await ready.
         timeline.ready.catch(()=>{});
@@ -59,7 +65,10 @@ export class TimelineModelStartup {
             if(model)await this.select(new URL(model,applicationRoot).href,{defaultProviderUrl:providerUrl},'yaml',generation);
             else {
                 this.timeline.modelSource='default';
-                await this.timeline.applyModel(buildDefaultModel(),{providerUrl,offline:!providerUrl});
+                const selected=takeEditorModel(null,buildDefaultModel(),this.timeline.modelInstanceId);
+                this.timeline.validateModel?.(selected,'Editor draft');
+                await this.timeline.applyModel(selected,{providerUrl,
+                    offline:!providerUrl && !selected.dataSource && !selected.params?.[0]?.data});
                 this.complete();
             }
         } catch(error) {this.failure(error,generation);}
@@ -69,9 +78,14 @@ export class TimelineModelStartup {
         try {
             const response=await fetch(model,{signal:this.controller.signal});
             if(!response.ok)throw new Error('HTTP '+response.status);
-            data=await response.json();
+            const original=await response.json();
             if(generation!==this.generation)return this.timeline.ready;
+            data=takeEditorModel(String(model),original,this.timeline.modelInstanceId);
             this.timeline.validateModel(data,model);
+            // An explicit source change in an applied draft must match the editor preview.
+            // Otherwise retain the HTML caller's established dataset precedence.
+            if(data!==original && typeof data.dataSource?.url==='string' && data.dataSource.url.trim() &&
+                data.dataSource.url!==original.dataSource?.url) options={...options,dataset:data.dataSource.url};
             if(!data.dataSource && !(options.providerUrl || data.params[0].data || options.defaultProviderUrl)) {
                 options={...options,providerUrl:await this.timeline.updateURL()};
             }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Model and YAML editor — OpenBEXI Timeline</title>
+  <link rel="stylesheet" href="css/ob_model_editor.css">
+</head>
+<body>
+<header class="editor-heading">
+  <div><a href="demos.html">OpenBEXI Timeline</a><h1>Model and YAML editor</h1><p>Edit a property and see its effect in the live timeline.</p></div>
+  <button id="connect">Connect to server</button>
+</header>
+<main>
+  <nav class="document-bar" aria-label="Document actions">
+    <label>Open document <select id="documents"><option value="">Loading examples…</option></select></label>
+    <button id="new-model">New model</button><button id="new-yaml">New YAML</button>
+    <button id="import">Import</button><input id="file" type="file" accept=".json,.yaml,.yml" hidden>
+    <button id="duplicate">Duplicate</button><button id="rename">Rename</button><button id="delete">Delete</button>
+    <button id="save" class="primary">Save</button><button id="export">Export</button>
+  </nav>
+  <section class="document-state" aria-label="Document status">
+    <strong id="document-name">Loading…</strong><span id="document-source"></span><span id="dirty"></span>
+    <button id="undo" title="Undo the last valid edit">Undo</button><button id="redo">Redo</button><button id="revert">Revert</button>
+  </section>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <div class="editor-workspace">
+    <section class="property-panel" aria-label="Configuration properties">
+      <div class="tabs" role="tablist" aria-label="Editor mode">
+        <button id="form-tab" role="tab" aria-selected="true" aria-controls="form-view">Properties</button>
+        <button id="text-tab" role="tab" aria-selected="false" aria-controls="text-view">Advanced text</button>
+      </div>
+      <div id="errors" role="alert" hidden></div>
+      <div id="form-view" role="tabpanel" aria-labelledby="form-tab"><label class="filter">Find a property <input id="property-filter" type="search" placeholder="Color, ticks, camera…"></label><div id="properties"></div></div>
+      <div id="text-view" role="tabpanel" aria-labelledby="text-tab" hidden><label for="raw">Document text</label><textarea id="raw" spellcheck="false" aria-describedby="text-help"></textarea><p id="text-help">Valid edits update Properties and the preview. Invalid edits keep the last valid preview. YAML comments and unrelated keys are preserved.</p></div>
+    </section>
+    <section class="preview-panel" aria-label="Live preview">
+      <div class="preview-toolbar"><h2>Live preview</h2><label><input id="live" type="checkbox" checked> Update as I edit</label><button id="refresh">Refresh</button><button id="apply" hidden>Apply to original timeline</button></div>
+      <label class="preview-source">Preview data <select id="preview-data"><option value="document">Current document / connected timeline</option></select></label>
+      <div class="preview-source"><button id="use-data">Use preview data URL in model</button></div>
+      <p id="preview-state" role="status" aria-live="polite">Preparing preview…</p>
+      <div id="preview-host"></div>
+      <p class="preview-note">Preview changes stay in this editor. Save persists the document; connected YAML changes may require a server restart.</p>
+    </section>
+  </div>
+</main>
+<dialog id="input-dialog"><form method="dialog"><h2 id="dialog-title"></h2><label id="dialog-label" for="dialog-input"></label><input id="dialog-input" autocomplete="off" required><p id="dialog-help"></p><div class="dialog-actions"><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary">Continue</button></div></form></dialog>
+<script type="module" src="src/openbexi_timeline_model_editor.js"></script>
+</body>
+</html>

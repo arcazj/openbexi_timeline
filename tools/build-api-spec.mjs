@@ -24,6 +24,12 @@ const paged = schema => ({type: 'object', required: ['items', 'total', 'offset',
     items: {type: 'array', items: schema}, total: {type: 'integer'}, offset: {type: 'integer'}, limit: {type: 'integer'},
     nextOffset: {type: ['integer', 'null']}, timeAxis: ref('TimeAxis')}});
 const schemas = {
+    ConfigFileInput: {type:'object', additionalProperties:false, required:['name','kind','text'], properties:{
+        name:{type:'string',description:'Simple filename, with .json for models or .yaml/.yml for YAML. No directories.'},
+        kind:{enum:['model','yaml']}, text:{type:'string',description:'Original document text, retained verbatim after validation.'}}},
+    ConfigFile: {type:'object', required:['id','name','kind','text','writable','restartRequired','location'], properties:{
+        id:{type:'string',pattern:'^[a-f0-9]{32}$'}, name:{type:'string'}, kind:{enum:['model','yaml']}, text:{type:'string'},
+        writable:{type:'boolean'}, restartRequired:{type:'boolean'}, location:{type:'string'}}},
     Problem: {type: 'object', required: ['type', 'title', 'status', 'detail', 'instance'], properties: {
         type: {type: 'string'}, title: {type: 'string'}, status: {type: 'integer'}, detail: {type: 'string'}, instance: {type: 'string'}}},
     TimeAxis: {type: 'object', required: ['kind'], properties: {kind: {enum: ['calendar', 'numeric']}, unit: {type: 'string'},
@@ -57,7 +63,13 @@ const paths = {
         delete: mutation('Administrator: delete a managed dataset and its records', null, 204)},
     '/models': {get: read('List datasets and their model links', ref('DatasetList'))},
     '/models/{datasetId}': {parameters: [datasetId], get: read('Read the dataset model', ref('Model')),
-        put: mutation('Administrator: replace a managed dataset model', ref('Model'), 200, ref('Model'))}
+        put: mutation('Administrator: replace a managed dataset model', ref('Model'), 200, ref('Model'))},
+    '/config-files': {get:{...read('Administrator: list configuration documents in approved roots', {type:'object',required:['items'],properties:{items:{type:'array',items:{type:'object',required:['id','name','kind','writable','restartRequired','location']}}}}),security:[{bearerAuth:[]}]},
+        post:mutation('Administrator: create a model or YAML file in managed configuration storage',ref('ConfigFileInput'),201,ref('ConfigFile'),false)},
+    '/config-files/{documentId}': {parameters:[param('documentId','path',{type:'string',pattern:'^[a-f0-9]{32}$'},'Server-issued document ID. Rename returns a new ID.',true)],
+        get:{...read('Administrator: read original model or YAML text',ref('ConfigFile')),security:[{bearerAuth:[]}]},
+        put:mutation('Administrator: replace document text, or rename unchanged content after reference checks',ref('ConfigFileInput'),200,ref('ConfigFile')),
+        delete:mutation('Administrator: delete an unreferenced configuration file',null,204)}
 };
 const queryParameters = [param('from', 'query', {type: 'string'}, 'Inclusive start, in chronological axis order. For Ma, from=165&to=115.'),
     param('to', 'query', {type: 'string'}, 'Inclusive end; returns intersecting records.'), param('search', 'query', {type: 'string', maxLength: 500}, 'Case-insensitive text search'),

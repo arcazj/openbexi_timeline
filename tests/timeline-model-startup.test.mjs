@@ -115,3 +115,69 @@ for(const source of ['html','yaml'])test(`A broken ${source} model reports its p
         assert.equal(f.h.window.document.querySelector('canvas'),null);
     } finally {f.close();}
 });
+
+test('Applied default drafts are isolated by timeline instance and consumed only once',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {TimelineModelStartup,buildDefaultModel}=await h.importModule('src/openbexi_timeline_model_startup.js');
+        const {stageEditorModel,takeEditorModel}=await h.importModule('src/openbexi_timeline_model_link.js');
+        const first={validateModel(){}},second={validateModel(){}};
+        const firstStartup=new TimelineModelStartup(first,{autoStart:false});
+        const secondStartup=new TimelineModelStartup(second,{autoStart:false});
+        const draft=buildDefaultModel();draft.params[0].title='Second timeline draft';
+        stageEditorModel(second,draft);
+        const fallback=buildDefaultModel();
+        assert.equal(takeEditorModel(null,fallback,first.modelInstanceId),fallback,'The first instance cannot consume the second draft');
+        const restored=takeEditorModel(null,fallback,second.modelInstanceId);
+        assert.equal(restored.params[0].title,'Second timeline draft');
+        assert.equal(takeEditorModel(null,fallback,second.modelInstanceId),fallback,'Apply is consumed once');
+        firstStartup.cancel();secondStartup.cancel();
+    } finally {h.close();}
+});
+
+test('An explicit instance identity survives a different initialization order',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {TimelineModelStartup,buildDefaultModel}=await h.importModule('src/openbexi_timeline_model_startup.js');
+        const {stageEditorModel,takeEditorModel}=await h.importModule('src/openbexi_timeline_model_link.js');
+        const original={modelPath:'models/shared.json',validateModel(){}},unrelated={};
+        const oldStartup=new TimelineModelStartup(original,{autoStart:false,instanceId:'detail'});
+        const draft=buildDefaultModel();draft.params[0].title='Explicit instance';stageEditorModel(original,draft);
+        const unrelatedStartup=new TimelineModelStartup(unrelated,{autoStart:false});
+        const restored={modelPath:original.modelPath};
+        const newStartup=new TimelineModelStartup(restored,{autoStart:false,instanceId:'detail'});
+        const fallback=buildDefaultModel();
+        assert.equal(takeEditorModel(restored.modelPath,fallback,restored.modelInstanceId).params[0].title,'Explicit instance');
+        for(const startup of [oldStartup,unrelatedStartup,newStartup])startup.cancel();
+    } finally {h.close();}
+});
+
+for(const change of ['changed','unchanged','omitted'])test(`Applying a ${change} dataset URL keeps preview and startup source precedence consistent`,async()=>{
+    const original=structuredClone(fixture),draft=structuredClone(fixture);
+    original.dataSource.url='/original.json';
+    if(change==='changed')draft.dataSource.url='/changed.json';
+    else if(change==='unchanged')draft.dataSource.url=original.dataSource.url;
+    else delete draft.dataSource.url;
+    const f=await setup(path=>path==='/models/apply.json'?json(original):
+        ['/original.json','/changed.json','/html-dataset.json'].includes(path)?json({events:[]}):undefined,{autoStart:false});
+    try {
+        const {stageEditorModel}=await f.h.importModule('src/openbexi_timeline_model_link.js');
+        f.t.modelPath='models/apply.json';stageEditorModel(f.t,draft);
+        await f.t.loadModel('models/apply.json',{dataset:'/html-dataset.json'});
+        assert.equal(f.t.localSource.url,change==='changed'?'/changed.json':'/html-dataset.json');
+        assert.equal(f.requests.includes('/changed.json'),change==='changed');
+        assert.equal(f.requests.includes('/html-dataset.json'),change!=='changed');
+    } finally {f.close();}
+});
+
+test('Applying a file-backed draft to a standalone default timeline loads its explicit source',async()=>{
+    const draft=structuredClone(fixture);draft.dataSource.url='/applied-data.json';
+    const f=await setup(path=>path===configPath?new Response('Not found',{status:404}):
+        path==='/applied-data.json'?json({events:[]}):undefined,{autoStart:false});
+    try {
+        const {stageEditorModel}=await f.h.importModule('src/openbexi_timeline_model_link.js');
+        stageEditorModel(f.t,draft);await f.t.modelStartup.start();await f.t.ready;
+        assert.equal(f.t.modelSource,'default');assert.equal(f.t.localSource.url,'/applied-data.json');
+        assert.ok(f.requests.includes('/applied-data.json'));
+    } finally {f.close();}
+});

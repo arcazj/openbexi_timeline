@@ -137,7 +137,9 @@ export class TimelineLoader {
 
     async load(input,{refresh=false}={}) {
         const t=this.timeline,r=t.ob_results,scene=t.ob_scene[0];
-        r.captureRanges();
+        // A navigation or search may have chosen a new range before its render
+        // commits. The previous scene must not overwrite that destination.
+        if (!r.pending) r.captureRanges();
         const main=scene.bands?.find(band=>!band.name.includes('overview_') && scene.getObjectByName(band.name));
         const visible=r.visibleRanges.get(main?.name) || r.ranges.get(main?.name) ||
             {from:Date.parse(scene.minDate),to:Date.parse(scene.maxDate)};
