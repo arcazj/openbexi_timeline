@@ -240,6 +240,11 @@ export class TimelineViewport {
         t.ob_timeline_panel.style.setProperty('--demo-toolbar-height',this.headerHeight+'px');
         this.signature=this.layoutSignature();
         this.updateSettingsNotice();
+        // Loading/search controls can change height during the same render in
+        // which measure() ran. The final header may match its previous observed
+        // size, so ResizeObserver does not necessarily notify us of that change.
+        const renderedHeaderHeight=t.ob_timeline_header.offsetHeight;
+        if (renderedHeaderHeight>0 && renderedHeaderHeight!==this.headerHeight) this.schedule();
     }
 
     mountSettings(panel) {
