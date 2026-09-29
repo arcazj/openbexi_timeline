@@ -206,20 +206,23 @@ export class TimelineViewport {
     layout() {
         const t=this.timeline;
         if (!this.pager) return;
-        const height=this.detailHeight || this.availableHeight;
         styles(t.ob_timeline_panel,{top:this.top+'px',left:this.left+'px',width:this.width+'px',height:this.height+'px'});
         styles(t.ob_timeline_header,{width:this.width+'px'});
-        styles(t.ob_timeline_body_frame,{top:this.headerHeight+'px',width:this.plotWidth+'px',height:height+'px',overflow:'hidden'});
+        // Loading can defer scene rebuilds, but a wrapping toolbar must still
+        // reserve its current height so the canvas cannot cover its controls.
+        const headerHeight=t.ob_timeline_header.offsetHeight || this.headerHeight;
+        const height=Math.max(1,(this.detailHeight || this.availableHeight)+this.headerHeight-headerHeight);
+        styles(t.ob_timeline_body_frame,{top:headerHeight+'px',width:this.plotWidth+'px',height:height+'px',overflow:'hidden'});
         t.ob_timeline_body_frame.scrollTop=0; t.ob_timeline_body_frame.scrollLeft=0;
         styles(t.ob_timeline_body,{width:this.plotWidth+'px',height:height+'px',overflow:'hidden'});
         const table=t.ob_views?.tablePanel;
         const split=t.ob_views?.mode==='split';
-        styles(table,{top:this.headerHeight+'px',left:(split?this.plotWidth:0)+'px',width:(split?this.width-this.plotWidth:this.width)+'px',
-            height:(this.height-this.headerHeight)+'px',overflow:'hidden'});
-        styles(t.ob_timeline_right_panel,{position:'absolute',top:(this.top+(this.overlay?this.headerHeight:0))+'px',
+        styles(table,{top:headerHeight+'px',left:(split?this.plotWidth:0)+'px',width:(split?this.width-this.plotWidth:this.width)+'px',
+            height:(this.height-headerHeight)+'px',overflow:'hidden'});
+        styles(t.ob_timeline_right_panel,{position:'absolute',top:(this.top+(this.overlay?headerHeight:0))+'px',
             left:(this.overlay?this.left+Math.max(0,this.width-Math.min(this.sideWidth,this.width)):this.left+this.width)+'px',
             width:Math.min(this.sideWidth || 320,window.innerWidth)+'px',
-            height:Math.max(1,this.height-(this.overlay?this.headerHeight+(t.ob_views?.mode==='table'?0:this.overviewHeight):0))+'px',
+            height:Math.max(1,this.height-(this.overlay?headerHeight+(t.ob_views?.mode==='table'?0:this.overviewHeight):0))+'px',
             overflowY:'auto',overflowX:'hidden',zIndex:'100000'});
         this.sideResizer.hidden=!this.descriptorOpen;
         const panelStyle=t.ob_timeline_right_panel.style;
@@ -239,7 +242,7 @@ export class TimelineViewport {
         if (this.continued?.length) this.label.textContent+=' · Session continues';
         this.label.title=this.continued?.length?'Continued sessions: '+this.continued.join(', '):'';
         t.ob_timeline_panel.style.setProperty('--ob-overview-height',this.overviewHeight+'px');
-        t.ob_timeline_panel.style.setProperty('--demo-toolbar-height',this.headerHeight+'px');
+        t.ob_timeline_panel.style.setProperty('--demo-toolbar-height',headerHeight+'px');
         this.signature=this.layoutSignature();
         this.updateSettingsNotice();
         // Loading/search controls can change height during the same render in

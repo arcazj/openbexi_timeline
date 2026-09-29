@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.2.0
+ *     OpenBEXI Timeline version 2.3.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -31,9 +31,11 @@ import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
 import {openModelEditor} from './openbexi_timeline_model_link.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
+import {compileFilter,decodeFilter} from './openbexi_timeline_filter_expression.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
-import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability} from './openbexi_timeline_filters.js';
+import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability, showFilterSyntax, showFilterError} from './openbexi_timeline_filters.js';
 import {TimelineViewport} from './openbexi_timeline_viewport.js';
+import {TimelinePerspective} from './openbexi_timeline_perspective.js';
 import {createTimelineHelp} from './openbexi_timeline_help.js';
 import {validateDemoModel, validateLegacyModel} from './openbexi_timeline_model_validation.js';
 import {projectOverviewSessions, renderOverviewSessions, updateOverviewViewport} from './openbexi_timeline_overview.js';
@@ -460,12 +462,14 @@ function OB_TIMELINE(options = {}) {
         }
     };
     OB_TIMELINE.prototype.ob_apply_orthographic_camera = function (ob_scene_index) {
+        if(this.ob_perspective) {this.ob_perspective.setMode(false);return;}
         this.ob_scene[ob_scene_index].ob_camera_type = "Orthographic";
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
             this.ob_scene[ob_scene_index].ob_camera_type, null, false);
     };
     OB_TIMELINE.prototype.ob_apply_perspective_camera = function (ob_scene_index) {
+        if(this.ob_perspective) {this.ob_perspective.setMode(true);return;}
         this.ob_scene[ob_scene_index].ob_camera_type = "Perspective";
         this.update_scene(ob_scene_index, this.header, this.params, this.ob_scene[ob_scene_index].bands,
             this.ob_scene[ob_scene_index].model, this.ob_scene[ob_scene_index].sessions,
@@ -510,7 +514,7 @@ function OB_TIMELINE(options = {}) {
             "&endDate=" + this.ob_scene[ob_scene_index].maxDate +
             "&icon=" + icon +
             "&filterName=" + this.ob_scene[ob_scene_index].ob_filter_name +
-            "&filter=" + this.ob_scene[ob_scene_index].ob_filter_value +
+            "&filter=" + encodeURIComponent(this.ob_scene[ob_scene_index].ob_filter_value) +
             "&search=" + this.ob_scene[ob_scene_index].ob_search_value +
             "&timelineName=" + this.name +
             "&userName=" + this.ob_user_name;
@@ -554,56 +558,15 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.ob_help_filters = function () {
-        const helpMessage = `
-        Usage: <Include filters>|<Exclude filters>
-
-        Example 1: Include only sessions with the status SCHEDULE:
-        status=SCHEDULE
-
-        Example 2: Include sessions with type0, type1, and type2:
-        type=type0;type=type1;type=type2
-
-        Example 3: Exclude sessions with type0, type1, and type2:
-        |type=type0;type=type1;type=type2
-
-        Example 4: Include sessions with type0, type1, and type2, and exclude sessions with type0 and status STARTED:
-        type=type0;type=type1;type=type2|type0+status=STARTED
-    `;
-
-        alert(helpMessage);
+        showFilterSyntax(this);
     };
 
     OB_TIMELINE.prototype.ob_get_filter_value = function (ob_scene_index, ob_filter_index) {
-        try {
-            let ob_filter_value;
-            if (this.ob_filters !== undefined && ob_filter_index !== undefined) {
-                ob_filter_value = document.getElementById("textarea2_" + this.name + "_" + this.ob_filters[ob_filter_index].name).value;
-            } else {
-                ob_filter_value = document.getElementById("textarea2_" + this.name + "_new").value;
-            }
-            ob_filter_value = ob_filter_value.replace(/[^a-zA-Z0-9;|\\\/\-+=:_()% ]/g, "");
-            ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_")
-                .replaceAll("+", "_PLUS_")
-                .replaceAll("%", "_PERC_")
-                .replaceAll("(", "_PARL_")
-                .replaceAll(")", "_PARR_");
-            return ob_filter_value;
-        } catch (err) {
-            try {
-                let ob_filter_value = this.ob_filters[ob_filter_index].filter_value;
-                if (ob_filter_value === undefined) {
-                    ob_filter_value = this.ob_scene[ob_scene_index].ob_filter_value;
-                }
-                ob_filter_value = ob_filter_value.replaceAll("|", "_PIPE_")
-                    .replaceAll("+", "_PLUS_")
-                    .replaceAll("%", "_PERC_")
-                    .replaceAll(")", "_PARR_")
-                    .replaceAll("(", "_PARL_");
-                return ob_filter_value;
-            } catch (err) {
-                return "";
-            }
-        }
+        const saved=this.ob_filters?.[ob_filter_index];
+        const input=document.getElementById("textarea2_"+this.name+"_"+(saved?.name || "new"));
+        const value=decodeFilter(input?.value ?? saved?.filter_value ?? '');
+        return value.replaceAll("|", "_PIPE_").replaceAll("+", "_PLUS_").replaceAll("%", "_PERC_")
+            .replaceAll("(", "_PARL_").replaceAll(")", "_PARR_");
     };
 
 
@@ -615,7 +578,6 @@ function OB_TIMELINE(options = {}) {
             } else
                 ob_filter_name = document.getElementById("textarea_" + this.name + "_new").value;
             ob_filter_name = ob_filter_name.replaceAll(" ", "_").replace(/[^a-zA-Z0-9_]/g, "");
-            this.ob_scene[ob_scene_index].ob_filter_name = ob_filter_name;
             return ob_filter_name;
         } catch (err) {
         }
@@ -646,8 +608,11 @@ function OB_TIMELINE(options = {}) {
 
     OB_TIMELINE.prototype.ob_load_filters = function (ob_request, ob_scene_index, ob_filter_index, ob_show) {
         try {
+            if (['saveFilter','addFilter','updateFilter'].includes(ob_request))
+                compileFilter(this.ob_get_filter_value(ob_scene_index,ob_filter_index));
+            showFilterError(this,null);
             if (applyLocalFilterOperation(this, ob_request, ob_filter_index, ob_scene_index)) return;
-        } catch (error) { this.ob_results?.fail(error); return; }
+        } catch (error) { showFilterError(this,error); return; }
         let backgroundColor = "";
         if (this.backgroundColor !== undefined)
             backgroundColor = this.backgroundColor;
@@ -657,7 +622,7 @@ function OB_TIMELINE(options = {}) {
         let ob_filter_value = this.ob_get_filter_value(ob_scene_index, ob_filter_index);
         let ob_sortBy;
         try {
-            if (ob_request === "saveFilter") {
+            if (ob_request === "saveFilter" || ob_request === "addFilter") {
                 ob_sortBy = document.getElementById("ob_sort_by").value;
                 if (ob_sortBy === "") ob_sortBy = "NONE";
                 document.getElementById("ob_sort_by").value = ob_sortBy;
@@ -685,8 +650,8 @@ function OB_TIMELINE(options = {}) {
             "&width=" + this.ob_scene[ob_scene_index].width +
             "&height=" + this.ob_scene[ob_scene_index].height +
             "&camera=" + this.ob_scene[ob_scene_index].ob_camera_type +
-            "&sortBy=" + ob_sortBy +
-            "&filter=" + ob_filter_value;
+            "&sortBy=" + encodeURIComponent(ob_sortBy) +
+            "&filter=" + encodeURIComponent(ob_filter_value);
         this.load_data(ob_scene_index);
         this.show_filters = ob_show;
     };
@@ -836,11 +801,6 @@ function OB_TIMELINE(options = {}) {
                 "</fieldset>\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info(" + ob_scene_index + ");\" value='Apply Timeline Info' />\n" +
                 "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Close' />\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>2 - </span>Timeline Camera Info</legend>\n" +
-                "</fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_orthographic_camera(" + ob_scene_index + ");\" value='Orthographic' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_perspective_camera(" + ob_scene_index + ");\" value='Perspective' />\n" +
                 "</form>\n" +
                 "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
                 "</div>";
@@ -857,6 +817,7 @@ function OB_TIMELINE(options = {}) {
             div.querySelector('.ob_panel_heading').after(modelEditor);
             this.ob_results?.mountSettings(div);
             this.ob_viewport?.mountSettings(div);
+            this.ob_perspective?.mount(div);
             document.getElementById(this.name + "_start").value = now.toISOString().slice(0, 16);
 
         } catch (err) {
@@ -1191,6 +1152,7 @@ function OB_TIMELINE(options = {}) {
         this.ob_descriptor_record=record;
         if (this.staticData) {cancelDescriptor(this);this.ob_createDescriptor(index,record);}
         else loadDescriptor(this,index,record);
+        this.ob_results?.focusRecord(record);
     };
 
     OB_TIMELINE.prototype.ob_remove_descriptor = function () {
@@ -1221,14 +1183,15 @@ function OB_TIMELINE(options = {}) {
             //this.ob_timeline_header.innerText = this.name;
             this.ob_timeline_panel.appendChild(this.ob_timeline_header);
             this.ob_timeline_header.onmousedown = function (event) {
+                if (that2.ob_viewport || event.button !== 0 || event.target.closest('button,input,select,textarea,summary,a,img,[role="button"]')) return;
                 that2.moving = true;
                 // get the mouse cursor position at startup:
                 that2.pos3 = event.clientX;
                 that2.pos4 = event.clientY;
             };
             this.ob_timeline_header.onmousemove = function (event) {
-                that2.ob_timeline_header.style.cursor = "move";
                 if (that2.moving !== true) return;
+                that2.ob_timeline_header.style.cursor = "move";
                 that2.ob_remove_help();
                 that2.ob_remove_calendar();
                 that2.ob_remove_descriptor();
@@ -1244,8 +1207,6 @@ function OB_TIMELINE(options = {}) {
                 that2.ob_timeline_panel_resizer.style.left = (that2.ob_timeline_panel.offsetWidth - 8) + "px";
             };
             this.ob_timeline_header.onmouseup = function () {
-                that2.ob_timeline_panel.style.top = that2.ob_timeline_panel.offsetTop - that2.pos2 + "px";
-                that2.ob_timeline_panel.style.left = that2.ob_timeline_panel.offsetLeft - that2.pos1 + "px";
                 that2.moving = false;
                 //that2.ob_timeline_header.style.zIndex = "0";
             };
@@ -2814,7 +2775,9 @@ function OB_TIMELINE(options = {}) {
 
         let ob_box = this.track[ob_scene_index](new THREE.BoxGeometry(width, height, depth));
         let ob_material;
-        if (texture !== undefined) {
+        if (this.ob_scene[ob_scene_index].ob_camera_type==='Perspective' && !band_name.includes('overview_')) {
+            ob_material=this.ob_perspective.material(this.track[ob_scene_index],{color});
+        } else if (texture !== undefined) {
             let loader = this.track[ob_scene_index](new THREE.CubeTextureLoader());
             loader.setCrossOrigin("");
             loader.setPath('three.js/examples/textures/cube/pisa/');
@@ -2852,6 +2815,7 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.destroy_scene = function (ob_scene_index) {
+        this.ob_perspective?.detach();
         if (this.ob_scene === undefined || this.ob_scene[ob_scene_index] === undefined) return;
         this.ob_scene[ob_scene_index].cancelPan?.();
         for (let i = 0; i < this.ob_scene[ob_scene_index].children.length; i++) {
@@ -3018,6 +2982,9 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.update_all_timelines = function (ob_scene_index, header, params, bands, model, sessions, camera) {
+        // A queued rebuild can precede a new selection's first frame. Let that
+        // selection use the rebuilt scene; interrupt only an active movement.
+        if(this.ob_results?.focusAnimation?.started)this.ob_results.cancelFocus(false);
         ob_timelines.forEach(function (ob_timeline) {
                 const populationStarted=performance.now();
                 if (ob_scene_index === undefined)
@@ -3039,7 +3006,7 @@ function OB_TIMELINE(options = {}) {
                     ob_timeline.ob_scene_init(ob_scene_index);
                     if (ob_timeline.ob_viewport) ob_timeline.ob_scene[ob_scene_index].width=ob_timeline.ob_viewport.plotWidth;
                     ob_timeline.set_bands(ob_scene_index);
-                    ob_timeline.ob_scene[ob_scene_index].ob_camera_type = camera;
+                    ob_timeline.ob_scene[ob_scene_index].ob_camera_type = ob_timeline.ob_perspective?.mode || camera;
                     if (ob_timeline.ob_results?.supported) {
                         ob_timeline.ob_results.computeMap();
                         for (const band of ob_timeline.ob_scene[ob_scene_index].bands)
@@ -4078,7 +4045,9 @@ function OB_TIMELINE(options = {}) {
         const ob_box = track(new THREE.BoxGeometry(session.width, session.height, 1));
         let ob_material;
 
-        if (texture) {
+        if (scene.ob_camera_type==='Perspective' && !band_name.includes('overview_')) {
+            ob_material=this.ob_perspective.material(track,{color,transparent:true,opacity});
+        } else if (texture) {
             ob_material = this.createTextureMaterial(track, scene, texture);
         } else {
             ob_material = track(new THREE.MeshBasicMaterial({
@@ -4170,7 +4139,7 @@ function OB_TIMELINE(options = {}) {
 
         let ob_material;
 
-        if (texture !== undefined) {
+        if (texture !== undefined && this.ob_scene[ob_scene_index].ob_camera_type!=='Perspective') {
             let loader = this.track[ob_scene_index](new THREE.CubeTextureLoader());
             loader.setCrossOrigin("");
             loader.setPath('three.js/examples/textures/cube/pisa/');
@@ -4268,6 +4237,7 @@ function OB_TIMELINE(options = {}) {
                 map: texture,
                 transparent: true,
                 opacity: 1,
+                toneMapped: this.ob_scene[ob_scene_index].ob_camera_type!=='Perspective',
             }));
         } else {
             // Use sphere geometry if no texture is available
@@ -4623,10 +4593,10 @@ function OB_TIMELINE(options = {}) {
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
-                that.ob_open_descriptor(ob_scene_index, ob_obj.data);
                 // A click selects an event; it must not start an inertial pan and
                 // refresh the side panel as if the user had dragged the timeline.
                 if (!dragged) {
+                    that.ob_open_descriptor(ob_scene_index, ob_obj.data);
                     that.ob_results?.endGesture();
                     that.ob_render(ob_scene_index);
                     return;
@@ -4987,6 +4957,7 @@ function OB_TIMELINE(options = {}) {
 
         // Set all listeners
         this.ob_setListeners(ob_scene_index);
+        this.ob_perspective?.attach(ob_scene_index);
 
         // requestAnimationFrame(this.animate);
         this.ob_render(ob_scene_index);
@@ -5064,7 +5035,7 @@ function OB_TIMELINE(options = {}) {
                 "&scene=" + ob_scene_index +
                 "&namespace=" + namespace +
                 "&filterName=" + ob_scene.ob_filter_name +
-                "&filter=" + ob_scene.ob_filter_value +
+                "&filter=" + encodeURIComponent(ob_scene.ob_filter_value) +
                 "&search=" + encodeURIComponent(ob_scene.ob_search_value || '') +
                 "&timelineName=" + this.name +
                 "&userName=" + this.ob_user_name;
@@ -5076,7 +5047,7 @@ function OB_TIMELINE(options = {}) {
                 "&scene=" + ob_scene_index +
                 "&namespace=" + namespace +
                 "&filterName=" + ob_scene.ob_filter_name +
-                "&filter=" + ob_scene.ob_filter_value +
+                "&filter=" + encodeURIComponent(ob_scene.ob_filter_value) +
                 "&search=" + encodeURIComponent(ob_scene.ob_search_value || '') +
                 "&timelineName=" + this.name +
                 "&userName=" + this.ob_user_name;
@@ -5123,7 +5094,7 @@ function OB_TIMELINE(options = {}) {
 
         let ob_url_secure = this.data && this.data.match(/^(https|http?):\/\//);
         if (ob_url_secure !== null && ob_url_secure.length === 2) {
-            if (!!window.EventSource && this.data.includes("sse")) {
+            if (!!window.EventSource && this.data.includes("sse") && this.method === "GET") {
                 let that = this;
                 this.ob_not_connected(ob_scene_index);
 
@@ -5157,7 +5128,7 @@ function OB_TIMELINE(options = {}) {
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
                                 "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
-                                "&filter=" + that.ob_scene[ob_scene_index].ob_filter_value +
+                                "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +
                                 "&userName=" + that.ob_user_name;
@@ -5224,7 +5195,7 @@ function OB_TIMELINE(options = {}) {
                             "&scene=" + ob_scene_index +
                             "&namespace=" + namespace +
                             "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
-                            "&filter=" + that.ob_scene[ob_scene_index].ob_filter_value +
+                            "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                             "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                             "&timelineName=" + that.name +
                             "&userName=" + that.ob_user_name;
@@ -5236,7 +5207,7 @@ function OB_TIMELINE(options = {}) {
                             "&scene=" + ob_scene_index +
                             "&namespace=" + namespace +
                             "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
-                            "&filter=" + that.ob_scene[ob_scene_index].ob_filter_value +
+                            "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                             "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                             "&timelineName=" + that.name +
                             "&userName=" + that.ob_user_name;
@@ -5265,7 +5236,7 @@ function OB_TIMELINE(options = {}) {
                         console.log("Response OK!");
                         this.ob_connected(ob_scene_index);
                         return readTimelineResponse(response, 'Timeline request');
-                    } else if (response.status===404 && this.autoEndpoint && this.data.includes('/openbexi_timeline/sessions')) {
+                    } else if ([404,405].includes(response.status) && this.autoEndpoint && this.data.includes('/openbexi_timeline/sessions')) {
                         this.autoEndpoint=false;
                         this.data=this.data.replace('/openbexi_timeline/sessions','/openbexi_timeline_sse/sessions');
                         this.load_data(ob_scene_index);
@@ -5286,7 +5257,7 @@ function OB_TIMELINE(options = {}) {
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
                                 "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
-                                "&filter=" + that.ob_scene[ob_scene_index].ob_filter_value +
+                                "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +
                                 "&userName=" + that.ob_user_name;
@@ -5311,7 +5282,7 @@ function OB_TIMELINE(options = {}) {
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
                                 "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
-                                "&filter=" + that.ob_scene[ob_scene_index].ob_filter_value +
+                                "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +
                                 "&userName=" + that.ob_user_name;
@@ -5463,7 +5434,18 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.updateURL = async function () {
-        // Endpoint discovery must not delay construction of the offline UI.
+        const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),750);
+        try {
+            const response=await fetch(new URL('../openbexi_timeline/config',import.meta.url),
+                {signal:controller.signal,headers:{Accept:'application/json'}});
+            if(response.ok) {
+                const config=await response.json();
+                if(typeof config.data==='string' && config.data) {
+                    this.autoEndpoint=false;return new URL(config.data,window.location.href).href;
+                }
+            }
+        } catch { /* Static hosts use the established fallback. */ }
+        finally {clearTimeout(timeout);}
         this.autoEndpoint=true;
         return new URL('openbexi_timeline/sessions', window.location.href).href;
     };
@@ -5473,6 +5455,7 @@ function OB_TIMELINE(options = {}) {
         this.modelStartup?.initialized();
         // Initialization logic here
         this.ob_init();
+        this.ob_perspective = new TimelinePerspective(this);
         this.ob_results = new TimelineResults(this);
         this.ob_visible_view ??= this.params[0].overview !== false;
         if (!this.staticData && /^https?:\/\//.test(this.data) && !this.data.includes('startDate=test')) {

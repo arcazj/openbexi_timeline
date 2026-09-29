@@ -29,6 +29,8 @@ abstract class data_manager {
     public final String _include;
     public final String _exclude;
     public final String _search;
+    public final String _filterExpression;
+    protected final java.util.function.Predicate<JSONObject> _eventFilter;
     public final HttpServletResponse _response;
     public final HttpSession _session;
     public final int _context_timer = 0;
@@ -60,7 +62,11 @@ abstract class data_manager {
         }
 
         String filter = (String) _data_configuration.getConfiguration().get("filter");
-        if (filter != null) {
+        _filterExpression=FilterExpression.decode(filter);
+        _eventFilter=FilterExpression.compile(_filterExpression);
+        if (_filterExpression.startsWith("expr:")) {
+            _include=_filterExpression;_exclude="";
+        } else if (filter != null) {
             String[] filter_items = filter.split("\\|");
             if (filter_items.length == 0) {
                 _include = "";
@@ -106,13 +112,13 @@ abstract class data_manager {
     }
 
     public String get_filter() {
-        if (!_include.equals("") && !_exclude.equals(""))
-            return _include + "|" + _exclude;
-        if (_include.equals("") && !_exclude.equals(""))
-            return "|" + _exclude;
-        if (!_include.equals("") && _exclude.equals(""))
-            return _include;
-        return "";
+        return _filterExpression;
+    }
+
+    protected JSONArray filterSelected(JSONArray events) {
+        JSONArray selected=new JSONArray();
+        for(Object event:events)if(_eventFilter.test((JSONObject)event))selected.add(event);
+        return selected;
     }
 
     abstract Object login(String url, JSONArray cookies);
@@ -154,165 +160,14 @@ abstract class data_manager {
                                String ob_title, String ob_filter_name, String ob_backgroundColor, String ob_user,
                                String ob_email, String ob_top, String ob_left, String ob_width, String ob_height,
                                String ob_camera, String ob_sort_by, String ob_filter) {
-        JSONParser parser = new JSONParser();
-        Object filters;
-        StringBuilder jsonObjectMerged = null;
-        JSONObject jsonObject;
-        File buildFile = new File("filters");
-        if (!buildFile.exists())
-            buildFile.getParentFile().mkdirs();
-
-        JSONArray openbexi_timeline = null;
-        JSONArray filter_array = null;
-        JSONArray filter_array2;
-        boolean no_filter_found = true;
-        boolean ob_first_filter_deleted = false;
-        boolean change_current = true;
-
-        File outputs = new File(buildFile + "/" + ob_user + "_" + ob_timeline_name + "_filter_setting.json");
-        if (ob_user.equals("guest"))
-            outputs = new File("filters/default_filter_setting.json");
-
-        if (!outputs.getParentFile().exists())
-            outputs.getParentFile().mkdirs();
-
-        try {
-            if (outputs.exists()) {
-                Reader reader = new FileReader(outputs);
-                try {
-                    filters = parser.parse(reader);
-                    jsonObject = (JSONObject) filters;
-                    openbexi_timeline = (JSONArray) jsonObject.get("openbexi_timeline");
-                    ((JSONObject) openbexi_timeline.get(0)).put("sources", _data_configuration.getConfiguration().get("startup configuration"));
-                    ((JSONObject) openbexi_timeline.get(0)).put("multiples", "45");
-
-                    if (ob_action.equals("readFilters")) {
-                        reader.close();
-                        return filters;
-                    }
-
-                    filter_array2 = (JSONArray) ((JSONObject) openbexi_timeline.get(0)).get("filters");
-                    filter_array = sortFilter(filter_array2, ob_filter_name);
-                } catch (Exception e) {
-                    System.err.print("updateFilter:" + e.getMessage());
-                }
-            }
-            if (filter_array == null || filter_array.size() == 0) {
-                filter_array = new JSONArray();
-                filter_array.add(0, ob_filter_name);
-                if (ob_filter_name.equals("")) ob_filter_name = "ALL";
-            }
-
-            jsonObjectMerged = new StringBuilder("{\n" +
-                    "  \"dateTimeFormat\": \"iso8601\",\n" +
-                    "  \"scene\": \"" + ob_scene + "\",\n" +
-                    "  \"namespace\": \"" + ob_namespace + "\",\n" +
-                    "  \"openbexi_timeline\": [{\n" +
-                    "  \"name\": \"" + ob_timeline_name + "\"," +
-                    "  \"title1\": \"" + ob_title + "\"," +
-                    "  \"user\": \"" + ob_user + "\"," +
-                    "  \"email\": \"" + ob_email + "\"," +
-                    "  \"start\": \"current_time\"," +
-                    "  \"top\": \"" + ob_top + "\"," +
-                    "  \"left\": \"" + ob_left + "\"," +
-                    "  \"width\": \"" + ob_width + "\"," +
-                    "  \"height\": \"" + ob_height + "\"," +
-                    "  \"camera\": \"" + ob_camera + "\"," +
-                    "  \"backgroundColor\": \"" + ob_backgroundColor + "\"," +
-                    "  \"sortBy\": \"" + ob_sort_by + "\",");
-
-            jsonObjectMerged.append("  \"sources\":");
-            jsonObjectMerged.append(_data_configuration.getConfiguration().get("startup configuration"));
-            jsonObjectMerged.append("  ,");
-
-            jsonObjectMerged.append("  \"filters\":[");
-
-            String filter_name;
-            if (ob_action.equals("addFilter")) {
-                JSONObject obj = new JSONObject();
-                obj.put("name", ob_filter_name);
-                obj.put("backgroundColor", ob_backgroundColor);
-                obj.put("filter_value", ob_filter);
-                obj.put("sortBy", ob_sort_by);
-                obj.put("current", "yes");
-                filter_array.add(obj);
-                filter_array = sortFilter(filter_array, ob_filter_name);
-            }
-            int filter_size = filter_array.size();
-            for (int f = 0; f < filter_size; f++) {
-                try {
-                    filter_name = String.valueOf(((JSONObject) filter_array.get(f)).get("name"));
-                } catch (Exception e) {
-                    filter_name = ob_filter_name;
-                }
-                if (ob_filter_name.equals(filter_name)) {
-                    no_filter_found = false;
-                    if (!ob_action.equals("deleteFilter")) {
-                        if (f > 0)
-                            jsonObjectMerged.append(",{");
-                        else
-                            jsonObjectMerged.append("{");
-                        String[] filter_attributs = ob_filter.split(":| ");
-                        jsonObjectMerged.append("  \"name\":\"").append(ob_filter_name).append("\",");
-                        if (filter_attributs.length > 0) {
-                            jsonObjectMerged.append("  \"backgroundColor\":\"").append(ob_backgroundColor).append("\",");
-                            jsonObjectMerged.append("  \"filter_value\":\"").append(get_filter()).append("\",");
-                            jsonObjectMerged.append("  \"sortBy\":\"" + ob_sort_by + "\",");
-                            jsonObjectMerged.append("  \"current\":\"" + "yes");
-                            if (f == filter_size - 1)
-                                jsonObjectMerged.append("\"}]}");
-                            else
-                                jsonObjectMerged.append("\"}");
-                        } else {
-                            if (f == filter_size - 1)
-                                jsonObjectMerged.append("  \"current\":\"" + "yes" + "\"}]}");
-                            else
-                                jsonObjectMerged.append("  \"current\":\"" + "yes" + "\"}");
-                        }
-                    } else {
-                        if (f == filter_size - 1 && filter_size != 1)
-                            jsonObjectMerged.append("]}");
-                        if (filter_size == 1)
-                            jsonObjectMerged.append("]}");
-                        if (f == 0) ob_first_filter_deleted = true;
-                    }
-                } else {
-                    if (ob_first_filter_deleted && f == 1) {
-                    } else if (f > 0)
-                        jsonObjectMerged.append(",");
-                    if (ob_action.equals("deleteFilter") && change_current) {
-                        ((JSONObject) filter_array.get(f)).put("current", "yes");
-                        change_current = false;
-                    } else
-                        ((JSONObject) filter_array.get(f)).put("current", "no");
-                    jsonObjectMerged.append(filter_array.get(f));
-                    if (f == filter_size - 1)
-                        jsonObjectMerged.append("]}");
-                }
-            }
-            jsonObjectMerged.append("]}");
-        } catch (Exception e) {
-            System.err.print("updateFilter:" + e.getMessage());
-        }
-
-        if (no_filter_found && !ob_action.equals("deleteFilter")) {
-            return addFilter(ob_timeline_name, ob_title, ob_scene, ob_namespace, ob_filter_name, ob_backgroundColor,
-                    ob_user, ob_email, ob_top, ob_left, ob_width, ob_height, ob_camera, ob_sort_by, ob_filter);
-        }
-
-        if (ob_user.equals("guest"))
-            outputs = new File(buildFile + "/" + ob_user + "_" + ob_timeline_name + "_filter_setting.json");
-        try (FileWriter file = new FileWriter(outputs)) {
-            file.write(jsonObjectMerged.toString());
-            file.flush();
-        } catch (IOException e) {
-            log(e, "Exception");
-        }
-        try {
-            return parser.parse(jsonObjectMerged.toString());
-        } catch (ParseException e) {
-            return null;
-        }
+        JSONObject query=new JSONObject(_data_configuration.getConfiguration());
+        query.put("request",ob_action);query.put("timelineName",ob_timeline_name);
+        query.put("scene",ob_scene);query.put("namespace",ob_namespace);query.put("title",ob_title);
+        query.put("filterName",ob_filter_name);query.put("filter",ob_filter);
+        query.put("backgroundColor",ob_backgroundColor);query.put("userName",ob_user);query.put("email",ob_email);
+        query.put("top",ob_top);query.put("left",ob_left);query.put("width",ob_width);query.put("height",ob_height);
+        query.put("camera",ob_camera);query.put("sortBy",ob_sort_by);
+        return SavedFilters.update(new data_configuration(query));
     }
 
     public Object addFilter(String ob_timeline_name, String ob_title, String ob_scene, String ob_namespace,

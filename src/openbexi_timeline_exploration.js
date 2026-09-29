@@ -70,6 +70,71 @@ export function clusterEvents(events, scale, protectedKeys=new Set(), cell=48) {
     return output.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start));
 }
 
+// A history cursor owns one archive traversal. Each request is bounded, but
+// empty pages do not impose a cutoff on the total history that can be searched.
+export async function searchTimelineHistory(input,{query,range,signal,onProgress,timeout=15000}) {
+    const request=cleanTimelineURL(input);
+    for(const key of ['cursor','cancel','ob_request'])request.searchParams.delete(key);
+    for(const [key,value] of Object.entries({search:query,progressive:'1',matchProtocol:'1',history:'backward',purpose:'seek-past',
+        startDate:new Date(range.from).toISOString(),endDate:new Date(range.to).toISOString()}))request.searchParams.set(key,value);
+    let cursorURL,pages=0,incomplete=false;
+    const cursors=new Set(),warnings=new Set();
+    const release=()=>{
+        if(!cursorURL)return;
+        const url=new URL(cursorURL);cursorURL=null;url.searchParams.set('cancel','1');
+        fetch(url,{keepalive:true,headers:{Accept:'application/json'}}).catch(()=>{});
+    };
+    const abort=()=>release();signal?.addEventListener('abort',abort,{once:true});
+    try {
+        signal?.throwIfAborted();onProgress?.({...range,pages,filesExamined:0});
+        while(true) {
+            signal?.throwIfAborted();
+            const controller=new AbortController(),cancel=()=>controller.abort();
+            signal?.addEventListener('abort',cancel,{once:true});
+            const timer=setTimeout(cancel,timeout);
+            let json;
+            try {json=await readTimelineResponse(await fetch(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Search timeline history');}
+            finally {clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
+            const meta=json.timelineMatch;
+            if(meta?.nextCursor) {const next=new URL(request);next.searchParams.set('cursor',meta.nextCursor);cursorURL=next.href;}
+            else cursorURL=null;
+            signal?.throwIfAborted();pages++;
+            if(!Array.isArray(json.events) || !meta || meta.query!==query || typeof meta.hasCondition!=='boolean' || meta.error)
+                throw new Error(meta?.error || 'This source cannot search timeline history.');
+            // Older deployments expose only neighboring-window searches.
+            if(!meta.history)return {unsupported:true,complete:false};
+            const history=meta.history;
+            if(history.direction!=='backward')throw new Error('The source returned an invalid history search direction.');
+            for(const warning of meta.warnings || [])if(typeof warning==='string')warnings.add(warning);
+            incomplete ||= history.incomplete===true || history.supported===false || warnings.size>0;
+            const from=Date.parse(history.checkingRange?.from),to=Date.parse(history.checkingRange?.to);
+            onProgress?.({from:Number.isFinite(from)?from:range.from,to:Number.isFinite(to)?to:range.to,
+                pages,filesExamined:history.filesExamined,incomplete});
+            const candidates=[];
+            const visit=records=>{for(const record of records) {
+                const bounds=recordRange(record);
+                if(!record.zone && Number.isFinite(bounds.from) && bounds.from<=range.to &&
+                    (!meta.hasCondition || record.searchMatch===true))candidates.push(record);
+                visit(record.activities || []);
+            }};
+            visit(json.events);
+            if(candidates.length) {
+                candidates.sort((a,b)=>Date.parse(b.start)-Date.parse(a.start));
+                return {record:candidates[0],events:json.events,metadata:{...meta,warnings:[...warnings]},complete:false};
+            }
+            if(!meta.nextCursor) {
+                const complete=history.exhausted===true && meta.complete===true && !incomplete;
+                return {exhausted:history.exhausted===true,complete,incomplete:!complete,warnings:[...warnings],metadata:meta};
+            }
+            if(history.exhausted || cursors.has(meta.nextCursor))throw new Error('The source returned a repeated or inconsistent history cursor.');
+            cursors.add(meta.nextCursor);request.searchParams.set('cursor',meta.nextCursor);
+            // Yield between cached responses as well, so Stop and query edits
+            // can interrupt a long scan without waiting for the next network hop.
+            await new Promise(resolve=>setTimeout(resolve,0));
+        }
+    } finally {signal?.removeEventListener('abort',abort);release();}
+}
+
 // Search without moving the current view. Work and time are bounded; each page
 // is inspected immediately and unused cursors are released, including on cancel.
 export async function seekTimelineRecord(input,{query,range,direction='past',signal,onProgress,maxPages=32,maxWindows=8,pagesPerWindow=4,timeout=20000}) {

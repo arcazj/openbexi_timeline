@@ -132,6 +132,11 @@ for (const demo of catalog.demos) test(`${demo.id}: rendering, overview, panels,
     });
     await expect(sideSlot.getByRole('button', {name: 'Close event details'})).toBeVisible();
     await settle(page);
+    await page.waitForFunction(async()=>{
+        const {ob_results:r}=await (await import('/src/openbexi_demo.js')).demoReady;
+        return !r.focusAnimation && !r.pending;
+    });
+    const focused=await inspect(page);
     const sideBox=await page.locator('.ob_viewport_side').boundingBox();
     await staysInsideSidePanel(sideSlot.locator('.ob_static_description'), sideBox);
     await page.getByRole('button', {name: 'Help', exact: true}).click();
@@ -185,6 +190,6 @@ for (const demo of catalog.demos) test(`${demo.id}: rendering, overview, panels,
     await expect(sideSlot.getByRole('heading', {name: 'Help and sharing'})).toBeVisible();
     await page.getByRole('button', {name: 'Timeline', exact: true}).click();
     if (initial.dockOverview) await expect(overview).toBeVisible();
-    expect((await inspect(page)).reference).toEqual(initial.reference);
+    expect((await inspect(page)).reference).toEqual(focused.reference);
     expect(errors, 'No uncaught runtime errors').toEqual([]);
 });

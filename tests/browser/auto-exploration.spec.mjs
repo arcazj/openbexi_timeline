@@ -83,7 +83,7 @@ test('An empty startup and an unfinished search do not cover the plot with the n
         await expect(page.getByRole('button',{name:'Find previous activity',exact:true})).toBeVisible();
         await expect(page.getByRole('button',{name:'Find next activity',exact:true})).toBeVisible();
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('volcano');
-        await expect(page.getByRole('button',{name:'Cancel search',exact:true})).toBeVisible();
+        await expect(page.getByRole('button',{name:'Stop search',exact:true})).toBeVisible();
         await expect(page.locator('.ob_results_empty')).toBeHidden();
         expect(fixture.errors).toEqual([]);
     } finally {await fixture.close();}
@@ -183,13 +183,21 @@ test('Unknown coverage remains explicit and does not trigger an automatic move',
     } finally {await fixture.close();}
 });
 
-test('Connected earlier search can be cancelled without moving the timeline',async({page})=>{
+test('REST Auto scale stays idle; an explicit earlier search can be cancelled without moving the timeline',async({page})=>{
     const fixture=await setup(page,[],{connected:true,holdSearch:true});
     try {
+        const frame=await page.locator('.ob_timeline_panel').boundingBox();
         const before=await state(page);await page.getByLabel('Auto scale',{exact:true}).check();
+        await settle(page);
+        expect(fixture.requests.some(url=>url.searchParams.get('purpose')==='seek-past')).toBe(false);
+        await page.getByRole('button',{name:'Find previous activity',exact:true}).click();
         await expect(page.getByRole('button',{name:'Cancel search',exact:true})).toBeVisible();
+        await expect(page.locator('.ob_loading_status')).toBeVisible();
         await page.getByRole('button',{name:'Cancel search',exact:true}).click();
         await expect(page.locator('.ob_explore_notice')).toContainText('Search stopped');
+        await expect(page.locator('.ob_loading_status')).toBeHidden();
+        const after=await page.locator('.ob_timeline_panel').boundingBox();
+        expect(after.x).toBe(frame.x);expect(after.y).toBe(frame.y);
         expect((await state(page)).range.from).toBeCloseTo(before.range.from,-1);expect(fixture.errors).toEqual([]);
     } finally {await fixture.close();}
 });
@@ -232,7 +240,7 @@ test('A newer query cancels an earlier lookup and stale replies cannot move the 
     const fixture=await setup(page,[event('current',when,'earthquake')],{connected:true,holdSearch:true});
     try {
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('volcano');
-        await expect(page.getByRole('button',{name:'Cancel search',exact:true})).toBeVisible();
+        await expect(page.getByRole('button',{name:'Stop search',exact:true})).toBeVisible();
         await expect.poll(()=>fixture.held.length).toBe(1);
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('earthquake');
         await expect.poll(async()=>{const s=await state(page);return s.counts.matching.events;}).toBe(1);

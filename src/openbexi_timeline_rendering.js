@@ -6,6 +6,14 @@ const choice = (value, values, description) => ({type:'string',default:value,enu
 const bool = (value, description) => ({type:'boolean',default:value,description});
 const text = (value, description) => ({type:'string',default:value,minLength:1,maxLength:160,description});
 const group = (description, properties) => ({type:'object',additionalProperties:false,description,properties});
+// Reference pose from the supplied perspective screenshot. Camera fitting scales
+// the pose to the available board; saved user poses remain relative to that board.
+export const PERSPECTIVE_PRESET=freeze({
+    position:[-2477.905,1596.207,1609.17],target:[0,749,0],zoom:1,fieldOfView:30,
+    yaw:-57*Math.PI/180,pitch:16*Math.PI/180,roll:0,
+    ambientColor:'#ffffff',ambientIntensity:.3,directionalColor:'#ffffff',directionalIntensity:1.8,
+    azimuth:-25,elevation:35,metalness:0,roughness:.75
+});
 export const RENDERING_SCHEMA = group('Optional rendering settings. Omitted properties retain the existing presentation.', {
     theme:group('Scene and optional application surface colors.',{
         sceneBackground:color('#f7f9fc','Canvas background.'),
@@ -49,15 +57,15 @@ export const RENDERING_SCHEMA = group('Optional rendering settings. Omitted prop
         handleWidth:number(7,3,24,'Handle width in pixels.'),
         handleMaxHeight:number(48,12,120,'Maximum handle height in pixels.')
     }),
-    camera:group('3D camera and lighting. Existing params.camera takes precedence for initial mode.',{
-        mode:choice('Orthographic',['Orthographic','Perspective'],'Initial camera mode.'),
-        fieldOfView:number(30,10,100,'Perspective field of view in degrees.'),
-        yaw:number(-.42,-.65,.65,'Initial horizontal orbit angle in radians.'),
-        pitch:number(.22,.06,.46,'Initial vertical orbit angle in radians.'),
-        roll:number(-.12,-.5,.5,'Board rotation in radians.'),
-        rotationSensitivity:number(.002,.0001,.02,'Shift-drag rotation per pixel.'),
+    camera:group('3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.',{
+        mode:choice('Orthographic',['Orthographic','Perspective'],'Camera mode for model preview. Page startup always uses 2D.'),
+        fieldOfView:number(PERSPECTIVE_PRESET.fieldOfView,10,100,'Perspective field of view in degrees.'),
+        yaw:number(PERSPECTIVE_PRESET.yaw,-Math.PI,Math.PI,'Initial horizontal orbit angle in radians.'),
+        pitch:number(PERSPECTIVE_PRESET.pitch,-1.48,1.48,'Initial vertical orbit angle in radians.'),
+        roll:number(PERSPECTIVE_PRESET.roll,-.5,.5,'Board rotation in radians.'),
+        rotationSensitivity:number(.002,.0001,.02,'Orbit rotation sensitivity; 0.002 is the default speed.'),
         ambientColor:color('#ffffff','Perspective ambient light.'),
-        ambientIntensity:number(1.5,0,5,'Perspective ambient light intensity.'),
+        ambientIntensity:number(PERSPECTIVE_PRESET.ambientIntensity,0,5,'Perspective ambient light intensity.'),
         directionalColor:color('#ffffff','Perspective directional light.'),
         directionalIntensity:number(1.8,0,5,'Perspective directional light intensity.')
     }),

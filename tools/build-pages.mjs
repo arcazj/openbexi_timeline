@@ -18,6 +18,7 @@ const publicAssets=manifest.filter(file=>/^(?:css|icon|help|docs|schemas|swagger
         'models/regular_timeline.json','models/regular_timeline_earthquake.json','README.md','LICENSE'].includes(file));
 const dependencies=[
     'node_modules/three/build/three.module.min.js','node_modules/three/examples/jsm/controls/DragControls.js',
+    'node_modules/three/examples/jsm/controls/OrbitControls.js',
     'node_modules/three/LICENSE','node_modules/three-spritetext/dist/three-spritetext.mjs',
     'node_modules/three-spritetext/LICENSE','node_modules/simple-jscalendar/source/jsCalendar.min.js',
     'node_modules/simple-jscalendar/LICENSE'

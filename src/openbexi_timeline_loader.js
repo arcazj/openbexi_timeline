@@ -1,5 +1,6 @@
 import {parseTimelineData} from './openbexi_timeline_data.js';
 import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
+import {TimelineLive} from './openbexi_timeline_live.js';
 
 const key = record => JSON.stringify([record.namespace ?? record.data?.namespace ?? '', record.sourceRecordKey || record.id]);
 function merge(records) {
@@ -31,7 +32,8 @@ const recordIn = (record,range) => Date.parse(record.start)<=range.to &&
 export class TimelineLoader {
     constructor(timeline) {
         this.timeline=timeline;this.generation=0;this.cache=[];this.sequence=0;
-        this.limits={characters:8*1024*1024,records:15000,nestedRecords:50000,pages:512};
+        this.limits={characters:8*1024*1024,records:15000,nestedRecords:50000,pages:32,bufferPages:4};
+        this.live=new TimelineLive(this);
     }
 
     abandon(entry) {
@@ -54,13 +56,31 @@ export class TimelineLoader {
         fetch(url,{headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});
     }
 
-    cancel() {
+    cancel(keepLive=false) {
         this.generation++;
         clearTimeout(this.poll);clearTimeout(this.navigationTimer);this.navigationTimer=null;
         this.controller?.abort();this.running=false;
         for (const entry of this.cache) this.abandon(entry);
         this.cursorURLs=new Map();
         if (this.timeline.ob_results) this.timeline.ob_results.fetching=false;
+        if (!keepLive) {this.live.close();clearTimeout(this.liveTimer);this.pendingRevision=null;}
+    }
+
+    invalidate(revision) {
+        this.pendingRevision=revision;
+        if(this.running)return;
+        clearTimeout(this.liveTimer);
+        this.liveTimer=setTimeout(()=>{
+            this.pendingRevision=null;
+            if(this.input)this.load(this.input,{refresh:true});
+        },100);
+    }
+
+    revalidate(entry) {
+        if(entry.validation)return;
+        entry.validation={events:entry.events,metadata:entry.metadata,complete:entry.complete,etag:entry.done && !entry.paused?entry.etag:null};
+        entry.priorEvents=entry.events;entry.events=[];entry.characters=0;
+        entry.done=false;entry.complete=false;entry.pages=0;entry.cursor=null;entry.paused=false;entry.limitRange=null;
     }
 
     navigationChanged() {
@@ -89,14 +109,19 @@ export class TimelineLoader {
             const range={from:origin+cell*unit,to:origin+(cell+1)*unit};
             let entry=previous.find(item=>item.from===range.from && item.to===range.to);
             if (!entry) {
-                const events=merge(previous.filter(item=>overlaps(item,range)).flatMap(item=>item.events)).filter(record=>recordIn(record,range));
+                const parents=previous.filter(item=>overlaps(item,range));
+                const events=merge(parents.flatMap(item=>item.events)).filter(record=>recordIn(record,range));
                 const done=covers(previous,range);
                 entry={...range,events,characters:JSON.stringify(events).length,done,complete:done,pages:0,served:0,
+                    checkedAt:done?Math.min(...parents.map(item=>item.checkedAt || Date.now())):undefined,
+                    revision:parents.every(item=>item.revision===parents[0]?.revision)?parents[0]?.revision:null,
                     metadata:previous.find(item=>overlaps(item,range) && item.metadata)?.metadata};
                 if (entry.metadata) entry.metadata={...entry.metadata,warnings:(entry.metadata.warnings || [])
                     .filter(warning=>![bufferWarning,scanWarning,loadedWarning].includes(warning))};
             }
             entry.purpose=overlaps(range,visible)?'visible':range.to<=visible.from?'past-prefetch':'future-prefetch';
+            if(entry.purpose==='visible' && entry.done && !entry.paused && entry.checkedAt && Date.now()-entry.checkedAt>30000)
+                this.revalidate(entry);
             if (entry.paused && entry.purpose==='visible' && (!entry.limitRange ||
                 entry.limitRange.from!==visible.from || entry.limitRange.to!==visible.to)) {
                 entry.paused=false;entry.done=false;entry.pages=0;
@@ -150,11 +175,27 @@ export class TimelineLoader {
         url.searchParams.set('search',r.state.query);url.searchParams.set('sortBy',t.ob_sortBy || 'NONE');
         const cacheKey=JSON.stringify([url.origin,url.pathname,r.state.query,url.searchParams.get('filter'),
             url.searchParams.get('userName'),url.searchParams.get('timelineName'),scene.sources]);
+        // Regrouping can retain loaded records, but a server search cursor is
+        // bound to its original Sort by and must restart when that changes.
+        r.explorer?.sourceChanged(JSON.stringify([cacheKey,url.searchParams.get('sortBy')]));
         this.input=input;
-        if (this.running && !refresh && cacheKey===this.cacheKey) {this.targets(visible);this.url=url;return;}
-        this.cancel();
-        if (refresh || cacheKey!==this.cacheKey) {this.cache=[];this.grid=null;}
+        const subscription=new URL(url);
+        subscription.searchParams.set('startDate',new Date(visible.from).toISOString());
+        subscription.searchParams.set('endDate',new Date(visible.to).toISOString());
+        if (this.running && !refresh && cacheKey===this.cacheKey) {this.targets(visible);this.url=url;this.live.start(subscription.href);return;}
+        this.cancel(true);
+        if (cacheKey!==this.cacheKey) {
+            const replacing=this.cacheKey!==undefined;
+            this.cache=[];this.grid=null;this.sourceRevision=null;
+            if(replacing) {
+                r.acceptRemote({events:[]},{version:1,revision:'filter-change-'+this.generation,query:r.state.query,
+                    hasCondition:Boolean(r.state.query),progressive:true,complete:false,
+                    domain:{from:new Date(visible.from).toISOString(),to:new Date(visible.to).toISOString()}});
+            }
+        }
+        else if(refresh)for(const entry of this.cache)this.revalidate(entry);
         this.cacheKey=cacheKey;this.url=url;this.targets(visible);
+        this.live.start(subscription.href);
         const generation=this.generation,current=()=>generation===this.generation;
         this.loadId=globalThis.crypto?.randomUUID?.() || `load-${Date.now()}-${generation}`;
         this.running=true;r.fetching=true;r.loading=false;r.cancelled=false;r.error='';r.updateUI();
@@ -169,9 +210,11 @@ export class TimelineLoader {
                 // Each independent scan has its own work budget. Accumulating
                 // pages across both buffers and later drags stopped otherwise
                 // healthy navigation merely because the user kept browsing.
-                if (entry.pages>=this.limits.pages) {
-                    if (overlaps(entry,this.visible)) throw new Error('Loading limit reached for this interval. Narrow the time window or retry.');
-                    this.pauseBuffer(entry,false,scanWarning);this.publish(generation,count,false);continue;
+                if (entry.pages>=(overlaps(entry,this.visible)?this.limits.pages:Math.min(this.limits.pages,this.limits.bufferPages))) {
+                    const visible=overlaps(entry,this.visible);
+                    this.pauseBuffer(entry,false,visible?loadedWarning:scanWarning);
+                    if(visible)entry.limitRange={...this.visible};
+                    this.publish(generation,count,false);continue;
                 }
                 const request=new URL(this.url);
                 request.searchParams.set('loadId',this.loadId);
@@ -184,7 +227,18 @@ export class TimelineLoader {
                 const timeout=setTimeout(()=>controller.abort(),15000),started=performance.now();
                 let response,json;
                 try {
-                    response=await fetch(request.href,{signal:controller.signal,headers:{Accept:'application/json'}});
+                    const headers={Accept:'application/json'};
+                    if(!entry.cursor && entry.validation?.etag)headers['If-None-Match']=entry.validation.etag;
+                    response=await fetch(request.href,{signal:controller.signal,headers});
+                    if(response.status===304) {
+                        if(!current() || entry.retired)continue;
+                        const previous=entry.validation;
+                        if(!previous)throw new Error('Unexpected cache validation response.');
+                        Object.assign(entry,previous,{done:true,checkedAt:Date.now(),validation:null,priorEvents:null});
+                        entry.characters=JSON.stringify(entry.events).length;
+                        entry.revision=response.headers?.get?.('X-Timeline-Revision') || entry.revision;
+                        this.publish(generation,++count,false);continue;
+                    }
                     json=await readTimelineResponse(response,'Timeline data request');
                 } catch (error) {if (entry.retired && current()) continue;throw error;}
                 finally {clearTimeout(timeout);}
@@ -192,6 +246,10 @@ export class TimelineLoader {
                 if (entry.retired) {this.discardResponse(request,json);continue;}
                 if (!Array.isArray(json.events)) throw new Error('Timeline data response has no events array. The displayed data is retained.');
                 t.ob_connected(0);
+                if(!entry.cursor) {
+                    entry.etag=response.headers?.get?.('ETag') || null;
+                    entry.revision=response.headers?.get?.('X-Timeline-Revision') || null;
+                }
                 const metadata=json.timelineMatch;
                 if (!metadata) {
                     r.acceptRemote(json,null);scene.sessions=json;
@@ -245,14 +303,22 @@ export class TimelineLoader {
                     this.publish(generation,count,true);
                     break;
                 }
+                const replaces=!!entry.validation && !metadata.nextCursor;
                 Object.assign(entry,{events,characters,metadata,cursor:metadata.nextCursor,done:!metadata.nextCursor,
                     complete:metadata.complete===true,pages:entry.pages+1,served:++this.sequence});
+                if(entry.done) {entry.checkedAt=Date.now();entry.validation=null;entry.priorEvents=null;}
                 if (entry.cursor) {request.searchParams.set('cursor',entry.cursor);this.cursorURLs.set(entry,request.href);}
                 else this.cursorURLs.delete(entry);
-                this.publish(generation,count,json.events.length>0);
+                this.publish(generation,count,json.events.length>0 || replaces);
                 await new Promise(resolve=>setTimeout(resolve,0));
             }
-            if (current()) {this.running=false;r.fetching=false;r.updateUI();r.explorer.schedule();this.schedule(input);}
+            if (current()) {
+                const revision=this.cache[0]?.revision;
+                this.sourceRevision=revision && this.cache.every(entry=>entry.revision===revision)?revision:null;
+                this.running=false;r.fetching=false;r.updateUI();r.explorer.schedule();
+                if(this.pendingRevision && this.pendingRevision!==this.sourceRevision)this.invalidate(this.pendingRevision);
+                else this.pendingRevision=null;
+            }
         } catch (error) {
             if (!current()) return;
             this.running=false;r.fetching=false;
@@ -264,7 +330,7 @@ export class TimelineLoader {
     publish(generation,count,changed=true) {
         const r=this.timeline.ob_results,metadata=this.activeEntry?.metadata || this.cache.find(item=>item.metadata)?.metadata;
         if (!metadata) return;
-        const events=merge(this.cache.flatMap(item=>item.events));
+        const events=merge(this.cache.flatMap(item=>[...(item.priorEvents || []),...item.events]));
         const combined={...metadata,progressive:true,revision:`${generation}:${count}`,
             complete:this.cache.every(item=>item.done && item.complete),
             loadLimited:this.cache.some(item=>item.limitRange && overlaps(item,this.visible)),
@@ -273,6 +339,8 @@ export class TimelineLoader {
             domain:{from:new Date(Math.min(...this.cache.map(item=>item.from))).toISOString(),
                 to:new Date(Math.max(...this.cache.map(item=>item.to))).toISOString()},
             availableRange:this.cache.map(item=>item.metadata?.availableRange).find(Boolean),
+            latestRange:this.cache.map(item=>item.metadata?.latestRange).filter(Boolean)
+                .sort((a,b)=>Date.parse(b.from)-Date.parse(a.from))[0],
             warnings:[...new Set(this.cache.flatMap(item=>item.metadata?.warnings || []))]};
         if (changed || !r.remoteMetadata || r.remoteMetadata.query!==combined.query)
             r.acceptRemote(parseTimelineData(JSON.stringify({events,timelineMatch:combined})),combined);
@@ -287,8 +355,7 @@ export class TimelineLoader {
 
     schedule(input) {
         clearTimeout(this.poll);
-        // Refreshing the same full interval would repeat the scan every 30s.
-        // Query changes and navigation start loading normally.
-        if (!this.cache.some(item=>item.limitRange)) this.poll=setTimeout(()=>this.load(input,{refresh:true}),30000);
+        // REST becomes idle after its finite load. Only the SSE connector subscribes.
+        this.live.start(input);
     }
 }

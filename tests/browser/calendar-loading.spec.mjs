@@ -122,16 +122,18 @@ test('Calendar month browsing is inert and day selection renders current records
     } finally {await control.close();}
 });
 
-test('A failed calendar load displays a red accessible action and a real drag recovers visible data',async({page})=>{
+test('A failed calendar load displays an orange toolbar action and a real drag recovers visible data',async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const control=await setup(page);
     try {
         await calendar(page);await page.locator('.jsCalendar-nav-left').click();
         control.failNext=true;await selectedDay(page).click();
         const failure=page.locator('.ob_update_failed');
-        await expect(failure).toBeVisible();await expect(failure).toHaveText(/Update failed.*open details/);
-        await expect(failure).toHaveAttribute('role','button');
-        expect(await failure.evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(165, 29, 41)');
+        await expect(failure).toBeVisible();await expect(failure).toHaveText(/Update unavailable.*retained|Source unavailable.*details/);
+        await expect(failure).toHaveJSProperty('tagName','BUTTON');
+        expect(await failure.evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(255, 240, 217)');
+        expect(await failure.evaluate(element=>element.closest('.ob_results_controls').contains([...document.querySelectorAll('button')].find(button=>button.textContent==='Refresh')))).toBe(true);
+        await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
         await failure.focus();await page.keyboard.press('Enter');
         await expect(page.locator('.ob_results_details')).toHaveAttribute('open','');
         await expect(page.locator('.ob_results_summary')).toContainText('503');

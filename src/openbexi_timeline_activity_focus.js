@@ -1,4 +1,4 @@
-import {renderingFor, bandRendering, RENDERING_DEFAULTS} from './openbexi_timeline_rendering.js';
+import {renderingFor, bandRendering, RENDERING_DEFAULTS, PERSPECTIVE_PRESET} from './openbexi_timeline_rendering.js';
 import * as THREE from 'three';
 import {recordKey} from './openbexi_timeline_paging.js';
 
@@ -34,7 +34,8 @@ export function positionActivityCamera(timeline,index) {
     const direction=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
     camera.position.copy(target).add(direction);camera.lookAt(target);camera.rotateZ(renderingFor(timeline).camera.roll);
     const inverse=camera.quaternion.clone().invert(),tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),tanH=tanV*camera.aspect;
-    let distance=1;
+    const preset=PERSPECTIVE_PRESET;
+    let distance=Math.hypot(...preset.position.map((v,i)=>v-preset.target[i]))*scene.ob_height/(2*preset.target[1]);
     // Fit the board at its oblique angle without changing the time scale.
     for(const x of [-scene.width/2,scene.width/2])for(const y of [0,scene.ob_height])for(const z of [0,24]) {
         const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);
@@ -55,29 +56,6 @@ export class TimelineActivityFocus {
             this.layer=document.createElement('div');this.layer.className='ob_activity_labels';
             this.leaders=document.createElementNS('http://www.w3.org/2000/svg','svg');
             this.leaders.setAttribute('aria-hidden','true');this.layer.append(this.leaders);host.append(this.layer);
-            if(this.host)this.host.removeEventListener('pointerdown',this.rotate,true);
-            this.host=host;
-            this.rotate=event=>{
-                const scene=this.timeline.ob_scene[this.index];
-                if(!event.shiftKey || event.button!==0 || !scene.ob_camera?.isPerspectiveCamera)return;
-                event.preventDefault();event.stopImmediatePropagation();scene.cancelPan?.();
-                const start={x:event.clientX,y:event.clientY,...(this.orbit || defaultOrbit(this.timeline))};
-                const move=e=>{
-                    e.preventDefault();e.stopImmediatePropagation();
-                    this.orbit={yaw:clamp(start.yaw+(e.clientX-start.x)*renderingFor(this.timeline).camera.rotationSensitivity,-.65,.65),
-                        pitch:clamp(start.pitch+(e.clientY-start.y)*renderingFor(this.timeline).camera.rotationSensitivity,.06,.46)};
-                    positionActivityCamera(this.timeline,this.index);this.timeline.ob_render(this.index);
-                };
-                const finish=e=>{
-                    e.stopImmediatePropagation();window.removeEventListener('pointermove',move,true);
-                    window.removeEventListener('pointerup',finish,true);window.removeEventListener('pointercancel',finish,true);
-                    window.removeEventListener('blur',finish);
-                };
-                window.addEventListener('pointermove',move,{capture:true,passive:false});
-                window.addEventListener('pointerup',finish,true);window.addEventListener('pointercancel',finish,true);
-                window.addEventListener('blur',finish);
-            };
-            host.addEventListener('pointerdown',this.rotate,true);
         }
     }
     register(mesh,band) {
@@ -91,12 +69,16 @@ export class TimelineActivityFocus {
         if(perspective) {
             if(mesh.geometry.type==='SphereGeometry')mesh.geometry=track(new THREE.BoxGeometry(width,height,8));
             const material=mesh.material;
-            mesh.material=track(new THREE.MeshPhongMaterial({color:material.color,map:material.map,envMap:material.envMap,
-                transparent:material.transparent,opacity:material.opacity,shininess:style.shininess}));
             if(material.map && mesh.geometry.type==='PlaneGeometry') {
+                // Artwork stays unlit; its solid support receives metal and light.
+                material.userData.timelineIcon=true;
+                material.toneMapped=false;
                 const support=track(new THREE.Mesh(track(new THREE.BoxGeometry(width,height,6)),
-                    track(new THREE.MeshPhongMaterial({color:record.render?.color || band.eventColor || '#5899bd',shininess:style.shininess}))));
+                    t.ob_perspective.material(track,{color:record.render?.color || band.eventColor || '#5899bd'})));
                 support.position.z=-3;support.raycast=()=>{};mesh.add(support);
+            } else {
+                mesh.material=t.ob_perspective.material(track,{color:material.color,map:material.map,
+                    transparent:material.transparent,opacity:material.opacity});
             }
             const shadow=track(new THREE.Mesh(track(new THREE.PlaneGeometry(width+3,height+3)),
                 track(new THREE.MeshBasicMaterial({color:style.shadowColor,transparent:true,opacity:style.shadowOpacity,depthWrite:false}))));

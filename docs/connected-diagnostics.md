@@ -7,35 +7,31 @@ properties. Public examples below contain synthetic values.
 
 ## Launch URL
 
-Keep deployment addresses in the local source YAML, alongside `data_sources`:
+The existing source `connector` supplies the listening ports and transport:
 
 ```yaml
-web_ui:
-  entry_page: demos.html
-  port: 8123
-  host: localhost
-  context_path: /viewer
-# data_sources: your existing configured providers
+data_sources:
+  - namespace: sample
+    type: json_file
+    enable: true
+    connector: "secure_sse:8441|secure:8442"
+    data_model: /data/sample/yyyy/mm/dd
 ```
 
-`port` selects the connector serving the page; it does not create a listener.
-The connector must also exist in the source configuration. `context_path`
-mounts the embedded application there. HTTP/HTTPS comes from that connector,
-and the ready URL uses its actual bound port. The exact configured filename is
-preserved, including `.htm` versus `.html`. Without an entry page the server
-prints configuration guidance instead of guessing a URL.
+Open the desired HTML page on the chosen listener, for example
+`https://localhost:8442/openbexi_timeline_earthquake.html` for REST or the same
+page on port 8441 for live updates. HTTPS requires the deployment's configured
+certificate. The page discovers its model and data route through
+`/openbexi_timeline/config`; private source paths remain on the server.
 
-For a reverse proxy or separate UI service, set `external_base_url` to the
-browser-facing base (for example `https://example.test/viewer/`). The configured
-entry page is resolved against it. The server verifies its own listener's
-readiness; it cannot verify an external proxy's health. With multiple listeners,
-set `port` so the UI URL is announced only by its designated connector.
+No `web_ui` section is required. Older deployments may still use that optional
+section for a context path or a printed launch URL. It does not create listeners.
+When it is absent, use the connector's port and the desired page directly.
 
 Illustrative local output after successful startup:
 
 ```text
-Timeline service ready: scheme=http port=8123 context=/viewer route=/openbexi_timeline/sessions
-Web UI ready: http://localhost:8123/viewer/demos.html
+Timeline service ready: scheme=https port=8442 context= route=/openbexi_timeline/sessions
 ```
 
 ## What the UI sends
@@ -47,8 +43,9 @@ Web UI ready: http://localhost:8123/viewer/demos.html
 | Load visible/context records | GET same route | `matchProtocol=1`, `progressive=1`, `startDate`, `endDate`, `search`, `filter` |
 | Next batch | GET same route | Same query/window plus returned `cursor` |
 | Cancel continuation | GET same route | Same query/window/cursor plus `cancel=1` |
+| Conditional refresh | GET same route | Same query/window plus `If-None-Match`; unchanged completed windows return `304` |
 | Descriptor | POST same route | `ob_request=readDescriptor` and record identity |
-| SSE listener | `/openbexi_timeline_sse/sessions` | GET controls or data; `Accept: application/json` for finite batches, `text/event-stream` for legacy live snapshots |
+| SSE listener | GET `/openbexi_timeline_sse/sessions` | `Accept: application/json` for finite batches; `live=1` with `text/event-stream` for revision notifications |
 | Managed API data/models | `/api/v1/...` | See the [REST API guide](rest-api.md) and [OpenAPI](../swagger/openapi-v1.json) for authentication and CRUD |
 
 The browser uses real instants from its first connected frame; UTC display
@@ -58,6 +55,11 @@ batches), both adjacent buffers receive a page before current continuations.
 Later pages alternate among the three intervals. There is one active data fetch,
 at most four aligned retained windows, cancellation and stale-response guards.
 See [loader and scan limits](progressive-loading.md).
+
+REST stays idle after those finite loads. Navigation conditionally checks expired
+visible cache entries; **Refresh** checks all retained windows. SSE maintains one
+subscription, resumes with `Last-Event-ID`, and reloads changed windows while
+preserving the selected record and time span. Heartbeats do not trigger data reads.
 
 The UI attaches a random `loadId` to each logical load and a `purpose` of
 `initial`, `visible`, `past-prefetch`, `future-prefetch`, `refresh`, or `retry`.
@@ -163,3 +165,22 @@ Missing descriptors return HTTP 404 with `descriptorStatus: "not_found"`; invali
 identity/dates return 400 and malformed descriptor files return 500, each with a
 JSON body. Empty, truncated or malformed JSON is a request failure even under
 HTTP 200. The UI retains valid records and reports the operation and request ID.
+
+## Startup and filtering in 2.2.2
+
+For explicit HTML models, inspect the public configuration response first: its
+`data` route must match the listener. An SSE listener advertises
+`/openbexi_timeline_sse/sessions`; sending startup POST requests to the REST route
+on that listener used to return HTTP 405. Settings now use finite JSON requests.
+The live subscription starts with initial data loading and keeps the active range,
+filter, user and timeline parameters.
+
+Connection failures and empty intervals appear on the toolbar beside Refresh.
+Orange status messages open details without covering the plot. Record transfers
+use source rules and the active saved filter before serialization; see
+[filter syntax](filter-syntax.md). SSE revision messages contain no event payloads.
+
+Compare performance with the same model, time range, saved filter, source data,
+browser and server runtime. Measure both first response and first rendered
+records, plus request counts. Separate cold startup from warmed caches; keep
+operational captures and logs in ignored local storage.

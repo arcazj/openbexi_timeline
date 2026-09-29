@@ -77,6 +77,15 @@ status, separate session/event counts, loading coverage and timing.
 See [connected setup and diagnostics](docs/connected-diagnostics.md) and
 [progressive loading](docs/progressive-loading.md) for configuration and protocol details.
 
+If a search has no loaded matches, the timeline automatically searches earlier
+configured files in the background. The right side of the toolbar shows the date
+being checked or the number of files examined, with **Stop search** beside it.
+Stopping keeps the view and displayed records. A match brings its time range
+into view at the current zoom; active filters and **Sort by** remain in effect. A final no-match
+message requires a complete search of eligible history. Unreadable sources,
+failed requests and older servers with limited search support show an incomplete
+result. See [historical search](docs/progressive-loading.md#historical-search).
+
 To run the managed-data API locally, install **JDK 17 or later** and **Maven**, then run:
 
 ```sh
@@ -127,8 +136,14 @@ explains local import/export, server file CRUD, and applying a draft. The
 
 ## Copyright and Licensing
 
-**Current version: [2.2.0](https://github.com/arcazj/openbexi_timeline/releases/tag/v2.2.0)**, OpenBEXI Timeline 2.2.
-The [release notes](docs/release-2.2.md) describe the included changes, verified
+**Current version: [2.3.0](docs/release-2.3.0.md)**, OpenBEXI Timeline 2.3.
+This release adds historical search with progress and cancellation, filtered REST
+and SSE updates, advanced filter expressions, saved sorting, matching Overview
+band colors, and configurable [3D perspective and appearance](docs/perspective.md).
+The UI always opens in **2D**. Enable 3D to restore your saved viewpoint or use
+the built-in reference preset, also applied to Claude Monet and Dinosaurs.
+Metalness affects the view span and activities; icon artwork keeps its colors.
+The [release notes](docs/release-2.3.0.md) describe the included changes, verified
 checks and remaining scope. Create the reviewed source archive and its
 SHA-256 manifest in `dist/` with:
 

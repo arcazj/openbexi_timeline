@@ -1,4 +1,5 @@
 import {renderingFor} from './openbexi_timeline_rendering.js';
+import {dateAxisHeight} from './openbexi_timeline_paging.js';
 /** Timeline presentation controls. The WebGL scene stays intact when switching views. */
 export class TimelineViews {
     constructor(timeline) {
@@ -163,6 +164,9 @@ export class TimelineViews {
             timeline.dateToBandPixelOffSet(this.sceneIndex, mainBand, timeline.ob_scene.sync_time) : 0;
         const center = scene.width / 2 + referenceOffset - this.frame.scrollLeft;
         marker.style.left = (center - parseInt(marker.style.width, 10) / 2) + "px";
+        const axisHeight=mainBand?.intervalUnitPos==='TOP'?dateAxisHeight(mainBand):0;
+        marker.style.top = Math.max(0,(timeline.ob_timeline_header.offsetHeight || parseFloat(this.frame.style.top) || 0)+axisHeight-16)+'px';
+        marker.style.zIndex = '35';
         marker.style.visibility = this.mode === "table" || center < 0 || center > width ? "hidden" : "visible";
     }
 
@@ -171,6 +175,12 @@ export class TimelineViews {
         const active=document.activeElement;
         const focused=this.tablePanel.contains(active)?{page:active.dataset.page,key:active.dataset.record}:null;
         const entries=[];
+        const recordBands=new Map();
+        for(const band of vp?.fullBands || scene.bands || []) {
+            if(band.name.includes('overview_'))continue;
+            for(const session of band.sessions || [])for(const record of session.activities || [session])
+                recordBands.set(record.matchKey || (record.namespace || '')+':'+record.id,band);
+        }
         const records=scene.sessions?.densityRecords || scene.sessions?.events;
         for(const session of Array.isArray(records)?records:[]) {
             if(!session || session.zone!==undefined) continue;
@@ -191,6 +201,22 @@ export class TimelineViews {
                 (!t.ob_results?.supported && String(activity.render?.backgroundColor).toUpperCase()==='#F8DF09')) {
                 row.className='ob_event_table_match';row.setAttribute('aria-label','Search match: '+data.title);
             }
+            row.classList.toggle('ob_event_table_selected',key===t.ob_results?.selectedKey);
+            if(key===t.ob_results?.selectedKey)row.setAttribute('aria-selected','true');
+            const titleContent=()=>{
+                const marker=document.createElement('span');marker.className='ob_table_marker';marker.setAttribute('aria-hidden','true');
+                const band=recordBands.get(key) || scene.bands?.find(item=>!item.name.includes('overview_'));
+                marker.style.backgroundColor=activity.render?.color ||
+                    (activity.end || activity.activities ? band?.SessionColor : band?.eventColor) || '#238448';
+                const icon=activity.render?.image ?? band?.image;
+                if(icon) {
+                    const image=document.createElement('img');image.alt='';image.src=icon;
+                    image.onload=()=>marker.classList.add('ob_table_marker_image');
+                    image.onerror=()=>{image.remove();marker.classList.remove('ob_table_marker_image');};
+                    marker.append(image);
+                }
+                return marker;
+            };
             const date=value=>value && t.formatEventDate?t.formatEventDate(value):value;
             const values={title:data.title,start:date(activity.start),end:date(activity.end),
                 source:activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,
@@ -199,10 +225,12 @@ export class TimelineViews {
                 const value=values[column.field];
                 const cell=row.insertCell();cell.textContent=value===undefined || value===null || value===''?'\u2014':String(value);
                 cell.title=cell.textContent;
+                if(column.field==='title')cell.prepend(titleContent());
             }
             if(vp) {
                 const button=document.createElement('button');button.type='button';button.className='ob_table_record';
                 button.textContent=data.title || 'Event details';button.title=button.textContent;button.dataset.record=key;
+                button.prepend(titleContent());
                 button.setAttribute('aria-label','Details: '+button.textContent);
                 button.onclick=()=>t.ob_open_descriptor(this.sceneIndex,activity);
                 const titleColumn=columns.findIndex(column=>column.field==='title');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {coveredRange,timelineGaps,elapsedLabel,clusterEvents,neighboringEntry,seekTimelineRecord} from '../src/openbexi_timeline_exploration.js';
+import {coveredRange,timelineGaps,elapsedLabel,clusterEvents,neighboringEntry,seekTimelineRecord,searchTimelineHistory} from '../src/openbexi_timeline_exploration.js';
 import {densityMap,projectMap} from '../src/openbexi_timeline_adaptive.js';
 import {adaptiveTickSettings,bandTicks} from '../src/openbexi_timeline_ticks.js';
 import {formatTimelineDate} from '../src/openbexi_timeline_data.js';
@@ -68,6 +68,75 @@ function response(url,events,nextCursor=null) {
         query:u.searchParams.get('search'),hasCondition:true,complete:!nextCursor,nextCursor,revision:'fixture',
         domain:{from:u.searchParams.get('startDate'),to:u.searchParams.get('endDate')}}}));
 }
+
+function historyResponse(url,events=[],{nextCursor=null,incomplete=false,exhausted=!nextCursor,supported=true,warnings=[],complete=exhausted && !incomplete}={}) {
+    const u=new URL(url);
+    return new Response(JSON.stringify({events,timelineMatch:{version:1,progressive:true,query:u.searchParams.get('search'),
+        hasCondition:true,nextCursor,complete,domain:{from:iso(base-200*day),to:u.searchParams.get('endDate')},warnings,
+        history:{direction:'backward',exhausted,incomplete,supported,checkingRange:{from:iso(base-114*day),to:iso(base-113*day)},filesExamined:40}}}));
+}
+
+test('History search continues beyond 32 pages, retains source filters and sorting, and releases the remaining cursor on a match',async()=>{
+    const previous=globalThis.fetch,requests=[],progress=[];let page=0;
+    globalThis.fetch=async input=>{
+        const url=new URL(input);requests.push(url);
+        if(url.searchParams.has('cancel'))return new Response('{}');
+        page++;
+        return historyResponse(url,page===40?[{id:'may-21',start:'2026-05-21T12:00:00Z',searchMatch:true,data:{title:'DB locked'}}]:
+            [event('ignored',-1,{searchMatch:false})],{nextCursor:'history-'+page});
+    };
+    try {
+        const result=await searchTimelineHistory('http://localhost/sessions?filter=namespace%3Aservice&sortBy=namespace&userName=guest',{
+            query:'locked',range:{from:base,to:base+day},onProgress:state=>progress.push(state)});
+        assert.equal(result.record.id,'may-21');assert.equal(page,40);
+        assert.ok(requests.every(url=>url.searchParams.get('filter')==='namespace:service' && url.searchParams.get('sortBy')==='namespace'));
+        assert.ok(requests.every(url=>url.searchParams.get('history')==='backward' && url.searchParams.get('endDate')===iso(base+day)));
+        assert.equal(requests.at(-1).searchParams.get('cancel'),'1');assert.equal(requests.at(-1).searchParams.get('cursor'),'history-40');
+        assert.equal(progress.at(-1).pages,40);assert.equal(progress.at(-1).filesExamined,40);
+    } finally {globalThis.fetch=previous;}
+});
+
+test('Only exhaustive readable history can report no matches; partial and unsupported scans stay incomplete',async()=>{
+    const previous=globalThis.fetch;
+    try {
+        for(const options of [{},{incomplete:true},{supported:false},{exhausted:false},{complete:false},{warnings:['One file could not be read.']}]) {
+            globalThis.fetch=async input=>historyResponse(input,[],options);
+            const result=await searchTimelineHistory('http://localhost/sessions',{query:'absent',range:{from:base,to:base+day}});
+            assert.equal(result.complete,Object.keys(options).length===0);
+        }
+        globalThis.fetch=async input=>response(input,[],'legacy-cursor');
+        const result=await searchTimelineHistory('http://localhost/sessions',{query:'absent',range:{from:base,to:base+day}});
+        assert.equal(result.unsupported,true);assert.equal(result.complete,false);
+    } finally {globalThis.fetch=previous;}
+});
+
+test('Stopping history aborts its outstanding page and releases both known and late returned cursors',async()=>{
+    const previous=globalThis.fetch,controller=new AbortController(),requests=[];let finish,page=0;
+    globalThis.fetch=input=>{
+        const url=new URL(input);requests.push(url);
+        if(url.searchParams.has('cancel'))return Promise.resolve(new Response('{}'));
+        if(++page===1)return Promise.resolve(historyResponse(url,[],{nextCursor:'known'}));
+        return new Promise(resolve=>{finish=()=>resolve(historyResponse(url,[event('stale',-1,{searchMatch:true})],{nextCursor:'late'}));});
+    };
+    try {
+        const pending=searchTimelineHistory('http://localhost/sessions',{query:'locked',range:{from:base,to:base+day},signal:controller.signal});
+        await waitFor(()=>finish);controller.abort();
+        assert.ok(requests.some(url=>url.searchParams.get('cursor')==='known' && url.searchParams.has('cancel')));
+        finish();await assert.rejects(pending,{name:'AbortError'});
+        assert.ok(requests.some(url=>url.searchParams.get('cursor')==='late' && url.searchParams.has('cancel')));
+    } finally {globalThis.fetch=previous;}
+});
+
+test('History rejects repeated cursors and preserves warnings from earlier pages',async()=>{
+    const previous=globalThis.fetch;let page=0;
+    try {
+        globalThis.fetch=async input=>new URL(input).searchParams.has('cancel')?new Response('{}'):historyResponse(input,[],{nextCursor:'repeated'});
+        await assert.rejects(searchTimelineHistory('http://localhost/sessions',{query:'locked',range:{from:base,to:base+day}}),/repeated/);
+        globalThis.fetch=async input=>++page===1?historyResponse(input,[],{nextCursor:'next',warnings:['One file could not be read.']}):historyResponse(input);
+        const result=await searchTimelineHistory('http://localhost/sessions',{query:'locked',range:{from:base,to:base+day}});
+        assert.equal(result.complete,false);assert.deepEqual(result.warnings,['One file could not be read.']);
+    } finally {globalThis.fetch=previous;}
+});
 test('Earlier search respects server matches and filters, grows backward and releases its newest cursor',async()=>{
     const previous=globalThis.fetch,requests=[];
     globalThis.fetch=async input=>{const url=new URL(input);requests.push(url);
@@ -215,10 +284,10 @@ test('Lock view and Auto scale off prevent automatic navigation; keyboard zoom k
     } finally {f.close();}
 });
 
-test('Startup stays clear and the empty panel appears only after an unsuccessful search finishes',async()=>{
+test('Empty and failed intervals use the toolbar and keep the plot clear',async()=>{
     const f=await local([]);const {r}=f;
     try {
-        assert.equal(r.empty.hidden,true);
+        assert.equal(r.empty.hidden,true,'Empty state stays in the toolbar');
         assert.equal(r.explorer.lockLabel.hidden,false);
         assert.equal(r.explorer.findPrevious.parentElement,r.toolbar);
         assert.equal(r.explorer.findNext.previousElementSibling,r.explorer.findPrevious);
@@ -226,10 +295,27 @@ test('Startup stays clear and the empty panel appears only after an unsuccessful
         r.request({query:'missing'});
         assert.equal(r.empty.hidden,true,'A pending search does not flash an empty state');
         await waitFor(()=>!r.pending && !r.explorer.searchQuery);
-        assert.equal(r.empty.hidden,false);
-        assert.equal(r.empty.querySelectorAll('button').length,2,'Activity navigation belongs in the toolbar');
-        r.request({query:''});await waitFor(()=>!r.pending);
         assert.equal(r.empty.hidden,true);
+        assert.equal(r.empty.querySelectorAll('button').length,0,'Activity navigation belongs in the toolbar');
+        r.request({query:''});await waitFor(()=>!r.pending);
+        assert.equal(r.empty.hidden,true,'Clearing search keeps the plot clear');
+    } finally {f.close();}
+});
+
+test('An empty grouped search preserves the time window when groups disappear and return',async()=>{
+    const f=await local();const {r,t}=f;
+    try {
+        t.ob_sortBy='namespace';r.request();await waitFor(()=>!r.pending);
+        r.captureRanges();const before={...r.explorer.range()};
+        const grouped=t.ob_scene[0].bands.find(band=>!band.name.includes('overview_')).name;
+        r.request({query:'absent',mode:'only'});await waitFor(()=>!r.pending && !r.explorer.searchQuery);
+        r.captureRanges();
+        assert.notEqual(t.ob_scene[0].bands.find(band=>!band.name.includes('overview_')).name,grouped);
+        assert.equal(r.explorer.range().from,before.from);assert.equal(r.explorer.range().to,before.to);
+        r.request({query:''});await waitFor(()=>!r.pending);
+        r.captureRanges();
+        assert.equal(t.ob_scene[0].bands.find(band=>!band.name.includes('overview_')).name,grouped);
+        assert.equal(r.explorer.range().from,before.from);assert.equal(r.explorer.range().to,before.to);
     } finally {f.close();}
 });
 

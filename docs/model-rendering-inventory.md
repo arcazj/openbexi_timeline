@@ -6,7 +6,7 @@ Rendering configuration lives in the optional root `rendering` object. `src/open
 
 Omitting `rendering`, specifying an empty object, or explicitly providing all defaults produces the same geometry. Existing demo model properties remain in place. File-backed demo models continue to reject unknown fields. Provider models use `schemas/legacy-model.schema.json`, which preserves legacy extensions, numeric-string intervals, `AUTO` subintervals and alternate group colors while validating the new rendering object strictly.
 
-Settings apply to the whole timeline. Existing band, record and source-specific settings retain their established scope. Explicit `params[0].camera` overrides the initial rendering camera mode. Saved layout preferences and URL/share state retain their existing precedence. Camera controls, searches and navigation change runtime state; they do not rewrite the model.
+Settings apply to the whole timeline. Existing band, record and source-specific settings retain their established scope. Page loads always start in 2D; `params[0].camera` takes precedence over `rendering.camera.mode` in the model editor preview. Saved layout preferences and URL/share state retain their existing precedence. Camera controls, searches and navigation change runtime state; they do not rewrite the model.
 
 All values in the tables below are presentation preferences, not engine resource or security limits. Null optional theme colors retain the current stylesheet theme. Validation rejects unknown rendering keys, invalid types, values outside the listed bounds, empty visible-column sets and label width inversions. The editor displays the validation issue at the model property path.
 
@@ -99,7 +99,7 @@ Consumer: `openbexi_timeline_overview_panel.js: createPanel/syncPanel/syncAxis`.
 
 ### camera
 
-3D camera and lighting. Existing params.camera takes precedence for initial mode.
+3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.
 
 Consumer: `openbexi_timeline.js: ob_set_camera; activity_focus: positionActivityCamera/begin`.
 
@@ -107,12 +107,12 @@ Consumer: `openbexi_timeline.js: ob_set_camera; activity_focus: positionActivity
 | --- | --- | --- |
 | `rendering.camera.mode` | `"Orthographic"` | Orthographic, Perspective |
 | `rendering.camera.fieldOfView` | `30` | 10 to 100 |
-| `rendering.camera.yaw` | `-0.42` | -0.65 to 0.65 |
-| `rendering.camera.pitch` | `0.22` | 0.06 to 0.46 |
-| `rendering.camera.roll` | `-0.12` | -0.5 to 0.5 |
+| `rendering.camera.yaw` | `-0.9948376736367678` (-57°) | -π to π |
+| `rendering.camera.pitch` | `0.2792526803190927` (16°) | -1.48 to 1.48 |
+| `rendering.camera.roll` | `0` | -0.5 to 0.5 |
 | `rendering.camera.rotationSensitivity` | `0.002` | 0.0001 to 0.02 |
 | `rendering.camera.ambientColor` | `"#ffffff"` | string |
-| `rendering.camera.ambientIntensity` | `1.5` | 0 to 5 |
+| `rendering.camera.ambientIntensity` | `0.3` | 0 to 5 |
 | `rendering.camera.directionalColor` | `"#ffffff"` | string |
 | `rendering.camera.directionalIntensity` | `1.8` | 0 to 5 |
 

@@ -11,7 +11,7 @@ export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 // and 2D text measurement are stubbed; this is not a screenshot/visual test.
 export async function createTimelineHarness(options = {}) {
     const dom = new JSDOM(options.html || '<!doctype html><html><head></head><body></body></html>', {
-        url: options.url || 'http://localhost/', runScripts: 'outside-only'
+        url: options.url || 'http://localhost/', runScripts: 'outside-only', pretendToBeVisual: true
     });
     const context = dom.getInternalVMContext();
     const {window} = dom;

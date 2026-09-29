@@ -82,7 +82,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
         t.data=location.origin+'/__loading_fixture';t.load_data(0);
     });
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
-    await expect(page.locator('.ob_results_status')).toContainText('Loading more records');
+    await expect(page.locator('.ob_loading_status')).toContainText('Loading items');
     await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('aria-busy','false');
     await capture(page,'connected-loading'+(testInfo.project.name==='narrow'?'-narrow':''));
@@ -91,7 +91,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
     await expect(page.locator('.ob_results_status')).toContainText('Loading cancelled');
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(2);waiting.splice(0).forEach(resolve=>resolve());
-    await expect(page.locator('.ob_results_status')).toContainText('Update failed');
+    await expect(page.locator('.ob_results_status')).toContainText('unavailable');
     await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(3);waiting.splice(0).forEach(resolve=>resolve());

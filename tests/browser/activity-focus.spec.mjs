@@ -2,20 +2,118 @@ import {test,expect} from '@playwright/test';
 import fs from 'node:fs/promises';
 
 const base=Date.parse('2026-09-12T12:00:00Z'),hour=3600000;
+test('Metallic 3D keeps icon artwork and colored sessions visible',async({page})=>{
+    const f=await setup(page,{markers:true,textureIcon:true});
+    await page.getByAltText('2D or 3D view',{exact:true}).click();await ready(page);
+    await page.waitForFunction(()=>get_ob_timeline('ob_timeline_2').ob_activity_focus.items.some(item=>item.mesh.material.map?.image?.width>0));
+    const state=await page.evaluate(async()=>{
+        const {Vector3}=await import('three');
+        const t=get_ob_timeline('ob_timeline_2'),s=t.ob_scene[0],p=t.ob_perspective;
+        const icon=t.ob_activity_focus.items.find(item=>item.mesh.material.userData.timelineIcon).mesh;
+        const original={map:icon.material.map.uuid,color:icon.material.color.getHexString()};
+        p.appearance.metalness=1;p.appearance.roughness=.15;p.applyAppearance();t.ob_render(0);
+        const point=icon.getWorldPosition(new Vector3()).project(s.ob_camera);
+        const gl=s.ob_renderer.getContext(),pixel=new Uint8Array(4);
+        gl.readPixels(Math.floor((point.x+1)*gl.drawingBufferWidth/2),Math.floor((point.y+1)*gl.drawingBufferHeight/2),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);
+        const session=t.ob_activity_focus.items.find(item=>item.record.end)?.mesh.material;
+        return {original,map:icon.material.map.uuid,color:icon.material.color.getHexString(),type:icon.material.type,
+            point:point.toArray(),pixel:[...pixel],session:{type:session.type,metalness:session.metalness,color:session.color.getHexString()}};
+    });
+    expect(state.type).toBe('MeshBasicMaterial');expect(state.map).toBe(state.original.map);expect(state.color).toBe(state.original.color);
+    expect(Math.abs(state.point[0])).toBeLessThan(1);expect(Math.abs(state.point[1])).toBeLessThan(1);
+    expect(state.pixel[3]).toBe(255);expect(Math.max(...state.pixel.slice(0,3))).toBeGreaterThan(30);
+    expect(state.session).toMatchObject({type:'MeshStandardMaterial',metalness:1,color:'ee9e18'});
+    expect(f.errors).toEqual([]);
+});
+test('Cursor sits above the view span; table icons, fallback colors and overview selection remain clear',async({page},info)=>{
+    const f=await setup(page,{markers:true});
+    const marker=page.locator('.ob_results_marker');
+    const markerBox=await marker.boundingBox(),frame=await page.getByRole('region',{name:'Timeline events',exact:true}).boundingBox();
+    const axisHeight=await page.evaluate(async()=>{
+        const {dateAxisHeight}=await import('/src/openbexi_timeline_paging.js');
+        return dateAxisHeight(get_ob_timeline('ob_timeline_2').ob_scene[0].bands.find(band=>!band.name.includes('overview_')));
+    });
+    expect(markerBox.y).toBeLessThan(frame.y+axisHeight);
+    expect(markerBox.y).toBeGreaterThanOrEqual(frame.y);
+    expect(markerBox.y+markerBox.height).toBeGreaterThanOrEqual(frame.y+axisHeight);
+    expect(markerBox.y+markerBox.height).toBeLessThanOrEqual(frame.y+axisHeight+5);
+    await page.getByRole('button',{name:'Table',exact:true}).click();await ready(page);
+    const rows=page.locator('.ob_table_record');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0).locator('.ob_table_marker_image img')).toBeVisible();
+    await expect(rows.nth(1).locator('.ob_table_marker')).toHaveCSS('background-color','rgb(36, 155, 202)');
+    await expect(rows.nth(2).locator('img')).toHaveCount(0);
+    await expect(rows.nth(2).locator('.ob_table_marker')).toHaveCSS('background-color','rgb(238, 158, 24)');
+    const before=await timelineState(page);
+    await rows.nth(2).click();
+    await page.waitForFunction(()=>{const r=get_ob_timeline('ob_timeline_2').ob_results;return !r.focusAnimation && !r.pending;});
+    const focused=await timelineState(page);
+    expect((focused.range.from+focused.range.to)/2).toBeCloseTo(base+hour+7.5*60000,-1);
+    expect(focused.range.to-focused.range.from).toBeCloseTo(before.range.to-before.range.from,-1);
+    await expect(page.locator('.ob_event_table_selected')).toHaveCount(1);
+    await page.getByRole('button',{name:'Split',exact:true}).click();await ready(page);
+    const overview=page.locator('[data-overview-selection] [data-selected-key]').first();
+    await expect(overview).toBeVisible();
+    expect(Number(await overview.getAttribute('width'))).toBeGreaterThanOrEqual(12);
+    expect(await overview.evaluate(node=>node.parentNode===node.ownerSVGElement.lastElementChild)).toBe(true);
+    await expect(page.locator('.ob_activity_selected')).toBeVisible();
+    await page.screenshot({path:info.outputPath('selection-and-icons.png')});
+    expect(f.errors).toEqual([]);
+});
+
+test('Gantt selection pans gradually, retains zoom and yields immediately to the next gesture',async({page})=>{
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    const f=await setup(page),before=await timelineState(page);
+    const samples=await page.evaluate(async()=>{
+        const t=get_ob_timeline('ob_timeline_2'),scene=t.ob_scene[0],r=t.ob_results;
+        const item=t.ob_activity_focus.items.find(item=>item.record.id==='activity-0');
+        scene.dragControls.dispatchEvent({type:'dragstart',object:item.mesh});
+        scene.dragControls.dispatchEvent({type:'dragend',object:item.mesh});
+        const samples=[];
+        while(r.focusAnimation) {
+            await new Promise(requestAnimationFrame);
+            r.captureRanges();const range=[...r.visibleRanges.values()][0];samples.push((range.from+range.to)/2);
+        }
+        return samples;
+    });
+    await ready(page);
+    expect(new Set(samples.map(Math.round)).size).toBeGreaterThan(3);
+    const focused=await timelineState(page);
+    expect((focused.range.from+focused.range.to)/2).toBeCloseTo(base-hour,-1);
+    expect(focused.range.to-focused.range.from).toBeCloseTo(before.range.to-before.range.from,-1);
+    expect(focused.items.filter(item=>item.selected)).toHaveLength(1);
+    await page.evaluate(()=>{
+        const t=get_ob_timeline('ob_timeline_2');
+        t.ob_open_descriptor(0,t.ob_results.snapshot.entries.find(entry=>entry.record.id==='activity-2').record);
+    });
+    await page.waitForFunction(()=>!!get_ob_timeline('ob_timeline_2').ob_results.focusAnimation);
+    const box=await page.getByRole('region',{name:'Timeline events',exact:true}).boundingBox();
+    await page.mouse.move(box.x+box.width*.4,box.y+box.height*.7);await page.mouse.wheel(0,-100);
+    await page.waitForFunction(()=>!get_ob_timeline('ob_timeline_2').ob_results.focusAnimation);
+    await ready(page);
+    expect((await timelineState(page)).range.to-(await timelineState(page)).range.from).toBeLessThan(before.range.to-before.range.from);
+    expect(f.errors).toEqual([]);
+});
 const titles=[
     'Volcano monitoring: Great Sitkin — continuing eruption with elevated surface temperatures and persistent steam emissions',
     'Volcano monitoring: Kilauea — lava fountains inside the summit crater; observation teams are checking changes in gas emissions and ground deformation',
     'Volcano monitoring: Ahyi Seamount — underwater activity detected; full analysis from acoustic stations is available for review'
 ];
 const records=titles.map((title,index)=>({id:'activity-'+index,start:new Date(base+(index-1)*hour).toISOString(),namespace:'volcano',data:{title}}));
-async function setup(page,{dense=false,compact=false}={}) {
+async function setup(page,{dense=false,compact=false,markers=false,textureIcon=false}={}) {
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:new Date(base).toISOString(),data:'/__focus.json',showCurrentTime:false});
     const events=compact?Array.from({length:20},(_,index)=>({...records[index%3],id:'compact-'+index,
         start:new Date(base+(index-10)*4*60000).toISOString(),end:new Date(base+(index-10)*4*60000+90000).toISOString(),
         data:{title:'Activity '+(index+1)},render:{color:['#399a35','#ee9e18','#249bca'][index%3]}})):
-        dense?Array.from({length:12},(_,index)=>({...records[index%3],id:'dense-'+index,start:new Date(base+index*60000).toISOString()})):records;
+        dense?Array.from({length:12},(_,index)=>({...records[index%3],id:'dense-'+index,start:new Date(base+index*60000).toISOString()})):records.map(record=>({...record}));
+    if(markers) {
+        for(let index=0;index<events.length;index++)events[index]={...events[index],render:{color:['#399a35','#249bca','#ee9e18'][index],
+            image:index===0?(textureIcon?'icon/ob_info.png':'/icon/ob_marker.png'):index===2?'/missing-activity-icon.png':''}};
+        events[2].end=new Date(base+hour+15*60000).toISOString();
+        await page.route('**/missing-activity-icon.png',route=>route.fulfill({status:404,body:'Not found'}));
+    }
     await page.route('**/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
     await page.route('**/__focus.json',route=>route.fulfill({json:{events}}));
     await page.goto('/openbexi_timeline_earthquake.html');await ready(page);
@@ -24,7 +122,7 @@ async function setup(page,{dense=false,compact=false}={}) {
 async function ready(page) {
     await page.waitForFunction(()=>{
         const t=window.get_ob_timeline?.('ob_timeline_2');
-        return t?.ob_results?.snapshot && !t.ob_results.pending && t.ob_viewport.width===innerWidth &&
+        return t?.ob_results?.snapshot && !t.ob_results.pending && t.ob_viewport.width===t.ob_timeline_panel.clientWidth &&
             t.ob_scene[0].ob_camera?.type===t.ob_scene[0].ob_camera_type+'Camera' &&
             t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
     });
@@ -35,7 +133,7 @@ const timelineState=page=>page.evaluate(()=>{
         items:t.ob_activity_focus.items.map(item=>({key:item.key,start:item.record.start,x:item.record.x_relative,
             z:item.mesh.position.z,base:item.base,scale:item.mesh.scale.toArray(),selected:item.glow.visible,
             size:item.mesh.geometry.parameters,fontSize:item.sprites[0]?.textHeight,row:item.record.row,
-            labelSize:item.metrics.fontSize})),pages:t.ob_viewport.pages.length,orbit:t.ob_activity_focus.orbit || {yaw:-.42,pitch:.22}};
+            labelSize:item.metrics.fontSize})),pages:t.ob_viewport.pages.length,orbit:t.ob_perspective.cameraValues()};
 });
 async function readableLabels(page,expectedTitles=titles) {
     const boxes=await page.locator('.ob_activity_label').evaluateAll(labels=>labels.map(label=>({
@@ -94,12 +192,14 @@ test('3D uses an angled board and keeps full titles readable without lifting the
     expect(before.items.every(item=>item.z===item.base)).toBe(true);
     expect(before.items.every(item=>item.fontSize===item.labelSize)).toBe(true);
     const region=page.getByRole('region',{name:'Timeline events',exact:true}),box=await region.boundingBox();
-    await page.keyboard.down('Shift');await page.mouse.move(box.x+box.width*.4,box.y+box.height*.7);
+    await page.evaluate(()=>get_ob_timeline('ob_timeline_2').ob_perspective.setAdjusting(true));
+    await page.mouse.move(box.x+box.width*.4,box.y+box.height*.7);
     await page.mouse.down();await page.mouse.move(box.x+box.width*.4+65,box.y+box.height*.7+12,{steps:8});
-    await page.mouse.up();await page.keyboard.up('Shift');
+    await page.mouse.up();
+    await page.evaluate(()=>get_ob_timeline('ob_timeline_2').ob_perspective.setAdjusting(false));
     const after=await timelineState(page);
     expect(after.range.from).toBeCloseTo(before.range.from,-1);expect(after.range.to).toBeCloseTo(before.range.to,-1);
-    expect(after.orbit.yaw).toBeGreaterThan(before.orbit.yaw);
+    expect(Math.abs(after.orbit.yaw-before.orbit.yaw)).toBeGreaterThan(1);
     await readableLabels(page);
     await page.mouse.wheel(0,-100);await ready(page);await readableLabels(page);
     await expect(page.locator('.ob_activity_selected')).toBeVisible();

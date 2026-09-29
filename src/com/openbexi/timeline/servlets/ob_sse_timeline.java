@@ -46,6 +46,18 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
         resp.setCharacterEncoding("UTF-8");
         // Read parameters
         data_configuration _data_configuration = this._data_configuration.forRequest(req);
+        if ("1".equals(req.getParameter("live")) && "json_file".equals(_data_configuration.getType(0))) {
+            var handler=new ob_handle_http_requests(req,resp,_data_configuration);
+            handler.ob_handle_header(req,resp);
+            try {
+                SavedFilters.resolve(_data_configuration.getConfiguration());
+                FilterExpression.compile((String)_data_configuration.getConfiguration().get("filter"));
+                TimelineLiveUpdates.stream(req,resp,_data_configuration);
+            }
+            catch(IllegalArgumentException error) {handler.jsonError(req,resp,400,error.getMessage());}
+            catch(IOException error) {TimelineRequestLog.begin(req,resp).failure("failed");}
+            return;
+        }
         String ob_request = req.getParameter("ob_request");
         String startDate = req.getParameter("startDate");
         String endDate = req.getParameter("endDate");
@@ -112,7 +124,8 @@ public class ob_sse_timeline extends HttpServlet implements HttpSessionListener 
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doOptions(req, resp);
+        new ob_handle_http_requests(req,resp,_data_configuration.forRequest(req)).ob_handle_header(req,resp);
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @Override

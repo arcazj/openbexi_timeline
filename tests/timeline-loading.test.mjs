@@ -7,12 +7,139 @@ const waitFor=async predicate=>{
     const deadline=Date.now()+6000;
     while(!predicate()) {assert.ok(Date.now()<deadline,'Loading must settle'); await new Promise(resolve=>setTimeout(resolve,15));}
 };
-async function connected({abortRequests=true}={}) {
+async function finishCycle(f,offset,answer) {
+    let cursor=offset;
+    const deadline=Date.now()+6000;
+    while(f.r.fetching || f.r.pending || cursor<f.requests.length) {
+        assert.ok(Date.now()<deadline,'A bounded loading cycle must finish');
+        while(cursor<f.requests.length) {
+            const request=f.requests[cursor++];
+            if(new URL(request.url).searchParams.has('cancel'))request.resolve(new Response('{}'));
+            else answer(request);
+        }
+        await new Promise(resolve=>setTimeout(resolve,15));
+    }
+}
+
+test('REST becomes idle, reuses adjacent cached ranges and revalidates without rebuilding unchanged data',async()=>{
+    const f=await connected(),{h,t,r,requests,settings}=f;
+    try {
+        const timers=[],setTimeout=h.window.setTimeout.bind(h.window);
+        h.window.setTimeout=(callback,delay,...args)=>{timers.push(delay);return setTimeout(callback,delay,...args);};
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['cached'],null,true,{'ETag':'W/"one"','X-Timeline-Revision':'one'}));
+        const before=requests.length,snapshot=r.snapshot;
+        await new Promise(resolve=>setTimeout(resolve,160));
+        assert.equal(requests.length,before);assert.ok(!timers.some(delay=>delay>=30000),'REST schedules no idle polling');
+        await t.ob_loader.load(t.ob_loader.input);
+        assert.equal(requests.length,before);assert.equal(r.snapshot,snapshot);
+        r.refreshButton.click();
+        await finishCycle(f,before,request=>{
+            assert.equal(request.options.headers['If-None-Match'],'W/"one"');
+            request.resolve(new Response(null,{status:304,headers:{'X-Timeline-Revision':'one'}}));
+        });
+        assert.equal(r.snapshot,snapshot,'304 keeps the same scene snapshot');
+        assert.equal(t.ob_loader.sourceRevision,'one');
+        const stale=requests.length;
+        for(const entry of t.ob_loader.cache)entry.checkedAt=Date.now()-31000;
+        const navigation=t.ob_loader.load(t.ob_loader.input);
+        await finishCycle(f,stale,request=>{
+            assert.equal(request.options.headers['If-None-Match'],'W/"one"');
+            request.resolve(new Response(null,{status:304,headers:{'X-Timeline-Revision':'one'}}));
+        });
+        await navigation;
+        assert.equal(requests.length,stale+1,'Navigation revalidates only the expired visible window');
+    } finally {f.close();}
+});
+
+test('Refresh reconciles deleted records including an empty final snapshot and preserves the viewport',async()=>{
+    const f=await connected(),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['removed','retained'],null,true,{'ETag':'W/"old"','X-Timeline-Revision':'old'}));
+        r.captureRanges();const range=JSON.stringify([...r.visibleRanges]);
+        let offset=requests.length;
+        r.refreshButton.click();
+        await finishCycle(f,offset,request=>batch(request,['retained'],null,true,{'ETag':'W/"updated"','X-Timeline-Revision':'updated'}));
+        assert.deepEqual([...r.snapshot.entries].map(entry=>entry.record.id),['retained']);
+        offset=requests.length;r.refreshButton.click();
+        await finishCycle(f,offset,request=>batch(request,[],null,true,{'ETag':'W/"empty"','X-Timeline-Revision':'empty'}));
+        assert.equal(r.snapshot.entries.length,0);assert.equal(r.empty.hidden,true);
+        r.captureRanges();assert.equal(JSON.stringify([...r.visibleRanges]),range);
+        assert.equal(t.ob_loader.sourceRevision,'empty');
+    } finally {f.close();}
+});
+
+test('An empty archive scan stops at finite visible and neighbor page budgets',async()=>{
+    const f=await connected(),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        t.ob_loader.limits.pages=3;t.ob_loader.limits.bufferPages=1;
+        let page=0;
+        await finishCycle(f,1,request=>batch(request,[],'page-'+(++page)));
+        assert.equal(page,5);assert.equal(r.error,'');assert.equal(r.remoteMetadata.loadLimited,true);
+        assert.ok(requests.some(request=>new URL(request.url).searchParams.get('cancel')==='1'));
+        const before=requests.length;
+        await t.ob_loader.load(t.ob_loader.input);
+        assert.equal(requests.length,before,'An unchanged view does not recursively restart paused scans');
+    } finally {f.close();}
+});
+
+test('SSE revisions refresh changes once, reconcile deletions and ignore closed streams without moving the view',async()=>{
+    const f=await connected({data:'http://localhost/openbexi_timeline_sse/sessions'}),{h,t,r,requests,settings}=f;
+    const streams=[];
+    class Stream {
+        constructor(url){this.url=url;this.listeners={};streams.push(this);}
+        addEventListener(type,handler){this.listeners[type]=handler;}
+        close(){this.closed=true;}
+        message(revision){this.onmessage?.({data:JSON.stringify({revision}),lastEventId:revision});}
+    }
+    h.window.EventSource=Stream;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        assert.equal(streams.length,1,'Live connection starts before finite loading finishes');
+        const subscribed=new URL(streams[0].url);
+        assert.equal(subscribed.searchParams.get('userName'),'guest');
+        assert.equal(subscribed.searchParams.get('timelineName'),t.name);
+        assert.equal(subscribed.searchParams.get('filter'),'');
+        assert.ok(subscribed.searchParams.has('startDate'));
+        await finishCycle(f,1,request=>batch(request,['live'],null,true,{'X-Timeline-Revision':'one'}));
+        assert.equal(streams.length,1);const stream=streams[0];
+        assert.equal(new URL(stream.url).searchParams.get('live'),'1');
+        stream.onopen();assert.equal(r.liveState,'Live');
+        r.captureRanges();const range=JSON.stringify([...r.visibleRanges]);
+        const selected=r.snapshot.entries[0].key;r.selectActivity(selected);
+        let offset=requests.length;
+        stream.message('one');await new Promise(resolve=>setTimeout(resolve,130));
+        assert.equal(requests.length,offset);
+        stream.message('two');stream.message('two');
+        await waitFor(()=>requests.length>offset);
+        await finishCycle(f,offset,request=>batch(request,['live','new'],null,true,{'X-Timeline-Revision':'two'}));
+        assert.equal(streams.length,1);assert.equal(r.selectedKey,selected);assert.equal(r.snapshot.entries.length,2);
+        r.captureRanges();assert.equal(JSON.stringify([...r.visibleRanges]),range);
+        stream.onerror();assert.match(r.liveState,/Reconnecting/);
+        stream.onopen();offset=requests.length;stream.message('two');
+        await new Promise(resolve=>setTimeout(resolve,130));assert.equal(requests.length,offset);
+        stream.message('three');await waitFor(()=>requests.length>offset);
+        await finishCycle(f,offset,request=>batch(request,[],null,true,{'X-Timeline-Revision':'three'}));
+        assert.equal(r.snapshot.entries.length,0);
+        r.fail(new Error('Temporary disconnected read'));offset=requests.length;
+        stream.onopen();
+        await waitFor(()=>requests.length>offset);
+        await finishCycle(f,offset,request=>batch(request,['reconnected'],null,true,{'X-Timeline-Revision':'three'}));
+        assert.equal(r.error,'');assert.equal(r.snapshot.entries[0].record.id,'reconnected');
+        offset=requests.length;t.ob_loader.cancel();stream.message('late');
+        await new Promise(resolve=>setTimeout(resolve,130));
+        assert.equal(stream.closed,true);assert.equal(requests.length,offset);assert.equal(r.liveState,'');
+    } finally {f.close();}
+});
+async function connected({abortRequests=true,data='http://localhost/sessions'}={}) {
     const h=await createTimelineHarness({calendar:true});
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
     t.params=model.params; t.bands=model.bands;
-    Object.assign(t.params[0],{data:'http://localhost/sessions',date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
+    Object.assign(t.params[0],{data,date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
     const requests=[];
     h.window.fetch=(url,options={})=>new Promise((resolve,reject)=>{
         requests.push({url:String(url),options,resolve,reject});
@@ -23,11 +150,11 @@ async function connected({abortRequests=true}={}) {
         backgroundColor:'#eef1f2',sortBy:'NONE',sources:[],filters:[{name:'ALL',current:'yes',filter_value:'',sortBy:'NONE',backgroundColor:'#eef1f2'}]};
     return {h,t,r:t.ob_results,requests,settings,close(){t.ob_loader?.cancel();h.close();}};
 }
-function batch(request, ids, cursor=null, complete=!cursor) {
+function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     const url=new URL(request.url),from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
     const events=ids.map((id,index)=>({id,namespace:'operations',series:index%2?'beta':'alpha',start:new Date((from+to)/2).toISOString(),
         data:{title:id,status:id==='nominal'?'nominal':'warning'},searchMatch:!!url.searchParams.get('search')}));
-    request.resolve({ok:true,json:async()=>({events,timelineMatch:{version:1,progressive:true,query:url.searchParams.get('search')||'',
+    request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,progressive:true,query:url.searchParams.get('search')||'',
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
 
@@ -372,6 +499,28 @@ test('Progressive overlap merges occurrences without collapsing empty or reused 
         assert.equal(r.snapshot.entries.find(entry=>entry.record.sourceRecordKey==='empty-one').record.data.title,'Updated occurrence');
         assert.ok(r.snapshot.entries.every(entry=>entry.record.data.sourceRecordKey===undefined));
         assert.equal(t.ob_loader.cache.flatMap(entry=>entry.events).filter(record=>record.sourceRecordKey==='empty-one').length,1);
+    } finally {f.close();}
+});
+
+test('Creating a server filter saves the selected Sort by together with its expression',async()=>{
+    const f=await connected();const {h,t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        batch(requests[1],['warning','nominal']);await waitFor(()=>r.snapshot?.entries.length===2 && !r.pending);
+        t.ob_create_filters(0,undefined,'add_filter');
+        h.window.document.querySelector('[aria-label="New filter name"]').value='Grouped warnings';
+        h.window.document.querySelector('[aria-label="New filter expression"]').value='expr: status = "warning"';
+        h.window.document.querySelector('[aria-label="Sort by"]').value='series';
+        t.ob_load_filters('addFilter',0,undefined,true);
+        const request=requests.find(req=>new URL(req.url).searchParams.get('ob_request')==='addFilter');assert.ok(request);
+        const url=new URL(request.url);assert.equal(url.searchParams.get('sortBy'),'series');
+        assert.equal(url.searchParams.get('filter'),'expr: status = "warning"');
+        settings.filters[0].current='no';settings.filters.push({name:'Grouped warnings',current:'yes',filter_value:'expr: status = "warning"',sortBy:'series'});
+        request.resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>t.ob_sortBy==='series' && requests.at(-1)!==request);
+        assert.equal(new URL(requests.at(-1).url).searchParams.get('sortBy'),'series');
+        batch(requests.at(-1),['warning']);await waitFor(()=>!r.pending && r.snapshot.entries.length===1);
+        assert.ok(t.ob_viewport.fullBands.some(band=>band.groupBy==='series'));
     } finally {f.close();}
 });
 

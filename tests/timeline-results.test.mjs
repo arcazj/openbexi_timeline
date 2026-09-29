@@ -31,6 +31,28 @@ async function load() {
 const visible = t => t.ob_scene[0].bands.filter(b => !b.name.includes('overview_')).flatMap(b => b.sessions.flatMap(s => s.activities));
 const overview = t => t.ob_scene[0].bands.filter(b => b.name.includes('overview_')).flatMap(b => b.sessions.flatMap(s => s.activities));
 
+test('Status buttons explain partial coverage and loading ends on completion, cancellation and failure',async()=>{
+    const {h,t,r}=await load();
+    try {
+        r.complete=false;r.remoteData=structuredClone(r.projection);
+        const metadata={version:1,query:'',hasCondition:false,complete:false,revision:'status-test',
+            domain:{from:new Date(r.domain.from).toISOString(),to:new Date(r.domain.to).toISOString()},
+            warnings:['A configured source is unavailable.']};
+        r.remoteMetadata=metadata;
+        r.fetching=true;r.updateUI();
+        assert.equal(r.status.tagName,'BUTTON');assert.equal(r.status.textContent,'Partial data');
+        assert.equal(r.status.nextElementSibling,r.loadingStatus);assert.equal(r.loadingStatus.hidden,false);
+        r.status.click();assert.equal(r.details.open,true);assert.match(r.summary.textContent,/configured source is unavailable/);
+        r.detailsToggle.dispatchEvent(new h.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        assert.equal(r.details.open,false);assert.equal(r.fetching,true,'Closing details does not cancel loading');
+        r.cancelLoad();assert.equal(r.loadingStatus.hidden,true);assert.equal(r.status.textContent,'Loading cancelled');
+        r.cancelled=false;r.fetching=false;r.fail(new Error('Service unreachable'));
+        assert.equal(r.loadingStatus.hidden,true);r.status.click();assert.match(r.statusExplanation.textContent,/Retry or Refresh/);
+        r.error='';r.complete=true;r.remoteMetadata={...metadata,complete:true,warnings:[]};r.updateUI();
+        assert.equal(r.loadingStatus.hidden,true);assert.equal(r.status.hidden,true);
+    } finally {h.close();}
+});
+
 test('Overview stays centered on the main interval as records arrive, preserving its chosen span', async () => {
     const h=await createTimelineHarness();
     try {
@@ -158,8 +180,8 @@ test('Cold connected startup renders loading, reports first-response failures an
         await settle();
         assert.match(r.summary.textContent,/Cannot read the configured analysis scope/);
         assert.ok(r.status.classList.contains('ob_update_failed'));
-        assert.equal(r.status.getAttribute('role'),'button');
-        r.status.dispatchEvent(new h.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+        assert.equal(r.status.tagName,'BUTTON');
+        r.status.click(); // Native button keyboard activation is covered in Chromium.
         assert.equal(r.details.open,true);
         assert.ok(h.window.document.querySelector('canvas'));
         t.load_data(0);
@@ -203,6 +225,24 @@ test('Wide connected startup has a visible band even when the first request fail
     } finally {h.close();}
 });
 
+test('A replacement selection survives the queued render that settles the previous movement',async()=>{
+    const {h,t,r}=await load();
+    try {
+        const records=r.snapshot.entries.map(entry=>entry.record),first=records[0],last=records.at(-1);
+        r.focusRecord(first);
+        await new Promise(resolve=>setTimeout(resolve,45));
+        // Pointer-down settles the old movement before the next click selects.
+        r.cancelFocus();
+        r.focusRecord(last);
+        await waitFor(()=>!r.focusAnimation && !r.pending);
+        r.captureRanges();
+        const visible=r.visibleRanges.values().next().value;
+        const center=(Date.parse(last.start)+Date.parse(last.end || last.start))/2;
+        assert.ok(Math.abs((visible.from+visible.to)/2-center)<2,'The newest selected record reaches the center');
+        assert.equal(r.selectedKey,r.snapshot.entries.find(entry=>entry.record.id===last.id).key);
+    } finally {h.close();}
+});
+
 test('Highlight, only, empty and clear share identities, counts, colors, selection and stable real ranges', async () => {
     const {h,t,r} = await load();
     try {
@@ -224,7 +264,7 @@ test('Highlight, only, empty and clear share identities, counts, colors, selecti
         assert.equal(t.ob_views.tablePanel.querySelectorAll('tbody tr').length, 5);
         assert.deepEqual(plain([...r.ranges]), range);
         r.request({query:'no-such-record'}); await settle();
-        assert.equal(r.empty.hidden, false);
+        assert.equal(r.empty.hidden, true);
         assert.equal(r.fitButton.disabled, true);
         assert.equal(overview(t).length, 0);
         assert.ok(t.ob_scene[0].bands.every(b => Number.isFinite(b.height)));
