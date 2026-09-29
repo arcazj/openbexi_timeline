@@ -117,7 +117,8 @@ ob_ajax_timeline extends HttpServlet {
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doOptions(req, resp);
+        new ob_handle_http_requests(req,resp,_data_configuration.forRequest(req)).ob_handle_header(req,resp);
+        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @Override

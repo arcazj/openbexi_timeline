@@ -98,6 +98,52 @@ export class TimelineResults {
         if(this.timeline.ob_viewport)this.timeline.ob_viewport.anchor=entry.key;
     }
 
+    cancelFocus(settle = true) {
+        if (!this.focusAnimation) return;
+        window.cancelAnimationFrame(this.focusAnimation.frame);
+        this.focusAnimation=null;this.gesture=false;
+        this.captureRanges();
+        if (settle) {this.request();this.timeline.ob_loader?.navigationChanged();}
+    }
+
+    focusRecord(record) {
+        this.cancelFocus(false);
+        this.explorer.interrupt();this.selectRecord(record);
+        const from=instant(record.start),to=instant(record.end || record.start);
+        if (!Number.isFinite(from) || !Number.isFinite(to)) return;
+        const t=this.timeline,scene=t.ob_scene[0];
+        scene.cancelPan?.();
+        const animation=this.focusAnimation={};
+        animation.frame=window.requestAnimationFrame(()=>{
+            if(this.focusAnimation!==animation)return;
+            animation.started=true;
+            this.captureRanges();
+            const band=scene.bands.find(item=>!overview(item));
+            const mesh=scene.getObjectByName(band?.name),range=this.visibleRanges.get(band?.name);
+            if (!mesh || !range) {this.focusAnimation=null;return;}
+            const center=(from+to)/2,span=range.to-range.from;
+            const destination={from:center-span/2,to:center+span/2};
+            const frame=t.ob_timeline_body_frame,width=frame.clientWidth || scene.width;
+            const target=(frame.scrollLeft || 0)+width/2-scene.width/2-t.dateToBandPixelOffSet(0,band,center);
+            const startX=mesh.position.x,started=window.performance.now();
+            const duration=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : 650;
+            this.gesture=true;this.overviewDefaultsFrozen=true;
+            const step=now=>{
+                if (this.focusAnimation!==animation) return;
+                const progress=duration?Math.min(1,(now-started)/duration):1;
+                const eased=progress*progress*(3-2*progress);
+                t.move_band(0,band.name,startX+(target-startX)*eased,mesh.position.y,mesh.position.z,true);
+                t.ob_render(0);
+                if (progress<1) animation.frame=window.requestAnimationFrame(step);
+                else {
+                    this.focusAnimation=null;this.gesture=false;
+                    this.navigate(destination,true,{immediate:true,automatic:true});
+                }
+            };
+            animation.frame=window.requestAnimationFrame(step);
+        });
+    }
+
     pruneRanges() {
         const names=new Set(this.rangeBands().filter(band=>!overview(band)).map(band=>band.name));
         for (const ranges of [this.ranges,this.visibleRanges])
@@ -128,6 +174,7 @@ export class TimelineResults {
     request(patch = {}, delay = 0) {
         this.explorer.changed(patch);
         const keys = Object.keys(patch);
+        if(keys.length)this.cancelFocus(false);
         this.presentationUpdate = keys.length === 0 && Boolean(this.snapshot) &&
             (Boolean(this.timeline.staticData) || this.remoteMetadata?.query === this.state.query);
         if (keys.length) {
@@ -237,7 +284,7 @@ export class TimelineResults {
         return true;
     }
 
-    beginGesture() { this.explorer.interrupt();this.gesture = true; this.overviewDefaultsFrozen=true; }
+    beginGesture() { this.cancelFocus(false);this.explorer.interrupt();this.gesture = true; this.overviewDefaultsFrozen=true; }
     endGesture() {
         this.gesture = false;
         this.captureRanges();
@@ -334,6 +381,7 @@ export class TimelineResults {
 
     navigate(range, fitVisible = false, {immediate = false, automatic = false, centerBounds = null, render = true} = {}) {
         if (!Number.isFinite(range?.from) || !Number.isFinite(range?.to) || range.to<=range.from) return;
+        this.cancelFocus(false);
         if(!automatic)this.explorer.interrupt();
         this.centerBounds=centerBounds;
         const scene=this.timeline.ob_scene[0];
@@ -501,23 +549,24 @@ export class TimelineResults {
             control.setAttribute('aria-label',label); control.title = label;
         }
         this.search.insertBefore(zoomIn,autoLabel); this.search.insertBefore(zoomOut,autoLabel);
-        this.details = node('details', undefined, {class:'ob_results_details'});
+        this.details = node('details', undefined, {class:'ob_results_details',id:t.name+'_status_details'});
         this.detailsToggle = node('summary', 'Search details');
+        this.statusExplanation = node('p', '', {class:'ob_status_explanation'});
         this.summary = node('div', undefined, {class:'ob_results_summary'});
-        this.details.append(this.detailsToggle, this.summary);
+        this.details.append(this.detailsToggle, this.statusExplanation, this.summary);
         this.details.addEventListener('toggle', () => {
             header.classList.toggle('ob_results_expanded', this.details.open);
+            for (const control of [this.status,this.liveStatus]) control?.setAttribute('aria-expanded',String(this.details.open));
             this.layout();
         });
         this.details.addEventListener('keydown', event => {
             if (event.key === 'Escape') { this.details.open = false; this.detailsToggle.focus(); }
         });
-        this.status = node('span', undefined, {class:'ob_results_status',role:'status','aria-live':'polite','aria-atomic':'true'});
-        const openFailure = () => { if (this.error) { this.details.open = true; this.detailsToggle.focus(); } };
-        this.status.addEventListener('click', openFailure);
-        this.status.addEventListener('keydown', event => {
-            if (this.error && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openFailure(); }
-        });
+        const openDetails = () => { this.details.open=true;this.detailsToggle.focus(); };
+        this.status = button('',openDetails);
+        this.status.className='ob_results_status';
+        this.status.setAttribute('aria-live','polite');
+        this.status.setAttribute('aria-atomic','true');
         this.feedback = node('div', undefined, {class:'ob_results_feedback'});
         this.feedback.append(this.details, this.status);
         this.retryButton = button('Retry', () => { this.retrying=true;this.timeline.load_data(0); });
@@ -525,28 +574,47 @@ export class TimelineResults {
         this.narrowButton = button('Narrow time window', () => this.zoom(0.5));
         this.narrowButton.title = 'Halve the visible time range and load that interval.';
         this.feedback.append(this.narrowButton);
-        this.availableButton=button('Go to available interval',()=>{
-            const available=this.remoteMetadata?.availableRange;
-            if (!available) return;
-            const main=this.ranges.values().next().value,span=main.to-main.from;
-            const center=instant(available.from);
-            this.navigate({from:center-span/2,to:center+span/2});
+        this.refreshButton=button('Refresh',()=>{
+            if(t.ob_loader?.input)t.ob_loader.load(t.ob_loader.input,{refresh:true});
+            else t.load_data(0);
         });
-        this.availableButton.title='Navigate to an interval observed in the source. Your filters still apply; coverage may be partial.';
+        this.refreshButton.title='Check for updated data in this view.';
+        this.liveStatus=button('',openDetails);
+        this.liveStatus.className='ob_live_status';
+        for (const control of [this.status,this.liveStatus]) {
+            control.setAttribute('aria-controls',this.details.id);
+            control.setAttribute('aria-expanded','false');
+        }
+        this.loadingStatus=node('span','Loading items…',{class:'ob_loading_status ob_connection_warning',role:'status','aria-live':'polite'});
+        this.loadingStatus.hidden=true;
+        this.statusGroup=node('div',undefined,{class:'ob_status_controls'});
+        this.feedback.append(this.liveStatus);
+        this.availableButton=button('Go to latest data',()=>{
+            const available=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
+            if (!available) return;
+            const main=this.visibleRanges.values().next().value || this.ranges.values().next().value;
+            if(!main)return;
+            const span=main.to-main.from;
+            const center=instant(available.from);
+            this.navigate({from:center-span/2,to:center+span/2},true);
+        });
+        this.availableButton.title='Go to the latest timestamp observed while loading. Coverage may be partial.';
         this.feedback.append(this.availableButton);
         const titleSlot=node('div',undefined,{class:'ob_results_title_slot'}); titleSlot.append(t.ob_time_marker);
         header.replaceChildren(nav, this.search, titleSlot, utilities, this.toolbar, this.feedback);
         if (t.ob_marker) {
             t.ob_marker.classList.add('ob_results_marker');
             t.ob_marker.style.top = '0px';
-            t.ob_timeline_body_frame.append(t.ob_marker);
+            t.ob_timeline_panel.append(t.ob_marker);
         }
         const wheel = event => {
-            if (!this.supported || (this.gesture && t.ob_scene[0].ob_pan_frame === undefined) ||
+            if (t.ob_perspective?.adjusting && t.ob_timeline_body_frame.contains(event.target)) return;
+            if (!this.supported || (this.gesture && !this.focusAnimation && t.ob_scene[0].ob_pan_frame === undefined) ||
                 event.target.closest('input,select,button,textarea,summary')) return;
             const footer = event.target.closest('.ob_docked_overview');
             if (!footer && !t.ob_timeline_body_frame.contains(event.target)) return;
             if (!Number.isFinite(event.deltaY) || !event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            this.cancelFocus(false);
             event.preventDefault();
             const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1);
             this.zoom(Math.exp(Math.max(-0.4, Math.min(0.4, delta * 0.002))), event.clientX, footer?.dataset.overviewBand || false);
@@ -555,9 +623,6 @@ export class TimelineResults {
         t.ob_timeline_body_frame.title = 'Scroll up to zoom in; scroll down to zoom out.';
         this.empty = node('div', undefined, {class: 'ob_results_empty', role: 'status'});
         this.empty.hidden = true;
-        this.empty.append(node('p', 'No matching events or sessions'), button('Edit search', () => t.ob_search_input.focus()),
-            button('Clear search', () => this.clearButton.click()));
-        t.ob_timeline_body_frame.append(this.empty);
         t.ob_stop.tabIndex = 0;
         t.ob_stop.setAttribute('role', 'button');
         t.ob_stop.addEventListener('keydown', event => {
@@ -572,6 +637,7 @@ export class TimelineResults {
         }, true);
         t.ob_timeline_panel.addEventListener('pointerup', event => { t.ob_scene[0].panReleaseTime = event.timeStamp; }, true);
         document.addEventListener('pointerdown', () => {
+            this.cancelFocus();
             const scene = t.ob_scene[0];
             if (scene.ob_pan_frame !== undefined) {
                 scene.cancelPan();
@@ -579,10 +645,13 @@ export class TimelineResults {
             }
         }, true);
         const guard = event => {
+            if (event.type==='keydown' && event.key==='Escape' && this.details.open && this.details.contains(event.target)) return;
+            if (event.type==='keydown' && event.key==='Escape' && t.ob_perspective?.adjusting && t.ob_timeline_body_frame.contains(event.target)) return;
             if ((this.loading || this.fetching) && event.type === 'keydown' && event.key === 'Escape') {
                 event.preventDefault(); this.cancelLoad(); return;
             }
-            if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help) return;
+            if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help ||
+                event.target === this.status || event.target === this.liveStatus || event.target===this.explorer.stop || this.details.contains(event.target)) return;
             if (event.type === 'keydown' && event.key === 'Tab') return;
             event.preventDefault(); event.stopImmediatePropagation();
         };
@@ -593,6 +662,8 @@ export class TimelineResults {
         this.selectionNotice.append(node('span', 'Selection hidden by results filter '), button('Show context', () => this.request({mode: 'highlight'})));
         header.append(this.selectionNotice);
         this.explorer.mount(header);
+        this.statusGroup.append(this.retryButton,this.liveStatus,this.status,this.loadingStatus);
+        this.toolbar.append(this.refreshButton,this.feedback,this.statusGroup);
         this.updateUI();
     }
 
@@ -639,7 +710,7 @@ export class TimelineResults {
         this.disabledControls ??= new Map();
         if (busy) {
             for (const control of t.ob_timeline_header.querySelectorAll('button,input,select,img')) {
-                if (control === t.ob_stop || control === t.ob_help) continue;
+                if (control === t.ob_stop || control === t.ob_help || control === this.status || control === this.liveStatus || control===this.explorer.stop) continue;
                 if (!this.disabledControls.has(control)) this.disabledControls.set(control, Boolean(control.disabled));
                 control.disabled = true; control.setAttribute('aria-disabled', 'true');
             }
@@ -650,6 +721,7 @@ export class TimelineResults {
             this.disabledControls.clear();
         }
         if (t.ob_scene[0].dragControls) t.ob_scene[0].dragControls.enabled = !busy;
+        t.ob_perspective?.syncInteraction();
         if (busy && !this.wasLoading) {
             this.focusBeforeLoad = document.activeElement;
             if (t.ob_timeline_panel.contains(this.focusBeforeLoad) || t.ob_timeline_right_panel?.contains(this.focusBeforeLoad))
@@ -700,19 +772,28 @@ export class TimelineResults {
         this.toolbar.hidden = !this.supported && !active && !this.state.auto;
         for (const control of this.matchControls) control.hidden = !active;
         t.ob_search_input.setAttribute('aria-invalid', this.error ? 'true' : 'false');
-        const status = this.error ? 'Update failed — open details' : this.cancelled ? 'Loading cancelled' : this.fetching ? 'Loading more records…' : this.pending && !this.presentationUpdate ? (this.snapshot ? 'Updating…' : 'Loading timeline…') :
+        const working=Boolean(this.loading || this.fetching || this.pending && !this.presentationUpdate || this.explorer.seeking);
+        const status = this.error ? (this.snapshot?.entries.length?'Update unavailable — displayed records retained':'Source unavailable — open details') : this.cancelled ? 'Loading cancelled' : working && !this.remoteMetadata?.warnings?.length && !this.remoteMetadata?.loadLimited ? '' :
             !this.supported ? 'Match controls unavailable' : this.remoteMetadata?.loadLimited ? 'Data limit reached' : !this.complete ? 'Partial data' :
                 this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No matches' : '';
         this.status.textContent = status;
         this.status.classList.toggle('ob_update_failed', Boolean(this.error));
-        this.status.setAttribute('role', this.error ? 'button' : 'status');
-        this.status.tabIndex = this.error ? 0 : -1;
+        this.status.classList.toggle('ob_connection_warning',Boolean(this.error || this.cancelled ||
+            this.remoteMetadata?.warnings?.length));
+        this.loadingStatus.hidden=!working;
         this.retryButton.hidden = !this.error && !this.cancelled;
+        this.refreshButton.hidden=Boolean(t.staticData);
+        this.refreshButton.disabled=this.fetching || this.loading;
+        this.liveStatus.textContent=this.liveState || '';
+        this.liveStatus.hidden=!this.liveState;
+        this.liveStatus.classList.toggle('ob_connection_warning',Boolean(this.liveState && this.liveState!=='Live'));
+        this.toolbar.hidden=this.toolbar.hidden && !status && !working && !this.liveState && t.staticData;
         this.narrowButton.hidden = !this.remoteMetadata?.loadLimited;
         this.narrowButton.disabled = this.pending || this.fetching;
-        this.status.title = this.error || (!this.complete ? 'Coverage and source warnings are available in details.' : '');
-        this.feedback.hidden = !active && !status;
-        if (!active && !status) this.details.open = false;
+        this.status.title = 'Explain this status';
+        this.liveStatus.title='Explain the live connection';
+        this.feedback.hidden = !active && !status && !working && !this.liveState;
+        if (!active && !status && !working && !this.liveState) this.details.open = false;
         this.detailsToggle.textContent = active ? 'Search details' : 'Timeline details';
         this.fitButton.disabled = this.pending || Boolean(this.error) || !this.supported || !this.complete || !this.snapshot?.matchingBounds || !this.snapshot.hasCondition;
         this.fitButton.title = this.fitButton.disabled ? 'An active query and complete matching bounds are required.' : 'Fit matching real timestamps with padding';
@@ -735,14 +816,32 @@ export class TimelineResults {
         this.summary.textContent = text;
         const noRecords=this.supported && this.snapshot?.counts.eligible.events===0 && this.snapshot?.counts.eligible.sessions===0;
         if (!t.staticData && !this.remoteMetadata && !this.error) this.summary.textContent='Loading timeline data';
-        this.availableButton.hidden=!(noRecords && this.remoteMetadata?.availableRange);
-        if (noRecords && this.remoteMetadata && !this.error && !this.remoteMetadata.loadLimited) {
-            this.status.textContent=this.fetching?'Looking for records in this interval…':this.complete?'No records in this interval':'No records loaded; coverage is partial';
+        const available=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
+        const range=this.visibleRanges.values().next().value;
+        const visibleRecords=this.snapshot?.entries.some(entry=>!range ||
+            instant(entry.record.start)<=range.to && instant(entry.record.end || entry.record.start)>=range.from);
+        this.availableButton.hidden=!(!visibleRecords && available);
+        if(!this.availableButton.hidden)this.feedback.hidden=false;
+        if(available)this.availableButton.title='Latest observed data: '+available.from+'; coverage may be partial.';
+        if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !this.remoteMetadata.loadLimited) {
+            this.status.textContent=working?'':this.complete?'No records in this interval':'No records loaded; coverage is partial';
             this.feedback.hidden=false;
         }
         this.empty.hidden = true;
         this.selectionNotice.hidden = !this.selectedKey || this.projection?.displayedKeys.includes(this.selectedKey);
         this.explorer.update();
+        this.status.hidden=!this.status.textContent;
+        this.statusGroup.hidden=this.status.hidden && this.loadingStatus.hidden && this.liveStatus.hidden && this.retryButton.hidden;
+        const explanation=this.error ? this.error+' Use Retry or Refresh to request data again.' : this.cancelled ?
+            'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.remoteMetadata?.loadLimited ?
+            'The loading limit was reached. Narrow the time window to continue.' : working && !this.remoteMetadata?.warnings?.length ?
+            'Items are loading in batches. Records already displayed remain available.' : !this.complete ?
+            'Coverage is incomplete in one or more loaded or prefetched time ranges. Counts describe loaded records. Review the warnings and ranges below; Refresh checks the sources again.' :
+            this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No loaded records match the current search and filters.' :
+            'The requested data finished loading. The counts and time ranges below describe the current view.';
+        const live=this.liveState==='Live' ? ' Live updates are connected; matching changes are loaded automatically.' : this.liveState ?
+            ' The live connection is reconnecting. Displayed records remain available; Refresh can check for updates.' : '';
+        this.statusExplanation.textContent=(this.explorer.historySearch && this.explorer.message?this.explorer.message+' ':'')+explanation+live;
         this.updateLoadingUI();
         this.layout();
     }

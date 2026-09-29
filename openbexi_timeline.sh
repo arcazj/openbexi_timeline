@@ -32,6 +32,10 @@ elif [[ $# -eq 2 && ( $1 == -data_conf || $1 == -data_path ) ]]; then
     [[ $ob_launch_config = /* ]] || ob_launch_config="$ob_launch_cwd/$ob_launch_config"
     set -- "$1" "$ob_launch_config"
 fi
+if [[ -n ${ob_launch_config:-} && ! -f $ob_launch_config ]]; then
+    printf '%s\n' 'Configuration not found. Pass -data_conf with an existing YAML file or set OPENBEXI_TIMELINE_CONFIG. Local startup configurations are not shipped with the release.' >&2
+    exit 1
+fi
 cd -- "$ob_launch_root"
 mkdir -p tomcat
 exec "$ob_launch_java" -cp "$ob_launch_root/target/classes:$ob_launch_root/target/runtime/*" \

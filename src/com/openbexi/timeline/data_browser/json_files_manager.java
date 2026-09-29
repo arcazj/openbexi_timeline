@@ -83,7 +83,7 @@ public class json_files_manager extends data_manager {
         if ("1".equals(_data_configuration.getConfiguration().get("matchProtocol"))) {
             if ("1".equals(_data_configuration.getConfiguration().get("progressive")))
                 return ProgressiveSourceScan.read(_data_configuration.getConfiguration(), _currentStartDateL, _currentEndDateL,
-                        events -> _include.isEmpty() && _exclude.isEmpty() ? events : filterEvents(events, _include, _exclude));
+                        this::filterSelected);
             if (pendingMatchResponse != null) {
                 JSONObject response = pendingMatchResponse; pendingMatchResponse = null; return response;
             }
@@ -119,8 +119,15 @@ public class json_files_manager extends data_manager {
                     jsonObject = (JSONObject) events;
                     JSONArray obj = (JSONArray) jsonObject.get("events");
                     obj = filterDates(obj, _currentStartDateL, _currentEndDateL);
+                    for(Object source:(JSONArray)_data_configuration.getConfiguration().get("startup configuration")) {
+                        JSONObject configured=(JSONObject)source;
+                        if(Objects.equals(configured.get("namespace"),entry.getValue())) {
+                            var predicate=FilterExpression.source(configured);
+                            obj.removeIf(value->!predicate.test((JSONObject)value));
+                        }
+                    }
                     if (!_include.equals("") || !_exclude.equals(""))
-                        obj = filterEvents(obj, _include, _exclude);
+                        obj = filterSelected(obj);
                     if (!_search.equals(""))
                         obj = searchEvents(obj, _search);
                     count += obj.size();
@@ -176,7 +183,7 @@ public class json_files_manager extends data_manager {
         try {
             JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
             return new MatchSourceScan(_currentStartDateL, _currentEndDateL,
-                    events -> _include.isEmpty() && _exclude.isEmpty() ? events : filterEvents(events, _include, _exclude))
+                    this::filterSelected)
                     .read(configurations, _search, scene);
         } catch (Exception error) {
             return MatchResults.failure(_search, scene, _currentStartDateL, _currentEndDateL,
@@ -614,6 +621,13 @@ public class json_files_manager extends data_manager {
 
     @Override
     public JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
+        if(filter_include!=null && filter_include.startsWith("expr:")) {
+            var include=FilterExpression.compile(filter_include);
+            var exclude=filter_exclude==null || filter_exclude.isEmpty()?null:FilterExpression.compile(filter_exclude);
+            JSONArray selected=new JSONArray();
+            for(Object value:events)if(include.test((JSONObject)value) && (exclude==null || !exclude.test((JSONObject)value)))selected.add(value);
+            return selected;
+        }
         if (filter_include.equals("") && filter_exclude.equals(""))
             return events;
 

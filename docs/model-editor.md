@@ -31,6 +31,7 @@ applied reload; unchanged sources retain their normal precedence.
 When launched from Settings, the preview inherits the visible date, search, view
 and camera. Editing the model's date or camera mode takes precedence over that
 context. Changing camera optics, such as field of view, keeps the inherited 2D/3D mode.
+Applying a model reloads the timeline in 2D. Enable 3D to use its saved perspective.
 **Use preview data URL in model** makes a chosen demo dataset explicit in a saved
 file, so reopening a copy does not depend on the original demo page's options.
 

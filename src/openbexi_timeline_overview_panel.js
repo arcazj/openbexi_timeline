@@ -35,13 +35,15 @@ function createPanel(timeline) {
     panel.appendChild(svg);
     timeline.ob_timeline_panel.appendChild(panel);
     const heading = svgElement('g');
+    const backgrounds = svgElement('g', {'data-overview-backgrounds': '', 'pointer-events':'none'});
     const content = svgElement('g', {'data-overview-content': ''});
     const windows = svgElement('g');
     const overviewAxis = {group: svgElement('g', {'data-overview-axis': 'overview'}), ticks: new Map()};
     // Match cues are appended above viewport shading in their own retained group.
     const matches = svgElement('g', {'data-overview-matches': ''});
-    svg.append(heading, content, windows, matches, overviewAxis.group);
-    const state = {panel, svg, heading, content, windows, matches, overviewAxis};
+    const selection = svgElement('g', {'data-overview-selection': '', 'pointer-events':'none'});
+    svg.append(backgrounds, heading, content, windows, matches, overviewAxis.group, selection);
+    const state = {panel, svg, backgrounds, heading, content, windows, matches, overviewAxis, selection};
     const controls=document.createElement('div'); controls.className='ob_overview_controls';
     for (const [label,title,action] of [
         [labels.previousOverviewLabel,labels.previousOverviewTitle,()=>timeline.ob_results.panOverview(state.band.name,-interaction.overviewPanFraction)],
@@ -168,7 +170,7 @@ function projectionKey(band, width, height, highlight) {
     // stale miniature geometry. This inexpensive scan never reads DOM layout.
     const key = [band, band.timeScale, band.sessions, band.zones, band.overviewRegions, width, height,
         band.overviewLabel, band.showContextLabel, band.viewportHandles, highlight];
-    for (const region of band.overviewRegions || []) key.push(region, region.sourceBand, region.y, region.height);
+    for (const region of band.overviewRegions || []) key.push(region, region.sourceBand, region.color, region.y, region.height);
     for (const zone of band.zones || []) key.push(zone, zone.id, zone.start, zone.end, zone.overviewY,
         zone.overviewHeight, zone.render?.color, zone.render?.opacity);
     for (const session of band.sessions || []) {
@@ -305,9 +307,17 @@ function syncPanel(timeline, index, band, panels, position, count) {
     const y = value => contentTop + (top - value) * scaleY;
     const highlight=searchActive && timeline.ob_results?.state.highlight !== false;
     const key = projectionKey(band, width, height, highlight);
+    const sourceColors = regions.map(region => (timeline.ob_viewport?.fullBands || bands)
+        .find(source => source.name === region.sourceBand)?.color || region.color || background);
+    key.push(...sourceColors);
     key.push(config);
     if (!equalKey(state.projectionKey, key)) {
         state.projectionKey = key;
+        state.backgrounds.replaceChildren();
+        regions.forEach((region, i) => state.backgrounds.append(svgElement('rect', {
+            x:0, y:y(region.y + region.height / 2), width, height:Math.max(0.5, region.height * scaleY),
+            fill:sourceColors[i], 'data-overview-band':region.sourceBand
+        })));
         state.content.replaceChildren();
         state.matches.replaceChildren();
         state.heading.replaceChildren();
@@ -401,6 +411,23 @@ function syncPanel(timeline, index, band, panels, position, count) {
     // A pan translates one retained group; events and zones keep their DOM nodes.
     attributes(state.content, {transform: `translate(${mesh.position.x} 0)`});
     attributes(state.matches, {transform: `translate(${mesh.position.x} 0)`});
+    const selectedKey=timeline.ob_results?.selectedKey;
+    const selectionKey=[selectedKey,state.projectionKey];
+    if (!equalKey(state.selectionKey,selectionKey)) {
+        state.selectionKey=selectionKey;state.selection.replaceChildren();
+        for(const session of band.sessions || []) for(const activity of session.activities || []) {
+            if(activity.matchKey!==selectedKey || !selectedKey)continue;
+            const left=width/2+(activity.overviewDuration?activity.x:activity.x_relative);
+            const size=Math.max(10,activity.height*scaleY+6);
+            const selected=svgElement('rect', {x:left-4,y:y(activity.y)-size/2,
+                width:Math.max(12,(activity.overviewDuration?activity.width:0)+8),height:size,rx:3,
+                fill:'#ffe04b','fill-opacity':.8,stroke:'#172b3a','stroke-width':2,
+                'data-selected-key':selectedKey,role:'img','aria-label':'Selected: '+(activity.data?.title || 'Record')});
+            selected.append(svgElement('title',{},'Selected: '+(activity.data?.title || 'Record')));
+            state.selection.append(selected);
+        }
+    }
+    attributes(state.selection, {transform: `translate(${mesh.position.x} 0)`});
     const heading = state.headingNodes;
     if (heading.background) attributes(heading.background, {x: visibleLeft + viewportWidth - (band.overviewLabel.length * 5.5 + 8) - 4});
     if (heading.title) attributes(heading.title, {x: band.overviewLabel ? visibleLeft + viewportWidth - 8 : visibleLeft + 8});

@@ -50,6 +50,12 @@ The native launchers use the same compiled classes and runtime JARs. Build with 
 
 The launchers preserve existing environment variables. `JDK_HOME`, then `JAVA_HOME`, select Java (otherwise the PATH Java is used). `OPENBEXI_TIMELINE_HOME` optionally selects the installation; otherwise the script's directory is used. Explicit configuration arguments take priority, followed by `OPENBEXI_TIMELINE_CONFIG`, the legacy `OPENBEXI_TIMELINE_DATA_PATH` configuration-file variable, and `yaml/sources_startup.yml`. Relative explicitly supplied paths are resolved from the caller's directory. JVM settings such as `JAVA_TOOL_OPTIONS` and the REST token variables pass through unchanged.
 
+`yaml/sources_startup.yml` is a local deployment file and is not shipped with the
+release. Supply an existing configuration explicitly or through the environment.
+The launchers report a missing file before starting Java. Public examples under
+`yaml/` describe connector and source settings; adapt their data paths and TLS
+settings for your installation. The static demo gallery needs no deployment YAML.
+
 Both Java launchers serve static files through an explicit public-asset allowlist. Browser modules, dependency assets, models, the catalog, `json/test-data`, documentation, schemas, and icons remain public. Repository internals, deployment YAML, arbitrary JSON files, Java sources, build output, dotfiles, and directory listings are unavailable. Symlinks cannot expose an unpublished file or escape the document root. The two existing browser view-test files remain available; other tests and developer tools are linked through GitHub. Add new public asset locations to `PublicAssetServlet` deliberately.
 
 Keep writable API data outside the static document root, provide tokens through environment variables or the deployment's secret manager, and terminate TLS at a trusted reverse proxy. Never place credentials in shared URLs or checked-in configuration. See [REST API deployment](rest-api.md) for role tokens and storage settings.

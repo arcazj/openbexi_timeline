@@ -113,6 +113,10 @@ async function drag(page, direction, kind = 'band') {
     expect(released.positions.every(Number.isFinite)).toBe(true);
     expect(Number.isFinite(released.marker)).toBe(true);
     expect(Math.sign(released.marker - point.marker)).toBe(-direction);
+    if(kind==='session') expect(await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        return Boolean(t.ob_results.selectedKey || t.ob_descriptor_record);
+    }),'Dragging an activity pans without selecting it or opening Data').toBe(false);
     return {direction, kind, held, released};
 }
 

@@ -341,7 +341,7 @@
         "camera": {
           "type": "object",
           "additionalProperties": false,
-          "description": "3D camera and lighting. Existing params.camera takes precedence for initial mode.",
+          "description": "3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.",
           "properties": {
             "mode": {
               "type": "string",
@@ -350,7 +350,7 @@
                 "Orthographic",
                 "Perspective"
               ],
-              "description": "Initial camera mode."
+              "description": "Camera mode for model preview. Page startup always uses 2D."
             },
             "fieldOfView": {
               "type": "number",
@@ -361,21 +361,21 @@
             },
             "yaw": {
               "type": "number",
-              "default": -0.42,
-              "minimum": -0.65,
-              "maximum": 0.65,
+              "default": -0.9948376736367678,
+              "minimum": -3.141592653589793,
+              "maximum": 3.141592653589793,
               "description": "Initial horizontal orbit angle in radians."
             },
             "pitch": {
               "type": "number",
-              "default": 0.22,
-              "minimum": 0.06,
-              "maximum": 0.46,
+              "default": 0.2792526803190927,
+              "minimum": -1.48,
+              "maximum": 1.48,
               "description": "Initial vertical orbit angle in radians."
             },
             "roll": {
               "type": "number",
-              "default": -0.12,
+              "default": 0,
               "minimum": -0.5,
               "maximum": 0.5,
               "description": "Board rotation in radians."
@@ -385,7 +385,7 @@
               "default": 0.002,
               "minimum": 0.0001,
               "maximum": 0.02,
-              "description": "Shift-drag rotation per pixel."
+              "description": "Orbit rotation sensitivity; 0.002 is the default speed."
             },
             "ambientColor": {
               "type": "string",
@@ -397,7 +397,7 @@
             },
             "ambientIntensity": {
               "type": "number",
-              "default": 1.5,
+              "default": 0.3,
               "minimum": 0,
               "maximum": 5,
               "description": "Perspective ambient light intensity."

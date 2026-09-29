@@ -29,6 +29,10 @@ if "%~1"=="-data_path" set "OB_LAUNCH_CONFIG=%~2"
 if not defined OB_LAUNCH_CONFIG goto run
 :resolveConfig
 for %%I in ("%OB_LAUNCH_CONFIG%") do set "OB_LAUNCH_CONFIG=%%~fI"
+if not exist "%OB_LAUNCH_CONFIG%" (
+  echo Configuration not found. Pass -data_conf with an existing YAML file or set OPENBEXI_TIMELINE_CONFIG. Local startup configurations are not shipped with the release.
+  exit /b 1
+)
 :run
 pushd "%OB_LAUNCH_ROOT%" || exit /b 1
 if not exist tomcat mkdir tomcat

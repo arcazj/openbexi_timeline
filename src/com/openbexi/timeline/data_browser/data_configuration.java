@@ -66,9 +66,11 @@ public class data_configuration {
         getConfiguration().put("search", req.getParameter("search"));
         getConfiguration().put("matchProtocol", req.getParameter("matchProtocol"));
         getConfiguration().put("progressive", req.getParameter("progressive"));
+        getConfiguration().put("history", req.getParameter("history"));
         getConfiguration().put("cursor", req.getParameter("cursor"));
         getConfiguration().put("cancel", req.getParameter("cancel"));
         String ob_filter = req.getParameter("filter");
+        getConfiguration().put("filterProvided", ob_filter != null);
         if (ob_filter != null)
             ob_filter = ob_filter.replaceAll("_PIPE_", "|")
                     .replaceAll("_PARR_", "\\)")

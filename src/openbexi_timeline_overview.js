@@ -50,7 +50,7 @@ export function projectOverviewSessions(timeline, sceneIndex) {
             const sourceCenter = (extent.top + extent.bottom) / 2;
             const scaleX = timePerPixel(source) / timePerPixel(overview);
             const mapY = y => center + (y - sourceCenter) * scaleY;
-            overview.overviewRegions.push({sourceBand: source.name, y: center, height, scaleX});
+            overview.overviewRegions.push({sourceBand: source.name, color: source.color || '#dfe7e9', y: center, height, scaleX});
             let sourceSessions = source.sessions || [];
             if (timeline.ob_results?.supported) {
                 const laidOut = new Map(sourceSessions.flatMap(session => session.activities.map(activity => [activity.matchKey, activity])));
@@ -128,6 +128,11 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
             parent.add(mesh);
             return mesh;
         };
+        for (const region of band.overviewRegions) {
+            const background = box(band.width, region.height, 0, region.y, region.color, 1, 'overviewBand');
+            background.position.z = 2;
+            background.userData.sourceBand = region.sourceBand;
+        }
         for (const zone of band.zones) {
             const start = timeline.dateToBandPixelOffSet(sceneIndex, band, zone.start);
             const end = timeline.dateToBandPixelOffSet(sceneIndex, band, zone.end);

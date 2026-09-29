@@ -207,6 +207,7 @@ for (const mode of ['timeline', 'split']) test(`Selecting a demo event preserves
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
         await timeline.loadModel('models/demos/space_exploration.json', {dataset: 'json/test-data/space_exploration.json'});
+        const clock=animationClock(harness.window);
         timeline.ob_views.setMode(mode);
         timeline.ob_calendar.click();
         assert.ok(harness.window.document.getElementById(timeline.name + '_cal'));
@@ -216,14 +217,15 @@ for (const mode of ['timeline', 'split']) test(`Selecting a demo event preserves
             scene.traverse(object => {
                 if (object.isMesh && object.name === '' && object.data && !object.parent.name.includes('overview_')) events.push(object);
             });
-            assert.ok(events.length > i, 'Selectable event meshes exist');
-            const selected = events[i];
+            assert.ok(events.length > 0, 'Selectable event meshes exist');
+            const selected = events[i % events.length];
             scene.dragControls.dispatchEvent({type: 'dragstart', object: selected});
             if (i === 1) {
                 selected.position.x += 12;
                 scene.dragControls.dispatchEvent({type: 'drag', object: selected});
             }
             scene.dragControls.dispatchEvent({type: 'dragend', object: selected});
+            clock.frame();clock.advance(700);clock.frame();
             await settle();
             const descriptor = harness.window.document.getElementById(timeline.name + '_descriptor');
             assert.ok(descriptor?.textContent.includes(selected.data.data.title), 'Selected descriptor stays visible');

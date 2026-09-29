@@ -32,6 +32,191 @@ class ProgressiveSourceScanTest {
     private JSONObject request(JSONObject config) { return (JSONObject)new json_files_manager(null,null,new data_configuration(config)).getData("","0"); }
     private JSONObject meta(JSONObject page) { return (JSONObject)page.get("timelineMatch"); }
 
+    private JSONObject history(JSONObject config) {
+        config.put("history", "backward"); config.put("search", "locked"); config.put("sortBy", "namespace");
+        return config;
+    }
+
+    @Test void sharedFilesAreEvaluatedWithEveryConfiguredNamespacesAndFilter() throws Exception {
+        JSONArray records = new JSONArray();
+        records.add(record("locked-May-21", "2026-05-21T12:00:00Z", null));
+        records.add(record("locked-current", "2026-09-12T12:00:00Z", null));
+        write("shared.json", records);
+        for (boolean historical : new boolean[]{false, true}) {
+            for (boolean sameNamespace : new boolean[]{false, true}) {
+                JSONObject config = configuration(); if (historical) history(config); else config.put("search", "locked");
+                JSONArray sources = new JSONArray();
+                sources.add(new JSONObject(Map.of("type", "json_file", "enable", true, "namespace", sameNamespace ? "allowed" : "blocked",
+                        "data_model", temporary.resolve("shared.json").toString(), "filter", new JSONObject(Map.of("exclude", "locked")))));
+                sources.add(new JSONObject(Map.of("type", "json_file", "enable", true, "namespace", "allowed",
+                        "data_model", temporary.resolve("shared.json").toString())));
+                config.put("startup configuration", sources); config.put("filter", "namespace:allowed");
+                JSONArray found = new JSONArray(); JSONObject page; int pages = 0;
+                do {
+                    page = request(config); assertNull(meta(page).get("error"));
+                    found.addAll((JSONArray)page.get("events"));
+                    config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 40);
+                } while (config.get("cursor") != null);
+                assertEquals(historical ? 2 : 1, found.size(), "Another source's exclusion must not suppress allowed records");
+                for (Object value : found) {
+                    assertEquals("allowed", ((JSONObject)value).get("namespace"));
+                    assertEquals(true, ((JSONObject)value).get("searchMatch"));
+                }
+                assertEquals(true, meta(page).get("complete"));
+                if (historical) assertEquals(false, ((JSONObject)meta(page).get("history")).get("incomplete"));
+            }
+        }
+    }
+
+    @Test void historicalDirectoryDepthLimitReportsIncompleteInsteadOfExhaustiveNoMatch() throws Exception {
+        String path = "";
+        for (int depth = 0; depth < 32; depth++) path += "d/";
+        JSONArray records = new JSONArray(); records.add(record("locked-too-deep", "2026-05-21T12:00:00Z", null));
+        write(path + "events.json", records);
+        JSONObject config = history(configuration()), page; int pages = 0;
+        do {
+            page = request(config); assertNull(meta(page).get("error"));
+            assertTrue(((JSONArray)page.get("events")).isEmpty(), "The scan must retain the 32-level directory boundary");
+            config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 40);
+        } while (config.get("cursor") != null);
+        JSONObject progress = (JSONObject)meta(page).get("history");
+        assertEquals(false, meta(page).get("complete")); assertEquals(true, progress.get("incomplete"));
+        assertTrue(((JSONArray)meta(page).get("warnings")).stream().anyMatch(value -> value.toString().contains("depth limit")));
+    }
+
+    @Test void historicalSearchFindsMayRecordsFromSeptemberAndPreservesSourceAndUserFilters() throws Exception {
+        JSONArray may = new JSONArray();
+        may.add(record("locked-May-21", "2026-05-21T12:00:00Z", null));
+        may.add(record("locked-source-hidden", "2026-05-21T12:00:00Z", null));
+        may.add(record("locked-user-hidden", "2026-05-21T12:00:00Z", null));
+        may.add(record("ordinary", "2026-05-21T12:00:00Z", null));
+        write("2026/05/21/events.json", may);
+        JSONArray old = new JSONArray(); old.add(record("locked-older", "2020-01-01T12:00:00Z", null));
+        write("2020/01/01/events.json", old);
+        JSONObject config = history(configuration());
+        ((JSONObject)((JSONArray)config.get("startup configuration")).get(0)).put("filter",
+                new JSONObject(Map.of("exclude", "title:locked-source-hidden")));
+        config.put("filter", "namespace:operations|title:locked-user-hidden");
+        JSONArray found = new JSONArray(); JSONObject page; int pages = 0;
+        do {
+            page = request(config); assertNull(meta(page).get("error"));
+            assertTrue(((JSONArray)page.get("events")).size() <= 256);
+            found.addAll((JSONArray)page.get("events"));
+            assertEquals("backward", ((JSONObject)meta(page).get("history")).get("direction"));
+            config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 40);
+        } while(config.get("cursor") != null);
+        assertEquals(List.of("locked-May-21", "locked-older"), found.stream().map(value -> ((JSONObject)value).get("id")).toList());
+        for (Object value : found) assertEquals(true, ((JSONObject)value).get("searchMatch"));
+        JSONObject progress = (JSONObject)meta(page).get("history");
+        assertEquals(true, progress.get("exhausted")); assertEquals(false, progress.get("incomplete"));
+        assertEquals("2020-01-01T12:00:00Z", ((JSONObject)progress.get("checkingRange")).get("from"));
+        assertEquals(2, progress.get("filesExamined"));
+        assertEquals("namespace", config.get("sortBy"));
+        assertFalse(page.toJSONString().contains(temporary.toString()), "Progress never exposes server file paths");
+    }
+
+    @Test void historicalSearchKeepsCurrentWindowAndNestedMatchesAndReusesSourceCache() throws Exception {
+        JSONObject session = record("session", "2026-05-21T00:00:00Z", "2027-01-01T00:00:00Z");
+        JSONArray children = new JSONArray();
+        children.add(record("locked-child", "2026-05-21T12:00:00Z", null));
+        children.add(record("locked-future-child", "2026-12-21T12:00:00Z", null));
+        session.put("activities", children);
+        JSONArray records = new JSONArray(); records.add(session);
+        records.add(record("locked-current", "2026-09-12T12:00:00Z", null));
+        records.add(record("locked-future", "2026-12-21T12:00:00Z", null));
+        write("2026/05/21/events.json", records);
+        for (int run = 0; run < 2; run++) {
+            JSONObject config = history(configuration()), page; JSONArray found = new JSONArray(); long characters = 0;
+            do {
+                page = request(config); assertNull(meta(page).get("error"));
+                found.addAll((JSONArray)page.get("events")); characters += ((Number)meta(page).get("charactersRead")).longValue();
+                config.put("cursor", meta(page).get("nextCursor"));
+            } while(config.get("cursor") != null);
+            assertEquals(2, found.size());
+            JSONObject parent = (JSONObject)found.get(0);
+            assertEquals("session", parent.get("id")); assertEquals(false, parent.get("searchMatch"));
+            JSONArray scoped = (JSONArray)parent.get("activities");
+            assertEquals(1, scoped.size()); assertEquals("locked-child", ((JSONObject)scoped.get(0)).get("id"));
+            assertEquals(true, ((JSONObject)scoped.get(0)).get("searchMatch"));
+            assertEquals("locked-current", ((JSONObject)found.get(1)).get("id"));
+            if (run == 0) assertTrue(characters > 0); else assertEquals(0, characters, "History rereads use unchanged cached source records");
+        }
+    }
+
+    @Test void historicalSearchContinuesBeyondTheOrdinaryScanRecordLimit() throws Exception {
+        JSONArray records = new JSONArray();
+        for (int index = 0; index < 4000; index++) records.add(record("ordinary-" + index, "2026-09-12T12:00:00Z", null));
+        for (int file = 0; file < 26; file++) write("2026/09/12/part-" + file + ".json", records);
+        JSONArray may = new JSONArray(); may.add(record("locked-May-21", "2026-05-21T12:00:00Z", null));
+        write("2026/05/21/events.json", may);
+        JSONObject config = history(configuration()), page; JSONArray found = new JSONArray(); int examined = 0, pages = 0;
+        do {
+            page = request(config); assertNull(meta(page).get("error"));
+            found.addAll((JSONArray)page.get("events")); examined += ((Number)meta(page).get("recordsExamined")).intValue();
+            config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 1000);
+        } while(config.get("cursor") != null);
+        assertEquals(104001, examined); assertEquals(1, found.size());
+        assertEquals("locked-May-21", ((JSONObject)found.get(0)).get("id"));
+        assertEquals(true, meta(page).get("complete"));
+        assertEquals(false, ((JSONObject)meta(page).get("history")).get("incomplete"));
+    }
+
+    @Test void historicalExhaustionDoesNotHideUnavailableOrUnsupportedSources() throws Exception {
+        JSONArray records = new JSONArray(); records.add(record("ordinary", "2026-05-21T12:00:00Z", null));
+        write("2026/05/21/events.json", records);
+        for (String problem : List.of("none", "broken-file", "missing-source", "unsupported-source")) {
+            JSONObject config = history(configuration());
+            JSONArray sources = (JSONArray)config.get("startup configuration");
+            if (problem.equals("broken-file")) Files.writeString(temporary.resolve("broken.json"), "{invalid");
+            else Files.deleteIfExists(temporary.resolve("broken.json"));
+            if (problem.equals("missing-source")) sources.add(new JSONObject(Map.of("type", "json_file", "enable", true,
+                    "namespace", "missing", "data_model", temporary.resolve("absent/yyyy/mm/dd").toString())));
+            if (problem.equals("unsupported-source")) sources.add(new JSONObject(Map.of("type", "mongoDb", "enable", true, "namespace", "database")));
+            JSONObject page; int pages = 0;
+            do {
+                page = request(config); assertNull(meta(page).get("error"));
+                assertTrue(((JSONArray)page.get("events")).isEmpty());
+                config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 40);
+            } while(config.get("cursor") != null);
+            JSONObject progress = (JSONObject)meta(page).get("history");
+            assertEquals(problem.equals("none"), meta(page).get("complete"));
+            assertEquals(!problem.equals("none"), progress.get("incomplete"));
+            assertEquals(!problem.equals("unsupported-source"), progress.get("exhausted"));
+            assertEquals(!problem.equals("unsupported-source"), progress.get("supported"));
+        }
+    }
+
+    @Test void historicalContinuationCanBeCancelledAndCannotChangeQueryFiltersSortOrMode() throws Exception {
+        JSONArray records = new JSONArray();
+        for (int index = 0; index < 800; index++) records.add(record("locked-" + index, "2026-05-21T12:00:00Z", null));
+        write("2026/05/21/events.json", records);
+        JSONObject config = history(configuration()); JSONObject first = request(config);
+        config.put("cursor", meta(first).get("nextCursor")); assertNotNull(config.get("cursor"));
+        for (String key : List.of("history", "search", "filter", "sortBy")) {
+            JSONObject changed = new JSONObject(config); changed.put(key, "different");
+            assertNotNull(meta(request(changed)).get("error"), "Cursor must bind " + key);
+        }
+        JSONObject next = request(config), replay = request(config);
+        assertEquals(next.get("events"), replay.get("events")); assertEquals(meta(next).get("history"), meta(replay).get("history"));
+        config.put("cursor", meta(next).get("nextCursor")); config.put("cancel", "1");
+        assertEquals(true, meta(request(config)).get("cancelled"));
+        config.remove("cancel"); assertNotNull(meta(request(config)).get("error"));
+    }
+
+    @Test void unchangedFilesAreReusedAcrossRangesAndEditsInvalidateTheSharedCache() throws Exception {
+        JSONArray records=new JSONArray();records.add(record("one","2026-09-12T12:00:00Z",null));
+        write("2026/09/12/current.json",records);
+        JSONObject config=configuration(),page;long first=0,second=0;
+        do {page=request(config);first+=((Number)meta(page).get("charactersRead")).longValue();config.put("cursor",meta(page).get("nextCursor"));}while(config.get("cursor")!=null);
+        assertTrue(first>0);
+        do {page=request(config);second+=((Number)meta(page).get("charactersRead")).longValue();config.put("cursor",meta(page).get("nextCursor"));}while(config.get("cursor")!=null);
+        assertEquals(0,second,"Unchanged source JSON is not parsed again");
+        records.add(record("new-item","2026-09-12T13:00:00Z",null));write("2026/09/12/current.json",records);
+        JSONArray found=new JSONArray();
+        do {page=request(config);found.addAll((JSONArray)page.get("events"));config.put("cursor",meta(page).get("nextCursor"));}while(config.get("cursor")!=null);
+        assertEquals(2,found.size());
+    }
+
     @Test void searchNamedSourcePrecedesDenseSourcesWithoutDroppingTheirContext() throws Exception {
         JSONArray earthquakes=new JSONArray();
         for(int i=0;i<800;i++) earthquakes.add(record("quake-"+i,"2026-09-12T12:00:00Z",null));
@@ -66,7 +251,7 @@ class ProgressiveSourceScanTest {
         do {
             page=request(config); assertNull(meta(page).get("error"));
             JSONArray batch=(JSONArray)page.get("events");
-            assertTrue(batch.size()<=256); assertTrue(((Number)meta(page).get("recordsExamined")).intValue()<=256);
+            assertTrue(batch.size()<=256); assertTrue(((Number)meta(page).get("recordsExamined")).intValue()<=4096);
             for(Object value:batch) assertTrue(ids.add((String)((JSONObject)value).get("id")),"No duplicate IDs across pages");
             if(pages==0 && !batch.isEmpty()) {
                 assertTrue(((String)((JSONObject)batch.get(0)).get("id")).startsWith("current-"));

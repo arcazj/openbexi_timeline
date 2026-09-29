@@ -81,11 +81,7 @@ public final class MatchResults {
     private static void annotate(JSONArray records, Pattern pattern, long from, long to) {
         for (Object value : records) {
             JSONObject record = (JSONObject) value;
-            JSONObject own = new JSONObject(record);
-            own.remove("activities"); own.remove("searchMatch"); own.remove("sourceRecordKey");
-            boolean match = pattern != null && !Boolean.TRUE.equals(record.get("zone")) &&
-                    pattern.matcher(own.toJSONString().replace(" ", "").replace("\"", "")).find();
-            record.put("searchMatch", match);
+            record.put("searchMatch", matchesOwn(record, pattern));
             // Legacy records may omit a timezone on one endpoint. Send the
             // server's resolved instants so browser locale cannot invert a range.
             // Match first, preserving searches against the original field values.
@@ -99,6 +95,22 @@ public final class MatchResults {
                 annotate(scoped, pattern, from, to);
             }
         }
+    }
+
+    private static boolean matchesOwn(JSONObject record, Pattern pattern) {
+        JSONObject own = new JSONObject(record);
+        own.remove("activities"); own.remove("searchMatch"); own.remove("sourceRecordKey");
+        return pattern != null && !Boolean.TRUE.equals(record.get("zone")) &&
+                pattern.matcher(own.toJSONString().replace(" ", "").replace("\"", "")).find();
+    }
+
+    /** Same search semantics as response annotations, including scoped nested activities. */
+    static boolean hasMatch(JSONObject record, Pattern pattern, long from, long to) {
+        if (pattern == null || matchesOwn(record, pattern)) return true;
+        if (record.get("activities") instanceof JSONArray children)
+            for (Object child : inRange(children, from, to))
+                if (hasMatch((JSONObject) child, pattern, from, to)) return true;
+        return false;
     }
 
     public static JSONObject failure(String query, String scene, long from, long to, String message) {

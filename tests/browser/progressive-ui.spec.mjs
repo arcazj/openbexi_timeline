@@ -80,7 +80,7 @@ test('First connected batch is visible and interactive while the next batch wait
         return r.snapshot?.counts.eligible.events===30 && !r.pending;});
     await expect.poll(()=>Boolean(nextPage)).toBe(true);
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
-    await expect(page.locator('.ob_results_status')).toContainText('Loading more records');
+    await expect(page.locator('.ob_loading_status')).toHaveText('Loading items…');
     await expect(page.getByRole('button',{name:'Stop loading',exact:true})).toBeVisible();
     await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
     await page.getByAltText('Sorting and filtering',{exact:true}).click();await ready(page);
@@ -94,6 +94,7 @@ test('First connected batch is visible and interactive while the next batch wait
     await reply(nextPage,20,60,null);
     await page.waitForFunction(async()=>{const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
         return r.snapshot?.counts.eligible.events===60 && !r.fetching && !r.pending;});
+    await expect(page.locator('.ob_loading_status')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
@@ -106,6 +107,9 @@ test('A stopped data server leaves the standalone frame and complete toolbar usa
     await expect(page.locator('canvas')).toBeVisible();
     for(const icon of ['Calendar browser','Sorting and filtering','Settings','Help']) await expect(page.getByAltText(icon,{exact:true})).toBeVisible();
     await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
+    const warning=page.locator('.ob_update_failed');await expect(warning).toBeVisible();
+    expect(await warning.evaluate(node=>getComputedStyle(node).backgroundColor)).toBe('rgb(255, 240, 217)');
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await expect(page.getByRole('button',{name:'Add a new filter',exact:true})).toBeDisabled();
     await expect(page.getByRole('button',{name:'Retry filters',exact:true})).toBeEnabled();
@@ -113,4 +117,29 @@ test('A stopped data server leaves the standalone frame and complete toolbar usa
     await expect(page.getByRole('heading',{name:'Help and sharing'})).toBeVisible();
     await expect(page.getByRole('combobox',{name:'Local dataset'})).toHaveValue('');
     await capture(page,'standalone-offline',info);
+});
+
+test('Advanced filter help, validation and saved sorting remain available in the editor',async({page})=>{
+    const dialogs=[];page.on('dialog',async dialog=>{dialogs.push(dialog.message());await dialog.dismiss();});
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    await page.getByAltText('Sorting and filtering',{exact:true}).click();
+    await page.getByRole('button',{name:'Add a new filter',exact:true}).click();
+    await page.getByRole('button',{name:'Filter syntax',exact:true}).click();
+    await expect(page.locator('[data-filter-syntax]')).toBeVisible();
+    await expect(page.locator('[data-filter-syntax]')).toContainText('Legacy:');
+    await expect(page.locator('[data-filter-syntax]')).toContainText('expr:');
+    await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Advanced');
+    const input=page.getByRole('textbox',{name:'New filter expression',exact:true});
+    await input.fill('expr: namespace =');
+    await page.getByRole('button',{name:'Save new filter',exact:true}).click();
+    await expect(input).toHaveAttribute('aria-invalid','true');
+    await expect(page.locator('[data-filter-error]')).toContainText('character');
+    await input.fill('expr: NOT title CONTAINS "excluded + | text"');
+    await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('namespace');
+    await page.getByRole('button',{name:'Save new filter',exact:true}).click();await ready(page);
+    await expect(page.getByRole('combobox',{name:'Sort by',exact:true})).toHaveValue('namespace');
+    await page.locator('.ob_saved_filter').filter({hasText:'Advanced'}).getByRole('button',{name:'Edit',exact:true}).click();
+    await expect(page.getByRole('textbox',{name:'Filter expression',exact:true})).toHaveValue('expr: NOT title CONTAINS "excluded + | text"');
+    await expect(page.getByRole('button',{name:'Filter syntax',exact:true})).toBeVisible();
+    expect(dialogs).toEqual([]);
 });

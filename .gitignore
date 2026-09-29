@@ -51,5 +51,5 @@
 !/yaml/sources_default.yml
 !/yaml/sources_default_test.yml
 !/yaml/sources_earthquake.yml
-!/yaml/sources_startup.yml
 !/yaml/tomcat.yml
+/tools/com/intelsat/

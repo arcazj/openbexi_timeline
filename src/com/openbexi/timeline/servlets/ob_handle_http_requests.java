@@ -37,8 +37,8 @@ public class ob_handle_http_requests {
         resp.setCharacterEncoding("UTF-8");
         resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, HEAD");
-        resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept");
-        resp.addHeader("Access-Control-Expose-Headers", "X-Request-ID");
+        resp.addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept, If-None-Match, Last-Event-ID");
+        resp.addHeader("Access-Control-Expose-Headers", "X-Request-ID, ETag, X-Timeline-Revision");
         resp.addHeader("Accept-Encoding", "gzip, compress, br");
 
         // Determine content type based on the "accept" header
@@ -158,30 +158,7 @@ public class ob_handle_http_requests {
             String connector_type = configuration.getType(0);
             Object json = null;
             if (connector_type.equals("json_file")) {
-                json_files_manager json_files_manager;
-                if (req.getHeader("accept").equals("text/event-stream"))
-                    json_files_manager = new json_files_manager(
-                            resp, req.getSession(), configuration);
-                else
-                    json_files_manager = new json_files_manager(
-                            null, null, configuration);
-                json = json_files_manager.updateFilter(
-                        (String) configuration.getConfiguration().get("request"),
-                        (String) configuration.getConfiguration().get("timelineName"),
-                        (String) configuration.getConfiguration().get("title"),
-                        (String) configuration.getConfiguration().get("scene"),
-                        (String) configuration.getConfiguration().get("namespace"),
-                        (String) configuration.getConfiguration().get("filterName"),
-                        (String) configuration.getConfiguration().get("backgroundColor"),
-                        (String) configuration.getConfiguration().get("userName"),
-                        (String) configuration.getConfiguration().get("email"),
-                        (String) configuration.getConfiguration().get("top"),
-                        (String) configuration.getConfiguration().get("left"),
-                        (String) configuration.getConfiguration().get("width"),
-                        (String) configuration.getConfiguration().get("height"),
-                        (String) configuration.getConfiguration().get("camera"),
-                        (String) configuration.getConfiguration().get("sortBy"),
-                        (String) configuration.getConfiguration().get("filter"));
+                json = SavedFilters.update(configuration);
             }
             if (connector_type.equals("mongoDb")) {
                 db_mongo_manager db_mongo_manager;
@@ -230,7 +207,8 @@ public class ob_handle_http_requests {
             }
             configuration.diagnostics.sent(json,connector_type,false);
         } catch (Exception e) {
-            jsonError(req,resp,500,"Cannot read or update timeline filters.");
+            jsonError(req,resp,e instanceof IllegalArgumentException?400:500,
+                    e instanceof IllegalArgumentException?e.getMessage():"Cannot read or update timeline filters.");
         }
     }
 
@@ -266,14 +244,33 @@ public class ob_handle_http_requests {
 
     public void ob_handle_default_request(HttpServletRequest req, HttpServletResponse resp, data_configuration configuration) {
         try {
+            SavedFilters.resolve(configuration.getConfiguration());
+            FilterExpression.compile((String)configuration.getConfiguration().get("filter"));
+            if (req.getParameter("startDate")==null || req.getParameter("endDate")==null)
+                throw new IllegalArgumentException("Missing time range.");
+            long from=MatchResults.time(req.getParameter("startDate")),to=MatchResults.time(req.getParameter("endDate"));
+            if(to<=from)throw new IllegalArgumentException("Invalid time range.");
+            if ("GET".equals(req.getMethod()) && !"text/event-stream".equals(req.getHeader("accept")) &&
+                    "json_file".equals(configuration.getType(0)) && req.getParameter("cursor")==null &&
+                    req.getParameter("cancel")==null && req.getParameter("history")==null) {
+                try {
+                    String revision=com.openbexi.timeline.data_browser.SourceRevision.current(configuration);
+                    org.json.simple.JSONObject query=new org.json.simple.JSONObject();
+                    for(String name:java.util.List.of("startDate","endDate","search","filter","matchProtocol",
+                            "progressive","history","userName","timelineName","scene","sortBy"))
+                        query.put(name,configuration.getConfiguration().getOrDefault(name,req.getParameter(name)));
+                    String etag="W/\""+com.openbexi.timeline.data_browser.SourceRevision.digest(revision+query)+"\"";
+                    resp.setHeader("ETag",etag);resp.setHeader("Cache-Control","private, no-cache");resp.setHeader("Vary","Accept");
+                    resp.setHeader("X-Timeline-Revision",revision);
+                    if(etag.equals(req.getHeader("If-None-Match"))) {resp.setStatus(304);return;}
+                } catch(java.io.IOException ignored) { /* Unconditional reads remain available. */ }
+            }
             HttpSession session = req.getSession();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-            if (req.getParameter("startDate")==null || req.getParameter("endDate")==null)
-                throw new IllegalArgumentException("Missing time range.");
-            String startDate = simpleDateFormat.format(new Date(MatchResults.time(req.getParameter("startDate"))));
-            String endDate = simpleDateFormat.format(new Date(MatchResults.time(req.getParameter("endDate"))));
+            String startDate = simpleDateFormat.format(new Date(from));
+            String endDate = simpleDateFormat.format(new Date(to));
 
             Object json = null;
             String connector_type = configuration.getType(0);
@@ -299,7 +296,7 @@ public class ob_handle_http_requests {
             }
         } catch (Exception e) {
             jsonError(req,resp,e instanceof IllegalArgumentException?400:500,
-                    e instanceof IllegalArgumentException?"Invalid timeline time range.":"Cannot read timeline data.");
+                    e instanceof FilterExpression.Invalid?e.getMessage():e instanceof IllegalArgumentException?"Invalid timeline request or time range.":"Cannot read timeline data.");
         }
     }
 

@@ -47,6 +47,14 @@ test('Docked overview uses projected rows, colors, durations, and zones while re
         assert.match(contextNode.textContent,/records \/ full context/);
         assert.equal(svg.querySelector('[data-overview-heading="count"]'),contextNode);
         assert.ok(svg.querySelector('[data-overview-window]'));
+        const sources=timeline.ob_viewport.fullBands.filter(band=>!band.name.includes('overview_'));
+        for(const source of sources) {
+            const background=[...svg.querySelectorAll('[data-overview-band]')].find(node=>node.dataset.overviewBand===source.name);
+            assert.equal(background.getAttribute('fill'),source.color);
+        }
+        const color=sources[0].color;sources[0].color='#123456';sync();
+        assert.equal(svg.querySelector('[data-overview-band]').getAttribute('fill'),'#123456','In-place band color edits repaint the overview');
+        sources[0].color=color;sync();
         assert.equal(scene.ob_renderer.domElement.height, Math.floor(scene.ob_height), 'WebGL canvas dimensions stay intact');
         assert.ok(parseFloat(timeline.ob_timeline_body.style.height) < scene.ob_height, 'Only the original overview tail/axis is cropped');
         assert.equal(timeline.ob_timeline_body.style.overflow, 'hidden');

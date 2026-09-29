@@ -160,10 +160,17 @@ export function searchTimelineData(dataset, search = "") {
 
 export function prepareStaticBands(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
+    const results = timeline.ob_results;
+    // The legacy scene initializer has already restored template bands here;
+    // the viewport still holds the previously rendered groups.
+    const previousBands = timeline.ob_viewport?.fullBands || results?.rangeBands() || [];
     const bands = [];
     for (const template of timeline.bands) {
         if (template.name.includes("overview_") && !timeline.ob_visible_view) continue;
         const isOverview = template.name.includes('overview_');
+        const previousBand = previousBands.find(band => (band.sourceBand || band.name) === template.name);
+        const previousRange = results?.ranges.get(previousBand?.name);
+        const previousVisible = results?.visibleRanges.get(previousBand?.name);
         const sortBy = timeline.ob_sortBy ?? template.model?.[0]?.sortBy ?? 'NONE';
         const groupBy = isOverview ? undefined : timeline.ob_sortBy !== undefined ?
             (sortBy === 'NONE' ? undefined : sortBy) : template.groupBy || (sortBy === 'NONE' ? undefined : sortBy);
@@ -229,6 +236,12 @@ export function prepareStaticBands(timeline, sceneIndex) {
             if (!isOverview && timeline.ob_results?.regroupRange) {
                 timeline.ob_results.ranges.set(band.name, {...timeline.ob_results.regroupRange});
                 timeline.ob_results.visibleRanges.delete(band.name);
+            } else if (!isOverview && previousRange && !results.ranges.has(band.name)) {
+                // Filtering can remove every group and later restore them.
+                // Keep the source band's time window when its generated name
+                // changes instead of rebuilding a zoom from template pixels.
+                results.ranges.set(band.name, {...previousRange});
+                if (previousVisible) results.visibleRanges.set(band.name, {...previousVisible});
             }
             timeline.ob_results?.applyScale(band, scene.width);
             bands.push(band);

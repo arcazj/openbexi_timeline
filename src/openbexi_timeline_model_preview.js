@@ -40,6 +40,8 @@ window.addEventListener('message',async event=>{
         // A fresh iframe owns the complete renderer lifecycle, including WebGL, timers and listeners.
         await timeline.applyModel(previewModel,options);
         if(disposed)return;
+        // Preview is an explicit editing action; ordinary page loads remain 2D.
+        if((previewModel.params[0].camera || previewModel.rendering?.camera?.mode)==='Perspective')timeline.ob_apply_perspective_camera(0);
         document.getElementById('demo-timeline-slot').append(timeline.ob_timeline_panel);
         document.getElementById('demo-side-slot').append(timeline.ob_timeline_right_panel);
         timeline.ob_viewport?.schedule();

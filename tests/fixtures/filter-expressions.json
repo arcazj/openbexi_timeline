@@ -1,0 +1,26 @@
+{
+  "records": [
+    {"id":"a","namespace":"operations","data":{"title":"Ground station A+B | ready","status":"STARTED","priority":3,"enabled":true,"owner":"Team A","optional":null}},
+    {"id":"b","namespace":"operations","data":{"title":"Scheduled activity","status":"SCHEDULE","priority":1,"enabled":false}},
+    {"id":"c","namespace":"planning","data":{"title":"Cancelled activity","status":"CANCELLED","priority":5,"enabled":true}},
+    {"id":"session","namespace":"operations","data":{"title":"Session","status":"STARTED","priority":2},"activities":[{"id":"child","data":{"status":"CANCELLED"}}]}
+  ],
+  "cases": [
+    {"expression":"","ids":["a","b","c","session"]},
+    {"expression":"status:STARTED;status:SCHEDULE|status:CANCELLED","ids":["a","b"]},
+    {"expression":"namespace:operations+priority:3","ids":["a"]},
+    {"expression":"description:Scheduled activity","ids":["b"]},
+    {"expression":"expr: namespace = operations AND (status IN (STARTED, SCHEDULE) OR priority >= 3)","ids":["a","b","session"]},
+    {"expression":"expr: status = CANCELLED OR status = STARTED AND priority > 2","ids":["a","c"]},
+    {"expression":"expr: NOT (status = CANCELLED OR priority < 2)","ids":["a","session"]},
+    {"expression":"expr: title CONTAINS \"A+B | ready\"","ids":["a"]},
+    {"expression":"expr: EXISTS(data.owner) AND data.owner STARTS_WITH \"Team\" AND data.owner ENDS_WITH 'A'","ids":["a"]},
+    {"expression":"expr: optional = null AND enabled = true AND priority <= 3","ids":["a"]},
+    {"expression":"expr: optional != null","ids":[]},
+    {"expression":"expr: NOT EXISTS(optional)","ids":["b","c","session"]},
+    {"expression":"expr: priority = \"3\"","ids":[]},
+    {"expression":"expr: enabled = false and status != STARTED","ids":["b"]},
+    {"expression":"expr: title CONTAINS \"a'b\"","ids":[]}
+  ],
+  "invalid": ["expr:","expr: status =", "expr: (status = STARTED", "expr: priority >> 3", "expr: status = \"unfinished", "expr: title ~= test", "expr: status IN ()", "expr: a = b trailing", "expr: title = A+B", "expr: a = 1e999", "["]
+}

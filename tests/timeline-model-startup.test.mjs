@@ -33,6 +33,19 @@ test('An explicit HTML model takes priority without requesting server configurat
     } finally {f.close();}
 });
 
+test('An explicit connected model discovers the SSE route before its first settings request',async()=>{
+    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    model.params[0].data='';
+    const f=await setup(path=>path===configPath?json({data:'/openbexi_timeline_sse/sessions'}):
+        path==='/model.json'?json(model):path==='/openbexi_timeline_sse/sessions'?json({events:[]}):undefined);
+    try {
+        await f.t.loadModel('/model.json');await settle();
+        assert.equal(f.requests.filter(path=>path===configPath).length,1);
+        assert.ok(f.requests.includes('/openbexi_timeline_sse/sessions'));
+        assert.equal(f.requests.includes('/openbexi_timeline/sessions'),false);
+    } finally {f.close();}
+});
+
 test('Constructing a timeline without loadModel loads the YAML model advertised by the server',async()=>{
     const f=await setup(path=>path===configPath?json({model:'models/custom.json',data:'/openbexi_timeline/sessions'}):
         path==='/models/custom.json'?json(fixture):undefined);

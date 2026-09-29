@@ -17,7 +17,7 @@ import java.util.function.UnaryOperator;
 
 /** Request-local, bounded inventory. Prefer requested date partitions before archives. */
 final class MatchSourceScan {
-    private record Source(String namespace, String model, Path root) {}
+    private record Source(String namespace, String model, Path root, java.util.function.Predicate<JSONObject> filter) {}
     private final long from, to, maxBytes;
     private final int maxFiles;
     private final UnaryOperator<JSONArray> filter;
@@ -46,7 +46,7 @@ final class MatchSourceScan {
             String model = String.valueOf(source.get("data_model")).replace('\\', '/');
             try {
                 Path root = Paths.get(model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0]).toRealPath();
-                sources.add(new Source(namespace, model, root));
+                sources.add(new Source(namespace, model, root,FilterExpression.source(source)));
             } catch (IOException | InvalidPathException error) {
                 warnings.add("Source unavailable: " + namespace + ".");
             }
@@ -99,6 +99,7 @@ final class MatchSourceScan {
                         JSONObject payload;
                         try (Reader reader = Files.newBufferedReader(file)) { payload = (JSONObject)new JSONParser().parse(reader); }
                         JSONArray selected = select((JSONArray)payload.get("events"), 0, source.namespace);
+                        selected.removeIf(value->!source.filter.test((JSONObject)value));
                         JSONArray events = filter.apply(selected);
                         for (Object value : events) {
                             if (records.size() >= 100000) { limited = true; return FileVisitResult.TERMINATE; }

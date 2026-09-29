@@ -56,6 +56,12 @@ function assertProjection(timeline) {
         const projected = activities(overview);
         assert.equal(projected.length, count, 'Overview contains the same activity occurrences as the main bands');
         for (const source of sources) {
+            const region=overview.overviewRegions.find(region=>region.sourceBand===source.name);
+            assert.equal(region.color,source.color || '#dfe7e9');
+            const background=scene.getObjectByName(overview.name).children.find(mesh=>mesh.userData.overviewBand && mesh.userData.sourceBand===source.name);
+            assert.ok(background,'Each source band has a colored overview region');
+            const mainMesh=scene.getObjectByName(source.name);
+            if(mainMesh)assert.equal(background.material.color.getStyle(),mainMesh.material.color.getStyle());
             const originals = activities(source);
             const copies = projected.filter(activity => activity.overviewSourceBand === source.name);
             if (!fullScope) assert.deepEqual(copies.map(activity => activity.id), originals.map(activity => activity.id),

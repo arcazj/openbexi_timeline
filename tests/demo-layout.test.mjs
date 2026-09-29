@@ -70,6 +70,11 @@ for (const demo of catalog.demos) test(demo.id + ': bounded responsive views ret
         }
         const first=t.staticData.events.find(e=>!e.zone);
         t.ob_open_descriptor(0,first);
+        const deadline=Date.now()+15000;
+        while(t.ob_results.focusAnimation || t.ob_results.pending) {
+            assert.ok(Date.now()<deadline,'Selection centering must finish before resizing');
+            await new Promise(resolve=>setTimeout(resolve,25));
+        }
         const descriptor=t.ob_timeline_right_panel.firstElementChild;
         const ids=t.ob_results.snapshot.entries.map(e=>e.key).join(',');
         const time=t.ob_scene.sync_time;

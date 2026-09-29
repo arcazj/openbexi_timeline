@@ -83,7 +83,7 @@ npx playwright show-report
 The regular `npm run test:demos` suite also exercises all seven demos' responsive
 layout, and covers detailed scale/projection and panel behavior in the DOM harness.
 
-The 2.2 release checkpoint uses the locked Chromium 153 headless shell.
+The 2.2.0 release checkpoint uses the locked Chromium 153 headless shell.
 The suite contains 163 enabled checks and seven duplicate narrow drag cases that
 are intentionally skipped. The 28 catalog screenshot comparisons retain the
 reviewed 2.1 baselines because default rendering remains compatible.
@@ -92,6 +92,14 @@ The release also includes 212 JavaScript tests and 68 Java tests, with 34 existi
 environment-dependent Java skips. See the [release validation record](release-2.2.md),
 [current captures](ui/overview/README.md) and
 [descriptor scenarios](ui/navigation-details/README.md).
+
+The [2.2.1 patch](release-2.2.1.md) adds checks for cursor placement, table icons,
+color fallback, selection animation, reduced motion and clear Overview selection.
+Resize checks wait for centering before asserting that the selected date stays
+fixed. Reviewed Split/Help baselines include the new table markers and the centered
+selection. Connected tests cover bounded idle REST behavior, conditional refresh,
+SSE revision handling and deletion reconciliation. Private deployment data and
+captures remain outside the committed fixtures and release archive.
 
 ## Review intentional visual changes
 
@@ -133,3 +141,52 @@ Dependabot proposes weekly npm, Maven, and GitHub Actions updates.
 
 See [Playwright visual comparisons](https://playwright.dev/docs/test-snapshots) and
 [CI configuration](https://playwright.dev/docs/ci) for the underlying tooling.
+
+### 2.2.2 regressions
+
+`progressive-ui.spec.mjs`, `calendar-loading.spec.mjs`, and `viewport-v2.spec.mjs`
+cover orange toolbar warnings, absence of automatic search popups, keyboard
+access to failure details, retry/drag recovery, responsive filter syntax help,
+quoted expressions, inline validation and retained Sort by at both viewport sizes.
+Java HTTP tests separately cover SSE route POST requests, saved and explicit
+server filters, source exclusions, conditional reads, live edits and deletions.
+Java and JavaScript read the same filter-expression fixtures with explicit
+expected record IDs.
+
+### 2.2.3 regressions
+
+Duplicate narrow drag cases are intentionally skipped; the drag-performance
+suite exercises those gestures at desktop width.
+
+`perspective-status.spec.mjs` covers matching band colors after filtering and
+preset reload, status explanations reached with the keyboard, right-side status
+placement, and the separate loading indicator. It also exercises actual
+OrbitControls rotation, pan and zoom, numeric camera and appearance changes,
+Save, reload, Restore and Reset at both viewport sizes. Camera gestures must
+preserve the time range, record count and selection.
+
+`perspective-demos.spec.mjs` checks Monet and Dinosaurs at both widths: the
+reference preset, 2D startup after saving 3D settings, restoration of the saved
+pose, reset and resize framing, unchanged dates and counts, and visible selection
+in Overview. A pixel comparison also verifies the original 2D view after toggling
+back from 3D. WebGL pixel checks verify that metalness changes the rendered surface
+without black areas. The activity-focus suite checks that textured icons stay
+readable at maximum metalness and that session colors are preserved.
+
+The Node suite additionally covers camera persistence across scene rebuilds,
+control disposal, invalid stored preferences, blocked browser storage, and the
+Sort by value sent when creating a server filter. Existing loading, navigation,
+selection, rendering and viewport checks remain part of regression coverage.
+
+### Historical search regressions
+
+`historical-search.spec.mjs` exercises connected text searches at desktop and
+narrow widths using synthetic archives. Coverage includes a `locked` match on
+May 21 beyond the initially loaded data, progress while the plot stays still,
+the adjacent **Stop search** button, cancellation and late-response rejection,
+query changes, locking the view, filters and **Sort by**, exhausted history,
+unavailable files and HTTP failures. `auto-exploration.spec.mjs` also covers
+older servers without the history protocol. An empty limited or failed scan
+must be reported as incomplete. The fixture also checks that REST stays idle
+without a query. These checks use public synthetic records rather than private
+operational files.

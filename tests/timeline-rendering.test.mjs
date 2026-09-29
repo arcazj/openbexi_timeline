@@ -93,17 +93,22 @@ test('Configured values reach WebGL axes, SVG overview, table columns, search an
 
 test('3D model preferences set camera, light, label metrics and glow without changing activity size',async()=>{
     const model=await read('models/demos/monet.json');
-    model.rendering={camera:{mode:'Perspective',fieldOfView:42,ambientIntensity:.4},
+    model.rendering={camera:{mode:'Perspective',fieldOfView:42,ambientIntensity:.4,rotationSensitivity:.004},
         activity:{glowColor:'#ff0000',glowOpacity:.5,transitionMs:0,labelMaxWidth:180,lineHeight:1.8,shininess:10}};
     const {harness,timeline:t}=await render(model);
     try {
+        assert.equal(t.ob_scene[0].ob_camera_type,'Orthographic');
+        t.ob_apply_perspective_camera(0);
+        await new Promise(resolve=>setTimeout(resolve,150));
         const scene=t.ob_scene[0];assert.equal(scene.ob_camera.fov,42);
+        assert.equal(t.ob_perspective.controls.rotateSpeed,1.3);
         assert.ok(scene.children.some(object=>object.isAmbientLight && object.intensity===.4));
         const item=t.ob_activity_focus.items[0];assert.ok(item);
         const size=item.mesh.geometry.parameters;const original=JSON.stringify(size);
         t.ob_results.selectActivity(item.key);t.ob_render(0);
         assert.equal(item.glow.material.color.getHexString(),'ff0000');assert.equal(item.glow.material.opacity,.5);
-        assert.equal(item.mesh.material.shininess,10);assert.equal(JSON.stringify(item.mesh.geometry.parameters),original);
+        assert.equal(item.mesh.material.roughness,Math.sqrt(2/12));assert.equal(item.mesh.material.metalness,0);
+        assert.equal(JSON.stringify(item.mesh.geometry.parameters),original);
         assert.ok(item.metrics.width<=180);assert.equal(item.metrics.lineHeight,Math.ceil(item.metrics.fontSize*1.8));
     } finally {harness.close();}
 });

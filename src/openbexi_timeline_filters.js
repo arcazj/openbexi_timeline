@@ -1,3 +1,5 @@
+import {compileFilter,decodeFilter,filterSyntax} from './openbexi_timeline_filter_expression.js';
+
 const element = (tag, text, attributes = {}) => {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -7,21 +9,22 @@ const element = (tag, text, attributes = {}) => {
 const button = (label, action) => { const node=element('button',label,{type:'button'}); node.onclick=action; return node; };
 
 export function filterLocalData(data, encoded = '') {
-    const expression=encoded.replaceAll('_PIPE_','|').replaceAll('_PLUS_','+').replaceAll('_PERC_','%')
-        .replaceAll('_PARL_','(').replaceAll('_PARR_',')');
-    if (!expression) return data;
-    const [include='',exclude='']=expression.split('|');
-    // Legacy rules OR semicolon alternatives, AND plus terms, and match the
-    // serialized session (including its activities). Exclusion wins.
-    const compile = part => part ? part.split(';').map(term=>term.split('+').map(value=>({
-        regex:new RegExp(value), literal:value.startsWith('description:') ? value.slice(12) : null
-    }))) : [];
-    const yes=compile(include), no=compile(exclude);
-    const matches=(groups,text)=>groups.some(group=>group.every(term=>term.regex.test(text) || term.literal!==null && text.includes(term.literal)));
-    return {...data,events:data.events.filter(record=>{
-        const text=JSON.stringify(record,(key,value)=>key==='sourceRecordKey'?undefined:value).replaceAll('"','');
-        return (!yes.length || matches(yes,text)) && !matches(no,text);
-    })};
+    if(!encoded)return data;
+    return {...data,events:data.events.filter(compileFilter(encoded))};
+}
+
+export function showFilterSyntax(t) {
+    const help=t.ob_timeline_right_panel?.querySelector('[data-filter-syntax]');
+    if(help){help.hidden=!help.hidden;return;}
+    t.ob_create_filters(0,undefined,'select_filter');
+    t.ob_timeline_right_panel.querySelector('[data-filter-syntax]').hidden=false;
+}
+
+export function showFilterError(t,error) {
+    const message=t.ob_timeline_right_panel?.querySelector('[data-filter-error]');
+    if(message){message.textContent=error?.message || '';message.hidden=!error;}
+    const input=t.ob_timeline_right_panel?.querySelector('textarea');
+    if(input)input.setAttribute('aria-invalid',String(Boolean(error)));
 }
 
 function localFilters(t) {
@@ -106,7 +109,7 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         const name=element('label'); name.append(radio,document.createTextNode(filter.name)); row.append(name);
         if (request==='edit_filter' && index===filterIndex) {
             const text=element('textarea',undefined,{id:`textarea2_${t.name}_${filter.name}`,'aria-label':'Filter expression',rows:'3'});
-            text.value=filter.filter_value; row.append(text,button('Save',()=>t.ob_save_filter(sceneIndex,index)));
+            text.value=decodeFilter(filter.filter_value); row.append(text,button('Save',()=>t.ob_save_filter(sceneIndex,index)));
         } else row.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
         row.append(button('Delete',()=>t.ob_delete_filters(sceneIndex,index))); fieldset.append(row);
     });
@@ -116,7 +119,9 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         fieldset.append(name,text,button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
     } else fieldset.append(button('Add a new filter',()=>t.ob_add_filters(sceneIndex)));
     const syntax=button('Filter syntax',()=>t.ob_help_filters()); syntax.dataset.filterAvailable='';
-    fieldset.append(syntax); panel.append(fieldset);
+    const help=element('pre',filterSyntax,{'data-filter-syntax':'',class:'ob_filter_syntax'});help.hidden=true;
+    const error=element('p','',{'data-filter-error':'',role:'alert',class:'ob_filter_error'});error.hidden=true;
+    fieldset.append(syntax,error,help); panel.append(fieldset);
     t.ob_timeline_right_panel.append(panel); t.ob_timeline_right_panel.style.visibility='visible';
     updateFilterAvailability(t);
     t.show_filters=false;
