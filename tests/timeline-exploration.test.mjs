@@ -289,9 +289,10 @@ test('Empty and failed intervals use the toolbar and keep the plot clear',async(
     try {
         assert.equal(r.empty.hidden,true,'Empty state stays in the toolbar');
         assert.equal(r.explorer.lockLabel.hidden,false);
-        assert.equal(r.explorer.findPrevious.parentElement,r.toolbar);
+        assert.equal(r.explorer.findPrevious.parentElement,r.controls.activityControls);
         assert.equal(r.explorer.findNext.previousElementSibling,r.explorer.findPrevious);
-        assert.equal(r.explorer.findPrevious.previousElementSibling,r.viewControls);
+        assert.equal(r.explorer.lockLabel.previousElementSibling.previousElementSibling,r.explorer.findNext);
+        assert.equal(r.autoLabel.previousElementSibling,r.explorer.lockLabel);
         r.request({query:'missing'});
         assert.equal(r.empty.hidden,true,'A pending search does not flash an empty state');
         await waitFor(()=>!r.pending && !r.explorer.searchQuery);

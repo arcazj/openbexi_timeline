@@ -50,6 +50,8 @@ export function buildTimelineShareURL(timeline, {baseURL, demoId} = {}) {
     if (time) page.searchParams.set('time', time);
     const search = searchValue(timeline.ob_scene?.[0]?.ob_search_value);
     if (search) page.searchParams.set('search', search);
+    if (timeline.ob_results?.state.searchMode && timeline.ob_results.state.searchMode!=='text')
+        page.searchParams.set('searchMode',timeline.ob_results.state.searchMode);
     page.searchParams.set('overview', timeline.ob_visible_view ? '1' : '0');
     const results = timeline.ob_results;
     if (results?.state.mode === 'only') page.searchParams.set('results', 'only');
@@ -86,10 +88,11 @@ export function applyTimelineShareState(timeline, query) {
         changed = true;
     }
     const results = timeline.ob_results;
-    if (results && ['results','highlight','auto','ratio'].some(key => query.has(key))) changed = true;
+    if (results && ['results','highlight','auto','ratio','searchMode'].some(key => query.has(key))) changed = true;
     if (changed && results) {
         if (time !== undefined) { results.ranges.clear(); results.scaleEngaged = false; }
         results.state.query = scene.ob_search_value || '';
+        if(['text','pattern','legacy'].includes(query.get('searchMode')))results.state.searchMode=query.get('searchMode');
         if (['only','highlight'].includes(query.get('results'))) results.state.mode = query.get('results');
         if (['0','1'].includes(query.get('highlight'))) results.state.highlight = query.get('highlight') === '1';
         if (['0','1'].includes(query.get('auto'))) { results.state.auto = query.get('auto') === '1'; results.scaleEngaged = true; }

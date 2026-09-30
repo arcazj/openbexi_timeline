@@ -37,6 +37,10 @@ final class MatchSourceScan {
     }
 
     JSONObject read(JSONArray configurations, String query, String scene) {
+        return read(configurations, query, scene, null);
+    }
+
+    JSONObject read(JSONArray configurations, String query, String scene, String searchMode) {
         List<Source> sources = new ArrayList<>();
         for (Object value : configurations) {
             JSONObject source = (JSONObject) value;
@@ -71,7 +75,7 @@ final class MatchSourceScan {
         if (unreadableFiles > 0) warnings.add("Unreadable data files skipped: " + unreadableFiles + ".");
         if (limited) warnings.add("Archive scan limit reached; requested date partitions were read first.");
         JSONObject result = sources.isEmpty() ? MatchResults.failure(query, scene, from, to, "No configured data source could be read.") :
-                MatchResults.envelope(records, query, scene, from, to, warnings.isEmpty());
+                MatchResults.envelope(records, query, scene, from, to, warnings.isEmpty(), searchMode);
         if (!warnings.isEmpty()) ((JSONObject)result.get("timelineMatch")).put("warnings", warnings);
         return result;
     }

@@ -64,6 +64,7 @@ public class data_configuration {
         getConfiguration().put("startDate", req.getParameter("startDate"));
         getConfiguration().put("endDate", req.getParameter("endDate"));
         getConfiguration().put("search", req.getParameter("search"));
+        getConfiguration().put("searchMode", req.getParameter("searchMode"));
         getConfiguration().put("matchProtocol", req.getParameter("matchProtocol"));
         getConfiguration().put("progressive", req.getParameter("progressive"));
         getConfiguration().put("history", req.getParameter("history"));

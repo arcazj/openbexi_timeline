@@ -28,7 +28,7 @@ export function openModelEditor(timeline) {
     const value = {model:timeline.modelDocument, modelPath, source:timeline.modelSource,
         dataset:timeline.demoContext?.datasetURL || timeline.localSource?.url,
         providerUrl:timeline.staticData ? undefined : timeline.data,
-        previewState:{query:timeline.ob_results?.state?.query || '',center:timeline.ob_scene?.sync_time,
+        previewState:{query:timeline.ob_results?.state?.query || '',searchMode:timeline.ob_results?.state?.searchMode || 'text',center:timeline.ob_scene?.sync_time,
             camera:timeline.ob_scene?.[0]?.ob_camera_type,view:timeline.ob_views?.mode,
             modelDate:timeline.modelDocument?.params?.[0]?.date,modelCamera:timeline.modelDocument?.params?.[0]?.camera,
             renderingCamera:timeline.modelDocument?.rendering?.camera},

@@ -37,6 +37,30 @@ class ProgressiveSourceScanTest {
         return config;
     }
 
+    @Test void explicitSearchModesReachArchiveAnnotationsAndBindContinuationCursors() throws Exception {
+        JSONArray records=new JSONArray();
+        for(int index=0;index<600;index++)records.add(record("Ground station [ready] "+index,"2026-05-21T12:00:00Z",null));
+        write("2026/05/21/events.json",records);
+        JSONObject config=history(configuration());
+        config.put("searchMode","text");config.put("search","[ready]");
+        JSONObject first=request(config);
+        assertNull(meta(first).get("error"));assertEquals("text",meta(first).get("searchMode"));
+        assertNotNull(meta(first).get("nextCursor"));
+        config.put("cursor",meta(first).get("nextCursor"));config.put("searchMode","pattern");
+        assertNotNull(meta(request(config)).get("error"),"A mode change cannot reuse an old search cursor");
+        config.put("searchMode","text");config.put("cancel","1");request(config);
+        config.remove("cursor");config.remove("cancel");
+        int count=0,pages=0;JSONObject response;
+        do {
+            response=request(config);assertNull(meta(response).get("error"));
+            for(Object value:(JSONArray)response.get("events")) {
+                assertEquals(true,((JSONObject)value).get("searchMatch"));count++;
+            }
+            config.put("cursor",meta(response).get("nextCursor"));assertTrue(++pages<40);
+        } while(config.get("cursor")!=null);
+        assertEquals(600,count);assertEquals(true,meta(response).get("complete"));
+    }
+
     @Test void sharedFilesAreEvaluatedWithEveryConfiguredNamespacesAndFilter() throws Exception {
         JSONArray records = new JSONArray();
         records.add(record("locked-May-21", "2026-05-21T12:00:00Z", null));

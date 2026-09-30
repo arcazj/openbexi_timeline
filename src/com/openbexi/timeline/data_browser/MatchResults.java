@@ -8,7 +8,6 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HexFormat;
-import java.util.regex.Pattern;
 
 /** Opt-in match protocol: preserve legacy regex interpretation and source styling. */
 public final class MatchResults {
@@ -47,12 +46,17 @@ public final class MatchResults {
     }
 
     public static JSONObject envelope(JSONArray eligible, String query, String scene, long from, long to, boolean complete) {
+        return envelope(eligible, query, scene, from, to, complete, null);
+    }
+
+    public static JSONObject envelope(JSONArray eligible, String query, String scene, long from, long to, boolean complete, String searchMode) {
         query = query == null ? "" : query;
         JSONObject result = new JSONObject();
         JSONObject metadata = new JSONObject();
         metadata.put("version", 1);
         metadata.put("provider", "json_file");
         metadata.put("query", query);
+        metadata.put("searchMode", searchMode == null ? "legacy" : searchMode);
         metadata.put("complete", complete);
         metadata.put("hasCondition", !query.isEmpty() && !query.equals("*"));
         JSONObject domain = new JSONObject();
@@ -64,12 +68,13 @@ public final class MatchResults {
         result.put("timelineMatch", metadata);
         try {
             if (to <= from) throw new IllegalArgumentException("Invalid analysis domain.");
-            Pattern pattern = Boolean.TRUE.equals(metadata.get("hasCondition")) ? Pattern.compile(query.replace(";", "|").replace(" ", "|")) : null;
+            SearchQuery pattern = new SearchQuery(query, searchMode);
+            metadata.put("hasCondition", pattern.active);
             JSONArray records = (JSONArray) new JSONParser().parse(eligible.toJSONString());
             annotate(records, pattern, from, to);
             result.put("events", records);
             metadata.put("revision", HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
-                    .digest((query + records.toJSONString()).getBytes(StandardCharsets.UTF_8))));
+                    .digest((pattern.mode + query + records.toJSONString()).getBytes(StandardCharsets.UTF_8))));
         } catch (Exception error) {
             result.put("events", new JSONArray());
             metadata.put("complete", false);
@@ -78,10 +83,10 @@ public final class MatchResults {
         return result;
     }
 
-    private static void annotate(JSONArray records, Pattern pattern, long from, long to) {
+    private static void annotate(JSONArray records, SearchQuery pattern, long from, long to) {
         for (Object value : records) {
             JSONObject record = (JSONObject) value;
-            record.put("searchMatch", matchesOwn(record, pattern));
+            record.put("searchMatch", pattern.matches(record));
             // Legacy records may omit a timezone on one endpoint. Send the
             // server's resolved instants so browser locale cannot invert a range.
             // Match first, preserving searches against the original field values.
@@ -97,16 +102,9 @@ public final class MatchResults {
         }
     }
 
-    private static boolean matchesOwn(JSONObject record, Pattern pattern) {
-        JSONObject own = new JSONObject(record);
-        own.remove("activities"); own.remove("searchMatch"); own.remove("sourceRecordKey");
-        return pattern != null && !Boolean.TRUE.equals(record.get("zone")) &&
-                pattern.matcher(own.toJSONString().replace(" ", "").replace("\"", "")).find();
-    }
-
     /** Same search semantics as response annotations, including scoped nested activities. */
-    static boolean hasMatch(JSONObject record, Pattern pattern, long from, long to) {
-        if (pattern == null || matchesOwn(record, pattern)) return true;
+    static boolean hasMatch(JSONObject record, SearchQuery pattern, long from, long to) {
+        if (!pattern.active || pattern.matches(record)) return true;
         if (record.get("activities") instanceof JSONArray children)
             for (Object child : inRange(children, from, to))
                 if (hasMatch((JSONObject) child, pattern, from, to)) return true;

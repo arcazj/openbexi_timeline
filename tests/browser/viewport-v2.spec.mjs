@@ -16,6 +16,14 @@ async function capture(page,name) {
     await fs.mkdir(process.env.V2_CAPTURE_DIR,{recursive:true});
     await page.screenshot({path:path.join(process.env.V2_CAPTURE_DIR,name+'.png')});
 }
+async function resizeFullWindow(page,width,height) {
+    await page.setViewportSize({width,height});
+    await expect.poll(()=>page.evaluate(async()=>{
+        const timeline=await(await import('/src/openbexi_demo.js')).demoReady;
+        return [timeline.width,timeline.height];
+    })).toEqual([width,height]);
+    await ready(page);
+}
 
 test('Date axes stay separate from records and Sort by changes the live bands',async({page},testInfo)=>{
     const errors=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -61,7 +69,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
         const t=await(await import('/src/openbexi_demo.js')).demoReady,r=t.ob_results;
         const payload=structuredClone(t.staticData);
         const mark=records=>records.forEach(e=>{e.searchMatch=false;if(e.activities)mark(e.activities);});mark(payload.events);
-        payload.timelineMatch={version:1,query:'',hasCondition:false,complete:true,revision:'public-fixture',
+        payload.timelineMatch={version:1,searchMode:'text',query:'',hasCondition:false,complete:true,revision:'public-fixture',
             domain:{from:new Date(r.domain.from).toISOString(),to:new Date(r.domain.to).toISOString()}};
         return payload;
     });
@@ -83,7 +91,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
     });
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
     await expect(page.locator('.ob_loading_status')).toContainText('Loading items');
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('aria-busy','false');
     await capture(page,'connected-loading'+(testInfo.project.name==='narrow'?'-narrow':''));
     await page.getByRole('button',{name:'Stop loading',exact:true}).click();
@@ -92,7 +100,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(2);waiting.splice(0).forEach(resolve=>resolve());
     await expect(page.locator('.ob_results_status')).toContainText('unavailable');
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(3);waiting.splice(0).forEach(resolve=>resolve());
     await ready(page);
@@ -101,7 +109,7 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
         return {pending:r.pending,loading:r.loading,error:r.error,status:r.status.textContent};
     })},null,2),contentType:'application/json'});
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     expect(errors).toEqual([]);
 });
 
@@ -109,7 +117,7 @@ for(const demo of catalog.demos) test(demo.id+': full viewport and bounded pages
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('/demos.html?demo='+demo.id);await ready(page);
     for(const [width,height] of [[1440,900],[800,700],[390,844]]) {
-        await page.setViewportSize({width,height});await ready(page);
+        await resizeFullWindow(page,width,height);
         const dimensions=await page.evaluate(async()=>{
             const t=await(await import('/src/openbexi_demo.js')).demoReady,v=t.ob_viewport;
             const frame=t.ob_timeline_body_frame,header=t.ob_timeline_header.getBoundingClientRect();
@@ -125,7 +133,7 @@ for(const demo of catalog.demos) test(demo.id+': full viewport and bounded pages
         if(dimensions.pages>1) expect(dimensions.pager).toBeLessThanOrEqual(height);
         if(demo.id==='default-dataset') await capture(page,width===1440?'timeline-desktop':width===390?'timeline-mobile':'timeline-narrow');
     }
-    await page.setViewportSize({width:1440,height:900});await ready(page);
+    await resizeFullWindow(page,1440,900);
     await page.getByRole('button',{name:'Split',exact:true}).click();await ready(page);
     const table=page.getByRole('region',{name:'Timeline event table'});
     expect(await table.locator('tbody tr').count()).toBeLessThan(demo.recordCount);
@@ -142,7 +150,8 @@ for(const demo of catalog.demos) test(demo.id+': full viewport and bounded pages
 
 test('Timeline Info applies and persists custom geometry; resizing retains the request',async({page})=>{
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
-    await page.getByAltText('Settings',{exact:true}).click();await ready(page);
+    await page.getByAltText('Settings',{exact:true}).click();
+    await page.locator('[data-settings-section=info] > summary').click();await ready(page);
     const auto=page.getByRole('checkbox',{name:'Use full browser window'});
     await expect(auto).toBeChecked();await auto.uncheck();
     for(const [name,value] of Object.entries({Top:'10',Left:'15',Width:'700',Height:'550'})) await page.getByRole('spinbutton',{name,exact:true}).fill(value);

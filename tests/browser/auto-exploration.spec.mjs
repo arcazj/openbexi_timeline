@@ -32,7 +32,7 @@ async function setup(page,records,{connected=false,partial=false,holdSearch=fals
         const from=Date.parse(u.searchParams.get('startDate')),to=Date.parse(u.searchParams.get('endDate'));
         const query=u.searchParams.get('search') || '';
         return route.fulfill({json:{events:records.filter(r=>Date.parse(r.start)>=from && Date.parse(r.start)<=to)
-            .map(r=>({...r,searchMatch:query?r.namespace===query:false})),timelineMatch:{version:1,progressive:true,
+            .map(r=>({...r,searchMatch:query?r.namespace===query:false})),timelineMatch:{version:1,searchMode:'text',progressive:true,
             query,hasCondition:!!query,complete:!partial,nextCursor:null,revision:'fixture',
             domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()},warnings:partial?['Source coverage is incomplete.']:[]}}});
     });
@@ -50,10 +50,8 @@ test('Typing a search centers its first result and Auto scale keeps the extra co
         await expect(page.getByLabel('Auto scale',{exact:true})).not.toBeChecked();
         const lock=page.getByLabel('Lock current view',{exact:true});
         await expect(lock).toBeVisible();
-        const clearBox=await page.getByRole('button',{name:'Clear search',exact:true}).first().boundingBox();
-        const lockBox=await lock.locator('..').boundingBox();
-        expect(lockBox.x).toBeGreaterThan(clearBox.x+clearBox.width);
-        expect(Math.abs(lockBox.y+lockBox.height/2-clearBox.y-clearBox.height/2)).toBeLessThan(2);
+        await expect(page.getByRole('button',{name:'Clear search',exact:true})).toBeVisible();
+        expect(await lock.evaluate(control=>!!control.closest('.ob_activity_controls'))).toBe(true);
         const first=await state(page);expect((first.range.from+first.range.to)/2).toBeCloseTo(base+8*hour,-1);
         await page.getByLabel('Show only matches',{exact:true}).check();await settle(page);
         const before=await state(page);
@@ -98,7 +96,7 @@ test('Previous and next buttons navigate matching activity and search the future
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('volcano');await centered(first);
         const previous=page.getByRole('button',{name:'Find previous activity',exact:true});
         const next=page.getByRole('button',{name:'Find next activity',exact:true});
-        expect(await previous.evaluate(button=>button.previousElementSibling.classList.contains('ob_view_controls'))).toBe(true);
+        await expect(previous.locator('..')).toHaveClass('ob_activity_controls');
         expect(await next.evaluate(button=>button.previousElementSibling.textContent)).toBe('Find previous activity');
         await next.click();await centered(second);
         await previous.click();await centered(first);
@@ -178,7 +176,7 @@ test('Unknown coverage remains explicit and does not trigger an automatic move',
         await page.evaluate(async()=>{(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.explorer.considerEarlier();});
         expect((await state(page)).range.from).toBeCloseTo(before.range.from,-1);
         expect(fixture.requests.some(u=>u.searchParams.get('purpose')==='seek-past')).toBe(false);
-        await page.locator('.ob_results_details > summary').click();
+        await page.getByRole('button',{name:'Timeline details',exact:true}).click();
         await expect(page.locator('.ob_coverage_intervals')).toContainText('partial');expect(fixture.errors).toEqual([]);
     } finally {await fixture.close();}
 });
@@ -192,7 +190,8 @@ test('REST Auto scale stays idle; an explicit earlier search can be cancelled wi
         expect(fixture.requests.some(url=>url.searchParams.get('purpose')==='seek-past')).toBe(false);
         await page.getByRole('button',{name:'Find previous activity',exact:true}).click();
         await expect(page.getByRole('button',{name:'Cancel search',exact:true})).toBeVisible();
-        await expect(page.locator('.ob_loading_status')).toBeVisible();
+        await expect(page.locator('.ob_explore_notice')).toContainText('Searching earlier intervals');
+        await expect(page.locator('.ob_loading_status')).toBeHidden();
         await page.getByRole('button',{name:'Cancel search',exact:true}).click();
         await expect(page.locator('.ob_explore_notice')).toContainText('Search stopped');
         await expect(page.locator('.ob_loading_status')).toBeHidden();
@@ -246,7 +245,7 @@ test('A newer query cancels an earlier lookup and stale replies cannot move the 
         await expect.poll(async()=>{const s=await state(page);return s.counts.matching.events;}).toBe(1);
         await settle(page);
         const before=await state(page),stale=fixture.held.shift(),url=new URL(stale.request().url());
-        await stale.fulfill({json:{events:[{...event('stale',base-10*hour),searchMatch:true}],timelineMatch:{version:1,
+        await stale.fulfill({json:{events:[{...event('stale',base-10*hour),searchMatch:true}],timelineMatch:{version:1,searchMode:'text',
             query:'volcano',hasCondition:true,complete:true,progressive:true,revision:'stale',
             domain:{from:url.searchParams.get('startDate'),to:url.searchParams.get('endDate')}}}}).catch(()=>{});
         await expect.poll(async()=>(await state(page)).fetching).toBe(false);

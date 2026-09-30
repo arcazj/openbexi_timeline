@@ -61,7 +61,7 @@ test('First connected batch is visible and interactive while the next batch wait
         const url=new URL(route.request().url()),from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
         const events=Array.from({length:end-start},(_,offset)=>{const i=start+offset;return {id:'sample-'+i,namespace:'operations',series:'series_'+i%3,
             start:new Date(from+(to-from)*(.2+(i%15)/30)).toISOString(),data:{title:'Sample event '+i},searchMatch:false};});
-        return route.fulfill({json:{events,timelineMatch:{version:1,progressive:true,query:'',hasCondition:false,complete:!cursor,revision:String(start),nextCursor:cursor,
+        return route.fulfill({json:{events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:'',hasCondition:false,complete:!cursor,revision:String(start),nextCursor:cursor,
             domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}}});
     };
     await page.route('**/__progressive_fixture**',async route=>{
@@ -82,7 +82,7 @@ test('First connected batch is visible and interactive while the next batch wait
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
     await expect(page.locator('.ob_loading_status')).toHaveText('Loading items…');
     await expect(page.getByRole('button',{name:'Stop loading',exact:true})).toBeVisible();
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await page.getByAltText('Sorting and filtering',{exact:true}).click();await ready(page);
     await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('series');
     await page.getByRole('button',{name:'Apply',exact:true}).click();await ready(page);
@@ -106,7 +106,7 @@ test('A stopped data server leaves the standalone frame and complete toolbar usa
     await page.waitForFunction(()=>window.timeline?.ob_results?.error);
     await expect(page.locator('canvas')).toBeVisible();
     for(const icon of ['Calendar browser','Sorting and filtering','Settings','Help']) await expect(page.getByAltText(icon,{exact:true})).toBeVisible();
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
     const warning=page.locator('.ob_update_failed');await expect(warning).toBeVisible();
     expect(await warning.evaluate(node=>getComputedStyle(node).backgroundColor)).toBe('rgb(255, 240, 217)');
@@ -129,6 +129,7 @@ test('Advanced filter help, validation and saved sorting remain available in the
     await expect(page.locator('[data-filter-syntax]')).toContainText('Legacy:');
     await expect(page.locator('[data-filter-syntax]')).toContainText('expr:');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Advanced');
+    await page.locator('.ob_filter_advanced > summary').click();
     const input=page.getByRole('textbox',{name:'New filter expression',exact:true});
     await input.fill('expr: namespace =');
     await page.getByRole('button',{name:'Save new filter',exact:true}).click();

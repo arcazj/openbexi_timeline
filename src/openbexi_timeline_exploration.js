@@ -1,4 +1,5 @@
 import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
+import {validateSearchMode} from './openbexi_timeline_search.js';
 
 export const recordRange = record => ({from:Date.parse(record.start),to:Date.parse(record.end || record.start)});
 export const intersects = (a,b) => a.from<=b.to && a.to>=b.from;
@@ -101,6 +102,7 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
             signal?.throwIfAborted();pages++;
             if(!Array.isArray(json.events) || !meta || meta.query!==query || typeof meta.hasCondition!=='boolean' || meta.error)
                 throw new Error(meta?.error || 'This source cannot search timeline history.');
+            validateSearchMode(meta,request.searchParams.get('searchMode'),query);
             // Older deployments expose only neighboring-window searches.
             if(!meta.history)return {unsupported:true,complete:false};
             const history=meta.history;
@@ -173,6 +175,7 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
                 signal?.throwIfAborted();
                 if(!Array.isArray(json.events) || !meta || meta.query!==query || typeof meta.hasCondition!=='boolean' || meta.error)
                     throw new Error(meta?.error || 'This source cannot search neighboring intervals.');
+                validateSearchMode(meta,request.searchParams.get('searchMode'),query);
                 const candidates=[];
                 const visit=records=>{for(const record of records){const bounds=recordRange(record);
                     if(!record.zone && (!meta.hasCondition || record.searchMatch===true) &&

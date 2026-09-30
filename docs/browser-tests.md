@@ -32,6 +32,13 @@ npx playwright show-report
 - Search, previous/next activity, view locking and Resync exercise local and
   connected records. Selected activities glow without changing their size;
   compact 3D labels remain readable through rotation and resizing.
+- Refresh, latest data, activity navigation, Lock current view and Auto scale
+  occupy a permanent second menu bar. Checks include responsive wrapping,
+  retained keyboard focus, keyboard zoom and no horizontal overflow on phone screens.
+  The filter builder and removable labels preserve other criteria.
+  Text, Pattern and Legacy share browser/server fixtures; checks cover invalid
+  patterns, debounce, immediate Enter, mode changes and obsolete responses.
+  Back restores the previous range. The application starts in 2D.
 - Startup checks cover explicit HTML models, YAML configuration, a missing
   model setting, offline/time-limited discovery, and explicit model errors.
 - The timeline fills the window, reserving space for an open panel on wide screens
@@ -159,7 +166,7 @@ Duplicate narrow drag cases are intentionally skipped; the drag-performance
 suite exercises those gestures at desktop width.
 
 `perspective-status.spec.mjs` covers matching band colors after filtering and
-preset reload, status explanations reached with the keyboard, right-side status
+preset reload, status explanations reached with the keyboard, central status
 placement, and the separate loading indicator. It also exercises actual
 OrbitControls rotation, pan and zoom, numeric camera and appearance changes,
 Save, reload, Restore and Reset at both viewport sizes. Camera gestures must
@@ -190,3 +197,17 @@ older servers without the history protocol. An empty limited or failed scan
 must be reported as incomplete. The fixture also checks that REST stays idle
 without a query. These checks use public synthetic records rather than private
 operational files.
+
+### Menu bars and Settings
+
+`toolbar-ux.spec.mjs` checks the permanent second menu bar, action order,
+separators, right-aligned Filter and Timeline details, and wrapping at desktop,
+narrow and phone widths. It captures both menu layouts and all five themes.
+Search-mode controls are checked inside Filter. A controlled clock verifies
+debouncing independently of machine load; Text, Pattern, invalid-pattern recovery,
+Back, filter labels, local Refresh and Go to latest data are exercised through the UI.
+
+Settings checks cover the four ordered sections, the initially collapsed Timeline
+info and Update perspective sections, native keyboard radio navigation, immediate
+theme changes, persistence after reload, invalid preferences and blocked storage.
+Theme changes must preserve records and the selected time range.

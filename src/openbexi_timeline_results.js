@@ -7,6 +7,9 @@ import {filterLocalData} from './openbexi_timeline_filters.js';
 import {projectOverviewSessions} from './openbexi_timeline_overview.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
 import {TimelineExplorer} from './openbexi_timeline_explorer.js';
+import {TimelineControls} from './openbexi_timeline_controls.js';
+import {compileSearch, validateSearchMode} from './openbexi_timeline_search.js';
+import {restoreAppearance} from './openbexi_timeline_appearance.js';
 
 const overview = band => band.name.includes('overview_');
 const instant = value => typeof value === 'number' ? value : Date.parse(value);
@@ -22,7 +25,7 @@ export class TimelineResults {
     constructor(timeline) {
         this.timeline = timeline;
         const preferences=renderingFor(timeline).interaction;
-        this.state = {query: '', mode: preferences.searchMode, highlight: preferences.highlight, auto: preferences.autoScale, ratio: preferences.adaptiveRatio};
+        this.state = {query: '', searchMode:'text', mode: preferences.searchMode, highlight: preferences.highlight, auto: preferences.autoScale, ratio: preferences.adaptiveRatio};
         this.ranges = new Map();
         this.visibleRanges = new Map();
         this.overviewRanges = new Map();
@@ -34,6 +37,7 @@ export class TimelineResults {
         this.scaleEngaged = false;
         this.pending = false;
         this.explorer = new TimelineExplorer(this);
+        this.controls = new TimelineControls(this);
         if (timeline.staticData) this.prepare(timeline.staticData);
     }
 
@@ -41,7 +45,7 @@ export class TimelineResults {
         if (!metadata) data = filterLocalData(data, this.timeline.ob_scene?.[0]?.ob_filter_value || '');
         const snapshot = metadata ? createProviderMatchSnapshot(data, metadata, this.state.query,
             {sourceScope: this.timeline.name || ''}) : createStaticMatchSnapshot(data, this.state.query,
-            {sourceScope: this.timeline.name || ''});
+            {sourceScope: this.timeline.name || '', searchMode:this.state.searchMode});
         const projection = projectMatchSnapshot(snapshot, this.state.mode);
         let domain = this.domain;
         if (!domain) {
@@ -107,6 +111,7 @@ export class TimelineResults {
     }
 
     focusRecord(record) {
+        this.controls.rememberView();
         this.cancelFocus(false);
         this.explorer.interrupt();this.selectRecord(record);
         const from=instant(record.start),to=instant(record.end || record.start);
@@ -172,6 +177,11 @@ export class TimelineResults {
     }
 
     request(patch = {}, delay = 0) {
+        if ('query' in patch || 'searchMode' in patch) {
+            try { compileSearch(patch.query ?? this.state.query, patch.searchMode ?? this.state.searchMode); }
+            catch(error) { this.searchError=error.message; this.updateUI(); return; }
+            this.searchError='';
+        }
         this.explorer.changed(patch);
         const keys = Object.keys(patch);
         if(keys.length)this.cancelFocus(false);
@@ -194,7 +204,7 @@ export class TimelineResults {
         clearTimeout(this.timer);
         if (this.gesture) { this.queued = true; return; }
         this.queued = false;
-        if (!this.timeline.staticData && this.remoteMetadata?.query !== this.state.query) {
+        if (!this.timeline.staticData && (this.remoteMetadata?.query !== this.state.query || 'searchMode' in patch)) {
             this.timeline.ob_scene[0].ob_search_value = this.state.query;
             this.timeline.load_data(0);
             return;
@@ -266,6 +276,8 @@ export class TimelineResults {
         }
         if (metadata.error) { this.fail(new Error(metadata.error)); return true; }
         if (metadata.query !== this.state.query) return true;
+        try { validateSearchMode(metadata,this.state.searchMode,this.state.query); }
+        catch(error) { this.fail(error); return true; }
         if (!this.gesture && !metadata.progressive) this.beginLoad();
         this.remoteData = data;
         this.remoteMetadata = metadata;
@@ -499,21 +511,25 @@ export class TimelineResults {
     mount() {
         const t = this.timeline;
         if (this.toolbar) { this.updateUI(); return; }
+        restoreAppearance();
         const header = t.ob_timeline_header;
         header.classList.add('ob_results_header');
         const nav = node('div', undefined, {class: 'ob_results_navigation'});
+        this.primaryNavigation = nav;
         const iconGroup = (...icons) => {
             const group=node('span',undefined,{class:'ob_toolbar_group'});
             group.hidden=icons.every(icon=>icon.hidden);
             group.append(node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),...icons);
             return group;
         };
-        nav.append(t.ob_start, t.ob_stop, t.ob_calendar, t.ob_sync, iconGroup(t.ob_filter));
+        nav.append(t.ob_start, t.ob_stop, t.ob_calendar, t.ob_sync);
         const utilities = node('div', undefined, {class: 'ob_results_utilities'});
+        this.utilities = utilities;
         utilities.append(t.ob_views.controls, iconGroup(t.ob_view,t.ob_no_view), t.ob_3d, t.ob_settings, t.ob_help);
         this.toolbar = node('div', undefined, {class: 'ob_results_controls', role: 'group', 'aria-label': 'Search and results'});
         this.search = node('div', undefined, {class:'ob_results_search'});
-        const searchButton = button('', () => { this.request({query:t.ob_search_input.value}); t.ob_search_input.focus(); });
+        const submitSearch = () => { clearTimeout(this.searchTimer); this.request({query:t.ob_search_input.value,searchMode:this.searchMode.value}); };
+        const searchButton = button('', () => { submitSearch(); t.ob_search_input.focus(); });
         searchButton.className = 'ob_results_search_button';
         searchButton.setAttribute('aria-label', 'Search');
         searchButton.title = 'Search events and sessions';
@@ -521,12 +537,28 @@ export class TimelineResults {
         t.ob_search.onclick = null;
         searchButton.append(t.ob_search);
         t.ob_search_input.setAttribute('aria-label', 'Search');
-        t.ob_search_input.onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); this.request({query: t.ob_search_input.value}); } };
-        t.ob_search_input.oninput = () => this.request({query: t.ob_search_input.value}, 140);
-        t.ob_search_input.addEventListener('search', () => this.request({query: t.ob_search_input.value}));
+        this.searchMode=node('select',undefined,{'aria-label':'Search mode'});
+        for(const [value,label] of [['text','Text'],['pattern','Pattern'],['legacy','Legacy']])this.searchMode.append(node('option',label,{value}));
+        this.searchMode.onchange=submitSearch;
+        t.ob_search_input.maxLength=500;
+        t.ob_search_input.onkeydown = event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); submitSearch(); } };
+        t.ob_search_input.oninput = event => {
+            clearTimeout(this.searchTimer);
+            if(event.isComposing)return;
+            // Cancel the old search immediately; defer starting a new network request.
+            this.explorer.interrupt();
+            this.updateUI();
+            this.searchTimer=setTimeout(submitSearch,t.staticData?140:300);
+        };
+        t.ob_search_input.addEventListener('compositionend',()=>t.ob_search_input.oninput({isComposing:false}));
+        t.ob_search_input.addEventListener('search', submitSearch);
+        this.searchErrorLabel=node('span','',{class:'ob_search_error',role:'alert',id:t.name+'_search_error'});
+        this.searchErrorLabel.hidden=true;
+        t.ob_search_input.setAttribute('aria-describedby',this.searchErrorLabel.id);
         this.auto = node('input', undefined, {type: 'checkbox'});
         this.auto.onchange = () => this.request({auto: this.auto.checked});
         const autoLabel = node('label', ' Auto scale'); autoLabel.prepend(this.auto);
+        this.autoLabel = autoLabel;
         this.highlight = node('input', undefined, {type:'checkbox'});
         this.highlight.onchange = () => this.request({highlight:this.highlight.checked});
         const highlightLabel = node('label', ' Highlight matches', {title:'Emphasize search matches in the timeline and overview.'});
@@ -537,45 +569,55 @@ export class TimelineResults {
         modeLabel.prepend(this.mode);
         this.fitButton = button('Fit matches', () => this.fit());
         this.clearButton = button('Clear search', () => {
-            t.ob_search_input.value = ''; t.ob_search_input.focus(); this.request({query: ''});
+            clearTimeout(this.searchTimer);t.ob_search_input.value = ''; t.ob_search_input.focus(); this.request({query: ''});
         });
-        this.search.append(searchButton, t.ob_search_input, autoLabel);
+        this.search.append(searchButton, t.ob_search_input, this.searchErrorLabel);
         this.viewControls = node('span', undefined, {class:'ob_view_controls'});
         this.viewControls.append(this.clearButton);
         this.matchControls = [highlightLabel, modeLabel, this.fitButton, this.clearButton];
         this.toolbar.append(highlightLabel, modeLabel, this.fitButton, this.viewControls);
-        const zoomIn = button('+', () => this.zoom(renderingFor(this.timeline).interaction.zoomInFactor)), zoomOut = button('−', () => this.zoom(renderingFor(this.timeline).interaction.zoomOutFactor));
-        for (const [control,label] of [[zoomIn,'Zoom in'],[zoomOut,'Zoom out']]) {
-            control.setAttribute('aria-label',label); control.title = label;
-        }
-        this.search.insertBefore(zoomIn,autoLabel); this.search.insertBefore(zoomOut,autoLabel);
         this.details = node('details', undefined, {class:'ob_results_details',id:t.name+'_status_details'});
-        this.detailsToggle = node('summary', 'Search details');
+        const detailsSummary=node('summary','Timeline details',{hidden:''});
+        this.detailsToggle = button('Timeline details',()=>{this.details.open=!this.details.open;syncDetails();});
+        this.detailsToggle.setAttribute('aria-controls',this.details.id);
+        this.detailsToggle.setAttribute('aria-expanded','false');
         this.statusExplanation = node('p', '', {class:'ob_status_explanation'});
         this.summary = node('div', undefined, {class:'ob_results_summary'});
-        this.details.append(this.detailsToggle, this.statusExplanation, this.summary);
-        this.details.addEventListener('toggle', () => {
+        this.details.append(detailsSummary, this.statusExplanation, this.summary);
+        const syncDetails = () => {
+            this.details.hidden=!this.details.open;
             header.classList.toggle('ob_results_expanded', this.details.open);
-            for (const control of [this.status,this.liveStatus]) control?.setAttribute('aria-expanded',String(this.details.open));
+            for (const control of [this.status,this.liveStatus,this.detailsToggle]) control?.setAttribute('aria-expanded',String(this.details.open));
             this.layout();
-        });
-        this.details.addEventListener('keydown', event => {
-            if (event.key === 'Escape') { this.details.open = false; this.detailsToggle.focus(); }
-        });
-        const openDetails = () => { this.details.open=true;this.detailsToggle.focus(); };
+        };
+        this.details.hidden=true;
+        this.details.addEventListener('toggle',syncDetails);
+        const closeDetails=event=>{
+            if(event.key==='Escape' && this.details.open){event.preventDefault();this.details.open=false;syncDetails();this.detailsToggle.focus();}
+        };
+        this.details.addEventListener('keydown',closeDetails);
+        this.detailsToggle.addEventListener('keydown',closeDetails);
+        const openDetails = () => { this.details.open=true;syncDetails();this.detailsToggle.focus(); };
         this.status = button('',openDetails);
         this.status.className='ob_results_status';
         this.status.setAttribute('aria-live','polite');
         this.status.setAttribute('aria-atomic','true');
         this.feedback = node('div', undefined, {class:'ob_results_feedback'});
-        this.feedback.append(this.details, this.status);
+        this.filterButton=button('Filter',()=>t.ob_filter.click());
+        this.filterButton.className='ob_toolbar_filter';
+        this.filterButton.setAttribute('aria-label','Filter');
+        this.filterButton.prepend(t.ob_filter);
+        const openFilter=t.ob_filter.onclick;
+        t.ob_filter.onclick=event=>{event.stopPropagation();openFilter.call(t.ob_filter,event);};
+        this.feedback.append(this.filterButton,node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),this.detailsToggle);
         this.retryButton = button('Retry', () => { this.retrying=true;this.timeline.load_data(0); });
-        this.feedback.append(this.retryButton);
         this.narrowButton = button('Narrow time window', () => this.zoom(0.5));
         this.narrowButton.title = 'Halve the visible time range and load that interval.';
-        this.feedback.append(this.narrowButton);
+        this.details.append(this.narrowButton);
         this.refreshButton=button('Refresh',()=>{
-            if(t.ob_loader?.input)t.ob_loader.load(t.ob_loader.input,{refresh:true});
+            if(t.staticData && t.localSource)t.loadLocalData();
+            else if(t.staticData)this.request();
+            else if(t.ob_loader?.input)t.ob_loader.load(t.ob_loader.input,{refresh:true});
             else t.load_data(0);
         });
         this.refreshButton.title='Check for updated data in this view.';
@@ -588,9 +630,8 @@ export class TimelineResults {
         this.loadingStatus=node('span','Loading items…',{class:'ob_loading_status ob_connection_warning',role:'status','aria-live':'polite'});
         this.loadingStatus.hidden=true;
         this.statusGroup=node('div',undefined,{class:'ob_status_controls'});
-        this.feedback.append(this.liveStatus);
         this.availableButton=button('Go to latest data',()=>{
-            const available=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
+            const available=this.latestAvailable();
             if (!available) return;
             const main=this.visibleRanges.values().next().value || this.ranges.values().next().value;
             if(!main)return;
@@ -599,9 +640,12 @@ export class TimelineResults {
             this.navigate({from:center-span/2,to:center+span/2},true);
         });
         this.availableButton.title='Go to the latest timestamp observed while loading. Coverage may be partial.';
-        this.feedback.append(this.availableButton);
         const titleSlot=node('div',undefined,{class:'ob_results_title_slot'}); titleSlot.append(t.ob_time_marker);
-        header.replaceChildren(nav, this.search, titleSlot, utilities, this.toolbar, this.feedback);
+        this.titleSlot=titleSlot;
+        this.primaryToolbar=node('div',undefined,{class:'ob_primary_toolbar'});
+        this.primaryToolbar.append(nav,this.search,titleSlot,utilities);
+        this.activityToolbar=node('div',undefined,{class:'ob_activity_toolbar'});
+        header.replaceChildren(this.primaryToolbar,this.activityToolbar,this.toolbar,this.details);
         if (t.ob_marker) {
             t.ob_marker.classList.add('ob_results_marker');
             t.ob_marker.style.top = '0px';
@@ -645,13 +689,13 @@ export class TimelineResults {
             }
         }, true);
         const guard = event => {
-            if (event.type==='keydown' && event.key==='Escape' && this.details.open && this.details.contains(event.target)) return;
+            if (event.type==='keydown' && event.key==='Escape' && this.details.open && (this.details.contains(event.target) || event.target===this.detailsToggle)) return;
             if (event.type==='keydown' && event.key==='Escape' && t.ob_perspective?.adjusting && t.ob_timeline_body_frame.contains(event.target)) return;
             if ((this.loading || this.fetching) && event.type === 'keydown' && event.key === 'Escape') {
                 event.preventDefault(); this.cancelLoad(); return;
             }
             if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help ||
-                event.target === this.status || event.target === this.liveStatus || event.target===this.explorer.stop || this.details.contains(event.target)) return;
+                event.target === this.status || event.target === this.liveStatus || event.target===this.detailsToggle || event.target===this.explorer.stop || this.details.contains(event.target)) return;
             if (event.type === 'keydown' && event.key === 'Tab') return;
             event.preventDefault(); event.stopImmediatePropagation();
         };
@@ -663,7 +707,7 @@ export class TimelineResults {
         header.append(this.selectionNotice);
         this.explorer.mount(header);
         this.statusGroup.append(this.retryButton,this.liveStatus,this.status,this.loadingStatus);
-        this.toolbar.append(this.refreshButton,this.feedback,this.statusGroup);
+        this.controls.mount();
         this.updateUI();
     }
 
@@ -674,6 +718,7 @@ export class TimelineResults {
     }
 
     cancelLoad() {
+        clearTimeout(this.searchTimer);
         this.explorer.interrupt();
         const t = this.timeline;
         t.ob_loader?.cancel();
@@ -710,7 +755,7 @@ export class TimelineResults {
         this.disabledControls ??= new Map();
         if (busy) {
             for (const control of t.ob_timeline_header.querySelectorAll('button,input,select,img')) {
-                if (control === t.ob_stop || control === t.ob_help || control === this.status || control === this.liveStatus || control===this.explorer.stop) continue;
+                if (control === t.ob_stop || control === t.ob_help || control === this.status || control === this.liveStatus || control===this.detailsToggle || control===this.explorer.stop) continue;
                 if (!this.disabledControls.has(control)) this.disabledControls.set(control, Boolean(control.disabled));
                 control.disabled = true; control.setAttribute('aria-disabled', 'true');
             }
@@ -753,11 +798,25 @@ export class TimelineResults {
         panel.append(fieldset);
     }
 
+    latestAvailable() {
+        const remote=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
+        if(remote && Number.isFinite(instant(remote.from)))return remote;
+        let latest=-Infinity;
+        for(const entry of this.snapshot?.entries || []) {
+            const timestamp=instant(entry.record.end || entry.record.start);
+            if(Number.isFinite(timestamp))latest=Math.max(latest,timestamp);
+        }
+        return Number.isFinite(latest)?{from:new Date(latest).toISOString()}:null;
+    }
+
     updateUI() {
         if (!this.toolbar) return;
         // Release owned disabled states before applying current availability.
         if (!this.loading) this.updateLoadingUI();
         const t = this.timeline;
+        if(!this.searchError)this.searchMode.value=this.state.searchMode;
+        this.searchErrorLabel.textContent=this.searchError || '';
+        this.searchErrorLabel.hidden=!this.searchError;
         this.auto.checked = this.state.auto; this.mode.checked = this.state.mode === 'only';
         const sorting=document.getElementById(t.name+'_setting')?.querySelector('#ob_sort_by');
         if (sorting) {
@@ -771,7 +830,7 @@ export class TimelineResults {
             (this.snapshot?.hasCondition && this.snapshot.query === this.state.query));
         this.toolbar.hidden = !this.supported && !active && !this.state.auto;
         for (const control of this.matchControls) control.hidden = !active;
-        t.ob_search_input.setAttribute('aria-invalid', this.error ? 'true' : 'false');
+        t.ob_search_input.setAttribute('aria-invalid', this.error || this.searchError ? 'true' : 'false');
         const working=Boolean(this.loading || this.fetching || this.pending && !this.presentationUpdate || this.explorer.seeking);
         const status = this.error ? (this.snapshot?.entries.length?'Update unavailable — displayed records retained':'Source unavailable — open details') : this.cancelled ? 'Loading cancelled' : working && !this.remoteMetadata?.warnings?.length && !this.remoteMetadata?.loadLimited ? '' :
             !this.supported ? 'Match controls unavailable' : this.remoteMetadata?.loadLimited ? 'Data limit reached' : !this.complete ? 'Partial data' :
@@ -782,7 +841,7 @@ export class TimelineResults {
             this.remoteMetadata?.warnings?.length));
         this.loadingStatus.hidden=!working;
         this.retryButton.hidden = !this.error && !this.cancelled;
-        this.refreshButton.hidden=Boolean(t.staticData);
+        this.refreshButton.hidden=false;
         this.refreshButton.disabled=this.fetching || this.loading;
         this.liveStatus.textContent=this.liveState || '';
         this.liveStatus.hidden=!this.liveState;
@@ -792,9 +851,7 @@ export class TimelineResults {
         this.narrowButton.disabled = this.pending || this.fetching;
         this.status.title = 'Explain this status';
         this.liveStatus.title='Explain the live connection';
-        this.feedback.hidden = !active && !status && !working && !this.liveState;
-        if (!active && !status && !working && !this.liveState) this.details.open = false;
-        this.detailsToggle.textContent = active ? 'Search details' : 'Timeline details';
+        this.feedback.hidden = false;
         this.fitButton.disabled = this.pending || Boolean(this.error) || !this.supported || !this.complete || !this.snapshot?.matchingBounds || !this.snapshot.hasCondition;
         this.fitButton.title = this.fitButton.disabled ? 'An active query and complete matching bounds are required.' : 'Fit matching real timestamps with padding';
         const counts = this.snapshot?.counts;
@@ -816,12 +873,9 @@ export class TimelineResults {
         this.summary.textContent = text;
         const noRecords=this.supported && this.snapshot?.counts.eligible.events===0 && this.snapshot?.counts.eligible.sessions===0;
         if (!t.staticData && !this.remoteMetadata && !this.error) this.summary.textContent='Loading timeline data';
-        const available=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
-        const range=this.visibleRanges.values().next().value;
-        const visibleRecords=this.snapshot?.entries.some(entry=>!range ||
-            instant(entry.record.start)<=range.to && instant(entry.record.end || entry.record.start)>=range.from);
-        this.availableButton.hidden=!(!visibleRecords && available);
-        if(!this.availableButton.hidden)this.feedback.hidden=false;
+        const available=this.latestAvailable();
+        this.availableButton.hidden=false;
+        this.availableButton.disabled=!available || this.pending || this.loading;
         if(available)this.availableButton.title='Latest observed data: '+available.from+'; coverage may be partial.';
         if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !this.remoteMetadata.loadLimited) {
             this.status.textContent=working?'':this.complete?'No records in this interval':'No records loaded; coverage is partial';
@@ -830,8 +884,12 @@ export class TimelineResults {
         this.empty.hidden = true;
         this.selectionNotice.hidden = !this.selectedKey || this.projection?.displayedKeys.includes(this.selectedKey);
         this.explorer.update();
+        if(this.explorer.seeking)this.loadingStatus.hidden=true;
+        this.controls.update();
         this.status.hidden=!this.status.textContent;
         this.statusGroup.hidden=this.status.hidden && this.loadingStatus.hidden && this.liveStatus.hidden && this.retryButton.hidden;
+        this.viewControls.hidden=this.clearButton.hidden;
+        this.toolbar.hidden=[...this.toolbar.children].every(control=>control.hidden);
         const explanation=this.error ? this.error+' Use Retry or Refresh to request data again.' : this.cancelled ?
             'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.remoteMetadata?.loadLimited ?
             'The loading limit was reached. Narrow the time window to continue.' : working && !this.remoteMetadata?.warnings?.length ?
@@ -848,6 +906,7 @@ export class TimelineResults {
 
     layout() {
         if (!this.toolbar) return;
+        this.controls.layout();
         const t = this.timeline, header = t.ob_timeline_header;
         const height = header.offsetHeight || (t.width < 700 ? 160 : 108);
         header.style.height = height + 'px';

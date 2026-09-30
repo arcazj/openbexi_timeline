@@ -1,6 +1,7 @@
 import {parseTimelineData} from './openbexi_timeline_data.js';
 import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
 import {TimelineLive} from './openbexi_timeline_live.js';
+import {validateSearchMode} from './openbexi_timeline_search.js';
 
 const key = record => JSON.stringify([record.namespace ?? record.data?.namespace ?? '', record.sourceRecordKey || record.id]);
 function merge(records) {
@@ -173,7 +174,8 @@ export class TimelineLoader {
         for (const name of ['cursor','cancel','ob_request']) url.searchParams.delete(name);
         url.searchParams.set('matchProtocol','1');url.searchParams.set('progressive','1');
         url.searchParams.set('search',r.state.query);url.searchParams.set('sortBy',t.ob_sortBy || 'NONE');
-        const cacheKey=JSON.stringify([url.origin,url.pathname,r.state.query,url.searchParams.get('filter'),
+        url.searchParams.set('searchMode',r.state.searchMode || 'text');
+        const cacheKey=JSON.stringify([url.origin,url.pathname,r.state.query,r.state.searchMode,url.searchParams.get('filter'),
             url.searchParams.get('userName'),url.searchParams.get('timelineName'),scene.sources]);
         // Regrouping can retain loaded records, but a server search cursor is
         // bound to its original Sort by and must restart when that changes.
@@ -188,7 +190,7 @@ export class TimelineLoader {
             const replacing=this.cacheKey!==undefined;
             this.cache=[];this.grid=null;this.sourceRevision=null;
             if(replacing) {
-                r.acceptRemote({events:[]},{version:1,revision:'filter-change-'+this.generation,query:r.state.query,
+                r.acceptRemote({events:[]},{version:1,revision:'filter-change-'+this.generation,query:r.state.query,searchMode:r.state.searchMode,
                     hasCondition:Boolean(r.state.query),progressive:true,complete:false,
                     domain:{from:new Date(visible.from).toISOString(),to:new Date(visible.to).toISOString()}});
             }
@@ -268,6 +270,8 @@ export class TimelineLoader {
                 if (metadata.nextCursor && metadata.nextCursor===entry.cursor)
                     throw new Error('The server repeated a loading cursor. Retry the request.');
                 if (metadata.query!==r.state.query) throw new Error('The server returned a different search. Retry the request.');
+                try { validateSearchMode(metadata,r.state.searchMode,r.state.query); }
+                catch(error) { this.discardResponse(request,json); throw error; }
                 metadata.requestId=response.headers?.get?.('X-Request-ID') || '';
                 metadata.loadId=this.loadId;
                 metadata.clientRequestMs=Math.round(performance.now()-started);

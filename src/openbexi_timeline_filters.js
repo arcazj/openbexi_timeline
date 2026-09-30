@@ -8,6 +8,64 @@ const element = (tag, text, attributes = {}) => {
 };
 const button = (label, action) => { const node=element('button',label,{type:'button'}); node.onclick=action; return node; };
 
+export function buildFilterClause(field, operator, value, type='text') {
+    if (!/^[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*$/.test(field)) throw new Error('Choose a field.');
+    if (!['=','!=','>','>=','<','<=','CONTAINS','STARTS_WITH','ENDS_WITH','EXISTS','MISSING'].includes(operator)) throw new Error('Choose an operator.');
+    if(operator==='EXISTS' || operator==='MISSING')return `${operator==='MISSING'?'NOT ':''}EXISTS(${field})`;
+    let literal=value;
+    if(type==='number') {
+        if(!String(value).trim() || !Number.isFinite(Number(value)))throw new Error('Enter a finite number.');
+        literal=Number(value);
+    } else if(type==='boolean') {
+        if(!['true','false'].includes(value))throw new Error('Enter true or false.');
+        literal=value==='true';
+    }
+    return `${field} ${operator} ${JSON.stringify(literal)}`;
+}
+
+function filterBuilder(t) {
+    const group=element('fieldset',undefined,{class:'ob_filter_builder'});
+    group.append(element('legend','Build a filter'));
+    const fields=new Set(['namespace','title','description','status','type','priority','severity']);
+    const visit=(record,prefix='')=>{for(const [key,value] of Object.entries(record || {})) {
+        const field=prefix+key;
+        if(!/^[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*$/.test(field) || key==='sourceRecordKey')continue;
+        if(value && typeof value==='object' && !Array.isArray(value) && prefix.split('.').length<4)visit(value,field+'.');
+        else fields.add(field);
+    }};
+    for(const entry of (t.ob_results?.snapshot?.entries || []).slice(0,100))visit(entry.record.data);
+    const field=element('select',undefined,{'aria-label':'Filter field'});
+    for(const name of fields)field.append(element('option',name,{value:name}));
+    const operator=element('select',undefined,{'aria-label':'Filter operator'});
+    for(const [value,label] of [['=','equals'],['!=','does not equal'],['CONTAINS','contains'],['STARTS_WITH','starts with'],
+        ['ENDS_WITH','ends with'],['>','greater than'],['>=','at least'],['<','less than'],['<=','at most'],['EXISTS','exists'],['MISSING','is missing']])
+        operator.append(element('option',label,{value}));
+    const value=element('input',undefined,{'aria-label':'Filter value',placeholder:'Value'});
+    const type=element('select',undefined,{'aria-label':'Filter value type'});
+    for(const name of ['text','number','boolean'])type.append(element('option',name,{value:name}));
+    operator.onchange=()=>{value.disabled=type.disabled=['EXISTS','MISSING'].includes(operator.value);};
+    const label=(text,control)=>{const node=element('label',text+' ');node.append(control);return node;};
+    group.append(label('Field',field),label('Operator',operator),label('Value',value),label('Type',type));
+    const apply=button('Apply filter',()=>{
+        try {
+            const expression='expr: '+buildFilterClause(field.value,operator.value,value.value,type.value);
+            const sourceLabel=operator.value==='='?value.value:operator.selectedOptions[0].textContent+(value.disabled?'':' '+value.value);
+            t.ob_results.controls.changeFilter(expression,field.value==='namespace'?'Source: '+sourceLabel:'Custom');
+            showFilterError(t,null);
+            message.textContent='Filter applied. Use Add a new filter to save it as a preset.';
+        } catch(error) {showFilterError(t,error);}
+    });
+    const message=element('p','',{role:'status'});
+    group.append(apply,message);
+    return group;
+}
+
+function advancedEditor(text) {
+    const details=element('details',undefined,{class:'ob_filter_advanced'});
+    details.append(element('summary','Advanced expression'),text);
+    return details;
+}
+
 export function filterLocalData(data, encoded = '') {
     if(!encoded)return data;
     return {...data,events:data.events.filter(compileFilter(encoded))};
@@ -89,7 +147,12 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         if (![...select.options].some(option=>option.value===field)) select.append(element('option',field,{value:field}));
     }
     select.value=t.ob_sortBy || 'NONE';
-    sorting.append(label,select,button('Apply',()=>t.ob_apply_timeline_sorting(sceneIndex))); panel.append(sorting);
+    sorting.append(label,select,button('Apply',()=>t.ob_apply_timeline_sorting(sceneIndex))); panel.append(sorting,filterBuilder(t));
+    if(t.ob_results?.searchMode) {
+        const search=element('fieldset'),label=element('label','Search mode ');
+        search.append(element('legend','Search options'));
+        label.append(t.ob_results.searchMode);search.append(label);panel.append(search);
+    }
     const fieldset=element('fieldset'); fieldset.append(element('legend','Timeline Filtering'));
     if (!t.staticData) {
         fieldset.dataset.serverFilters='';
@@ -104,19 +167,22 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     filters.forEach((filter,index)=>{
         const row=element('div',undefined,{class:'ob_saved_filter'});
         const radio=element('input',undefined,{type:'radio',name:t.name+'_saved_filter','aria-label':filter.name});
-        radio.checked=filterIndex===index || filterIndex===undefined && filter.current==='yes';
+        radio.checked=(filterIndex===index || filterIndex===undefined && filter.current==='yes') &&
+            decodeFilter(filter.filter_value)===decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
         radio.onchange=()=>t.ob_select_filters(sceneIndex,index);
         const name=element('label'); name.append(radio,document.createTextNode(filter.name)); row.append(name);
         if (request==='edit_filter' && index===filterIndex) {
             const text=element('textarea',undefined,{id:`textarea2_${t.name}_${filter.name}`,'aria-label':'Filter expression',rows:'3'});
-            text.value=decodeFilter(filter.filter_value); row.append(text,button('Save',()=>t.ob_save_filter(sceneIndex,index)));
+            text.value=decodeFilter(filter.filter_value); const advanced=advancedEditor(text);advanced.open=true;
+            row.append(advanced,button('Save',()=>t.ob_save_filter(sceneIndex,index)));
         } else row.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
         row.append(button('Delete',()=>t.ob_delete_filters(sceneIndex,index))); fieldset.append(row);
     });
     if (request==='add_filter') {
         const name=element('input',undefined,{id:`textarea_${t.name}_new`,'aria-label':'New filter name'});
         const text=element('textarea',undefined,{id:`textarea2_${t.name}_new`,'aria-label':'New filter expression',rows:'3'});
-        fieldset.append(name,text,button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
+        text.value=decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
+        fieldset.append(name,advancedEditor(text),button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
     } else fieldset.append(button('Add a new filter',()=>t.ob_add_filters(sceneIndex)));
     const syntax=button('Filter syntax',()=>t.ob_help_filters()); syntax.dataset.filterAvailable='';
     const help=element('pre',filterSyntax,{'data-filter-syntax':'',class:'ob_filter_syntax'});help.hidden=true;

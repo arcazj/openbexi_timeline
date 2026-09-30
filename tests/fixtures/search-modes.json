@@ -1,0 +1,22 @@
+{
+  "events": [
+    {"id":"ground","start":"2026-09-12T12:00:00Z","namespace":"Operations","data":{"title":"Ground station ready","status":"warning","tags":["Café","a+b [check] *"]}},
+    {"id":"radio","start":"2026-09-12T13:00:00Z","namespace":"Research","data":{"title":"Radio check","status":"nominal"}},
+    {"id":"literal","start":"2026-09-12T14:00:00Z","data":{"title":"ground;radio","sourceRecordKey":"internal-secret"}}
+  ],
+  "cases": [
+    {"mode":"text","query":"GROUND station","ids":["ground"]},
+    {"mode":"text","query":"ground;radio","ids":["literal"]},
+    {"mode":"text","query":"[check]","ids":["ground"]},
+    {"mode":"text","query":"*","ids":["ground"]},
+    {"mode":"text","query":"CAFÉ","ids":["ground"]},
+    {"mode":"text","query":"operations","ids":["ground"]},
+    {"mode":"text","query":"internal-secret","ids":[]},
+    {"mode":"pattern","query":"^(ground|radio)","ids":["ground","radio","literal"]},
+    {"mode":"pattern","query":"^radio check$","ids":["radio"]},
+    {"mode":"pattern","query":"a\\+b","ids":["ground"]},
+    {"mode":"legacy","query":"Ground;Radio","ids":["ground","radio"]},
+    {"mode":"legacy","query":"*","ids":[]},
+    {"mode":"text","query":"  ","ids":[]}
+  ]
+}

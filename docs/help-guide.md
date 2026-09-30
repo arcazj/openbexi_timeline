@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.3.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -9,10 +9,13 @@ These notes describe the version 2.2 browser application and the local demos in 
 - Selecting an event or session smoothly centers its timestamp or midpoint and preserves the visible time span. The gold selection glow remains visible, with a separate outlined marker above the Overview shading. A new gesture interrupts the movement; reduced motion makes centering immediate.
 - Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
-- **Lock current view** is followed by **Find previous activity** and **Find next activity**. These controls are available before searching and with Auto scale on or off. During a search, **Clear search** sits immediately before Lock current view. The activity buttons respect the active search and filters and center the result they find.
+- **Find previous activity** and **Find next activity** replace the +/− buttons and respect the active search and filters. The permanent second menu bar contains **Refresh | Go to latest data, Find previous activity, Find next activity | Lock current view, Auto scale**. Status appears in the middle; **Filter | Timeline details** stays on the right. Groups wrap on smaller screens. Display controls remain directly accessible. Use the mouse wheel or plus/minus keys to zoom.
+- Choose a search mode inside **Filter → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
+- **Back to previous view** restores the date and zoom before a search or selection moved the timeline, while retaining the current query and filters.
+- Active filters and grouping appear as removable labels. In **Sorting & Filtering**, use **Field → Operator → Value** and choose a text, number or boolean value type. **Apply filter** changes the current view; **Add a new filter** saves it as a preset. Existing syntax remains available under **Advanced expression**.
 - Drag the timeline or an activity to navigate through time. Clicking an activity selects it; dragging does not open Data or recenter it. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
 - Previous/next activity centers the result while preserving the current time span, widening only when needed for the activity's duration. A gold glow marks the result without enlarging its bar, icon or text, changing its depth, or adding rows. Reduced-motion settings disable the brief brightness pulse.
-- **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Open **Settings → Perspective** and enable **Adjust perspective** to rotate, pan and zoom the camera. Turn adjustment off or press Escape to navigate the timeline. Save the viewpoint, lighting, metalness and roughness for later visits. The UI always opens in **2D**; enabling 3D restores your saved settings or the reference preset. Metalness affects the view span and activities while icons keep their colors. See [Perspective settings](perspective.md).
+- **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Open **Settings → Update perspective** and enable **Adjust perspective** to rotate, pan and zoom the camera. Turn adjustment off or press Escape to navigate the timeline. Save the viewpoint, lighting, metalness and roughness for later visits. The UI always opens in **2D**; enabling 3D restores your saved settings or the reference preset. Metalness affects the view span and activities while icons keep their colors. See [Perspective settings](perspective.md).
 - Use row pagination to browse records that do not fit vertically. The timeline fills the browser window by default and recalculates page capacity when resized; long panel content can scroll independently.
 - Use **Resync** (Go to current time) to center the current date and time. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
 
@@ -25,7 +28,7 @@ In **Share**, choose **Copy link** to copy the current local demo's dataset, tim
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
 
 Calendar month arrows browse dates without moving the timeline. Select a day to
-load that interval. If loading fails, click the orange status on the right of the toolbar
+load that interval. If loading fails, click the orange status in the middle of the second menu bar
 to see the reason; Retry or navigate to resume. Loaded records stay visible.
 The separate orange **Loading items…** indicator disappears when loading ends.
 The Stop control or Escape cancels loading; Escape inside an open status explanation
@@ -51,7 +54,7 @@ separate axes with `params.dateAxisMode: "per-band"`.
 Axis labels choose suitable units from milliseconds to years. Numeric timelines
 keep their declared units. Overview always uses uniform time spacing.
 
-- **Search details** or **Timeline details** lists the loading and completion
+- **Timeline details** lists the loading and completion
   state of each retained interval. Incomplete coverage does not mean that no
   events occurred.
 - In a static demo, if a completed interval contains no relevant activity, Auto
@@ -62,8 +65,8 @@ keep their declared units. Overview always uses uniform time spacing.
 - A new search centers its first result once. Later batches keep the chosen view.
   If no match is loaded, connected text searches automatically scan earlier
   configured files through the visible end date. The toolbar shows the date
-  being checked or the number of files examined, with **Stop search** immediately
-  to its right. Stopping keeps the view and displayed records. Finding a match
+  being checked, with **Stop search** immediately
+  to its right. Click the short status to read file counts and full coverage details. Stopping keeps the view and displayed records. Finding a match
   centers it at the current zoom. Active filters and **Sort by** apply throughout; changing either or the
   query cancels the previous search.
   **Find previous activity** and **Find next activity** search backward and forward
@@ -92,9 +95,22 @@ found is not guaranteed to be the nearest in time. See
 compatibility details. With no query, a REST connection stays idle after loading
 its normal view and buffers.
 
+## Settings
+
+Settings has four sections: **1. Edit models**, **2. Timeline info**,
+**3. Update perspective**, and **4. Change look and feel**. Timeline info and
+Update perspective start collapsed; select their headings to expand them.
+Timeline info contains geometry and the maximum adaptive ratio.
+
+Choose Default, Apple style, Windows style, Minimal or High contrast using the
+circular radio buttons in Change look and feel. They appear horizontally and
+wrap on narrow panels. Arrow keys move between choices. Themes apply immediately
+and persist in this browser; Default is selected initially. They change interface
+controls without altering record colors or the selected time range.
+
 ## Model and YAML editor
 
-Open **Settings → Model and YAML editor** to edit the current model with color
+Open **Settings → Edit models → Model and YAML editor** to edit the current model with color
 pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes
 refresh a live timeline preview; invalid changes keep the last valid preview.
 The preview starts with your current date, search, view and camera.

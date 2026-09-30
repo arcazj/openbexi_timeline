@@ -184,7 +184,7 @@ public class json_files_manager extends data_manager {
             JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
             return new MatchSourceScan(_currentStartDateL, _currentEndDateL,
                     this::filterSelected)
-                    .read(configurations, _search, scene);
+                    .read(configurations, _search, scene, (String) _data_configuration.getConfiguration().get("searchMode"));
         } catch (Exception error) {
             return MatchResults.failure(_search, scene, _currentStartDateL, _currentEndDateL,
                     "Cannot read the configured analysis scope; retaining the previous view.");

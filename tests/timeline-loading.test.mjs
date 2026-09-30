@@ -154,9 +154,27 @@ function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     const url=new URL(request.url),from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
     const events=ids.map((id,index)=>({id,namespace:'operations',series:index%2?'beta':'alpha',start:new Date((from+to)/2).toISOString(),
         data:{title:id,status:id==='nominal'?'nominal':'warning'},searchMatch:!!url.searchParams.get('search')}));
-    request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,progressive:true,query:url.searchParams.get('search')||'',
+    request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:url.searchParams.get('search')||'',
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
+
+test('An incompatible search mode is explicit and releases the rejected continuation cursor',async()=>{
+    const f=await connected(),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['cached'],null,true));
+        const offset=requests.length;
+        r.request({query:'cached',searchMode:'pattern'});
+        await waitFor(()=>requests.length>offset);
+        await finishCycle(f,offset,request=>batch(request,['wrong-interpretation'],'rejected-cursor',false));
+        assert.match(r.error,/did not confirm the search mode/);
+        assert.ok(!r.snapshot.entries.some(entry=>entry.record.id==='wrong-interpretation'));
+        const released=requests.slice(offset).filter(request=>new URL(request.url).searchParams.get('cancel')==='1');
+        assert.ok(released.some(request=>new URL(request.url).searchParams.get('cursor')==='rejected-cursor'));
+        assert.equal(t.ob_loader.running,false);
+    } finally {f.close();}
+});
 
 test('Visible records render before later pages; prefetch stays interactive, merges identities and stops on cancel',async()=>{
     const f=await connected();const {h,t,r,requests,settings}=f;
@@ -478,7 +496,7 @@ test('Progressive overlap merges occurrences without collapsing empty or reused 
     const session=children=>({...point('parent','reused','Session'),start:'2026-09-12T00:00:00Z',end:'2026-09-13T00:00:00Z',activities:children});
     const reply=(request,events,cursor=null)=>{
         const url=new URL(request.url);
-        request.resolve({ok:true,json:async()=>({events,timelineMatch:{version:1,progressive:true,query:'',hasCondition:false,
+        request.resolve({ok:true,json:async()=>({events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:'',hasCondition:false,
             complete:!cursor,nextCursor:cursor,revision:'occurrences',domain:{from:url.searchParams.get('startDate'),to:url.searchParams.get('endDate')}}})});
     };
     try {

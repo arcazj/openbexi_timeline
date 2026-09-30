@@ -66,7 +66,7 @@ async function setup(page,{holdBackground=false}={}) {
             data:{title:control.phase+' sample activity'},render:{color:'#2878b5'}};
         const overflow=url.searchParams.has('cursor');
         const nextCursor=control.extraPage && !purpose.endsWith('prefetch')?'overflow':null;
-        return route.fulfill({json:{events:overflow?Array.from({length:4},(_,index)=>({...event,id:id+'-'+index})):[event],timelineMatch:{version:1,progressive:true,
+        return route.fulfill({json:{events:overflow?Array.from({length:4},(_,index)=>({...event,id:id+'-'+index})):[event],timelineMatch:{version:1,searchMode:'text',progressive:true,
             query:'',hasCondition:false,complete:!nextCursor,nextCursor:overflow?'overflow-next':nextCursor,revision:id,
             domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}}});
     });
@@ -113,8 +113,8 @@ test('Calendar month browsing is inert and day selection renders current records
         expect(Date.parse(visible.searchParams.get('startDate'))).toBeLessThan(after.range.to);
         expect(Date.parse(visible.searchParams.get('endDate'))).toBeGreaterThan(after.range.from);
         expect(control.held.length).toBeGreaterThan(0);
-        expect(after.error).toBe('');await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
-        await page.getByRole('button',{name:'Zoom in',exact:true}).click();
+        expect(after.error).toBe('');await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
+        await page.locator('.ob_paged_frame').focus();await page.keyboard.press('+');
         await expect.poll(async()=>Math.abs(((await state(page)).range.from+(await state(page)).range.to)/2-target)).toBeLessThanOrEqual(1);
         await info.attach('calendar-navigation-timing',{body:JSON.stringify({millisecondsToVisibleRecord:elapsed,
             backgroundRepliesReleased:0,viewport:info.project.name}),contentType:'application/json'});
@@ -132,7 +132,7 @@ test('A failed calendar load displays an orange toolbar action and a real drag r
         await expect(failure).toBeVisible();await expect(failure).toHaveText(/Update unavailable.*retained|Source unavailable.*details/);
         await expect(failure).toHaveJSProperty('tagName','BUTTON');
         expect(await failure.evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(255, 240, 217)');
-        expect(await failure.evaluate(element=>element.closest('.ob_results_controls').contains([...document.querySelectorAll('button')].find(button=>button.textContent==='Refresh')))).toBe(true);
+        expect(await failure.evaluate(element=>element.closest('.ob_activity_toolbar').contains([...document.querySelectorAll('button')].find(button=>button.textContent==='Refresh')))).toBe(true);
         await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
         await failure.focus();await page.keyboard.press('Enter');
         await expect(page.locator('.ob_results_details')).toHaveAttribute('open','');
@@ -166,6 +166,8 @@ test('A full data cache keeps visible records and offers a working narrow-window
         await expect(page.locator('.ob_results_status')).toHaveText('Data limit reached');
         await expect(page.locator('.ob_update_failed')).toHaveCount(0);
         await expect(page.getByRole('button',{name:'Retry',exact:true})).toBeHidden();
+        await page.getByRole('button',{name:'Data limit reached',exact:true}).click();
+        await expect(page.locator('.ob_status_explanation')).toContainText('Narrow the time window');
         const narrow=page.getByRole('button',{name:'Narrow time window',exact:true});
         await expect(narrow).toBeVisible();await expect(narrow).toBeEnabled();
         await visibleRecord(page,'initial-');

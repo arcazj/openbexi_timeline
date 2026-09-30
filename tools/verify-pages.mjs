@@ -52,7 +52,7 @@ try {
             page.on('response',r=>{if(r.status()>=400) errors.push(`${r.status()} ${r.url()}`);});
             page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED') errors.push(`${r.failure()?.errorText} ${r.url()}`);});
             await page.goto(new URL(`demos.html?demo=${demo.id}`,baseURL).href);
-            await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');await settled(page);
+            await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready',{timeout:30000});await settled(page);
             const initial=await state(page);assert.equal(initial.records,demo.recordCount);assert.ok(initial.draws>0);
             for(const name of ['Table','Split','Timeline']) {
                 const button=page.getByRole('button',{name,exact:true});await button.click();

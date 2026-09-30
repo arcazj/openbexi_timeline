@@ -67,7 +67,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private final String identity, id = UUID.randomUUID().toString(), query, scene;
     private final long from, to;
     private final boolean history;
-    private final Pattern historyPattern;
+    private final SearchQuery historyPattern;
+    private final String searchMode;
     private final UnaryOperator<JSONArray> filter;
     private final Deque<Directory> directories = new ArrayDeque<>();
     private final PriorityQueue<Directory> historyDirectories = new PriorityQueue<>(Comparator.comparingLong(Directory::priority).reversed()
@@ -100,15 +101,14 @@ final class ProgressiveSourceScan implements AutoCloseable {
     static synchronized JSONObject read(JSONObject configuration, long from, long to,
                                         UnaryOperator<JSONArray> filter) {
         String query = Objects.toString(configuration.get("search"), ""), scene = Objects.toString(configuration.get("scene"), "0");
-        if ("backward".equals(configuration.get("history"))) {
-            try { Pattern.compile(query.replace(";", "|").replace(" ", "|")); }
-            catch (PatternSyntaxException error) { return MatchResults.failure(query, scene, from, to, "Invalid search expression."); }
-        }
+        String searchMode = Objects.toString(configuration.get("searchMode"), "legacy");
+        try { new SearchQuery(query, searchMode); }
+        catch (IllegalArgumentException error) { return MatchResults.failure(query, scene, from, to, "Invalid search expression or mode."); }
         long now = System.currentTimeMillis();
         ACTIVE.values().removeIf(scan -> { if (now - scan.touched <= TTL) return false; scan.close(); return true; });
         String identity = Arrays.asList(configuration.get("startup configuration"), configuration.get("userName"),
                 configuration.get("timelineName"), configuration.get("filter"), configuration.get("sortBy"),
-                configuration.get("history"), query, scene, from, to).toString();
+                configuration.get("history"), searchMode, query, scene, from, to).toString();
         String cursor = Objects.toString(configuration.get("cursor"), "");
         try {
             ProgressiveSourceScan scan;
@@ -132,7 +132,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
             }
             if ("1".equals(configuration.get("cancel"))) {
                 scan.close(); ACTIVE.remove(scan.id);
-                JSONObject result=MatchResults.envelope(new JSONArray(), query, scene, from, to, false);
+                JSONObject result=MatchResults.envelope(new JSONArray(), query, scene, from, to, false, searchMode);
                 ((JSONObject)result.get("timelineMatch")).put("cancelled",true);return result;
             }
             scan.touched = now;
@@ -151,7 +151,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
                                   long from, long to, UnaryOperator<JSONArray> filter) {
         this.identity = identity; this.query = query; this.scene = scene;
         this.history = "backward".equals(configuration.get("history"));
-        this.historyPattern = history && !query.isEmpty() && !query.equals("*") ? Pattern.compile(query.replace(";", "|").replace(" ", "|")) : null;
+        this.searchMode = Objects.toString(configuration.get("searchMode"), "legacy");
+        this.historyPattern = new SearchQuery(query, searchMode);
         // This is the browser Date lower bound, also representable by java.time.
         // Request coordinates still bind the cursor; only the history response domain expands.
         this.from = history ? -8_640_000_000_000_000L : from; this.to = to; this.filter = filter;
@@ -163,8 +164,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         // Keep every source so highlighting and coverage retain their semantics.
         if (!query.isEmpty() && !query.equals("*")) {
             try {
-                Pattern pattern = Pattern.compile(query.replace(";", "|").replace(" ", "|"));
-                sources.sort(Comparator.comparing(item -> !pattern.matcher(Objects.toString(item.get("namespace"), "")).find()));
+                sources.sort(Comparator.comparing(item -> !historyPattern.matchesText(Objects.toString(item.get("namespace"), ""))));
             } catch (PatternSyntaxException ignored) { /* MatchResults reports invalid expressions. */ }
         }
         for (JSONObject item : sources) {
@@ -232,7 +232,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 }
             } catch (Exception error) { warn("Unreadable or oversized records were skipped; coverage is partial."); closeFile(); }
         }
-        JSONObject response = MatchResults.envelope(page, query, scene, from, to, done && warnings.isEmpty());
+        JSONObject response = MatchResults.envelope(page, query, scene, from, to, done && warnings.isEmpty(), searchMode);
         JSONObject metadata = (JSONObject) response.get("timelineMatch");
         metadata.put("progressive", true);
         metadata.put("batch", sequence++);

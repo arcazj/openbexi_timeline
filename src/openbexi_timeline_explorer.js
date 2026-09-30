@@ -20,7 +20,7 @@ export class TimelineExplorer {
     sourceChanged(key) {
         if(this.sourceKey!==undefined && key!==this.sourceKey) {
             this.interrupt();this.message='';this.outcome=null;this.historySearch=false;
-            this.searchQuery=this.results.state.query.trim()?this.results.state.query:null;
+            this.searchQuery=!this.retainRange && this.results.state.query.trim()?this.results.state.query:null;
         }
         this.sourceKey=key;
     }
@@ -29,9 +29,9 @@ export class TimelineExplorer {
         // pending navigation so checking Show only matches cannot cancel it.
         const searchQuery=this.searchQuery;
         if(Object.keys(patch).length) {this.interrupt();this.searchQuery=searchQuery;}
-        if('query' in patch || 'auto' in patch || 'mode' in patch) {
+        if('query' in patch || 'searchMode' in patch || 'auto' in patch || 'mode' in patch) {
             this.attempted.clear();this.suppressed=false;this.message='';this.outcome=null;this.historySearch=false;this.expanded.clear();
-            if('query' in patch) {this.results.selectedKey=null;this.results.pendingSelection=null;this.searchQuery=patch.query.trim()?patch.query:null;}
+            if('query' in patch || 'searchMode' in patch) {this.retainRange=false;this.results.selectedKey=null;this.results.pendingSelection=null;const query=patch.query ?? this.results.state.query;this.searchQuery=query.trim()?query:null;}
         }
     }
     centerSearchMatch({render=true}={}) {
@@ -106,6 +106,7 @@ export class TimelineExplorer {
         });
     }
     moveTo(record,{events,metadata,render=true}={}) {
+        this.results.controls.rememberView();
         const r=this.results,old=this.range(),bounds=recordRange(record);
         // Preserve the current zoom while typing; successive query edits must
         // not repeatedly halve the visible time span.
@@ -205,7 +206,10 @@ export class TimelineExplorer {
         this.stop.textContent=this.historySearch?'Stop search':'Cancel search';
         if(historyStatus) {
             if(this.stop.parentElement!==r.statusGroup)r.statusGroup.insertBefore(this.stop,r.loadingStatus);
-            r.status.textContent=this.message;
+            r.status.textContent=this.seeking ? (this.searchRange ? 'Searching '+new Intl.DateTimeFormat('en-US',
+                {month:'short',day:'numeric',timeZone:'UTC'}).format(this.searchRange.from)+'…' : 'Searching history…') :
+                this.outcome==='exhausted'?'No matching records':this.outcome==='stopped'?'Search stopped':'Search incomplete';
+            r.status.title=this.message;
             r.status.classList.toggle('ob_connection_warning',this.seeking || this.outcome==='incomplete');
         } else if(this.stop.parentElement!==this.notice)this.notice.append(this.stop);
         r.status.classList.toggle('ob_history_status',historyStatus);
