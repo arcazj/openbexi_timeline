@@ -6,7 +6,8 @@ window.disposePreview=()=>{
     if(disposed)return;disposed=true;used=true;
     const timeline=currentTimeline;if(!timeline)return;
     timeline.modelStartup?.cancel();timeline.ob_loader?.cancel();timeline.localController?.abort();
-    clearTimeout(timeline.ob_results?.timer);clearTimeout(timeline.ob_results?.navigationTimer);
+    timeline.ob_results?.controls.resizeObserver?.disconnect();
+    clearTimeout(timeline.ob_results?.timer);clearTimeout(timeline.ob_results?.navigationTimer);clearTimeout(timeline.ob_results?.searchTimer);
     if(timeline.ob_activity_focus?.frame)cancelAnimationFrame(timeline.ob_activity_focus.frame);
     for(const scene of timeline.ob_scene || []){
         scene?.cancelPan?.();
@@ -45,7 +46,7 @@ window.addEventListener('message',async event=>{
         document.getElementById('demo-timeline-slot').append(timeline.ob_timeline_panel);
         document.getElementById('demo-side-slot').append(timeline.ob_timeline_right_panel);
         timeline.ob_viewport?.schedule();
-        if(context?.query)timeline.ob_results?.request({query:String(context.query)});
+        if(context?.query)timeline.ob_results?.request({query:String(context.query),searchMode:context.searchMode || 'text'});
         if(['timeline','table','split'].includes(context?.view))timeline.ob_views?.setMode(context.view);
         window.previewTimeline=timeline;
         const count=timeline.staticData?.events?.filter(event=>!event.zone).length;

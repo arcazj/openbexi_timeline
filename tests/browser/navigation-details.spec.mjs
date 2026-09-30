@@ -79,7 +79,7 @@ test('Connected details retain full history, survive empty responses and reject 
         }
         const from=new Date(u.searchParams.get('startDate')),to=new Date(u.searchParams.get('endDate'));
         return route.fulfill({json:{events:records.filter(e=>new Date(e.start)>=from&&new Date(e.start)<=to),
-            timelineMatch:{version:1,query:'',hasCondition:false,progressive:true,complete:true,nextCursor:null,revision:'fixture',domain:{from:from.toISOString(),to:to.toISOString()}}}});
+            timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,progressive:true,complete:true,nextCursor:null,revision:'fixture',domain:{from:from.toISOString(),to:to.toISOString()}}}});
     });
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
     await expect.poll(()=>page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.snapshot?.entries.length)).toBe(2);

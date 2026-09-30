@@ -53,7 +53,7 @@ async function setup(page,{pages=3,holdPage=0,failPage=0,match=true,incomplete=f
             const time=Date.parse(record.start);return time>=from&&time<=to;
         });
         return {events:records.map(record=>({...record,searchMatch:!!query&&record.data.title.toLowerCase().includes(query.toLowerCase())})),
-            timelineMatch:{version:1,progressive:true,query,hasCondition:!!query,
+            timelineMatch:{version:1,searchMode:'text',progressive:true,query,hasCondition:!!query,
                 complete:isHistory?final&&!incomplete&&supported:true,
                 nextCursor:isHistory&&!final&&supported?`history-${pageNumber+1}`:null,revision:'synthetic-history',
                 domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()},
@@ -94,7 +94,10 @@ test('Historical search passes 32 pages to find May 21, reports progress, and pr
         expect(before.filter).toBe('namespace:operations');expect(before.sortBy).toBe('namespace');
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('locked');
         await expect.poll(()=>fixture.held.length).toBe(1);
-        await expect(status(page)).toContainText(/No matches in loaded data.*Searching earlier records.*Checking.*UTC/s);
+        await expect(status(page)).toHaveText(/Searching [A-Z][a-z]{2} \d+…/);
+        await status(page).click();
+        await expect(page.locator('.ob_status_explanation')).toContainText(/Searching earlier records.*Checking.*UTC.*files checked/s);
+        await page.getByRole('button',{name:'Timeline details',exact:true}).click();
         await expect(stop(page)).toBeVisible();await expect(stop(page)).toBeEnabled();
         expect(await stop(page).evaluate(button=>button.previousElementSibling?.classList.contains('ob_results_status')&&
             !!button.closest('.ob_status_controls'))).toBe(true);
@@ -127,10 +130,12 @@ test('A definitive no-match result waits for the complete available history',asy
         const before=await state(page);
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('missing');
         await expect.poll(()=>fixture.held.length).toBe(1);
-        await expect(status(page)).toContainText('Searching earlier records');
+        await expect(status(page)).toContainText('Searching');
         await expect(status(page)).not.toContainText('No matching records in available history');
         await fixture.release();
-        await expect(status(page)).toContainText(/No matching records in available history through/i);
+        await expect(status(page)).toHaveText('No matching records');
+        await status(page).click();
+        await expect(page.locator('.ob_status_explanation')).toContainText(/No matching records in available history through/i);
         await expect(stop(page)).toBeHidden();unchanged(await state(page),before);
         expect(fixture.history()).toHaveLength(3);expect(fixture.errors).toEqual([]);
     } finally {await fixture.close();}
@@ -165,7 +170,9 @@ test('An HTTP 503 continuation releases its cursor and retains the current view 
     try {
         const before=await state(page);
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('locked');
-        await expect(status(page)).toContainText(/Search incomplete.*503/i);
+        await expect(status(page)).toHaveText('Search incomplete');
+        await status(page).click();
+        await expect(page.locator('.ob_status_explanation')).toContainText(/Search incomplete.*503/i);
         await expect(status(page)).not.toContainText('No matching records in available history');
         await expect(stop(page)).toBeHidden();await settled(page);
         await expect.poll(()=>fixture.cancellations().some(url=>url.searchParams.get('cursor')==='history-2')).toBe(true);
@@ -181,7 +188,7 @@ test('Stop search releases the archive cursor and ignores a late match without m
         await page.getByRole('searchbox',{name:'Search',exact:true}).fill('locked');
         await expect.poll(()=>fixture.held.length).toBe(1);await expect(stop(page)).toBeVisible();
         await stop(page).click();
-        await expect(status(page)).toContainText('Search stopped. Current view retained.');
+        await expect(status(page)).toHaveText('Search stopped');
         await expect(stop(page)).toBeHidden();
         await expect.poll(()=>fixture.cancellations().some(url=>url.searchParams.get('cursor')==='history-2')).toBe(true);
         await fixture.release({late:true});await settled(page);
@@ -214,7 +221,9 @@ test('Changing the query cancels historical search and a stale match cannot repl
     try {
         const search=page.getByRole('searchbox',{name:'Search',exact:true});await search.fill('locked');
         await expect.poll(()=>fixture.held.length).toBe(1);
-        await search.fill('ready');await centered(page,now);await settled(page);
+        await search.fill('ready');
+        await expect.poll(async()=>(await state(page)).query).toBe('ready');
+        await centered(page,now);await settled(page);
         await expect.poll(()=>fixture.cancellations().some(url=>url.searchParams.get('cursor')==='history-2')).toBe(true);
         const before=await state(page);expect(before.ids).toContain(current.id);expect(before.query).toBe('ready');
         await fixture.release({late:true});await settled(page);

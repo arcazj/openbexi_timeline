@@ -1,16 +1,7 @@
 // Matching for complete, normalized file-backed data. Live providers retain their
 // own query semantics and must supply their own authoritative match results.
-export function createStaticSearchMatcher(search = '') {
-    const query = search.trim().toLocaleLowerCase();
-    return {
-        query,
-        hasCondition: query.length > 0,
-        // Keep the existing static search fields and literal substring semantics.
-        // parseTimelineData places searchable namespace/metadata in record.data.
-        matches: record => Boolean(query) &&
-            (JSON.stringify(record.data) ?? '').toLocaleLowerCase().includes(query)
-    };
-}
+import {compileSearch} from './openbexi_timeline_search.js';
+export const createStaticSearchMatcher = compileSearch;
 
 function freeze(value) {
     if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -27,8 +18,8 @@ function freeze(value) {
  * A parent can qualify through children without becoming a direct search match.
  * No display filtering, source mutation, or navigation occurs here.
  */
-export function createStaticMatchSnapshot(dataset, search = '', {sourceScope = ''} = {}) {
-    return createMatchSnapshot(dataset, createStaticSearchMatcher(search), {sourceScope});
+export function createStaticMatchSnapshot(dataset, search = '', {sourceScope = '', searchMode = 'text'} = {}) {
+    return createMatchSnapshot(dataset, createStaticSearchMatcher(search, searchMode), {sourceScope});
 }
 
 export function createProviderMatchSnapshot(dataset, metadata, search, {sourceScope = ''} = {}) {

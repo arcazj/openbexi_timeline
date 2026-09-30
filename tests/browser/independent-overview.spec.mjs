@@ -85,7 +85,7 @@ test('Cold connected frame, first records and cached past remain usable before a
         const period=u.searchParams.get('purpose')==='past-prefetch'?'past':u.searchParams.get('purpose')==='future-prefetch'?'future':'current';
         return route.fulfill({json:{events:[{id:period+'-session',namespace:'sample',searchMatch:false,start:new Date(from).toISOString(),end:new Date(to).toISOString(),
             data:{title:period+' sample session'},activities:[{id:'activity',namespace:'sample',searchMatch:false,start:new Date((from+to)/2).toISOString(),data:{title:'Sample activity'}}]}],
-            timelineMatch:{version:1,query:'',hasCondition:false,progressive:true,revision:'sample',complete:!continuation,nextCursor:continuation?'later-page':null,
+            timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,progressive:true,revision:'sample',complete:!continuation,nextCursor:continuation?'later-page':null,
                 domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}}});
     };
     await page.route('**/__connected**',async route=>{
@@ -104,7 +104,7 @@ test('Cold connected frame, first records and cached past remain usable before a
     expect(requests.findIndex(u=>u.searchParams.get('purpose')==='future-prefetch')).toBeLessThan(requests.findIndex(u=>u.searchParams.has('cursor')));
     await expect(page.locator('canvas')).toBeVisible();await expect(page.locator('.ob_docked_overview')).toBeVisible();
     expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.error)).toBe('');
-    await expect(page.getByRole('button',{name:'Zoom in',exact:true})).toBeEnabled();
+    await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     const before=await state(page);const box=await page.locator('.ob_paged_frame').boundingBox();
     await page.mouse.move(box.x+box.width*.45,box.y+box.height*.75);await page.mouse.down();
     await page.mouse.move(box.x+box.width*.72,box.y+box.height*.75,{steps:12});await page.mouse.up();

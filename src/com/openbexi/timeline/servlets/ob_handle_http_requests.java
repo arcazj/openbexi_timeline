@@ -256,7 +256,7 @@ public class ob_handle_http_requests {
                 try {
                     String revision=com.openbexi.timeline.data_browser.SourceRevision.current(configuration);
                     org.json.simple.JSONObject query=new org.json.simple.JSONObject();
-                    for(String name:java.util.List.of("startDate","endDate","search","filter","matchProtocol",
+                    for(String name:java.util.List.of("startDate","endDate","search","searchMode","filter","matchProtocol",
                             "progressive","history","userName","timelineName","scene","sortBy"))
                         query.put(name,configuration.getConfiguration().getOrDefault(name,req.getParameter(name)));
                     String etag="W/\""+com.openbexi.timeline.data_browser.SourceRevision.digest(revision+query)+"\"";

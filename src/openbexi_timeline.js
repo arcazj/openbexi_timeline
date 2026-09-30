@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.3.0
+ *     OpenBEXI Timeline version 2.3.1
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@ import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
-import {openModelEditor} from './openbexi_timeline_model_link.js';
+import {createTimelineSettings} from './openbexi_timeline_settings.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {compileFilter,decodeFilter} from './openbexi_timeline_filter_expression.js';
@@ -513,7 +513,7 @@ function OB_TIMELINE(options = {}) {
             "&startDate=" + this.ob_scene[ob_scene_index].minDate +
             "&endDate=" + this.ob_scene[ob_scene_index].maxDate +
             "&icon=" + icon +
-            "&filterName=" + this.ob_scene[ob_scene_index].ob_filter_name +
+            "&filterName=" + encodeURIComponent(this.ob_scene[ob_scene_index].ob_filter_name || '') +
             "&filter=" + encodeURIComponent(this.ob_scene[ob_scene_index].ob_filter_value) +
             "&search=" + this.ob_scene[ob_scene_index].ob_search_value +
             "&timelineName=" + this.name +
@@ -637,7 +637,7 @@ function OB_TIMELINE(options = {}) {
         backgroundColor = String(backgroundColor || this.backgroundColor || '#eef1f2').replaceAll("#", "@");
 
         this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + ob_request +
-            "&filterName=" + ob_filter_name +
+            "&filterName=" + encodeURIComponent(ob_filter_name || '') +
             "&scene=" + ob_scene_index +
             "&namespace=" + namespace +
             "&timelineName=" + this.name +
@@ -768,60 +768,7 @@ function OB_TIMELINE(options = {}) {
         }
     };
     OB_TIMELINE.prototype.ob_create_setting = function (ob_scene_index) {
-        this.ob_remove_descriptor();
-        this.ob_remove_calendar();
-        this.ob_remove_help();
-        this.ob_remove_sorting();
-        this.ob_remove_login();
-        try {
-            if (document.getElementById(this.name + "_setting") !== null) {
-                this.ob_remove_setting();
-                return;
-            }
-            this.ob_timeline_right_panel.style.visibility = "visible";
-            let div = document.createElement("div");
-            div.className = "ob_side_content";
-            div.id = this.name + '_setting';
-            let now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            div.innerHTML = "" +
-                "<div class='ob_panel_heading'>Settings</div>\n" +
-                "<div class='ob_panel_form'>\n" +
-                "<form>\n" +
-                "<fieldset>\n" +
-                "<legend><span class='number'>1 - </span>Timeline Info</legend>\n" +
-                "<input type='label' disabled value='Top :'>\n" +
-                "<input type='number' id=" + this.name + "_top value='" + this.ob_scene[ob_scene_index].top + "'>\n" +
-                "<input type='label' disabled value='Left :'>\n" +
-                "<input type='number' id=" + this.name + "_left value='" + this.ob_scene[ob_scene_index].left + "'>\n" +
-                "<input type='label' disabled value='Width :'>\n" +
-                "<input type='number' id=" + this.name + "_width value='" + this.ob_scene[ob_scene_index].width + "'>\n" +
-                "<input type='label' disabled value='Height :'>\n" +
-                "<input type='number' id=" + this.name + "_height value='" + this.ob_scene[ob_scene_index].ob_height + "'>\n" +
-                "</fieldset>\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_apply_timeline_info(" + ob_scene_index + ");\" value='Apply Timeline Info' />\n" +
-                "<input type='button' onclick=\"get_ob_timeline(\'" + this.name + "\').ob_cancel_setting(" + ob_scene_index + ");\" value='Close' />\n" +
-                "</form>\n" +
-                "<div class='ob_gui_iframe_container' id='" + this.name + "_gui_iframe_container2' style='position:absolute;'> </div>\n" +
-                "</div>";
-            this.ob_timeline_right_panel.style.top = this.ob_timeline_panel.offsetTop + "px";
-            this.ob_timeline_right_panel.style.left = this.ob_timeline_panel.offsetLeft + parseInt(this.ob_timeline_panel.style.width) + "px";
-            this.ob_timeline_right_panel.appendChild(div);
-            const closeSettings=document.createElement('button'); closeSettings.type='button'; closeSettings.textContent='Close';
-            closeSettings.setAttribute('aria-label','Close settings'); closeSettings.onclick=()=>this.ob_remove_setting();
-            div.querySelector('.ob_panel_heading').append(closeSettings);
-            const modelEditor=document.createElement('button'); modelEditor.type='button';
-            modelEditor.className='ob_model_editor_launch'; modelEditor.textContent='Model and YAML editor';
-            modelEditor.title='Edit the active model with a live preview';
-            modelEditor.addEventListener('click',()=>openModelEditor(this));
-            div.querySelector('.ob_panel_heading').after(modelEditor);
-            this.ob_results?.mountSettings(div);
-            this.ob_viewport?.mountSettings(div);
-            this.ob_perspective?.mount(div);
-            document.getElementById(this.name + "_start").value = now.toISOString().slice(0, 16);
-
-        } catch (err) {
-        }
+        createTimelineSettings(this, ob_scene_index);
     };
 
     OB_TIMELINE.prototype.ob_remove_setting = function () {
@@ -5034,7 +4981,7 @@ function OB_TIMELINE(options = {}) {
                 "&endDate=" + ob_scene.maxDate +
                 "&scene=" + ob_scene_index +
                 "&namespace=" + namespace +
-                "&filterName=" + ob_scene.ob_filter_name +
+                "&filterName=" + encodeURIComponent(ob_scene.ob_filter_name || '') +
                 "&filter=" + encodeURIComponent(ob_scene.ob_filter_value) +
                 "&search=" + encodeURIComponent(ob_scene.ob_search_value || '') +
                 "&timelineName=" + this.name +
@@ -5046,7 +4993,7 @@ function OB_TIMELINE(options = {}) {
                 "&endDate=" + ob_scene.maxDate +
                 "&scene=" + ob_scene_index +
                 "&namespace=" + namespace +
-                "&filterName=" + ob_scene.ob_filter_name +
+                "&filterName=" + encodeURIComponent(ob_scene.ob_filter_name || '') +
                 "&filter=" + encodeURIComponent(ob_scene.ob_filter_value) +
                 "&search=" + encodeURIComponent(ob_scene.ob_search_value || '') +
                 "&timelineName=" + this.name +
@@ -5085,6 +5032,7 @@ function OB_TIMELINE(options = {}) {
             const requestURL = new URL(this.data, window.location.href);
             requestURL.searchParams.set('matchProtocol', '1');
             requestURL.searchParams.set('search', results.state.query);
+            requestURL.searchParams.set('searchMode', results.state.searchMode);
             if (results.domain) {
                 requestURL.searchParams.set('startDate', new Date(results.domain.from).toUTCString());
                 requestURL.searchParams.set('endDate', new Date(results.domain.to).toUTCString());
@@ -5127,7 +5075,7 @@ function OB_TIMELINE(options = {}) {
                                 "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
-                                "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
+                                "&filterName=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_name || '') +
                                 "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +
@@ -5194,7 +5142,7 @@ function OB_TIMELINE(options = {}) {
                             "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
                             "&scene=" + ob_scene_index +
                             "&namespace=" + namespace +
-                            "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
+                            "&filterName=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_name || '') +
                             "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                             "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                             "&timelineName=" + that.name +
@@ -5206,7 +5154,7 @@ function OB_TIMELINE(options = {}) {
                             "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
                             "&scene=" + ob_scene_index +
                             "&namespace=" + namespace +
-                            "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
+                            "&filterName=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_name || '') +
                             "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                             "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                             "&timelineName=" + that.name +
@@ -5256,7 +5204,7 @@ function OB_TIMELINE(options = {}) {
                                 "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
-                                "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
+                                "&filterName=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_name || '') +
                                 "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +
@@ -5281,7 +5229,7 @@ function OB_TIMELINE(options = {}) {
                                 "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
                                 "&scene=" + ob_scene_index +
                                 "&namespace=" + namespace +
-                                "&filterName=" + that.ob_scene[ob_scene_index].ob_filter_name +
+                                "&filterName=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_name || '') +
                                 "&filter=" + encodeURIComponent(that.ob_scene[ob_scene_index].ob_filter_value) +
                                 "&search=" + that.ob_scene[ob_scene_index].ob_search_value +
                                 "&timelineName=" + that.name +

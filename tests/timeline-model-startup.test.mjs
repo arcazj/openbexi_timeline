@@ -96,7 +96,7 @@ for(const failure of ['404','network','timeout'])test(`An unavailable configurat
         assert.equal(f.t.modelSource,'default');assert.equal(f.t.staticData.events.length,0);
         assert.ok(f.h.window.document.querySelector('canvas'));
         assert.deepEqual(f.requests,[configPath]);
-        assert.equal(f.h.window.document.querySelector('[role="alert"]'),null);
+        assert.equal(f.h.window.document.querySelector('[role="alert"]:not([hidden])'),null);
     } finally {f.close();}
 });
 
@@ -115,7 +115,7 @@ for(const phase of ['configuration','model'])test(`A late ${phase} response cann
         const panel=f.t.ob_timeline_panel,params=f.t.params;
         reply(json(phase==='configuration'?{model:'models/yaml.json'}:fixture));await settle();
         assert.equal(f.t.modelSource,'html');assert.equal(f.t.params,params);assert.equal(f.t.ob_timeline_panel,panel);
-        assert.equal(f.h.window.document.querySelector('[role="alert"]'),null);
+        assert.equal(f.h.window.document.querySelector('[role="alert"]:not([hidden])'),null);
     } finally {f.close();}
 });
 

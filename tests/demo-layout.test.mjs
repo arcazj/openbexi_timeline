@@ -62,9 +62,11 @@ for (const demo of catalog.demos) test(demo.id + ': bounded responsive views ret
         assert.equal(t.ob_timeline_header.onmousedown,null);
         const search=[...t.ob_results.search.children];
         const input=search.indexOf(t.ob_search_input);
-        assert.equal(search[input+1].getAttribute('aria-label'),'Zoom in');
-        assert.equal(search[input+2].getAttribute('aria-label'),'Zoom out');
-        for (const icon of [t.ob_filter,t.ob_view]) {
+        assert.equal(t.ob_timeline_header.querySelector('[aria-label="Search mode"]'),null);
+        assert.equal(t.ob_timeline_header.querySelector('button[aria-label="Zoom in"], button[aria-label="Zoom out"]'),null);
+        assert.ok(t.ob_results.controls.activityControls.contains(t.ob_results.explorer.findPrevious));
+        assert.equal(t.ob_filter.parentElement,t.ob_results.filterButton);
+        for (const icon of [t.ob_view]) {
             assert.ok(icon.previousElementSibling.classList.contains('ob_toolbar_separator'));
             assert.equal(icon.previousElementSibling.getAttribute('aria-hidden'),'true');
         }

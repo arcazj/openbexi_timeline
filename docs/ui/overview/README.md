@@ -1,9 +1,12 @@
-# Current UI captures: version 2.1
+# Overview captures — 2.3.1
 
 These PNGs are captures of the actual Chromium/WebGL application on Windows,
 using public catalog data or explicitly synthetic connected records. They are
-not generated mockups. Earlier `../v2/` and `../progressive/` images record earlier
-checkpoints; this directory is the current README reference.
+not generated mockups. The menu bar keeps its display icons directly accessible,
+with previous/next activity, Lock current view and Auto scale grouped together.
+See the [wide toolbar](../toolbar-layout/wide.png) and
+[wrapped toolbar](../toolbar-layout/narrow.png) for the two available-space cases.
+Earlier `../v2/` and `../progressive/` images record earlier checkpoints.
 
 | Dataset | Desktop, 1440 x 900 | Narrow, 800 x 700 |
 | --- | --- | --- |
@@ -45,7 +48,7 @@ review the matching `split-help` capture as well. The catalog's
 `reference` fields point here; `npm run demos:readme` regenerates the Live Demos
 table without restoring historical references.
 
-Version 2.1 captures and baselines use the lockfile-managed Chromium 153 headless shell with SwiftShader. Screenshots are visual evidence; the interaction tests
+These captures and baselines use the lockfile-managed Chromium 153 headless shell with SwiftShader. Screenshots are visual evidence; the interaction tests
 separately check main pointer anchoring, centered context, manual Overview zoom,
 Auto scale, resizing and normal panel scrolling. GPU/browser differences can
 affect pixel comparisons. No private records or deployment pages are pictured.

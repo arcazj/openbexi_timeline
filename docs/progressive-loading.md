@@ -62,9 +62,9 @@ source or user filters do not make the search incomplete. An enabled source
 that cannot be read still makes coverage incomplete: a namespace filter alone
 cannot prove which namespaces its records contain.
 
-The view stays still while the right side of the toolbar reports progress, for
-example **No matches in loaded data. Searching earlier records… Checking May 21.**
-The date and number of files examined change as the scan advances. **Stop search**
+The view stays still while the middle of the second menu bar reports progress, for
+example **Searching May 21…**. Click the status to read the full date, number of
+files examined, and coverage warnings. **Stop search**
 sits immediately to the right and cancels outstanding search work while keeping
 the view and displayed records. Changing the query, filter or Sort by also cancels stale work.
 Cached source records can be reused, with the current filters applied again.
@@ -81,7 +81,7 @@ do not explore archives or poll when no search is active.
 
 This uses `history=backward` with `matchProtocol=1&progressive=1` on the existing
 sessions endpoint. Continuations keep the same query, source configuration,
-filter, Sort by and end date; cancellation releases the cursor. Older servers
+filter, search mode, Sort by and end date; cancellation releases the cursor. Older servers
 without this history protocol fall back to a nearby search of up to eight
 expanding windows, 32 pages and 20 seconds. An empty fallback result explicitly
 remains incomplete. **Find previous activity** and **Find next activity** retain
@@ -110,7 +110,18 @@ navigation, Lock current view, grouping and accessibility controls.
 The `json_file` provider accepts `matchProtocol=1&progressive=1` on the existing
 sessions endpoint. `startDate`, `endDate`, `search`, and legacy filter parameters
 retain their meanings. The response includes `events` and the existing
-`timelineMatch` metadata, with these additional fields:
+`timelineMatch` metadata.
+
+New clients send `searchMode=text` for literal case-insensitive metadata search,
+`searchMode=pattern` for a case-insensitive regular expression, or
+`searchMode=legacy` for the original case-sensitive expression rules. Spaces and
+semicolons act as OR only in Legacy. An omitted mode retains Legacy behavior for
+existing clients. `timelineMatch.searchMode` acknowledges the interpretation;
+Text and Pattern clients reject unacknowledged modes with a compatibility error.
+Mode participates in cache, conditional-response, and continuation identities.
+The same mode applies to visible pages, historical search, and SSE updates.
+
+Progressive responses include these additional fields:
 
 | Field | Meaning |
 | --- | --- |
@@ -307,7 +318,7 @@ work does not delay the live subscription. A terminal browser connection error
 retries after two seconds; native EventSource handles ordinary reconnections.
 Live revisions trigger bounded JSON reconciliation with the same server filters.
 
-Status buttons sit on the right of the toolbar. Source failures use orange
+Status buttons sit in the middle of the second menu bar. Source failures use orange
 buttons, with explanations and Retry available. A separate orange **Loading items…**
 indicator appears during active loading and disappears on completion, cancellation
 or a terminal request failure. No automatic search popup covers the plot.

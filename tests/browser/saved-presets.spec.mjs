@@ -20,7 +20,7 @@ test('Connected presets restore and regroup the same records while later pages a
     const requests=[],held=[];
     const response=(route,events,nextCursor=null)=>{
         const u=new URL(route.request().url());
-        return route.fulfill({json:{events,timelineMatch:{version:1,progressive:true,query:'',hasCondition:false,
+        return route.fulfill({json:{events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:'',hasCondition:false,
             complete:!nextCursor,revision:'fixture',nextCursor,
             domain:{from:new Date(u.searchParams.get('startDate')).toISOString(),to:new Date(u.searchParams.get('endDate')).toISOString()}}}});
     };

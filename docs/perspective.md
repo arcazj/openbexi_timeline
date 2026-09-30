@@ -1,6 +1,6 @@
 # Perspective settings
 
-Open **Settings → Perspective** and enable **3D perspective**. The toolbar's
+Open **Settings → Update perspective** and enable **3D perspective**. The toolbar's
 **2D or 3D view** control switches the same camera mode.
 
 Every page load starts in **2D**, including after saving settings while in 3D.

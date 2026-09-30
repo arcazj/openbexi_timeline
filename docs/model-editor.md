@@ -1,6 +1,6 @@
 # Model and YAML editor
 
-Open **Settings → Model and YAML editor** in any timeline. The editor opens
+Open **Settings → Edit models → Model and YAML editor** in any timeline. The editor opens
 `openbexi_timeline_model.html` with that timeline's model and data source.
 You can also open the editor directly and choose any of the seven public demos.
 

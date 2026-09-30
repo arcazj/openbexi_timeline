@@ -39,6 +39,7 @@ test('Overview band backgrounds follow filtered and sorted bands, including save
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await page.getByRole('button',{name:'Add a new filter',exact:true}).click();
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Grouped sample');
+    await page.locator('.ob_filter_advanced > summary').click();
     await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: namespace = '+JSON.stringify(namespace));
     await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('namespace');
     await page.getByRole('button',{name:'Save new filter',exact:true}).click();await ready(page);
@@ -54,12 +55,12 @@ test('Overview band backgrounds follow filtered and sorted bands, including save
     expect(errors).toEqual([]);
 });
 
-test('Status explanations are keyboard accessible on the right and the orange loading indicator clears on completion',async({page})=>{
+test('Status explanations are keyboard accessible in the center and the orange loading indicator clears on completion',async({page})=>{
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
     await page.evaluate(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady,r=t.ob_results;
         r.remoteData=structuredClone(r.projection);
-        r.complete=false;r.fetching=true;r.remoteMetadata={version:1,query:'',hasCondition:false,complete:false,revision:'status-fixture',
+        r.complete=false;r.fetching=true;r.remoteMetadata={version:1,searchMode:'text',query:'',hasCondition:false,complete:false,revision:'status-fixture',
             domain:{from:new Date(r.domain.from).toISOString(),to:new Date(r.domain.to).toISOString()},
             warnings:['A configured source is unavailable.']};r.updateUI();
     });
@@ -67,8 +68,8 @@ test('Status explanations are keyboard accessible on the right and the orange lo
     await expect(partial).toBeVisible();await expect(loading).toBeVisible();
     await expect(loading).toHaveCSS('background-color','rgb(255, 240, 217)');
     expect(await partial.evaluate(node=>node.nextElementSibling.classList.contains('ob_loading_status'))).toBe(true);
-    const group=await page.locator('.ob_status_controls').boundingBox(),toolbar=await page.locator('.ob_results_controls').boundingBox();
-    expect(Math.abs(group.x+group.width-toolbar.x-toolbar.width)).toBeLessThan(2);
+    const group=await page.locator('.ob_status_controls').boundingBox(),feedback=await page.locator('.ob_results_feedback').boundingBox();
+    expect(group.x+group.width).toBeLessThanOrEqual(feedback.x);
     await partial.focus();await page.keyboard.press('Space');
     await expect(page.locator('.ob_results_details')).toHaveAttribute('open','');
     await expect(page.locator('.ob_status_explanation')).toContainText('prefetched time ranges');
@@ -87,6 +88,7 @@ test('OrbitControls rotate, pan and zoom independently; perspective and appearan
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
     await page.getByAltText('Settings',{exact:true}).click();
+    await page.locator('[data-settings-section=perspective] > summary').click();
     await page.getByRole('checkbox',{name:'Enable 3D perspective',exact:true}).check();await ready(page);
     const section=page.locator('.ob_perspective_settings');
     await section.locator('summary').filter({hasText:'Camera position'}).click();
@@ -109,7 +111,8 @@ test('OrbitControls rotate, pan and zoom independently; perspective and appearan
     expect(after.range).toEqual(before.range);expect(after.count).toBe(before.count);expect(after.selected).toBe(before.selected);
     await page.keyboard.press('Escape');
     await expect.poll(async()=>(await state(page)).adjusting).toBe(false);
-    await page.getByAltText('Settings',{exact:true}).click();await ready(page);
+    await page.getByAltText('Settings',{exact:true}).click();
+    await page.locator('[data-settings-section=perspective] > summary').click();await ready(page);
     await page.getByRole('button',{name:'Save perspective',exact:true}).click();
     const saved=(await state(page)).saved;expect(saved.mode).toBe('Orthographic');expect(saved.appearance.metalness).toBe(.55);
     await page.screenshot({path:info.outputPath('perspective-settings.png')});
@@ -118,6 +121,7 @@ test('OrbitControls rotate, pan and zoom independently; perspective and appearan
     expect(restored.appearance).toEqual(saved.appearance);
     for(const key of ['position','target','up'])saved.camera[key].forEach((value,i)=>expect(restored.camera[key][i]).toBeCloseTo(value,6));
     await page.getByAltText('Settings',{exact:true}).click();
+    await page.locator('[data-settings-section=perspective] > summary').click();
     await page.getByRole('checkbox',{name:'Enable 3D perspective',exact:true}).check();await ready(page);
     const enabled=await state(page);expect(enabled.mode).toBe('Perspective');
     for(const key of ['position','target','up'])saved.camera[key].forEach((value,i)=>expect(enabled.camera[key][i]).toBeCloseTo(value,6));

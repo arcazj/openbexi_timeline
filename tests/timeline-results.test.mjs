@@ -35,7 +35,7 @@ test('Status buttons explain partial coverage and loading ends on completion, ca
     const {h,t,r}=await load();
     try {
         r.complete=false;r.remoteData=structuredClone(r.projection);
-        const metadata={version:1,query:'',hasCondition:false,complete:false,revision:'status-test',
+        const metadata={version:1,searchMode:'text',query:'',hasCondition:false,complete:false,revision:'status-test',
             domain:{from:new Date(r.domain.from).toISOString(),to:new Date(r.domain.to).toISOString()},
             warnings:['A configured source is unavailable.']};
         r.remoteMetadata=metadata;
@@ -116,7 +116,7 @@ test('Sort by rebuilds nested groups without losing records, search, selection, 
 test('Lazy loading locks conflicting controls, retains the view, cancels stale responses and offers retry', async () => {
     const {h,t,r,requests}=await connectedStartup();
     const response=revision=>({ok:true,json:async()=>({events:[{id:'example',start:'2026-09-12T12:00:00Z',data:{title:'Example'},searchMatch:false}],
-        timelineMatch:{version:1,query:'',hasCondition:false,complete:true,revision,domain:{from:'2026-09-12',to:'2026-09-13'}}})});
+        timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,complete:true,revision,domain:{from:'2026-09-12',to:'2026-09-13'}}})});
     try {
         assert.equal(r.loading,true); assert.equal(h.window.document.querySelector('.ob_timeline_loading'),null); assert.equal(t.ob_search_input.disabled,true);
         requests[0].resolve(response('first')); await waitFor(()=>!r.pending);
@@ -175,7 +175,7 @@ test('Cold connected startup renders loading, reports first-response failures an
         await settle();
         assert.equal(requests.length,3);
         assert.equal(new URL(requests[2].url).searchParams.get('matchProtocol'),'1');
-        const metadata={version:1,query:'',hasCondition:false,complete:false,revision:'failed',domain:{from:'2026-09-12',to:'2026-09-13'}};
+        const metadata={version:1,searchMode:'text',query:'',hasCondition:false,complete:false,revision:'failed',domain:{from:'2026-09-12',to:'2026-09-13'}};
         requests[2].resolve({ok:true,json:async()=>({events:[],timelineMatch:{...metadata,error:'Cannot read the configured analysis scope.'}})});
         await settle();
         assert.match(r.summary.textContent,/Cannot read the configured analysis scope/);
@@ -203,7 +203,7 @@ test('Cold connected startup renders loading, reports first-response failures an
 test('Cold connected startup with zero provider records still renders the timeline and controls', async () => {
     const {h,t,r,requests}=await connectedStartup();
     try {
-        requests[0].resolve({ok:true,json:async()=>({events:[],timelineMatch:{version:1,query:'',hasCondition:false,complete:true,
+        requests[0].resolve({ok:true,json:async()=>({events:[],timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,complete:true,
             revision:'empty',domain:{from:'2026-09-12',to:'2026-09-13'}}})});
         await waitFor(()=>r.snapshot && !r.pending);
         assert.equal(r.error,'');
@@ -305,14 +305,16 @@ test('Search keeps the original icon, reveals independent checkboxes, and retain
     try {
         assert.ok(t.ob_timeline_header.contains(t.ob_search));
         assert.equal(t.ob_search.parentElement.getAttribute('aria-label'),'Search');
-        assert.equal(t.ob_timeline_header.querySelector('select'),null);
-        assert.equal(r.toolbar.hidden,false,'Activity navigation remains available before searching');
+        assert.equal(r.searchMode.getAttribute('aria-label'),'Search mode');
+        assert.ok(r.controls.activityControls.contains(r.auto));
+        assert.ok(r.controls.activityControls.contains(r.explorer.findPrevious));
+        assert.equal(t.ob_timeline_header.querySelector('.ob_view_options, .ob_saved_views'),null);
         assert.ok(r.matchControls.every(control=>control.hidden));
         assert.equal(r.details.open,false);
         t.ob_search_input.value='volcano';
         t.ob_search_input.dispatchEvent(new h.window.Event('input'));
-        assert.equal(r.toolbar.hidden,false, 'Search actions appear as soon as typing starts');
         await new Promise(resolve=>setTimeout(resolve,180));
+        assert.equal(r.toolbar.hidden,false, 'Search actions appear with the active query');
         const counts=plain(r.snapshot.counts), keys=plain(r.projection.displayedKeys), map=r.map;
         r.captureRanges(); const ranges=plain([...r.ranges]);
         assert.ok(t.ob_timeline_panel.querySelectorAll('[data-match-key]').length>0);
@@ -337,11 +339,11 @@ test('Search keeps the original icon, reveals independent checkboxes, and retain
         assert.equal(r.details.contains(r.summary),true);
         assert.equal(r.details.open,false);
         r.clearButton.click();
-        assert.equal(r.toolbar.hidden,false,'Clearing retains activity navigation');
+        assert.equal(r.activityToolbar.hidden,false,'Clearing retains activity navigation');
         assert.ok(r.matchControls.every(control=>control.hidden),'Clearing hides search-only actions');
         assert.equal(h.window.document.activeElement,t.ob_search_input);
         await settle();
-        assert.equal(r.toolbar.hidden,false,'Activity navigation stays available after the search clears');
+        assert.equal(r.activityToolbar.hidden,false,'Activity navigation stays available after the search clears');
         assert.ok(r.matchControls.every(control=>control.hidden));
         assert.equal(r.state.mode,'only'); assert.equal(r.highlight.checked,true);
         assert.deepEqual(plain(r.projection.displayedKeys),keys);
@@ -363,7 +365,7 @@ async function normalizedProvider() {
     const annotate=records=>records.forEach(record=>{record.searchMatch=false;if(record.activities)annotate(record.activities);});
     annotate(data.events);
     t.staticData=null;
-    const metadata={version:1,query:'',hasCondition:false,complete:false,revision:'1',domain:{from:'2026-09-12',to:'2026-09-13'},warnings:['Source unavailable: test.']};
+    const metadata={version:1,searchMode:'text',query:'',hasCondition:false,complete:false,revision:'1',domain:{from:'2026-09-12',to:'2026-09-13'},warnings:['Source unavailable: test.']};
     r.acceptRemote(data,metadata); await settle();
     return {...result,data,metadata,clock:panClock(result.h.window)};
 }
@@ -453,7 +455,7 @@ test('Provider metadata is authoritative, partial coverage disables fit/auto map
         const data = structuredClone(fixture);
         const annotate = records => records.forEach(record => {record.searchMatch=record.id==='late'; if(record.activities) annotate(record.activities);});
         annotate(data.events);
-        const metadata = {version:1,query:'provider',hasCondition:true,complete:false,revision:'1',domain:{from:'2026-09-12',to:'2026-09-13'},warnings:['Source unavailable: example-source.', 'Invalid records skipped: 2.']};
+        const metadata = {version:1,searchMode:'text',query:'provider',hasCondition:true,complete:false,revision:'1',domain:{from:'2026-09-12',to:'2026-09-13'},warnings:['Source unavailable: example-source.', 'Invalid records skipped: 2.']};
         r.state.query='provider';
         r.acceptRemote(data,metadata); await settle();
         assert.equal(r.snapshot.matchingKeys.length,1);
@@ -515,7 +517,7 @@ test('Actual HTTP loader cancels older queries and ignores late responses, inclu
             const data=structuredClone(fixture);
             const annotate=records=>records.forEach(record=>{record.searchMatch=record.id==='late';if(record.activities)annotate(record.activities);});
             annotate(data.events);
-            data.timelineMatch={version:1,query,hasCondition:true,complete:true,revision:query,domain:{from:'2026-09-12',to:'2026-09-13'}};
+            data.timelineMatch={version:1,searchMode:'text',query,hasCondition:true,complete:true,revision:query,domain:{from:'2026-09-12',to:'2026-09-13'}};
             return {ok:true,json:async()=>data};
         };
         pending[1].resolve(response('volcano&readDescriptor'));
@@ -537,7 +539,7 @@ test('Superseded SSE streams cannot replace the current query or its displayed r
         r.request({query:'old'}); r.request({query:'new'});
         assert.equal(streams.length,2); assert.equal(streams[0].closed,true);
         const response=query=>JSON.stringify({events:[{id:query,start:'2026-09-12T12:00:00Z',data:{title:query},searchMatch:true}],
-            timelineMatch:{version:1,query,revision:query,hasCondition:true,complete:true,domain:{from:'2026-09-12',to:'2026-09-13'}}});
+            timelineMatch:{version:1,searchMode:'text',query,revision:query,hasCondition:true,complete:true,domain:{from:'2026-09-12',to:'2026-09-13'}}});
         streams[1].onmessage({data:response('new')}); await settle();
         const snapshot=r.snapshot; assert.equal(snapshot.query,'new');
         streams[0].onmessage({data:response('old')}); await settle();

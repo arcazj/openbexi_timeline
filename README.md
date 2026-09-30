@@ -16,6 +16,19 @@ connect to a Java server for progressive loading and managed datasets.
   records, buffer neighboring intervals, and show loading, retry and coverage states.
 - **Find activity quickly:** search centers a match, previous/next buttons navigate
   through activity, and Auto scale adapts the time axis to data density.
+- **Keep your place:** Back to previous view restores the date and zoom after
+  search or selection. Removable labels show active filters and grouping.
+- **Work with familiar controls:** Text and Pattern search work with local and
+  connected data; Legacy keeps older expressions available. Display controls remain
+  directly on the menu bar, and Sorting & Filtering includes a Field → Operator → Value builder.
+- **Use the second menu bar:** Refresh, Go to latest data, previous/next activity,
+  Lock current view and Auto scale stay together. Status appears in the middle;
+  Filter and Timeline details sit on the right. Groups wrap when space is limited.
+  Wheel and keyboard zoom remain available; search modes are inside Filter.
+- **Personalize Settings:** use Edit models, Timeline info, Update perspective,
+  and Change look and feel. Timeline info and perspective start collapsed.
+  Choose Default, Apple style, Windows style, Minimal or High contrast with
+  circular radio buttons; the choice is saved in your browser.
 - **Explore in 3D:** compact bars share rows, full labels remain readable, and
   the selected activity glows without changing size.
 - **Customize with a live preview:** open the Model and YAML editor from Settings
@@ -23,6 +36,12 @@ connect to a Java server for progressive loading and managed datasets.
   your configuration. Connected administrators can also manage server files.
 
 ## Screenshots
+
+Menu bar: [wide layout](docs/ui/toolbar-layout/wide.png) ·
+[limited room, wrapped layout](docs/ui/toolbar-layout/narrow.png).
+Settings: [Default](docs/ui/settings/default.png) · [Apple style](docs/ui/settings/apple.png) ·
+[Windows style](docs/ui/settings/windows.png) · [Minimal](docs/ui/settings/minimal.png) ·
+[High contrast](docs/ui/settings/contrast.png).
 
 Real application captures using public or synthetic data. Click an image to open
 it at full resolution. Both desktop examples use the same display width.
@@ -78,7 +97,7 @@ See [connected setup and diagnostics](docs/connected-diagnostics.md) and
 [progressive loading](docs/progressive-loading.md) for configuration and protocol details.
 
 If a search has no loaded matches, the timeline automatically searches earlier
-configured files in the background. The right side of the toolbar shows the date
+configured files in the background. The middle of the second menu bar shows the date
 being checked or the number of files examined, with **Stop search** beside it.
 Stopping keeps the view and displayed records. A match brings its time range
 into view at the current zoom; active filters and **Sort by** remain in effect. A final no-match
@@ -129,21 +148,22 @@ Use the [demo guide](docs/demos.md) to add datasets and models, and the
 reproduction steps and a public or synthetic example. Keep private configuration,
 records, logs and screenshots out of shared files; see [privacy guidance](docs/privacy.md).
 
-Open **Settings → Model and YAML editor** to edit configuration with a live
+Open **Settings → Edit models → Model and YAML editor** to edit configuration with a live
 timeline preview, color pickers and field choices. The [editor guide](docs/model-editor.md)
 explains local import/export, server file CRUD, and applying a draft. The
 [rendering inventory](docs/model-rendering-inventory.md) lists model settings and defaults.
 
 ## Copyright and Licensing
 
-**Current version: [2.3.0](docs/release-2.3.0.md)**, OpenBEXI Timeline 2.3.
-This release adds historical search with progress and cancellation, filtered REST
-and SSE updates, advanced filter expressions, saved sorting, matching Overview
-band colors, and configurable [3D perspective and appearance](docs/perspective.md).
+**Current version: [2.3.1](docs/release-2.3.1.md)**, OpenBEXI Timeline 2.3.
+This release reorganizes the menu bars and Settings, adds saved interface themes,
+and improves search modes, filter editing and navigation back to a previous view.
+It retains historical search, filtered REST and SSE updates, and configurable
+[3D perspective and appearance](docs/perspective.md).
 The UI always opens in **2D**. Enable 3D to restore your saved viewpoint or use
 the built-in reference preset, also applied to Claude Monet and Dinosaurs.
 Metalness affects the view span and activities; icon artwork keeps its colors.
-The [release notes](docs/release-2.3.0.md) describe the included changes, verified
+The [release notes](docs/release-2.3.1.md) describe the included changes, verified
 checks and remaining scope. Create the reviewed source archive and its
 SHA-256 manifest in `dist/` with:
 
