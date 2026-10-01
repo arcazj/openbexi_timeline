@@ -156,6 +156,7 @@ test('Dense groups expand with the keyboard and keep original counts and linear 
     const fixture=await setup(page,records);
     try {
         await page.getByLabel('Auto scale',{exact:true}).check();await settle(page);
+        await page.getByRole('button',{name:'Timeline details',exact:true}).click();
         await expect(page.locator('.ob_cluster_list')).toBeVisible();await page.locator('.ob_cluster_list summary').click();
         const group=page.locator('.ob_cluster_list button').first();await expect(group).toBeVisible();
         await group.focus();await page.keyboard.press('Enter');await settle(page);

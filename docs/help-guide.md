@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.3.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.3.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -9,8 +9,9 @@ These notes describe the version 2.3.1 browser application and the local demos i
 - Selecting an event or session smoothly centers its timestamp or midpoint and preserves the visible time span. The gold selection glow remains visible, with a separate outlined marker above the Overview shading. A new gesture interrupts the movement; reduced motion makes centering immediate.
 - Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
-- **Find previous activity** and **Find next activity** replace the +/− buttons and respect the active search and filters. The permanent second menu bar contains **Refresh | Go to latest data, Find previous activity, Find next activity | Lock current view, Auto scale**. Status appears in the middle; **Filter | Timeline details** stays on the right. Groups wrap on smaller screens. Display controls remain directly accessible. Use the mouse wheel or plus/minus keys to zoom.
-- Choose a search mode inside **Filter → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
+- The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Go to latest data, Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
+- The secondary bar groups **Calendar → Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.
+- Choose a search mode inside **Filters → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
 - **Back to previous view** restores the date and zoom before a search or selection moved the timeline, while retaining the current query and filters.
 - Active filters and grouping appear as removable labels. In **Sorting & Filtering**, use **Field → Operator → Value** and choose a text, number or boolean value type. **Apply filter** changes the current view; **Add a new filter** saves it as a preset. Existing syntax remains available under **Advanced expression**.
 - Drag the timeline or an activity to navigate through time. Clicking an activity selects it; dragging does not open Data or recenter it. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
@@ -28,12 +29,19 @@ In **Share**, choose **Copy link** to copy the current local demo's dataset, tim
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
 
 Calendar month arrows browse dates without moving the timeline. Select a day to
-load that interval. If loading fails, click the orange status in the middle of the second menu bar
-to see the reason; Retry or navigate to resume. Loaded records stay visible.
-The separate orange **Loading items…** indicator disappears when loading ends.
+load that interval. The secondary menu bar shows **Status: Loading…** or
+**Status: Searching…** in orange while work continues, and **Status: Ready** in
+green after successful completion. Partial coverage, data limits and interrupted
+connections stay orange; **Status: Error** is red and **Status: Cancelled** is gray.
+Click the **Status** button
+to open the current loading or search report; click it again to close the report,
+as with **Timeline details**. The tooltip also gives the current state. If loading
+fails, the report explains the reason; Retry or navigate to resume. Loaded records stay visible.
+The tooltip and report include loaded item counts and available search progress.
+The report's **Loading items…** indicator disappears when loading ends.
 The Stop control or Escape cancels loading; Escape inside an open status explanation
-closes that explanation. **Partial data** can concern loaded or prefetched time
-ranges; click it to review the warning and coverage for each range.
+closes that explanation. Partial data can concern loaded or prefetched time
+ranges; open **Status** to review the warning and coverage for each range.
 The plot stays clear. Toolbar messages describe empty intervals after loading settles
 with no records in the visible interval. Partial coverage and source failures have
 distinct messages. **Go to latest data** moves to the latest observed timestamp
@@ -64,9 +72,9 @@ keep their declared units. Overview always uses uniform time spacing.
   records are available. Turning Auto scale off restores ordinary spacing.
 - A new search centers its first result once. Later batches keep the chosen view.
   If no match is loaded, connected text searches automatically scan earlier
-  configured files through the visible end date. The toolbar shows the date
-  being checked, with **Stop search** immediately
-  to its right. Click the short status to read file counts and full coverage details. Stopping keeps the view and displayed records. Finding a match
+  configured files through the visible end date. The **Status** tooltip and report
+  show the date being checked, with **Stop search** immediately to the button's
+  right. Open the report to read file counts and full coverage details. Stopping keeps the view and displayed records. Finding a match
   centers it at the current zoom. Active filters and **Sort by** apply throughout; changing either or the
   query cancels the previous search.
   **Find previous activity** and **Find next activity** search backward and forward
@@ -107,6 +115,9 @@ circular radio buttons in Change look and feel. They appear horizontally and
 wrap on narrow panels. Arrow keys move between choices. Themes apply immediately
 and persist in this browser; Default is selected initially. They change interface
 controls without altering record colors or the selected time range.
+High contrast strengthens icons, buttons and separators in both menu bars so
+groups remain distinct. Hover, keyboard focus, selected and disabled controls
+have clear visual states.
 
 ## Model and YAML editor
 
@@ -160,14 +171,17 @@ The static demos do not call the Java service. The [API reference](api.html) doc
 Use Node.js 24 or later. From the repository root:
 
 ```sh
-npm install
-npm run test:demos
-node tools/update-demo-readme.mjs --check
+npm ci
+npm test
+npm run demos:readme -- --check
 ```
 
 The demo suite validates catalog coverage, source imports, model settings, local HTTP assets, interaction state, responsive layout, time scales, axis ticks, Overview geometry, and docked panel behavior. It uses actual scene objects and a simulated DOM, with GPU rendering and text measurement stubbed. The separate `npm run test:browser` suite renders all seven demos in Chromium/WebGL, compares reviewed screenshots at two window sizes, and checks panel boundaries, Overview toggling, scrolling, and resizing. See the [browser regression guide](browser-tests.md) for installation and baseline review instructions.
 
-To update the generated README demo list after a catalog edit, run `npm run demos:readme`. Java test sources are also present under [src/com/openbexi/timeline/tests](https://github.com/arcazj/openbexi_timeline/blob/master/src/com/openbexi/timeline/tests/test_timeline.java); the demo suite does not run them.
+After a catalog edit, `npm run demos:readme` updates the compact README links and
+the resource table in the demo guide. Run `mvn --batch-mode --no-transfer-progress
+verify` for Java and API tests. See [development and release validation](development.md)
+for the complete workflow.
 
 ## Deployment
 

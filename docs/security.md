@@ -44,6 +44,17 @@ Historical aggregate documents remain readable; no automatic database rewrite oc
 
 ## Deployment
 
+Build and run the container from the repository root:
+
+```sh
+docker build -t openbexi-timeline .
+docker run --rm -p 127.0.0.1:8442:8442 -v openbexi-data:/data openbexi-timeline
+```
+
+Open [the local gallery](http://localhost:8442/demos.html). The named volume
+stores managed data; configure a TLS reverse proxy and API tokens for a deployed
+service as described in the [REST API guide](rest-api.md).
+
 The container builds the Java classes and copies the runtime dependency set directly from Maven. It installs browser dependencies from the npm lockfile and runs on a maintained Java 17 image as an unprivileged user. Do not reuse an old manually assembled application JAR after updating `pom.xml`.
 
 The native launchers use the same compiled classes and runtime JARs. Build with `mvn --batch-mode --no-transfer-progress verify`, then run `bash openbexi_timeline.sh -data_conf "path/to/config.yml"` or `openbexi_timeline.bat -data_conf "C:\path\to\config.yml"`. Maven's package phase removes obsolete JARs from **only** `target/runtime` and copies the current resolved runtime set there; this prevents an older dependency from remaining on the wildcard classpath after an upgrade. Stop a native server before rebuilding its runtime, especially on Windows where running JARs can be locked.

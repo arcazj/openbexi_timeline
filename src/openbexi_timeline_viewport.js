@@ -220,7 +220,8 @@ export class TimelineViewport {
         styles(table,{top:headerHeight+'px',left:(split?this.plotWidth:0)+'px',width:(split?this.width-this.plotWidth:this.width)+'px',
             height:(this.height-headerHeight)+'px',overflow:'hidden'});
         styles(t.ob_timeline_right_panel,{position:'absolute',top:(this.top+(this.overlay?headerHeight:0))+'px',
-            left:(this.overlay?this.left+Math.max(0,this.width-Math.min(this.sideWidth,this.width)):this.left+this.width)+'px',
+            left:(!this.panelOpen?0:
+                this.overlay?this.left+Math.max(0,this.width-Math.min(this.sideWidth,this.width)):this.left+this.width)+'px',
             width:Math.min(this.sideWidth || 320,window.innerWidth)+'px',
             height:Math.max(1,this.height-(this.overlay?headerHeight+(t.ob_views?.mode==='table'?0:this.overviewHeight):0))+'px',
             overflowY:'auto',overflowX:'hidden',zIndex:'100000'});

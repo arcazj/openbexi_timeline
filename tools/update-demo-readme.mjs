@@ -24,37 +24,47 @@ export async function readDemoCatalog() {
     return catalog;
 }
 
-export function buildDemoReadme(catalog, baseURL = 'https://arcazj.github.io/openbexi_timeline/') {
+export function buildDemoReadme(catalog, baseURL = 'https://arcazj.github.io/openbexi_timeline/', {resources = false} = {}) {
     const escape = text => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
-    const lines = [
+    const links = catalog.demos.map(demo => {
+        const url = new URL('demos.html', baseURL);
+        url.searchParams.set('demo', demo.id);
+        return `[${escape(demo.title)}](${url.href})`;
+    });
+    if (!resources) return [
         '<!-- LIVE_DEMOS:START -->', '## Live demos', '',
-        'Open a demo directly on GitHub Pages; no installation or Java server is needed. Each uses the same Timeline, Table and Split views; its data, bands, colors and time scales come from [the catalog](demos/catalog.json) and model files. For local use, follow [Quick start](#quick-start).', '',
+        links.join(' ·\n'), '',
+        'Explore the [gallery](https://arcazj.github.io/openbexi_timeline/) in your browser. The [demo guide](docs/demos.md#live-demos) lists datasets, models and screenshots.',
+        '<!-- LIVE_DEMOS:END -->'
+    ].join('\n');
+    const lines = [
+        '<!-- DEMO_RESOURCES:START -->', '## Live demos', '',
+        'Each demo uses Timeline, Table and Split views with its own data, model and time scale. Open a link below to try it in your browser.', '',
         '| Demo | What it shows | Resources |',
         '| --- | --- | --- |'
     ];
-    for (const demo of catalog.demos) {
-        const url = new URL('demos.html', baseURL);
-        url.searchParams.set('demo', demo.id);
-        const resources = [`[Data](${demo.dataset})`, `[Model](${demo.model})`];
-        if (demo.reference) resources.push(`[Screenshot](${demo.reference})`);
-        lines.push(`| [${escape(demo.title)}](${url.href}) | ${escape(demo.description)} | ${resources.join(' · ')} |`);
+    for (const [index, demo] of catalog.demos.entries()) {
+        const files = [`[Data](../${demo.dataset})`, `[Model](../${demo.model})`];
+        if (demo.reference) files.push(`[Screenshot](../${demo.reference})`);
+        lines.push(`| ${links[index]} | ${escape(demo.description)} | ${files.join(' · ')} |`);
     }
-    lines.push('', 'Append `&view=table` or `&view=split` to a demo URL to open that view directly. See the [demo guide](docs/demos.md) for data formats, model options and hosting.', '<!-- LIVE_DEMOS:END -->');
+    lines.push('', 'Append `&view=table` or `&view=split` to a demo URL to open that view directly.', '<!-- DEMO_RESOURCES:END -->');
     return lines.join('\n');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
     const catalog = await readDemoCatalog();
-    const file = path.join(projectRoot, 'README.md');
-    const original = await fs.readFile(file, 'utf8');
-    const section = buildDemoReadme(catalog);
-    const marker = /<!-- LIVE_DEMOS:START -->[\s\S]*?<!-- LIVE_DEMOS:END -->/;
-    if (process.argv.includes('--check')) {
-        if (original.match(marker)?.[0].replaceAll('\r\n', '\n') !== section) throw new Error('README demo section is stale. Run npm run demos:readme.');
-    } else {
-        if (!marker.test(original)) throw new Error('README is missing the LIVE_DEMOS section markers.');
-        const next = original.replace(marker, section);
-        await fs.writeFile(file, next);
-        console.log('Updated README demos from ' + catalog.demos.length + ' catalog entries.');
+    for (const [relative, resources, name] of [['README.md', false, 'LIVE_DEMOS'], ['docs/demos.md', true, 'DEMO_RESOURCES']]) {
+        const file = path.join(projectRoot, relative);
+        const original = await fs.readFile(file, 'utf8');
+        const section = buildDemoReadme(catalog, undefined, {resources});
+        const marker = new RegExp(`<!-- ${name}:START -->[\\s\\S]*?<!-- ${name}:END -->`);
+        if (process.argv.includes('--check')) {
+            if (original.match(marker)?.[0].replaceAll('\r\n', '\n') !== section) throw new Error(relative + ' demo section is stale. Run npm run demos:readme.');
+        } else {
+            if (!marker.test(original)) throw new Error(relative + ' is missing the ' + name + ' section markers.');
+            await fs.writeFile(file, original.replace(marker, section));
+            console.log('Updated ' + relative + ' from ' + catalog.demos.length + ' catalog entries.');
+        }
     }
 }

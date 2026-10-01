@@ -22,15 +22,16 @@ Measured request latency and movement speed guide replenishment and direction
 priority. If data density fills the cache budget, neighboring scans pause with a
 partial-coverage warning; visible work can evict distant buffers first. Moving
 into a paused interval resumes it as visible work. A visible interval that exceeds
-the budget retains accepted records and shows **Data limit reached** with a
-**Narrow time window** action. This halves the visible range and loads that
+the budget retains accepted records and shows **Status: Data limit reached** in
+orange. Use wheel or keyboard zoom to narrow the visible range and load that
 interval, preserving the search and display options. Coverage remains partial
 and exact Fit matches stays disabled until loading completes. At this limit the
 client releases remaining cursors; narrowing the view or changing the query
 resumes loading.
-Loading failures have an orange status beside **Refresh**. Click it or
-press Enter to inspect the error. Retry or navigate to another interval to resume;
-an explicit Cancel stays cancelled until Retry. Calendar month arrows only browse
+Loading failures show a red **Status: Error** in the secondary menu bar. Click it or
+press Enter to inspect the error. Use Retry or Refresh, or navigate to another
+interval, to resume. Cancelled work shows **Status: Cancelled** in gray.
+Calendar month arrows only browse
 the calendar; choosing a day moves the timeline and requests that interval first.
 Counts and Overview describe loaded records and identify partial coverage.
 Searches prioritize sources whose namespaces match the query while retaining
@@ -62,9 +63,9 @@ source or user filters do not make the search incomplete. An enabled source
 that cannot be read still makes coverage incomplete: a namespace filter alone
 cannot prove which namespaces its records contain.
 
-The view stays still while the middle of the second menu bar reports progress, for
-example **Searching May 21…**. Click the status to read the full date, number of
-files examined, and coverage warnings. **Stop search**
+The view stays still while the secondary menu bar shows **Status: Searching…**.
+Its tooltip and report show the date being checked, the number of files examined
+and coverage warnings. Click Status to open or close the report. **Stop search**
 sits immediately to the right and cancels outstanding search work while keeping
 the view and displayed records. Changing the query, filter or Sort by also cancels stale work.
 Cached source records can be reused, with the current filters applied again.
@@ -318,8 +319,11 @@ work does not delay the live subscription. A terminal browser connection error
 retries after two seconds; native EventSource handles ordinary reconnections.
 Live revisions trigger bounded JSON reconciliation with the same server filters.
 
-Status buttons sit in the middle of the second menu bar. Source failures use orange
-buttons, with explanations and Retry available. A separate orange **Loading items…**
-indicator appears during active loading and disappears on completion, cancellation
-or a terminal request failure. No automatic search popup covers the plot.
+Status sits in the secondary menu bar. **Status: Loading…** and **Status: Searching…**
+are orange while work continues; **Status: Ready** turns green after successful
+completion. Partial coverage, data limits and interrupted connections stay orange;
+errors are red and cancelled work is gray. Click Status to open the report and
+click again to close it. The tooltip and report include loaded item counts,
+available search progress and recovery details. The report's **Loading items…**
+indicator disappears when loading ends.
 See [filter syntax and saved presets](filter-syntax.md).

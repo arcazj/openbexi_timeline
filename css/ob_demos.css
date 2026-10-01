@@ -2,7 +2,7 @@ body.ob_demo_page { margin: 0; height: 100vh; height: 100dvh; display: grid; gri
 #demo-status { position: fixed; right: 12px; bottom: 12px; box-sizing: border-box; max-width: calc(25vw - 24px); padding: 10px; border: 1px solid #c8d4dd; border-radius: 4px; background: #fff; color: #4b6273; overflow-wrap: anywhere; z-index: 1000; }
 #demo-status[data-state="ready"] { width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #demo-status[data-error="true"] { color: #a02727; border-color: #a02727; }
-#demo-workspace { position: relative; min-height: 0; min-width: 0; overflow: hidden; }
+#demo-workspace { position: relative; min-height: 0; min-width: 0; overflow: clip; }
 #demo-timeline-slot, #demo-side-slot { display: contents; }
 #demo-side-slot .ob_head_panel { box-sizing: border-box; width: 100% !important; max-width: 100%; overflow-wrap: anywhere; }
 #demo-side-slot input, #demo-side-slot select, #demo-side-slot textarea { box-sizing: border-box; max-width: 100%; }

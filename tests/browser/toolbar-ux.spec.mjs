@@ -8,25 +8,28 @@ const fixture=JSON.parse(await fs.readFile('tests/fixtures/search-modes.json','u
 const data=parseTimelineData(JSON.stringify(fixture));
 const search=page=>page.getByRole('searchbox',{name:'Search',exact:true});
 const state=page=>page.evaluate(async()=>{
-    const t=await(await import('/src/openbexi_demo.js')).demoReady,r=t.ob_results;
+    const t=window.toolbarStandalone || await(await import('/src/openbexi_demo.js')).demoReady,r=t.ob_results,v=t.ob_viewport;
     if(!r.pending)r.captureRanges();
     return {query:r.state.query,searchMode:r.state.searchMode,pending:r.pending,fetching:r.fetching,seeking:r.explorer.seeking,
+        viewportReady:v.width+(v.overlay?0:v.sideWidth)===innerWidth && v.height===innerHeight &&
+            v.headerHeight===t.ob_timeline_header.offsetHeight &&
+            v.panelOpen===Boolean(t.ob_timeline_right_panel.children.length && t.ob_timeline_right_panel.style.visibility!=='hidden'),
         range:[...r.visibleRanges.values()][0],view:t.ob_views.mode,filter:t.ob_scene[0].ob_filter_value,group:t.ob_sortBy,
         camera:t.ob_scene[0].ob_camera_type,error:r.error,ids:r.snapshot?.entries.map(e=>e.record.id),
         matches:r.snapshot?.entries.filter(e=>e.directMatch).map(e=>e.record.id)};
 });
-const ready=page=>expect.poll(async()=>{const s=await state(page);return Boolean(s.pending || s.fetching || s.seeking);}).toBe(false);
+const ready=page=>expect.poll(async()=>{const s=await state(page);return Boolean(s.pending || s.fetching || s.seeking || !s.viewportReady);}).toBe(false);
 async function find(page,query) {await search(page).fill(query);await search(page).press('Enter');await expect.poll(async()=>(await state(page)).query).toBe(query);await ready(page);}
 async function searchMode(page,mode) {
-    await page.getByRole('button',{name:'Filter',exact:true}).click();
+    await page.getByRole('button',{name:'Filters',exact:true}).click();
     await page.getByLabel('Search mode',{exact:true}).selectOption(mode);await ready(page);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();await ready(page);
 }
 function sameRange(a,b) {expect(a.from).toBeCloseTo(b.from,-1);expect(a.to).toBeCloseTo(b.to,-1);}
-async function setup(page,{connected=false}={}) {
+async function setup(page,{connected=false,standalone=false}={}) {
     const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:'2026-09-12T16:00:00Z',showCurrentTime:false,fullWindow:true,
-        data:connected?'http://127.0.0.1:8782/__ux-server':''});
+        data:connected?new URL('/__ux-server',test.info().project.use.baseURL).href:''});
     if(!connected) {
         model.dataSource={url:'/__ux-local',format:'json'};
         for(const band of model.bands){delete band.subIntervalPixels;band.intervalPixels=Number(band.intervalPixels);if(band.model)band.model=[{sortBy:'NONE'}];}
@@ -51,7 +54,13 @@ async function setup(page,{connected=false}={}) {
             complete:true,nextCursor:null,revision:'ux-fixture',domain:{from:new Date(history?0:from).toISOString(),to:new Date(to).toISOString()},
             ...(history?{history:{supported:true,exhausted:true,direction:'backward',filesExamined:1}}:{})}}});
     });
-    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    if(standalone) {
+        const html=(await fs.readFile('demos.html','utf8')).replace(/<body[\s\S]*$/,
+            '<body><script type="module">import {OB_TIMELINE} from "/src/openbexi_timeline.js"; window.toolbarStandalone=new OB_TIMELINE(); window.toolbarStarted=toolbarStandalone.loadModel("/models/demos/default-dataset.json",{dataset:"/json/test-data/default-dataset.json"});</script></body></html>');
+        await page.route('**/__toolbar-standalone.html',route=>route.fulfill({contentType:'text/html',body:html}));
+        await page.goto('/__toolbar-standalone.html');await page.evaluate(()=>window.toolbarStarted);
+    } else await page.goto('/demos.html?demo=default-dataset');
+    await ready(page);
     return {errors,requests};
 }
 
@@ -71,6 +80,10 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await page.getByRole('button',{name:'Apply',exact:true}).click();await ready(page);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();
     await expect(page.getByRole('button',{name:'Remove Filter: Custom',exact:true})).toBeVisible();
+    expect(await page.locator('.ob_active_filters').evaluate(labels=>
+        labels.parentElement.classList.contains('ob_results_feedback') &&
+        labels.previousElementSibling.alt==='Calendar browser' &&
+        labels.nextElementSibling.getAttribute('aria-label')==='Filters')).toBe(true);
     await page.getByRole('button',{name:'Remove Group: namespace',exact:true}).click();await ready(page);
     expect((await state(page)).group).toBe('NONE');expect((await state(page)).ids).toEqual(['ground']);
     await page.getByRole('button',{name:'Remove Filter: Custom',exact:true}).click();await ready(page);
@@ -85,13 +98,13 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await page.getByRole('button',{name:'Remove Source: does not equal Operations',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toHaveLength(3);
     await page.setViewportSize({width:420,height:740});await ready(page);
-    const box=await page.locator('.ob_activity_controls').boundingBox();
-    expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(420);
+    await page.getByLabel('Lock current view',{exact:true}).scrollIntoViewIfNeeded();
+    await expect(page.getByLabel('Lock current view',{exact:true})).toBeInViewport();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     expect(fixture.errors).toEqual([]);
 });
 
-test('Second menu bar keeps action order and right aligned details at wide and narrow widths',async({page},info)=>{
+test('Two menu bars keep ordered controls accessible and move navigation after Search when it fits',async({page},info)=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
     await page.setViewportSize({width:1920,height:900});
@@ -100,25 +113,49 @@ test('Second menu bar keeps action order and right aligned details at wide and n
         await page.setViewportSize({width,height:900});
         const header=page.locator('.ob_results_header');
         await expect(header).toHaveAttribute('data-toolbar-layout','two-rows');await ready(page);
+        await expect(header).toHaveAttribute('data-activity-row',width===1920?'main':'secondary');
         await expect(header.getByRole('combobox',{name:'Search mode',exact:true})).toHaveCount(0);
         expect(await page.locator('.ob_activity_controls').evaluate(element=>[...element.children].map(child=>child.classList.contains('ob_toolbar_separator')?'|':child.textContent.trim())))
-            .toEqual(['Refresh','|','Go to latest data','Find previous activity','Find next activity','|','Lock current view','Auto scale']);
-        const controls=[page.getByRole('button',{name:'Find previous activity',exact:true}),page.getByRole('button',{name:'Find next activity',exact:true}),
-            page.getByLabel('Lock current view',{exact:true}).locator('..'),page.getByLabel('Auto scale',{exact:true}).locator('..')];
+            .toEqual(['Go to latest data','Find previous activity','Find next activity','|','Auto scale','Lock current view']);
+        const controls=[page.getByRole('button',{name:'Go to latest data',exact:true}),
+            page.getByRole('button',{name:'Find previous activity',exact:true}),page.getByRole('button',{name:'Find next activity',exact:true}),
+            page.getByLabel('Auto scale',{exact:true}).locator('..'),page.getByLabel('Lock current view',{exact:true}).locator('..')];
         const boxes=[];
         for(const control of controls){await expect(control).toBeVisible();boxes.push(await control.boundingBox());}
         for(let i=1;i<boxes.length;i++) {
-            if(width>=1100) {
-                expect(Math.abs(boxes[i].y-boxes[0].y)).toBeLessThan(2);
-                expect(boxes[i].x).toBeGreaterThanOrEqual(boxes[i-1].x+boxes[i-1].width);
-            }
-            expect(boxes[i].x+boxes[i].width).toBeLessThanOrEqual(width);
+            expect(Math.abs(boxes[i].y+boxes[i].height/2-boxes[0].y-boxes[0].height/2)).toBeLessThan(2);
+            expect(boxes[i].x).toBeGreaterThanOrEqual(boxes[i-1].x+boxes[i-1].width-1);
         }
         const primary=await page.locator('.ob_primary_toolbar').boundingBox();
-        expect(boxes[0].y).toBeGreaterThanOrEqual(primary.y+primary.height);
-        const feedback=await page.locator('.ob_results_feedback').boundingBox();
-        expect(Math.abs(feedback.x+feedback.width-width+10)).toBeLessThan(2);
+        const secondary=await page.locator('.ob_activity_toolbar').boundingBox();
+        expect((await header.boundingBox()).height).toBeLessThan(primary.height+secondary.height+25);
+        expect(secondary.y).toBeGreaterThanOrEqual(primary.y+primary.height-1);
+        expect(secondary.height).toBeLessThan(65);
+        expect(primary.height).toBeLessThan(65);
+        expect(await page.locator('.ob_activity_controls').evaluate(node=>node.parentElement.className))
+            .toBe(width===1920?'ob_primary_toolbar':'ob_activity_toolbar');
+        if(width===1920) {
+            const input=await search(page).boundingBox();
+            expect(Math.abs(boxes[0].y+boxes[0].height/2-input.y-input.height/2)).toBeLessThan(2);
+            expect(boxes[0].x).toBeGreaterThanOrEqual(input.x+input.width);
+            expect(await page.locator('.ob_activity_controls').evaluate(node=>node.previousElementSibling.classList.contains('ob_results_search'))).toBe(true);
+            const feedback=await page.locator('.ob_results_feedback').boundingBox();
+            const paddingRight=await page.locator('.ob_activity_toolbar').evaluate(node=>parseFloat(getComputedStyle(node).paddingRight));
+            expect(Math.abs(feedback.x+feedback.width-secondary.x-secondary.width+paddingRight)).toBeLessThan(2);
+        } else {
+            expect(boxes[0].y).toBeGreaterThanOrEqual(secondary.y);
+            await controls.at(-1).scrollIntoViewIfNeeded();
+            await expect(controls.at(-1)).toBeInViewport({ratio:1});
+        }
+        const filter=page.getByRole('button',{name:'Filters',exact:true});
+        expect(await filter.evaluate(node=>node.previousElementSibling.classList.contains('ob_active_filters') &&
+            node.nextElementSibling.classList.contains('ob_toolbar_separator') &&
+            node.nextElementSibling.nextElementSibling.textContent==='Timeline details')).toBe(true);
+        expect(await page.getByAltText('2D or 3D view',{exact:true}).evaluate(node=>
+            node.nextElementSibling.classList.contains('ob_toolbar_separator') && node.nextElementSibling.nextElementSibling.alt==='Settings')).toBe(true);
         await expect(page.getByAltText('2D or 3D view',{exact:true})).toBeVisible();
+        await expect(page.getByRole('button',{name:'Narrow time window',exact:true})).toHaveCount(0);
+        await expect(page.getByRole('button',{name:'Filter',exact:true})).toHaveCount(0);
         await expect(page.locator('.ob_view_options, .ob_saved_views, button[aria-label="Zoom in"], button[aria-label="Zoom out"]')).toHaveCount(0);
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
         if(file && info.project.name==='desktop') {
@@ -139,6 +176,61 @@ test('Second menu bar keeps action order and right aligned details at wide and n
     const after=await state(page);
     expect(after.range.to-after.range.from).toBeLessThan(before.range.to-before.range.from);
     expect(errors).toEqual([]);
+});
+
+test('Status and Timeline details toggle the same report by pointer and keyboard, including during loading',async({page})=>{
+    const fixture=await setup(page),status=page.getByRole('button',{name:/^Status:/});
+    const details=page.getByRole('button',{name:'Timeline details',exact:true}),report=page.locator('.ob_results_details');
+    await expect(status).toHaveText('Status: Ready');
+    await expect(status).toHaveAttribute('aria-description',/\S/);
+    await expect(report).toBeHidden();
+    for(const width of [1920,420]) {
+        await page.setViewportSize({width,height:900});await ready(page);
+        await status.click();await expect(report).toBeVisible();
+        await expect(status).toHaveAttribute('aria-expanded','true');
+        await expect(details).toHaveAttribute('aria-expanded','true');
+        await status.click();await expect(report).toBeHidden();
+        await expect(status).toHaveAttribute('aria-expanded','false');
+        await details.click();await expect(report).toBeVisible();
+        await status.click();await expect(report).toBeHidden();
+        await status.focus();await page.keyboard.press('Space');await expect(report).toBeVisible();
+        await page.keyboard.press('Enter');await expect(report).toBeHidden();
+        await expect(status).toBeFocused();
+    }
+    await page.evaluate(async()=>{(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.beginLoad();});
+    await expect(status).toBeEnabled();await expect(status).toHaveAttribute('aria-description',/Loading items/);
+    await expect(status).toHaveCSS('background-color','rgb(255, 240, 217)');
+    await status.click();await expect(report).toBeVisible();
+    await expect(page.locator('.ob_loading_status')).toContainText('Loading items');
+    await expect(page.locator('.ob_loading_status')).toBeVisible();
+    await status.click();await expect(report).toBeHidden();
+    await status.click();await page.keyboard.press('Escape');await expect(report).toBeHidden();
+    expect(await page.evaluate(async()=>((await(await import('/src/openbexi_demo.js')).demoReady).ob_results.loading))).toBe(true);
+    await expect(status).toBeFocused();
+    await page.evaluate(async()=>{(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.cancelLoad();});
+    await expect(status).toHaveAttribute('aria-description',/Loading cancelled/);
+    await expect(page.getByRole('button',{name:'Narrow time window',exact:true})).toHaveCount(0);
+    expect(fixture.errors).toEqual([]);
+});
+
+for(const standalone of [false,true])test(`${standalone?'Standalone':'Demo'} toolbar overflow stays inside its row during rapid resizes`,async({page})=>{
+    const fixture=await setup(page,{standalone}),lock=page.getByLabel('Lock current view',{exact:true});
+    for(const width of [1920,420,1440,390,1920,420]) {
+        await page.setViewportSize({width,height:800});
+        // Exercise scrolling before the debounced viewport update commits.
+        await lock.evaluate(node=>node.scrollIntoView({block:'nearest',inline:'nearest'}));
+        await ready(page);
+        const geometry=await page.evaluate(()=>{
+            const panel=document.querySelector('.ob_timeline_panel'),workspace=document.querySelector('#demo-workspace');
+            return {panelX:panel.getBoundingClientRect().x,panelScroll:panel.scrollLeft,
+                workspaceX:workspace?.getBoundingClientRect().x || 0,workspaceScroll:workspace?.scrollLeft || 0,
+                bodyScroll:document.body.scrollLeft,documentScroll:document.documentElement.scrollLeft};
+        });
+        expect(geometry).toEqual({panelX:0,panelScroll:0,workspaceX:0,workspaceScroll:0,bodyScroll:0,documentScroll:0});
+        await lock.scrollIntoViewIfNeeded();await expect(lock).toBeInViewport({ratio:1});
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
+    expect(fixture.errors).toEqual([]);
 });
 
 test('Text, Pattern, invalid-pattern recovery and Back preserve the chosen search and zoom',async({page})=>{
@@ -216,7 +308,7 @@ test('Settings sections and native theme radios persist without changing data or
 test('Refresh and latest data work for local records while preserving the filter',async({page})=>{
     const fixture=await setup(page);
     await find(page,'Ground station');
-    await page.getByRole('button',{name:'Filter',exact:true}).click();
+    await page.getByRole('button',{name:'Filters',exact:true}).click();
     await page.getByLabel('Filter field',{exact:true}).selectOption('status');
     await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
     await page.getByLabel('Filter value',{exact:true}).fill('warning');

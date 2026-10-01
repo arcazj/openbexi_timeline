@@ -3,7 +3,10 @@ import {test,expect} from '@playwright/test';
 async function ready(page) {
     await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
     await page.waitForFunction(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;
-        return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;});
+        const v=t.ob_viewport;
+        return !t.ob_results.pending && v.headerHeight===t.ob_timeline_header.offsetHeight &&
+            v.width+(v.overlay?0:v.sideWidth)===innerWidth && v.height===innerHeight &&
+            v.panelOpen===Boolean(t.ob_timeline_right_panel.children.length && t.ob_timeline_right_panel.style.visibility!=='hidden');});
 }
 async function state(page) {
     return page.evaluate(async()=>{
@@ -55,7 +58,7 @@ test('Overview band backgrounds follow filtered and sorted bands, including save
     expect(errors).toEqual([]);
 });
 
-test('Status explanations are keyboard accessible in the center and the orange loading indicator clears on completion',async({page})=>{
+test('Status explanations are keyboard accessible and the orange loading indicator clears on completion',async({page})=>{
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
     await page.evaluate(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady,r=t.ob_results;
@@ -64,24 +67,26 @@ test('Status explanations are keyboard accessible in the center and the orange l
             domain:{from:new Date(r.domain.from).toISOString(),to:new Date(r.domain.to).toISOString()},
             warnings:['A configured source is unavailable.']};r.updateUI();
     });
-    const partial=page.getByRole('button',{name:'Partial data',exact:true}),loading=page.locator('.ob_loading_status');
-    await expect(partial).toBeVisible();await expect(loading).toBeVisible();
-    await expect(loading).toHaveCSS('background-color','rgb(255, 240, 217)');
-    expect(await partial.evaluate(node=>node.nextElementSibling.classList.contains('ob_loading_status'))).toBe(true);
+    const partial=page.getByRole('button',{name:/^Status:/}),loading=page.locator('.ob_loading_status');
+    await expect(partial).toBeVisible();await expect(loading).toBeHidden();
+    await expect(partial).toHaveAttribute('aria-description',/Partial data.*Loading items/);
+    await expect(partial).toHaveCSS('background-color','rgb(255, 240, 217)');
     const group=await page.locator('.ob_status_controls').boundingBox(),feedback=await page.locator('.ob_results_feedback').boundingBox();
     expect(group.x+group.width).toBeLessThanOrEqual(feedback.x);
     await partial.focus();await page.keyboard.press('Space');
     await expect(page.locator('.ob_results_details')).toHaveAttribute('open','');
+    await expect(loading).toBeVisible();
     await expect(page.locator('.ob_status_explanation')).toContainText('prefetched time ranges');
     await expect(page.locator('.ob_results_summary')).toContainText('configured source is unavailable');
     await expect(partial).toHaveAttribute('aria-expanded','true');
     await page.keyboard.press('Escape');await expect(page.locator('.ob_results_details')).not.toHaveAttribute('open','');
-    await expect(loading).toBeVisible();
+    await expect(loading).toBeHidden();
+    await expect(partial).toHaveAttribute('aria-description',/Loading items/);
     await page.evaluate(async()=>{
         const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
         r.fetching=false;r.complete=true;r.remoteMetadata={...r.remoteMetadata,complete:true,warnings:[]};r.updateUI();
     });
-    await expect(loading).toBeHidden();await expect(partial).toHaveCount(0);
+    await expect(loading).toBeHidden();await expect(partial).toHaveAttribute('aria-description','Ready');
 });
 
 test('OrbitControls rotate, pan and zoom independently; perspective and appearance save, restore and reset',async({page},info)=>{

@@ -40,16 +40,58 @@ test('Status buttons explain partial coverage and loading ends on completion, ca
             warnings:['A configured source is unavailable.']};
         r.remoteMetadata=metadata;
         r.fetching=true;r.updateUI();
-        assert.equal(r.status.tagName,'BUTTON');assert.equal(r.status.textContent,'Partial data');
-        assert.equal(r.status.nextElementSibling,r.loadingStatus);assert.equal(r.loadingStatus.hidden,false);
+        assert.match(r.statusExplanation.textContent,/Coverage is incomplete.*prefetched time ranges/);
+        assert.equal(r.status.tagName,'BUTTON');assert.equal(r.status.textContent,'Status: Loading…');
+        assert.match(r.statusMessage.textContent,/Partial data.*Loading items/);
+        assert.match(r.status.getAttribute('aria-description'),/Partial data/);
+        assert.equal(r.details.contains(r.loadingStatus),true);assert.equal(r.loadingStatus.hidden,false);
         r.status.click();assert.equal(r.details.open,true);assert.match(r.summary.textContent,/configured source is unavailable/);
+        r.status.click();assert.equal(r.details.open,false);assert.equal(r.fetching,true);
+        r.status.click();assert.equal(r.details.open,true);
         r.detailsToggle.dispatchEvent(new h.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
         assert.equal(r.details.open,false);assert.equal(r.fetching,true,'Closing details does not cancel loading');
-        r.cancelLoad();assert.equal(r.loadingStatus.hidden,true);assert.equal(r.status.textContent,'Loading cancelled');
+        r.cancelLoad();assert.equal(r.loadingStatus.hidden,true);assert.equal(r.statusMessage.textContent,'Loading cancelled');
         r.cancelled=false;r.fetching=false;r.fail(new Error('Service unreachable'));
         assert.equal(r.loadingStatus.hidden,true);r.status.click();assert.match(r.statusExplanation.textContent,/Retry or Refresh/);
         r.error='';r.complete=true;r.remoteMetadata={...metadata,complete:true,warnings:[]};r.updateUI();
-        assert.equal(r.loadingStatus.hidden,true);assert.equal(r.status.hidden,true);
+        assert.equal(r.loadingStatus.hidden,true);assert.equal(r.status.hidden,false);assert.equal(r.status.title,'Ready');
+    } finally {h.close();}
+});
+
+test('Status prioritizes unfinished work, incomplete coverage, failures and cancellation before green Ready',async()=>{
+    const {h,r}=await load();
+    try {
+        const status=(label,state,tone)=>{
+            r.updateUI();
+            assert.equal(r.status.textContent,'Status: '+label);
+            assert.equal(r.status.dataset.state,state);
+            assert.equal(r.status.dataset.tone,tone);
+        };
+        status('Ready','ready','success');
+        r.fetching=true;status('Loading…','loading','warning');
+        assert.match(r.status.title,/\d+ items loaded/);
+        r.explorer.seeking=true;r.explorer.message='Checking earlier records. 4 files checked.';
+        status('Searching…','searching','warning');
+        assert.match(r.status.title,/4 files checked/);
+        r.explorer.stop.click();status('Loading…','loading','warning');
+        r.fetching=false;status('Cancelled','cancelled','neutral');
+        assert.match(r.statusExplanation.textContent,/search was stopped.*submit the search again/);
+        r.explorer.interrupt();r.complete=false;status('Partial data','partial','warning');
+        r.complete=true;r.remoteMetadata={complete:false};status('Partial data','partial','warning');
+        r.remoteMetadata={complete:true,coverage:[],warnings:['An earlier source could not be read.']};status('Partial data','partial','warning');
+        r.remoteMetadata={complete:true,coverage:[],loadLimited:true};status('Data limit reached','limited','warning');
+        r.remoteMetadata=null;r.explorer.outcome='incomplete';status('Search incomplete','incomplete','warning');
+        r.explorer.failure='History request failed.';status('Error','error','error');
+        assert.match(r.statusExplanation.textContent,/History request failed.*retry/);
+        r.explorer.interrupt();r.liveState='Reconnecting live updates…';status('Connection interrupted','reconnecting','warning');
+        r.liveState='Live';status('Ready','ready','success');
+        r.error='Could not read data.';status('Error','error','error');
+        assert.match(r.statusExplanation.textContent,/Retry or Refresh/);
+        r.error='';r.searchError='Invalid search pattern';status('Error','error','error');
+        assert.match(r.statusExplanation.textContent,/Correct the search expression/);
+        r.searchError='';r.cancelled=true;status('Cancelled','cancelled','neutral');
+        r.cancelled=false;r.explorer.searchQuery='Pending search';status('Searching…','searching','warning');
+        r.explorer.interrupt();status('Ready','ready','success');
     } finally {h.close();}
 });
 
@@ -187,7 +229,7 @@ test('Cold connected startup renders loading, reports first-response failures an
         t.load_data(0);
         requests[3].resolve({ok:true,json:async()=>({events:[{id:'point',start:'Sat Sep 12 12:00:00 UTC 2026',end:'',searchMatch:false,data:{title:'Earthquake'}}],
             timelineMatch:{...metadata,complete:true,revision:'valid'}})});
-        await settle();
+        await waitFor(()=>!r.pending && r.remoteMetadata?.revision==='valid');
         assert.equal(r.error,'');
         assert.equal(r.snapshot.counts.eligible.events,1);
         assert.equal(r.status.classList.contains('ob_update_failed'),false);
@@ -313,7 +355,7 @@ test('Search keeps the original icon, reveals independent checkboxes, and retain
         assert.equal(r.details.open,false);
         t.ob_search_input.value='volcano';
         t.ob_search_input.dispatchEvent(new h.window.Event('input'));
-        await new Promise(resolve=>setTimeout(resolve,180));
+        await waitFor(()=>r.state.query==='volcano' && !r.pending);
         assert.equal(r.toolbar.hidden,false, 'Search actions appear with the active query');
         const counts=plain(r.snapshot.counts), keys=plain(r.projection.displayedKeys), map=r.map;
         r.captureRanges(); const ranges=plain([...r.ranges]);

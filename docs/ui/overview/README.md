@@ -1,11 +1,13 @@
-# Overview captures — 2.3.1
+# Overview captures
 
 These PNGs are captures of the actual Chromium/WebGL application on Windows,
 using public catalog data or explicitly synthetic connected records. They are
 not generated mockups. The menu bar keeps its display icons directly accessible,
-with previous/next activity, Lock current view and Auto scale grouped together.
+with latest data, previous/next activity, Auto scale and Lock current view grouped
+together. Two menu rows use horizontal scrolling when space is limited. Status
+labels distinguish loading, completion, errors and incomplete coverage.
 See the [wide toolbar](../toolbar-layout/wide.png) and
-[wrapped toolbar](../toolbar-layout/narrow.png) for the two available-space cases.
+[scrolling toolbar](../toolbar-layout/narrow.png) for the two available-space cases.
 Earlier `../v2/` and `../progressive/` images record earlier checkpoints.
 
 | Dataset | Desktop, 1440 x 900 | Narrow, 800 x 700 |
@@ -45,8 +47,8 @@ directory using the catalog ID and `-desktop`/`-narrow` suffix. The capture opti
 always writes current pixels, even if changes fall within comparison tolerance.
 For baseline updates, Playwright normalizes underscores to hyphens in filenames;
 review the matching `split-help` capture as well. The catalog's
-`reference` fields point here; `npm run demos:readme` regenerates the Live Demos
-table without restoring historical references.
+`reference` fields point here; `npm run demos:readme` regenerates the compact
+README links and the resource table in the demo guide.
 
 These captures and baselines use the lockfile-managed Chromium 153 headless shell with SwiftShader. Screenshots are visual evidence; the interaction tests
 separately check main pointer anchoring, centered context, manual Overview zoom,

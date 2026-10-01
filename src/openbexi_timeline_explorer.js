@@ -14,7 +14,7 @@ export class TimelineExplorer {
     reading() {return this.timeline.ob_viewport?.descriptorOpen || this.timeline.ob_timeline_right_panel?.querySelector('.ob_descriptor, .ob_record_details, .ob_static_description') && this.timeline.ob_timeline_right_panel.style.visibility!=='hidden';}
     interrupt() {
         clearTimeout(this.timer);this.generation++;this.controller?.abort();this.controller=null;
-        if(this.seeking && this.historySearch) {this.message='';this.outcome=null;this.historySearch=false;}
+        this.message='';this.outcome=null;this.failure='';this.historySearch=false;
         this.seeking=false;this.searchQuery=null;this.idleAt=Date.now()+600;
     }
     sourceChanged(key) {
@@ -88,10 +88,11 @@ export class TimelineExplorer {
             this.timeline.ob_search_input?.focus({preventScroll:true});
         });
         this.stop.className='ob_stop_search';
-        this.notice.append(this.noticeText,this.stop);header.append(this.notice);
+        this.notice.append(this.noticeText);r.details.append(this.notice);
+        r.statusGroup.append(this.stop);
         this.coverageList=element('ul',null,'ob_coverage_intervals');r.details.append(this.coverageList);
         this.clusterList=element('details',null,'ob_cluster_list');this.clusterList.append(element('summary','Event groups'));
-        this.clusterButtons=element('div');this.clusterList.append(this.clusterButtons);header.append(this.clusterList);
+        this.clusterButtons=element('div');this.clusterList.append(this.clusterButtons);r.details.append(this.clusterList);
         const frame=this.timeline.ob_timeline_body_frame;
         frame.setAttribute('aria-description','Left and right arrows move through time. Plus and minus zoom. Alt with left or right moves between matches.');
         frame.addEventListener('keydown',event=>{
@@ -182,6 +183,7 @@ export class TimelineExplorer {
             if(generation!==this.generation)return;
             this.seeking=false;this.controller=null;this.searchQuery=null;
             this.outcome='incomplete';
+            this.failure=error.message || 'The activity search failed.';
             this.message=error.name==='AbortError'?'Search incomplete: a request timed out. Current view retained; try again.':`Search incomplete: ${error.message}`;
             r.updateUI();
         }
@@ -200,21 +202,18 @@ export class TimelineExplorer {
         }
         this.lockLabel.hidden=!r.supported;this.lock.checked=!!this.locked;
         const hasRelevant=range && relevantEntries(r.snapshot).some(entry=>intersects(recordRange(entry.record),range));
-        if(hasRelevant && !this.seeking && this.outcome) {this.message='';this.outcome=null;this.historySearch=false;}
+        if(hasRelevant && !this.seeking && this.outcome==='exhausted') {this.message='';this.outcome=null;this.historySearch=false;}
         const historyStatus=this.historySearch && Boolean(this.message);
         this.notice.hidden=historyStatus || !this.message;this.noticeText.textContent=this.message || '';this.stop.hidden=!this.seeking;
         this.stop.textContent=this.historySearch?'Stop search':'Cancel search';
+        if(this.stop.previousElementSibling!==r.status)r.statusGroup.insertBefore(this.stop,r.statusMessage);
         if(historyStatus) {
-            if(this.stop.parentElement!==r.statusGroup)r.statusGroup.insertBefore(this.stop,r.loadingStatus);
-            r.status.textContent=this.seeking ? (this.searchRange ? 'Searching '+new Intl.DateTimeFormat('en-US',
+            r.statusMessage.textContent=this.seeking ? (this.searchRange ? 'Searching '+new Intl.DateTimeFormat('en-US',
                 {month:'short',day:'numeric',timeZone:'UTC'}).format(this.searchRange.from)+'…' : 'Searching history…') :
                 this.outcome==='exhausted'?'No matching records':this.outcome==='stopped'?'Search stopped':'Search incomplete';
-            r.status.title=this.message;
-            r.status.classList.toggle('ob_connection_warning',this.seeking || this.outcome==='incomplete');
-        } else if(this.stop.parentElement!==this.notice)this.notice.append(this.stop);
+        }
         r.status.classList.toggle('ob_history_status',historyStatus);
         r.statusGroup.classList.toggle('ob_history_search',historyStatus && this.seeking);
-        r.status.setAttribute('aria-live',historyStatus && this.seeking?'polite':'off');
         this.coverageList.replaceChildren();
         for(const interval of r.remoteMetadata?.coverage || []) this.coverageList.append(element('li',
             `${new Date(interval.from).toISOString()} to ${new Date(interval.to).toISOString()}: ${interval.state}`));
@@ -232,7 +231,7 @@ export class TimelineExplorer {
             else if(!this.covered(range) && !hasRelevant)message='No matching records loaded; coverage is incomplete.';
             else if(!hasRelevant)message=query?'No matching events in this interval.':'No events in this interval.';
             r.empty.hidden=true;
-            if(message && !historyStatus && !r.error && !r.cancelled && !r.fetching && !r.remoteMetadata?.loadLimited)r.status.textContent=message;
+            if(message && !historyStatus && !r.error && !r.cancelled && !r.fetching && !r.remoteMetadata?.loadLimited)r.statusMessage.textContent=message;
             if(message)r.feedback.hidden=false;
         }
     }

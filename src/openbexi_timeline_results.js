@@ -522,10 +522,11 @@ export class TimelineResults {
             group.append(node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),...icons);
             return group;
         };
-        nav.append(t.ob_start, t.ob_stop, t.ob_calendar, t.ob_sync);
+        nav.append(t.ob_start, t.ob_stop, t.ob_sync);
         const utilities = node('div', undefined, {class: 'ob_results_utilities'});
         this.utilities = utilities;
-        utilities.append(t.ob_views.controls, iconGroup(t.ob_view,t.ob_no_view), t.ob_3d, t.ob_settings, t.ob_help);
+        utilities.append(t.ob_views.controls, iconGroup(t.ob_view,t.ob_no_view), t.ob_3d,
+            node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}), t.ob_settings, t.ob_help);
         this.toolbar = node('div', undefined, {class: 'ob_results_controls', role: 'group', 'aria-label': 'Search and results'});
         this.search = node('div', undefined, {class:'ob_results_search'});
         const submitSearch = () => { clearTimeout(this.searchTimer); this.request({query:t.ob_search_input.value,searchMode:this.searchMode.value}); };
@@ -578,7 +579,8 @@ export class TimelineResults {
         this.toolbar.append(highlightLabel, modeLabel, this.fitButton, this.viewControls);
         this.details = node('details', undefined, {class:'ob_results_details',id:t.name+'_status_details'});
         const detailsSummary=node('summary','Timeline details',{hidden:''});
-        this.detailsToggle = button('Timeline details',()=>{this.details.open=!this.details.open;syncDetails();});
+        const toggleDetails = () => { this.details.open=!this.details.open;syncDetails(); };
+        this.detailsToggle = button('Timeline details',toggleDetails);
         this.detailsToggle.setAttribute('aria-controls',this.details.id);
         this.detailsToggle.setAttribute('aria-expanded','false');
         this.statusExplanation = node('p', '', {class:'ob_status_explanation'});
@@ -587,48 +589,44 @@ export class TimelineResults {
         const syncDetails = () => {
             this.details.hidden=!this.details.open;
             header.classList.toggle('ob_results_expanded', this.details.open);
-            for (const control of [this.status,this.liveStatus,this.detailsToggle]) control?.setAttribute('aria-expanded',String(this.details.open));
+            for (const control of [this.status,this.detailsToggle]) control?.setAttribute('aria-expanded',String(this.details.open));
             this.layout();
         };
         this.details.hidden=true;
         this.details.addEventListener('toggle',syncDetails);
         const closeDetails=event=>{
-            if(event.key==='Escape' && this.details.open){event.preventDefault();this.details.open=false;syncDetails();this.detailsToggle.focus();}
+            if(event.key==='Escape' && this.details.open){event.preventDefault();this.details.open=false;syncDetails();
+                (event.currentTarget===this.status?this.status:this.detailsToggle).focus({preventScroll:true});}
         };
         this.details.addEventListener('keydown',closeDetails);
         this.detailsToggle.addEventListener('keydown',closeDetails);
-        const openDetails = () => { this.details.open=true;syncDetails();this.detailsToggle.focus(); };
-        this.status = button('',openDetails);
+        this.status = button('Status: Loading…',toggleDetails);
         this.status.className='ob_results_status';
-        this.status.setAttribute('aria-live','polite');
-        this.status.setAttribute('aria-atomic','true');
+        this.status.setAttribute('aria-controls',this.details.id);
+        this.status.setAttribute('aria-expanded','false');
+        this.status.addEventListener('keydown',closeDetails);
+        this.statusMessage=node('span','',{class:'ob_status_message',role:'status','aria-live':'polite','aria-atomic':'true'});
         this.feedback = node('div', undefined, {class:'ob_results_feedback'});
-        this.filterButton=button('Filter',()=>t.ob_filter.click());
+        this.filterButton=button('Filters',()=>t.ob_filter.click());
         this.filterButton.className='ob_toolbar_filter';
-        this.filterButton.setAttribute('aria-label','Filter');
+        this.filterButton.setAttribute('aria-label','Filters');
         this.filterButton.prepend(t.ob_filter);
         const openFilter=t.ob_filter.onclick;
         t.ob_filter.onclick=event=>{event.stopPropagation();openFilter.call(t.ob_filter,event);};
-        this.feedback.append(this.filterButton,node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),this.detailsToggle);
-        this.retryButton = button('Retry', () => { this.retrying=true;this.timeline.load_data(0); });
-        this.narrowButton = button('Narrow time window', () => this.zoom(0.5));
-        this.narrowButton.title = 'Halve the visible time range and load that interval.';
-        this.details.append(this.narrowButton);
+        this.feedback.append(t.ob_calendar,this.filterButton,node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),this.detailsToggle);
+        this.retryButton = button('Retry', () => { this.explorer.interrupt();this.retrying=true;this.timeline.load_data(0); });
         this.refreshButton=button('Refresh',()=>{
+            this.explorer.interrupt();
             if(t.staticData && t.localSource)t.loadLocalData();
             else if(t.staticData)this.request();
             else if(t.ob_loader?.input)t.ob_loader.load(t.ob_loader.input,{refresh:true});
             else t.load_data(0);
         });
         this.refreshButton.title='Check for updated data in this view.';
-        this.liveStatus=button('',openDetails);
-        this.liveStatus.className='ob_live_status';
-        for (const control of [this.status,this.liveStatus]) {
-            control.setAttribute('aria-controls',this.details.id);
-            control.setAttribute('aria-expanded','false');
-        }
+        this.liveStatus=node('span','',{class:'ob_live_status'});
         this.loadingStatus=node('span','Loading items…',{class:'ob_loading_status ob_connection_warning',role:'status','aria-live':'polite'});
         this.loadingStatus.hidden=true;
+        this.details.append(this.liveStatus,this.loadingStatus);
         this.statusGroup=node('div',undefined,{class:'ob_status_controls'});
         this.availableButton=button('Go to latest data',()=>{
             const available=this.latestAvailable();
@@ -642,10 +640,10 @@ export class TimelineResults {
         this.availableButton.title='Go to the latest timestamp observed while loading. Coverage may be partial.';
         const titleSlot=node('div',undefined,{class:'ob_results_title_slot'}); titleSlot.append(t.ob_time_marker);
         this.titleSlot=titleSlot;
-        this.primaryToolbar=node('div',undefined,{class:'ob_primary_toolbar'});
+        this.primaryToolbar=node('div',undefined,{class:'ob_primary_toolbar',role:'group','aria-label':'Main menu bar',tabindex:'0'});
         this.primaryToolbar.append(nav,this.search,titleSlot,utilities);
-        this.activityToolbar=node('div',undefined,{class:'ob_activity_toolbar'});
-        header.replaceChildren(this.primaryToolbar,this.activityToolbar,this.toolbar,this.details);
+        this.activityToolbar=node('div',undefined,{class:'ob_activity_toolbar',role:'group','aria-label':'Secondary menu bar',tabindex:'0'});
+        header.replaceChildren(this.primaryToolbar,this.activityToolbar,this.details);
         if (t.ob_marker) {
             t.ob_marker.classList.add('ob_results_marker');
             t.ob_marker.style.top = '0px';
@@ -689,7 +687,7 @@ export class TimelineResults {
             }
         }, true);
         const guard = event => {
-            if (event.type==='keydown' && event.key==='Escape' && this.details.open && (this.details.contains(event.target) || event.target===this.detailsToggle)) return;
+            if (event.type==='keydown' && event.key==='Escape' && this.details.open && (this.details.contains(event.target) || event.target===this.detailsToggle || event.target===this.status)) return;
             if (event.type==='keydown' && event.key==='Escape' && t.ob_perspective?.adjusting && t.ob_timeline_body_frame.contains(event.target)) return;
             if ((this.loading || this.fetching) && event.type === 'keydown' && event.key === 'Escape') {
                 event.preventDefault(); this.cancelLoad(); return;
@@ -704,9 +702,9 @@ export class TimelineResults {
         t.ob_timeline_right_panel?.addEventListener('click', guard, true);
         this.selectionNotice = node('div', undefined, {class: 'ob_selection_notice'});
         this.selectionNotice.append(node('span', 'Selection hidden by results filter '), button('Show context', () => this.request({mode: 'highlight'})));
-        header.append(this.selectionNotice);
+        this.details.append(this.selectionNotice);
         this.explorer.mount(header);
-        this.statusGroup.append(this.retryButton,this.liveStatus,this.status,this.loadingStatus);
+        this.statusGroup.append(this.retryButton,this.status,this.statusMessage);
         this.controls.mount();
         this.updateUI();
     }
@@ -809,6 +807,20 @@ export class TimelineResults {
         return Number.isFinite(latest)?{from:new Date(latest).toISOString()}:null;
     }
 
+    statusPresentation(working) {
+        const search=this.explorer,metadata=this.remoteMetadata;
+        if(this.error || this.searchError || search.failure)return {state:'error',label:'Error',tone:'error'};
+        if(search.seeking || search.searchQuery)return {state:'searching',label:'Searching…',tone:'warning'};
+        if(working)return {state:'loading',label:'Loading…',tone:'warning'};
+        if(this.cancelled || search.outcome==='stopped')return {state:'cancelled',label:'Cancelled',tone:'neutral'};
+        if(metadata?.loadLimited)return {state:'limited',label:'Data limit reached',tone:'warning'};
+        if(search.outcome==='incomplete')return {state:'incomplete',label:'Search incomplete',tone:'warning'};
+        if(!this.supported || !this.complete || metadata?.complete===false || metadata?.warnings?.length)
+            return {state:'partial',label:'Partial data',tone:'warning'};
+        if(this.liveState && this.liveState!=='Live')return {state:'reconnecting',label:'Connection interrupted',tone:'warning'};
+        return {state:'ready',label:'Ready',tone:'success'};
+    }
+
     updateUI() {
         if (!this.toolbar) return;
         // Release owned disabled states before applying current availability.
@@ -835,10 +847,7 @@ export class TimelineResults {
         const status = this.error ? (this.snapshot?.entries.length?'Update unavailable — displayed records retained':'Source unavailable — open details') : this.cancelled ? 'Loading cancelled' : working && !this.remoteMetadata?.warnings?.length && !this.remoteMetadata?.loadLimited ? '' :
             !this.supported ? 'Match controls unavailable' : this.remoteMetadata?.loadLimited ? 'Data limit reached' : !this.complete ? 'Partial data' :
                 this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No matches' : '';
-        this.status.textContent = status;
-        this.status.classList.toggle('ob_update_failed', Boolean(this.error));
-        this.status.classList.toggle('ob_connection_warning',Boolean(this.error || this.cancelled ||
-            this.remoteMetadata?.warnings?.length));
+        this.statusMessage.textContent = status;
         this.loadingStatus.hidden=!working;
         this.retryButton.hidden = !this.error && !this.cancelled;
         this.refreshButton.hidden=false;
@@ -847,10 +856,6 @@ export class TimelineResults {
         this.liveStatus.hidden=!this.liveState;
         this.liveStatus.classList.toggle('ob_connection_warning',Boolean(this.liveState && this.liveState!=='Live'));
         this.toolbar.hidden=this.toolbar.hidden && !status && !working && !this.liveState && t.staticData;
-        this.narrowButton.hidden = !this.remoteMetadata?.loadLimited;
-        this.narrowButton.disabled = this.pending || this.fetching;
-        this.status.title = 'Explain this status';
-        this.liveStatus.title='Explain the live connection';
         this.feedback.hidden = false;
         this.fitButton.disabled = this.pending || Boolean(this.error) || !this.supported || !this.complete || !this.snapshot?.matchingBounds || !this.snapshot.hasCondition;
         this.fitButton.title = this.fitButton.disabled ? 'An active query and complete matching bounds are required.' : 'Fit matching real timestamps with padding';
@@ -878,7 +883,7 @@ export class TimelineResults {
         this.availableButton.disabled=!available || this.pending || this.loading;
         if(available)this.availableButton.title='Latest observed data: '+available.from+'; coverage may be partial.';
         if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !this.remoteMetadata.loadLimited) {
-            this.status.textContent=working?'':this.complete?'No records in this interval':'No records loaded; coverage is partial';
+            this.statusMessage.textContent=working?'':this.complete?'No records in this interval':'No records loaded; coverage is partial';
             this.feedback.hidden=false;
         }
         this.empty.hidden = true;
@@ -886,20 +891,36 @@ export class TimelineResults {
         this.explorer.update();
         if(this.explorer.seeking)this.loadingStatus.hidden=true;
         this.controls.update();
-        this.status.hidden=!this.status.textContent;
-        this.statusGroup.hidden=this.status.hidden && this.loadingStatus.hidden && this.liveStatus.hidden && this.retryButton.hidden;
+        const presentation=this.statusPresentation(working);
+        this.status.textContent='Status: '+presentation.label;
+        this.status.dataset.state=presentation.state;
+        this.status.dataset.tone=presentation.tone;
+        this.status.classList.toggle('ob_update_failed',presentation.state==='error');
+        this.status.classList.toggle('ob_connection_warning',presentation.tone==='warning');
+        const loadedItems=counts?counts.eligible.events+counts.eligible.sessions:null;
+        const progress=working && Number.isFinite(loadedItems)?`${loadedItems} ${loadedItems===1?'item':'items'} loaded`:'';
+        const statusText=[this.statusMessage.textContent,!this.loadingStatus.hidden?'Loading items…':'',progress,this.liveState,
+            this.searchError,this.explorer.message].filter(Boolean).join(' · ') || presentation.label;
+        this.status.title=statusText;
+        this.status.setAttribute('aria-description',statusText);
+        this.statusMessage.textContent=statusText;
+        this.statusGroup.hidden=false;
         this.viewControls.hidden=this.clearButton.hidden;
         this.toolbar.hidden=[...this.toolbar.children].every(control=>control.hidden);
-        const explanation=this.error ? this.error+' Use Retry or Refresh to request data again.' : this.cancelled ?
-            'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.remoteMetadata?.loadLimited ?
+        const explanation=this.searchError ? this.searchError+' Correct the search expression and try again.' :
+            this.explorer.failure ? this.explorer.failure+' Use the activity buttons or submit the search again to retry.' :
+            this.error ? this.error+' Use Retry or Refresh to request data again.' : this.cancelled ?
+            'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.explorer.outcome==='stopped' ?
+            'The search was stopped. Use the activity buttons or submit the search again to continue.' : this.remoteMetadata?.loadLimited ?
             'The loading limit was reached. Narrow the time window to continue.' : working && !this.remoteMetadata?.warnings?.length ?
-            'Items are loading in batches. Records already displayed remain available.' : !this.complete ?
+            'Items are loading in batches. Records already displayed remain available.' :
+            !this.supported || !this.complete || this.remoteMetadata?.complete===false || this.remoteMetadata?.warnings?.length ?
             'Coverage is incomplete in one or more loaded or prefetched time ranges. Counts describe loaded records. Review the warnings and ranges below; Refresh checks the sources again.' :
             this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No loaded records match the current search and filters.' :
             'The requested data finished loading. The counts and time ranges below describe the current view.';
         const live=this.liveState==='Live' ? ' Live updates are connected; matching changes are loaded automatically.' : this.liveState ?
             ' The live connection is reconnecting. Displayed records remain available; Refresh can check for updates.' : '';
-        this.statusExplanation.textContent=(this.explorer.historySearch && this.explorer.message?this.explorer.message+' ':'')+explanation+live;
+        this.statusExplanation.textContent=(this.explorer.message?this.explorer.message+' ':'')+explanation+live+(progress?' '+progress+'.':'');
         this.updateLoadingUI();
         this.layout();
     }

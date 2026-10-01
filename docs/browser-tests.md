@@ -32,9 +32,11 @@ npx playwright show-report
 - Search, previous/next activity, view locking and Resync exercise local and
   connected records. Selected activities glow without changing their size;
   compact 3D labels remain readable through rotation and resizing.
-- Refresh, latest data, activity navigation, Lock current view and Auto scale
-  occupy a permanent second menu bar. Checks include responsive wrapping,
-  retained keyboard focus, keyboard zoom and no horizontal overflow on phone screens.
+- Exactly two menu bars hold all controls. Latest data and activity navigation,
+  followed by a separator, Auto scale and Lock current view, follow search on
+  wide screens and move to the secondary bar when needed. Checks include
+  horizontal scrolling within each bar, retained keyboard focus, keyboard zoom
+  and no page-level horizontal overflow on phone screens.
   The filter builder and removable labels preserve other criteria.
   Text, Pattern and Legacy share browser/server fixtures; checks cover invalid
   patterns, debounce, immediate Enter, mode changes and obsolete responses.
@@ -90,23 +92,17 @@ npx playwright show-report
 The regular `npm run test:demos` suite also exercises all seven demos' responsive
 layout, and covers detailed scale/projection and panel behavior in the DOM harness.
 
-The 2.2.0 release checkpoint uses the locked Chromium 153 headless shell.
-The suite contains 163 enabled checks and seven duplicate narrow drag cases that
-are intentionally skipped. The 28 catalog screenshot comparisons retain the
-reviewed 2.1 baselines because default rendering remains compatible.
+Use the Chromium build installed for the locked Playwright dependency.
+`npx playwright test --list` lists the current scenarios. Catalog checks compare
+28 reviewed images across desktop and narrow layouts; the separate Java suite
+runs with Maven. See [development and validation](development.md),
+[current captures](ui/overview/README.md) and [descriptor scenarios](ui/navigation-details/README.md).
 
-The release also includes 212 JavaScript tests and 68 Java tests, with 34 existing
-environment-dependent Java skips. See the [release validation record](release-2.2.md),
-[current captures](ui/overview/README.md) and
-[descriptor scenarios](ui/navigation-details/README.md).
-
-The [2.2.1 patch](release-2.2.1.md) adds checks for cursor placement, table icons,
-color fallback, selection animation, reduced motion and clear Overview selection.
-Resize checks wait for centering before asserting that the selected date stays
-fixed. Reviewed Split/Help baselines include the new table markers and the centered
-selection. Connected tests cover bounded idle REST behavior, conditional refresh,
-SSE revision handling and deletion reconciliation. Private deployment data and
-captures remain outside the committed fixtures and release archive.
+Cursor placement, table icons, color fallback, selection animation, reduced
+motion and Overview selection have dedicated regression checks. Resize checks
+wait for centering before asserting the selected date. Connected tests cover
+bounded idle REST behavior, conditional refresh, SSE revisions and deletion
+reconciliation. Public and synthetic fixtures supply the committed evidence.
 
 ## Review intentional visual changes
 
@@ -200,14 +196,24 @@ operational files.
 
 ### Menu bars and Settings
 
-`toolbar-ux.spec.mjs` checks the permanent second menu bar, action order,
-separators, right-aligned Filter and Timeline details, and wrapping at desktop,
-narrow and phone widths. It captures both menu layouts and all five themes.
-Search-mode controls are checked inside Filter. A controlled clock verifies
+`toolbar-ux.spec.mjs` checks exactly two menu rows, navigation immediately after
+search when it fits, fallback to the secondary row, and horizontal scrolling at
+desktop, narrow and phone widths. The secondary filter group follows
+Calendar, Filter: \<filter name\>, Filters, a separator and Timeline details.
+Checks include the separator between 3D and Settings, removal of the old time-window
+button, and opening and closing the Status report with the same control.
+It captures both menu layouts and all five themes.
+Search-mode controls are checked inside Filters. A controlled clock verifies
 debouncing independently of machine load; Text, Pattern, invalid-pattern recovery,
 Back, filter labels, local Refresh and Go to latest data are exercised through the UI.
 
 Settings checks cover the four ordered sections, the initially collapsed Timeline
 info and Update perspective sections, native keyboard radio navigation, immediate
 theme changes, persistence after reload, invalid preferences and blocked storage.
+High contrast checks cover visible icons, buttons and separators in both bars,
+including hover, focus, selected and disabled states.
+`status-states.spec.mjs` checks dynamic labels and orange, green, red and gray
+states in every theme, including open reports and narrow layouts. Held data
+requests verify loading, failure, cancellation, recovery and successful completion;
+unit and historical-search tests ensure partial or unfinished work cannot show green.
 Theme changes must preserve records and the selected time range.
