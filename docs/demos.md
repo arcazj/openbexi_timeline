@@ -3,13 +3,31 @@
 Use Node.js 24 or later for the demo tools and tests.
 
 ```sh
-npm install
+npm ci
 npm run demo
 ```
 
-Open a dataset from the [README demo links](../README.md#live-demos), or open <http://localhost:8780/demos.html> for the default demo. Every demo begins with the original timeline toolbar; there is no page heading, description, or dataset selector above it. Use the same Timeline, Table, Split, search, overview, calendar, and camera controls as the main timeline. Split places the timeline on the left and the table on the right. Resync centers the current date and time; Help's Reset reference view restores the model's initial date. File-backed demos are read-only; server login, saved server filters, and event creation are not shown. Numeric axes have no calendar control.
+Open a dataset from the [live demo catalog](#live-demos), or open <http://localhost:8780/demos.html> for the default demo. Each demo uses the main and secondary menu bars described in the [user guide](help-guide.md#user-manual), with horizontal scrolling on narrow screens. Timeline, Table, Split, search, Overview, calendar and camera controls work across the catalog. Split places the timeline on the left and the table on the right. Resync centers the current date and time; Help's Reset reference view restores the model's initial date. File-backed demos are read-only; server login, saved server filters, and event creation are not shown. Numeric axes disable the calendar control.
 
 The file server binds to `127.0.0.1`; it does not publish the project. Change the port with `npm run demo -- --port 8788`. A link can select a view, for example `demos.html?demo=monet&view=split`.
+
+<!-- DEMO_RESOURCES:START -->
+## Live demos
+
+Each demo uses Timeline, Table and Split views with its own data, model and time scale. Open a link below to try it in your browser.
+
+| Demo | What it shows | Resources |
+| --- | --- | --- |
+| [Operations sample](https://arcazj.github.io/openbexi_timeline/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](../json/test-data/default-dataset.json) · [Model](../models/demos/default-dataset.json) · [Screenshot](../docs/ui/overview/default-dataset-desktop.png) |
+| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](../json/test-data/dinausaurs.json) · [Model](../models/demos/dinausaurs.json) · [Screenshot](../docs/ui/overview/dinausaurs-desktop.png) |
+| [Satellite ephemeris](https://arcazj.github.io/openbexi_timeline/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](../json/test-data/ephemeris.json) · [Model](../models/demos/ephemeris.json) · [Screenshot](../docs/ui/overview/ephemeris-desktop.png) |
+| [JFK chronology](https://arcazj.github.io/openbexi_timeline/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](../json/test-data/jfk.json) · [Model](../models/demos/jfk.json) · [Screenshot](../docs/ui/overview/jfk-desktop.png) |
+| [Claude Monet](https://arcazj.github.io/openbexi_timeline/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](../json/test-data/monet.json) · [Model](../models/demos/monet.json) · [Screenshot](../docs/ui/overview/monet-desktop.png) |
+| [Religious history](https://arcazj.github.io/openbexi_timeline/demos.html?demo=religions) | BCE/CE dates, duration and event bands, and overview context. | [Data](../json/test-data/religions.json) · [Model](../models/demos/religions.json) · [Screenshot](../docs/ui/overview/religions-desktop.png) |
+| [Space exploration](https://arcazj.github.io/openbexi_timeline/demos.html?demo=space_exploration) | A month-scale view with a yearly overview of the supplied space-history events. | [Data](../json/test-data/space_exploration.json) · [Model](../models/demos/space_exploration.json) · [Screenshot](../docs/ui/overview/space_exploration-desktop.png) |
+
+Append `&view=table` or `&view=split` to a demo URL to open that view directly.
+<!-- DEMO_RESOURCES:END -->
 
 ## Catalog and models
 
@@ -55,7 +73,7 @@ initialization method when ready.
 
 ### Demo catalog
 
-`demos/catalog.json` is the source for URL-based dataset selection and the generated README table. Its paths are relative to the repository root (`basePath` resolves from the catalog). Each entry provides `id`, `title`, `description`, `dataset`, `model`, `recordCount` (the expected number of records, excluding zones), and an optional `reference` PNG. The shared loader, renderer, and page contain no demo IDs or dataset-specific branches.
+`demos/catalog.json` supplies URL-based dataset selection, the README demo links and this guide's resource table. Its paths are relative to the repository root (`basePath` resolves from the catalog). Each entry provides `id`, `title`, `description`, `dataset`, `model`, `recordCount` (the expected number of records, excluding zones), and an optional `reference` PNG. The shared loader, renderer, and page contain no demo IDs or dataset-specific branches.
 
 Each model in `models/demos` uses the existing `params` and `bands` structure, plus `dataSource`. The presence of `dataSource` enables the shared file-backed loader; existing server models continue to use their server connection.
 

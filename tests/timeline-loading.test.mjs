@@ -335,8 +335,8 @@ for (const limit of ['records','nestedRecords','characters']) test(`Visible ${li
         batch(dataRequests()[3],['new-one','new-two',...(limit==='characters'?['large-'.repeat(200)]:[])],'newest-cursor');
         await waitFor(()=>!r.fetching && !r.pending);
         assert.equal(r.error,'');assert.equal(disconnected,0);
-        assert.equal(r.status.textContent,'Data limit reached');assert.equal(r.retryButton.hidden,true);
-        assert.equal(r.narrowButton.hidden,false);assert.equal(r.narrowButton.disabled,false);
+        assert.equal(r.statusMessage.textContent,'Data limit reached');assert.equal(r.retryButton.hidden,true);
+        assert.equal(r.narrowButton,undefined);
         assert.equal(r.complete,false);assert.equal(r.fitButton.disabled,true);
         assert.deepEqual([...r.snapshot.entries].map(entry=>entry.record.id),['visible']);
         assert.equal(r.snapshot.query,'volcano');assert.equal(r.state.mode,'only');
@@ -352,7 +352,7 @@ for (const limit of ['records','nestedRecords','characters']) test(`Visible ${li
         try {t.ob_loader.schedule(t.ob_loader.input);assert.equal(scheduled,0);} finally {f.h.window.setTimeout=timeout;}
         r.captureRanges();
         const before={...r.visibleRanges.values().next().value},count=dataRequests().length;
-        r.narrowButton.click();await waitFor(()=>dataRequests().length>count);
+        r.zoom(0.5);await waitFor(()=>dataRequests().length>count);
         const recovery=new URL(dataRequests()[count].url);
         assert.equal(recovery.searchParams.get('search'),'volcano');
         assert.ok(Math.abs(Date.parse(recovery.searchParams.get('endDate'))-Date.parse(recovery.searchParams.get('startDate'))-
@@ -365,7 +365,7 @@ for (const limit of ['records','nestedRecords','characters']) test(`Visible ${li
             assert.ok(answered<=count+4,'Narrowing completes with bounded requests');
         }
         await waitFor(()=>!r.pending);
-        assert.equal(r.error,'');assert.equal(r.remoteMetadata.loadLimited,false);assert.equal(r.narrowButton.hidden,true);
+        assert.equal(r.error,'');assert.equal(r.remoteMetadata.loadLimited,false);
         assert.ok(!r.remoteMetadata.warnings.some(warning=>warning.includes('limit')));
         assert.equal(r.complete,true);
     } finally {f.close();}
@@ -395,9 +395,9 @@ test('An oversized initial page provides an actionable partial state even withou
         requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
         t.ob_loader.limits.records=1;
         batch(requests[1],['first','second'],'oversized-next');await waitFor(()=>!r.fetching && !r.pending);
-        assert.equal(r.error,'');assert.equal(r.status.textContent,'Data limit reached');
+        assert.equal(r.error,'');assert.equal(r.statusMessage.textContent,'Data limit reached');
         assert.equal(r.snapshot.entries.length,0);assert.equal(r.complete,false);
-        assert.equal(r.narrowButton.hidden,false);assert.equal(r.narrowButton.disabled,false);
+        assert.equal(r.narrowButton,undefined);
         assert.ok(requests.some(request=>{const url=new URL(request.url);return url.searchParams.get('cancel')==='1' && url.searchParams.get('cursor')==='oversized-next';}));
     } finally {f.close();}
 });

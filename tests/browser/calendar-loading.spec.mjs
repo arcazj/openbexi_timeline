@@ -122,16 +122,17 @@ test('Calendar month browsing is inert and day selection renders current records
     } finally {await control.close();}
 });
 
-test('A failed calendar load displays an orange toolbar action and a real drag recovers visible data',async({page})=>{
+test('A failed calendar load displays a red error action and a real drag recovers visible data',async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const control=await setup(page);
     try {
         await calendar(page);await page.locator('.jsCalendar-nav-left').click();
         control.failNext=true;await selectedDay(page).click();
         const failure=page.locator('.ob_update_failed');
-        await expect(failure).toBeVisible();await expect(failure).toHaveText(/Update unavailable.*retained|Source unavailable.*details/);
+        await expect(failure).toBeVisible();await expect(failure).toHaveText('Status: Error');
+        await expect(failure).toHaveAttribute('aria-description',/Update unavailable.*retained|Source unavailable.*details/);
         await expect(failure).toHaveJSProperty('tagName','BUTTON');
-        expect(await failure.evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(255, 240, 217)');
+        expect(await failure.evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(253, 226, 226)');
         expect(await failure.evaluate(element=>element.closest('.ob_activity_toolbar').contains([...document.querySelectorAll('button')].find(button=>button.textContent==='Refresh')))).toBe(true);
         await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
         await failure.focus();await page.keyboard.press('Enter');
@@ -153,7 +154,7 @@ test('A failed calendar load displays an orange toolbar action and a real drag r
     } finally {await control.close();}
 });
 
-test('A full data cache keeps visible records and offers a working narrow-window action',async({page})=>{
+test('A full data cache keeps visible records and keyboard zoom recovers without a Narrow time window button',async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const control=await setup(page);
     try {
@@ -163,21 +164,20 @@ test('A full data cache keeps visible records and offers a working narrow-window
             t.ob_loader.limits.records=3;
             await t.ob_loader.load(t.ob_loader.input,{refresh:true});
         });
-        await expect(page.locator('.ob_results_status')).toHaveText('Data limit reached');
+        await expect(page.locator('.ob_results_status')).toHaveAttribute('aria-description',/Data limit reached/);
         await expect(page.locator('.ob_update_failed')).toHaveCount(0);
         await expect(page.getByRole('button',{name:'Retry',exact:true})).toBeHidden();
-        await page.getByRole('button',{name:'Data limit reached',exact:true}).click();
+        await page.getByRole('button',{name:/^Status:/}).click();
         await expect(page.locator('.ob_status_explanation')).toContainText('Narrow the time window');
-        const narrow=page.getByRole('button',{name:'Narrow time window',exact:true});
-        await expect(narrow).toBeVisible();await expect(narrow).toBeEnabled();
+        await expect(page.getByRole('button',{name:'Narrow time window',exact:true})).toHaveCount(0);
         await visibleRecord(page,'initial-');
         const before=await state(page);
         control.extraPage=false;
-        await narrow.click();
-        await expect(narrow).toBeHidden();
+        await page.getByRole('button',{name:/^Status:/}).click();
+        await page.locator('.ob_paged_frame').focus();await page.keyboard.press('+');
         await expect.poll(async()=>(await state(page)).fetching).toBe(false);
         const after=await state(page);
-        expect(after.range.to-after.range.from).toBeCloseTo((before.range.to-before.range.from)/2,0);
+        expect(after.range.to-after.range.from).toBeLessThan(before.range.to-before.range.from);
         expect(after.error).toBe('');await visibleRecord(page,'initial-');
         expect(errors).toEqual([]);
     } finally {await control.close();}

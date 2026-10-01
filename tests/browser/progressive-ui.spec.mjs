@@ -80,7 +80,7 @@ test('First connected batch is visible and interactive while the next batch wait
         return r.snapshot?.counts.eligible.events===30 && !r.pending;});
     await expect.poll(()=>Boolean(nextPage)).toBe(true);
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
-    await expect(page.locator('.ob_loading_status')).toHaveText('Loading items…');
+    await expect(page.getByRole('button',{name:/^Status:/})).toHaveAttribute('aria-description',/Loading items/);
     await expect(page.getByRole('button',{name:'Stop loading',exact:true})).toBeVisible();
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await page.getByAltText('Sorting and filtering',{exact:true}).click();await ready(page);
@@ -109,7 +109,8 @@ test('A stopped data server leaves the standalone frame and complete toolbar usa
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await expect(page.getByRole('button',{name:'Edit search',exact:true})).toHaveCount(0);
     const warning=page.locator('.ob_update_failed');await expect(warning).toBeVisible();
-    expect(await warning.evaluate(node=>getComputedStyle(node).backgroundColor)).toBe('rgb(255, 240, 217)');
+    await expect(warning).toHaveText('Status: Error');
+    expect(await warning.evaluate(node=>getComputedStyle(node).backgroundColor)).toBe('rgb(253, 226, 226)');
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await expect(page.getByRole('button',{name:'Add a new filter',exact:true})).toBeDisabled();
     await expect(page.getByRole('button',{name:'Retry filters',exact:true})).toBeEnabled();

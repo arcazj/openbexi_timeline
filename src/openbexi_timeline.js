@@ -2,7 +2,7 @@
  * This notice must be untouched at all times.
  *
  * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.3.1
+ *     OpenBEXI Timeline version 2.3.2
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  *     This program is free software; you can redistribute it and/or

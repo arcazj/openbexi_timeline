@@ -1,6 +1,9 @@
 # Filter syntax
 
-Open **Sorting & Filtering**, then **Filter syntax** for help beside the editor.
+Open **Filters** in the secondary menu bar to show Sorting & Filtering, then
+select **Filter syntax** for help beside the editor. **Search options** chooses
+Text, Pattern or Legacy search. The field/operator/value builder creates filters;
+the removable **Filter: \<filter name\>** label shows the active saved filter.
 An invalid expression shows its character position and keeps the last valid
 filter active. **Sort by** remains a separate setting saved with each preset.
 Choose the grouping field before **Save** or **Save new filter** to store it with

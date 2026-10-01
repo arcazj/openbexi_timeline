@@ -291,8 +291,8 @@ test('Empty and failed intervals use the toolbar and keep the plot clear',async(
         assert.equal(r.explorer.lockLabel.hidden,false);
         assert.equal(r.explorer.findPrevious.parentElement,r.controls.activityControls);
         assert.equal(r.explorer.findNext.previousElementSibling,r.explorer.findPrevious);
-        assert.equal(r.explorer.lockLabel.previousElementSibling.previousElementSibling,r.explorer.findNext);
-        assert.equal(r.autoLabel.previousElementSibling,r.explorer.lockLabel);
+        assert.equal(r.autoLabel.previousElementSibling.previousElementSibling,r.explorer.findNext);
+        assert.equal(r.explorer.lockLabel.previousElementSibling,r.autoLabel);
         r.request({query:'missing'});
         assert.equal(r.empty.hidden,true,'A pending search does not flash an empty state');
         await waitFor(()=>!r.pending && !r.explorer.searchQuery);
@@ -339,6 +339,45 @@ test('Previous and next activity honor the search, advance in order and center e
         assert.equal(center(),base+8*3600000);
         assert.equal(r.state.query,'volcano');
     } finally {f.close();}
+});
+
+test('Adjacent activity searches announce progress through Status while the report stays closed',async()=>{
+    const f=await local([event('current',12)]),{r,t,h}=f;
+    let pendingSeek;
+    try {
+        r.explorer.interrupt();
+        r.selectedKey=r.snapshot.entries[0].key;
+        t.staticData=false;
+        t.ob_loader={url:new URL('http://localhost/sessions')};
+        const requests=[];
+        h.window.fetch=(input,{signal})=>new Promise((resolve,reject)=>{
+            requests.push(String(input));
+            signal.addEventListener('abort',()=>reject(new h.window.DOMException('Stopped','AbortError')),{once:true});
+        });
+        for(const [direction,label] of [['past','earlier'],['future','later']]) {
+            const previousRequests=requests.length;
+            pendingSeek=r.explorer.seek(direction);
+            await waitFor(()=>r.explorer.seeking && requests.length>previousRequests);
+            assert.equal(r.explorer.historySearch,false,'The manual activity search uses adjacent intervals');
+            assert.equal(r.details.hidden,true);
+            assert.equal(r.status.textContent,'Status: Searching…');
+            assert.match(r.status.title,new RegExp('Searching '+label+' intervals'));
+            assert.equal(r.status.getAttribute('aria-description'),r.status.title);
+            assert.equal(r.statusMessage.textContent,r.status.title);
+            assert.equal(r.statusMessage.getAttribute('role'),'status');
+            assert.equal(r.statusMessage.getAttribute('aria-live'),'polite');
+            assert.equal(r.statusMessage.closest('[hidden]'),null,'Progress stays accessible with the report closed');
+            assert.equal(r.explorer.stop.hidden,false);
+            r.explorer.stop.click();
+            await pendingSeek;
+            pendingSeek=null;
+            assert.equal(r.explorer.seeking,false);
+        }
+    } finally {
+        r.explorer.interrupt();
+        await pendingSeek;
+        f.close();
+    }
 });
 
 test('Selection from a new remote batch waits for its normalized record identity',async()=>{

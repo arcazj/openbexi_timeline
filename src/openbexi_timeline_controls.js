@@ -53,25 +53,47 @@ export class TimelineControls {
         this.update();
     }
     mount() {
-        const r = this.results, t = this.timeline;
+        const r = this.results;
         this.backButton = button('Back to previous view', () => this.back());
         this.backButton.title = 'Restore the date and zoom before search or selection moved the timeline.';
         r.toolbar.prepend(this.backButton);
         this.labels = element('div', undefined, {class:'ob_active_filters', 'aria-label':'Active filters and grouping'});
-        t.ob_timeline_header.append(this.labels);
+        r.feedback.insertBefore(this.labels,r.filterButton);
         this.activityControls=element('div',undefined,{class:'ob_activity_controls',role:'group','aria-label':'Activity navigation and scale'});
         const separator=()=>element('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'});
-        this.activityControls.append(r.refreshButton,separator(),r.availableButton,r.explorer.findPrevious,
-            r.explorer.findNext,separator(),r.explorer.lockLabel,r.autoLabel);
-        r.activityToolbar.append(this.activityControls,r.statusGroup,r.feedback);
+        this.activityControls.append(r.availableButton,r.explorer.findPrevious,
+            r.explorer.findNext,separator(),r.autoLabel,r.explorer.lockLabel);
+        r.activityToolbar.append(r.refreshButton,this.activityControls,r.toolbar,r.statusGroup,r.feedback);
         if(window.ResizeObserver) {
             this.resizeObserver=new ResizeObserver(()=>r.layout());
             this.resizeObserver.observe(r.primaryToolbar);
+            this.resizeObserver.observe(this.activityControls);
+            this.resizeObserver.observe(r.utilities);
         }
         this.update();
     }
     layout() {
-        this.timeline.ob_timeline_header.dataset.toolbarLayout='two-rows';
+        const r=this.results,header=this.timeline.ob_timeline_header;
+        header.dataset.toolbarLayout='two-rows';
+        if(!this.activityControls)return;
+        const rowWidth=r.primaryToolbar.clientWidth;
+        if(!rowWidth) {header.dataset.activityRow='secondary';return;}
+        // Reserve a readable date label independently of the current row so
+        // moving controls cannot make the placement oscillate.
+        const width=element=>element.getBoundingClientRect().width;
+        const style=getComputedStyle(r.primaryToolbar);
+        const gap=Number.parseFloat(style.columnGap) || 10;
+        const titleWidth=Number.parseFloat(getComputedStyle(r.titleSlot).minWidth) || 180;
+        const required=[r.primaryNavigation,r.search,r.utilities,this.activityControls].reduce((sum,element)=>sum+width(element),0)+titleWidth+gap*4;
+        const available=rowWidth-(Number.parseFloat(style.paddingLeft) || 0)-(Number.parseFloat(style.paddingRight) || 0);
+        const fits=available>0 && required<=available;
+        const parent=fits?r.primaryToolbar:r.activityToolbar;
+        if(this.activityControls.parentElement!==parent) {
+            const focused=this.activityControls.contains(document.activeElement)?document.activeElement:null;
+            parent.insertBefore(this.activityControls,fits?r.titleSlot:r.toolbar);
+            focused?.focus({preventScroll:true});
+        }
+        header.dataset.activityRow=fits?'main':'secondary';
     }
     update() {
         if (!this.labels) return;

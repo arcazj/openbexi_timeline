@@ -83,9 +83,14 @@ test('Help resources resolve locally and guide anchors exist; offline API needs 
     } finally { await new Promise(resolve => server.close(resolve)); }
 });
 
-test('README demo links are generated from the current catalog', async () => {
+test('README demo links and guide resources are generated from the current catalog', async () => {
     const catalog = await readDemoCatalog();
     const readme = await fs.readFile(path.join(projectRoot, 'README.md'), 'utf8');
     const section = readme.match(/<!-- LIVE_DEMOS:START -->[\s\S]*?<!-- LIVE_DEMOS:END -->/)?.[0];
     assert.equal(section?.replaceAll('\r\n', '\n'), buildDemoReadme(catalog));
+    const guide = await fs.readFile(path.join(projectRoot, 'docs/demos.md'), 'utf8');
+    const resources = guide.match(/<!-- DEMO_RESOURCES:START -->[\s\S]*?<!-- DEMO_RESOURCES:END -->/)?.[0];
+    assert.equal(resources?.replaceAll('\r\n', '\n'), buildDemoReadme(catalog, undefined, {resources: true}));
+    for (const reference of resources.matchAll(/\]\((\.\.\/[^)]+)\)/g))
+        await fs.access(path.resolve(projectRoot, 'docs', reference[1]));
 });

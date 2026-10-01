@@ -90,23 +90,23 @@ test('Delayed connected data keeps the view interactive and supports cancel and 
         t.data=location.origin+'/__loading_fixture';t.load_data(0);
     });
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
-    await expect(page.locator('.ob_loading_status')).toContainText('Loading items');
+    await expect(page.getByRole('button',{name:/^Status:/})).toHaveAttribute('aria-description',/Loading items/);
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('aria-busy','false');
     await capture(page,'connected-loading'+(testInfo.project.name==='narrow'?'-narrow':''));
     await page.getByRole('button',{name:'Stop loading',exact:true}).click();
     waiting.splice(0).forEach(resolve=>resolve());
-    await expect(page.locator('.ob_results_status')).toContainText('Loading cancelled');
+    await expect(page.locator('.ob_results_status')).toHaveAttribute('aria-description',/Loading cancelled/);
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(2);waiting.splice(0).forEach(resolve=>resolve());
-    await expect(page.locator('.ob_results_status')).toContainText('unavailable');
+    await expect(page.locator('.ob_results_status')).toHaveAttribute('aria-description',/unavailable/);
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
     await page.getByRole('button',{name:'Retry',exact:true}).click();
     await expect.poll(()=>attempt).toBe(3);waiting.splice(0).forEach(resolve=>resolve());
     await ready(page);
     await testInfo.attach('request-state',{body:JSON.stringify({attempt,errors,state:await page.evaluate(async()=>{
         const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
-        return {pending:r.pending,loading:r.loading,error:r.error,status:r.status.textContent};
+        return {pending:r.pending,loading:r.loading,error:r.error,status:r.statusMessage.textContent};
     })},null,2),contentType:'application/json'});
     await expect(page.locator('.ob_timeline_loading')).toHaveCount(0);
     await expect(page.locator('.ob_paged_frame')).toHaveAttribute('tabindex','0');
