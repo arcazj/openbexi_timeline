@@ -166,7 +166,7 @@ identity/dates return 400 and malformed descriptor files return 500, each with a
 JSON body. Empty, truncated or malformed JSON is a request failure even under
 HTTP 200. The UI retains valid records and reports the operation and request ID.
 
-## Startup and filtering in 2.2.2
+## Startup and filtering
 
 For explicit HTML models, inspect the public configuration response first: its
 `data` route must match the listener. An SSE listener advertises
@@ -175,8 +175,10 @@ on that listener used to return HTTP 405. Settings now use finite JSON requests.
 The live subscription starts with initial data loading and keeps the active range,
 filter, user and timeline parameters.
 
-Connection failures and empty intervals appear on the toolbar beside Refresh.
-Orange status messages open details without covering the plot. Record transfers
+Connection failures and empty intervals appear in Status on the secondary menu
+bar. Loading, searching and incomplete coverage are orange; completed work is
+green, failures are red and cancelled work is gray. Click Status to open its
+report and click again to close it, matching Timeline details. Record transfers
 use source rules and the active saved filter before serialization; see
 [filter syntax](filter-syntax.md). SSE revision messages contain no event payloads.
 

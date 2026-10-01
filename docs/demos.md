@@ -127,7 +127,7 @@ The loader preserves descriptions as text. Legacy image and link references rema
 
 ## Responsive layout and Overview
 
-The demo page fills the available browser window. Event/session rows and table records use compact page controls when needed, without plot scrollbars. Open panels dock on wide windows and overlay on narrow windows. The toolbar wraps; Settings > Timeline Info supports full-window or custom sizing. Requested custom geometry is preserved during smaller resizes.
+The demo page fills the available browser window. Event/session rows and table records use compact page controls when needed, without plot scrollbars. Open panels dock on wide windows and overlay on narrow windows. The two menu bars scroll horizontally when space is limited; Settings > Timeline Info supports full-window or custom sizing. Requested custom geometry is preserved during smaller resizes.
 
 Overview projects the normal bands' completed layout into a miniature, retaining event colors, session durations, row order, groups, and highlighted intervals. Point events become compact dots and duration events remain horizontal bars. Each source band has a visible-time-range highlight that follows panning and the Timeline/Split viewport. Search, grouping, refresh, and Overview toggles use the same loaded data and layout; models do not need dataset-specific JavaScript.
 
