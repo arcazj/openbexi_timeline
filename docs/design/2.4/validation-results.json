@@ -1,0 +1,180 @@
+{
+  "generatedAt": "2026-10-01T18:53:31.046Z",
+  "modelSha256": "1ebc129ef0ddc9163c30c3de10a9f3c50ceb6ffd2020e9fc2a13705c752cbad2",
+  "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
+  "browser": {
+    "name": "msedge.exe",
+    "version": "154.0.4258.37",
+    "viewport": {
+      "width": 4000,
+      "height": 4800
+    },
+    "deviceScaleFactor": 1.25
+  },
+  "outputs": {
+    "simulator": {
+      "file": "timeline-2.4.hbds.png",
+      "width": 5000,
+      "height": 6000
+    },
+    "overview": {
+      "file": "timeline-2.4.overview.png",
+      "width": 3520,
+      "height": 2660
+    }
+  },
+  "expectedCounts": {
+    "nodes": 30,
+    "classes": 26,
+    "hyperclasses": 4,
+    "links": 44,
+    "attributes": 191,
+    "memberships": 26,
+    "inheritances": 2,
+    "objects": 3,
+    "objectLinks": 1
+  },
+  "checks": {
+    "countsMatch": true,
+    "modelValid": true,
+    "semanticProfilesValid": true,
+    "allClassLabelsPresent": true,
+    "allAttributeLabelsPresent": true,
+    "allLinkLabelsPresent": true,
+    "noClippedLabels": true,
+    "noEllipsizedAttributes": true,
+    "noOverlappingAttributes": true,
+    "validRelationshipHubs": true,
+    "renderedPixels": true,
+    "graphicsBufferMatchesCanvas": true,
+    "noPageErrors": true,
+    "noFailedRequests": true
+  },
+  "passed": true,
+  "counts": {
+    "nodes": 30,
+    "links": 44,
+    "attributes": 191,
+    "hyperclasses": 4,
+    "objects": 3,
+    "objectLinks": 1,
+    "memberships": 26,
+    "inheritances": 2
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "semanticProfiles": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "serverConnected": false,
+  "completedRenderCount": 9,
+  "canvas": {
+    "width": 5000,
+    "height": 5908,
+    "clientWidth": 4000,
+    "clientHeight": 4727
+  },
+  "graphics": {
+    "drawingBufferWidth": 5000,
+    "drawingBufferHeight": 5908,
+    "maxRenderbufferSize": 8192,
+    "maxTextureSize": 8192
+  },
+  "fit": {
+    "diagramWidth": 69.0617,
+    "diagramHeight": 78.9665,
+    "diagramDepth": 0.175,
+    "visibleWidth": 74.6647,
+    "visibleHeight": 88.235,
+    "subjectCount": 30,
+    "occupancyX": 0.925,
+    "occupancyY": 0.895,
+    "occupancy": 0.925,
+    "centerOffsetX": 0,
+    "centerOffsetY": 0,
+    "distance": 90.4543,
+    "center": {
+      "x": -0.1309,
+      "y": 0.4833,
+      "z": 0.0875
+    }
+  },
+  "pixels": {
+    "width": 5000,
+    "height": 5908,
+    "step": 406,
+    "sampled": 168,
+    "nonBackground": 168,
+    "colored": 52,
+    "averageNonBackgroundLuminance": 232
+  },
+  "labels": {
+    "classes": 30,
+    "attributes": 191,
+    "links": 44,
+    "clipped": [],
+    "ellipsizedAttributes": [],
+    "attributeOverlaps": [],
+    "fontPixels": {
+      "classes": {
+        "min": 20,
+        "max": 24
+      },
+      "attributes": {
+        "min": 8.06499,
+        "max": 9
+      },
+      "links": {
+        "min": 13,
+        "max": 13
+      }
+    }
+  },
+  "relationshipHubs": {
+    "count": 44,
+    "invalid": []
+  },
+  "effectiveInheritance": [
+    {
+      "classId": "obt24_Session",
+      "ancestors": [
+        "obt24_TimelineItem"
+      ],
+      "effectiveAttributes": 24,
+      "inheritedAttributes": 24
+    },
+    {
+      "classId": "obt24_Event",
+      "ancestors": [
+        "obt24_TimelineItem"
+      ],
+      "effectiveAttributes": 24,
+      "inheritedAttributes": 24
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "unexpectedHttpResponses": [],
+  "expectedOfflineResponses": [
+    {
+      "url": "http://hbds.test/api/ai/providers",
+      "status": 404
+    }
+  ],
+  "fallbackIcons": [
+    "/icons/organization.svg"
+  ],
+  "notes": [
+    "The full PNG is an actual simulator render with editing panels hidden, captured at 1.25 physical pixels per CSS pixel to remain within the graphics buffer budget.",
+    "The native simulator scales attribute text to at most 9 CSS pixels at this full-model fit; class and link labels retain their configured sizes. The capture preserves native font logic. Use the readable overview for orientation and load the JSON in HBDS to inspect attributes at higher zoom.",
+    "The offline AI provider request returns 404 and uses the simulator's local provider definitions.",
+    "Missing icons use the same generated placeholder as the upstream static server.",
+    "The overview intentionally simplifies associations; consult the JSON for the complete proposal.",
+    "Browser validation checks the proposed HBDS model, not future application enforcement."
+  ]
+}

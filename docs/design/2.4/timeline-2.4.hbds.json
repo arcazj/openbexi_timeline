@@ -1,0 +1,5695 @@
+{
+  "$schema": "https://openbexi.local/hbds/model/v2",
+  "metadata": {
+    "id": "obt24_proposal",
+    "name": "OpenBEXI Timeline 2.4 proposed HBDS model",
+    "version": "2.4-design-draft-1",
+    "purpose": "Reviewable domain proposal for commercial eligibility, per-model access, configuration, timeline records and optional AI assistance.",
+    "semanticVersion": 1,
+    "regressionTags": [
+      "timeline",
+      "proposal",
+      "semantic-v2"
+    ],
+    "preserveLayout": true,
+    "layout": {
+      "algorithm": "none",
+      "fit": {
+        "padding": 1.08
+      }
+    },
+    "font": {
+      "size": 15,
+      "family": "Arial, sans-serif",
+      "classSize": 20,
+      "hyperclassSize": 24,
+      "attributeSize": 15,
+      "linkSize": 13
+    },
+    "sceneSettings": {
+      "background": "#f8fafc",
+      "ambient": 0.9,
+      "front": 0.2
+    },
+    "extensions": {
+      "timeline24": {
+        "status": "proposal; not implemented authorization or licensing",
+        "targetRelease": "2.4.0",
+        "reference": {
+          "repository": "https://github.com/arcazj/openbexi_hbds",
+          "commit": "51b61998c12597cd435680158f185c81af2fa9ce",
+          "schema": "schemas/hbds-semantic-profile-v2.schema.json",
+          "profile": "doc/HBDS_STRUCTURAL_DIAGRAM_PROFILE_V1.md"
+        },
+        "cardinalityNotation": "source counts sources per one target; target counts targets per one source. These are proposed application constraints, not enforced by the HBDS schema. Inheritance illustration links have no association cardinality.",
+        "attributeNotation": "type describes the domain. required marks non-null reference/identity fields where explicitly specified; nullable marks optional/null fields. Other defaults and presence rules must be finalized in implementation schemas.",
+        "domainTypes": {
+          "ID": "Stable string identifier; tenant/source namespaces are explicit, and references must resolve within their declared scope.",
+          "timestamp": "ISO 8601 UTC audit timestamp.",
+          "timeValue": "A calendar string (including supported BCE/extended-year forms) or a finite numeric coordinate; interpret using Dataset.timeAxis. Preserve originalStart/originalEnd and uncertainty metadata.",
+          "timeAxis": {
+            "kind": [
+              "calendar",
+              "numeric"
+            ],
+            "calendar": "Preserve configured zone and existing normalization.",
+            "numeric": "Declare unit, origin where applicable, and increasing/decreasing direction; compare ranges in axis order."
+          },
+          "extensibleEnums": [
+            "DataSource.type",
+            "AIProvider.adapter"
+          ],
+          "yaml": "Original YAML text belongs to DocumentRevision.text; parsed model configuration belongs to ModelVersion.configuration. Other document kinds keep their own schema."
+        },
+        "builtInRoles": {
+          "admin": [
+            "model.read",
+            "records.read",
+            "records.write",
+            "filters.manage",
+            "model.edit",
+            "yaml.edit.scoped",
+            "access.manage",
+            "ai.use"
+          ],
+          "readWrite": [
+            "model.read",
+            "records.read",
+            "records.write",
+            "filters.write.allowed"
+          ],
+          "readOnly": [
+            "model.read",
+            "records.read",
+            "filters.apply"
+          ]
+        },
+        "exemptionCategories": [
+          "student",
+          "researcher",
+          "charity",
+          "nonprofit",
+          "other-approved"
+        ],
+        "invariants": [
+          "IMMUTABLE ITEM CONTRACT: never change event/session/activity JSON fields, types, nesting, null/absent distinctions, identifiers or unknown metadata. New ownership, access, licensing, AI and HBDS state belongs outside item payloads.",
+          "Commercial entitlement and model authorization are independent checks; exemption never grants data access.",
+          "Every active model retains at least one active admin. A role and membership assignment must match the model workspace.",
+          "Only model admins may use Model and YAML editors or AI generation. Shared deployment YAML additionally requires system configuration permission.",
+          "Enforce role and tenant boundaries in the backend, config API, data API, downloads and AI gateway, not only in UI controls.",
+          "ModelDataset accessMode, sourceScope and recordScope bound effective reads/writes; a writer role cannot expand the binding scope.",
+          "Shared datasets mean shared writes. Explicitly warn on binding and validate all access paths; no implicit union across model permissions.",
+          "A model owns its filters. Private/shared visibility and active user filter state remain distinct.",
+          "A populated dataset cannot silently change its time axis. Preserve UTC, zones, BCE/CE and decreasing numeric axes.",
+          "TimelineItem is abstract. Session and Event inherit its fields; activity is the parent relationship, not a third incompatible record kind.",
+          "Record identity is stable in its workspace/source namespace; generated API ids are unique within a dataset; all parent references resolve in that dataset and cannot cycle.",
+          "Document and model revisions are immutable; validate references, preserve unknown fields, write atomically, and detect stale versions.",
+          "AI provider output is untrusted candidate configuration. Admin reviews validation, preview and diff before apply or save.",
+          "Secrets are referenced server-side; images and records are sent only within authorized, explicitly selected scope.",
+          "HBDS diagram validation does not establish that the future application enforces these rules."
+        ],
+        "compatibility": {
+          "immutableItems": true,
+          "modelConfiguration": [
+            "params",
+            "bands",
+            "rendering",
+            "dataSource",
+            "unknown legacy extension keys"
+          ],
+          "yamlKinds": [
+            "model configuration",
+            "source configuration with data_sources",
+            "deployment configuration",
+            "server/snapshot configuration"
+          ],
+          "legacyEnvelope": "{ dateTimeFormat, events: [ sessions/events with nested activities ] }",
+          "canonicalEnvelope": "{ format: timeline-snapshot, formatVersion: 1, manifest, models, filters, records }",
+          "migration": "Retain current adapters and item structures. Only external control metadata may migrate: deployment tokens, model access and model-owned filters. Never infer a grant from a filename.",
+          "datasetId": "External ownership/index only. Never introduce datasetId or another ownership/HBDS/access/AI field into an existing event, session or activity item.",
+          "representations": "The TimelineItem attributes document fields already found in the snapshot representation. They are not newly required fields in legacy items; legacy data/activities and all unknown metadata remain unchanged."
+        },
+        "examples": {
+          "modelConfiguration": {
+            "params": [
+              {
+                "fullWindow": true,
+                "name": "ob_demo",
+                "title": "Operations sample",
+                "date": "2026-09-12T12:30:00Z",
+                "timeZone": "UTC",
+                "top": 130,
+                "left": 12,
+                "width": 1400,
+                "height": 640,
+                "fontSize": 13,
+                "data": "",
+                "overview": true,
+                "dockOverview": true,
+                "showCurrentTime": false
+              }
+            ],
+            "dataSource": {
+              "format": "json",
+              "recordsPath": "records"
+            },
+            "bands": [
+              {
+                "name": "ob_band_main",
+                "height": "84%",
+                "intervalUnit": "MINUTE",
+                "intervalPixels": 30,
+                "color": "#eef1f2",
+                "dateFormat": "HH:mm",
+                "dateColor": "#a0a6ab",
+                "textColor": "#263238",
+                "SessionColor": "#5c9ddb",
+                "eventColor": "#7675c8",
+                "fontSize": 13,
+                "intervalUnitPos": "BOTTOM",
+                "model": [
+                  {
+                    "sortBy": "NONE"
+                  }
+                ],
+                "trackIncrement": 32,
+                "range": {
+                  "from": "2026-09-12T08:00:00Z",
+                  "to": "2026-09-12T17:00:00Z"
+                },
+                "context": {
+                  "from": "2026-09-12T00:00:00Z",
+                  "to": "2026-09-13T00:00:00Z"
+                },
+                "focus": {
+                  "from": "2026-09-12T12:10:00Z",
+                  "to": "2026-09-12T13:20:00Z",
+                  "magnification": 3,
+                  "tickMinutes": 10
+                },
+                "tickMinutes": 30,
+                "labelPosition": "above",
+                "topPadding": 60,
+                "sessionHeight": 8,
+                "defaultEventSize": 4
+              },
+              {
+                "name": "ob_overview_band",
+                "height": "16%",
+                "intervalUnit": "HOUR",
+                "intervalPixels": 55,
+                "color": "#dfe7e9",
+                "dateFormat": "HH:mm",
+                "dateColor": "#a0a6ab",
+                "textColor": "#263238",
+                "SessionColor": "#5c9ddb",
+                "eventColor": "#7675c8",
+                "fontSize": 11,
+                "intervalUnitPos": "BOTTOM",
+                "model": [
+                  {
+                    "sortBy": "NONE"
+                  }
+                ],
+                "defaultEventSize": 1,
+                "showContextLabel": true,
+                "range": {
+                  "from": "2026-09-12T00:00:00Z",
+                  "to": "2026-09-13T00:00:00Z"
+                },
+                "context": {
+                  "from": "2026-09-12T00:00:00Z",
+                  "to": "2026-09-13T00:00:00Z"
+                },
+                "tickMinutes": 60
+              }
+            ]
+          },
+          "canonicalRecords": [
+            {
+              "id": "session-1",
+              "workspaceId": "example",
+              "sourceId": "manual",
+              "kind": "session",
+              "parentSessionId": null,
+              "start": "2026-10-01T12:00:00.000Z",
+              "end": "2026-10-01T14:00:00.000Z",
+              "originalStart": null,
+              "originalEnd": null,
+              "title": "session-1",
+              "data": {
+                "status": "planned"
+              },
+              "render": {
+                "color": "#2563eb"
+              },
+              "extensions": {},
+              "groupIds": [],
+              "tags": [],
+              "order": 0,
+              "schemaId": null,
+              "schemaVersion": null,
+              "version": 1,
+              "createdAt": "2026-10-01T12:00:00.000Z",
+              "createdBy": "example-user",
+              "updatedAt": "2026-10-01T12:00:00.000Z",
+              "updatedBy": "example-user",
+              "deletedAt": null
+            },
+            {
+              "id": "activity-1",
+              "workspaceId": "example",
+              "sourceId": "manual",
+              "kind": "event",
+              "parentSessionId": "session-1",
+              "start": "2026-10-01T12:30:00.000Z",
+              "end": null,
+              "originalStart": null,
+              "originalEnd": null,
+              "title": "activity-1",
+              "data": {
+                "status": "planned"
+              },
+              "render": {
+                "color": "#2563eb"
+              },
+              "extensions": {},
+              "groupIds": [],
+              "tags": [],
+              "order": 0,
+              "schemaId": null,
+              "schemaVersion": null,
+              "version": 1,
+              "createdAt": "2026-10-01T12:00:00.000Z",
+              "createdBy": "example-user",
+              "updatedAt": "2026-10-01T12:00:00.000Z",
+              "updatedBy": "example-user",
+              "deletedAt": null
+            },
+            {
+              "id": "event-1",
+              "workspaceId": "example",
+              "sourceId": "manual",
+              "kind": "event",
+              "parentSessionId": null,
+              "start": "2026-10-01T15:00:00.000Z",
+              "end": null,
+              "originalStart": null,
+              "originalEnd": null,
+              "title": "event-1",
+              "data": {
+                "status": "planned"
+              },
+              "render": {
+                "color": "#2563eb"
+              },
+              "extensions": {},
+              "groupIds": [],
+              "tags": [],
+              "order": 0,
+              "schemaId": null,
+              "schemaVersion": null,
+              "version": 1,
+              "createdAt": "2026-10-01T12:00:00.000Z",
+              "createdBy": "example-user",
+              "updatedAt": "2026-10-01T12:00:00.000Z",
+              "updatedBy": "example-user",
+              "deletedAt": null
+            }
+          ],
+          "legacyEnvelope": {
+            "dateTimeFormat": "iso8601",
+            "events": [
+              {
+                "id": "session-1",
+                "start": "2026-10-01T12:00:00.000Z",
+                "end": "2026-10-01T14:00:00.000Z",
+                "data": {
+                  "title": "session-1",
+                  "kind": "session"
+                },
+                "activities": [
+                  {
+                    "id": "activity-1",
+                    "start": "2026-10-01T12:30:00.000Z",
+                    "data": {
+                      "title": "activity-1",
+                      "kind": "event"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "event-1",
+                "start": "2026-10-01T15:00:00.000Z",
+                "data": {
+                  "title": "event-1",
+                  "kind": "event"
+                }
+              }
+            ]
+          },
+          "snapshotEnvelope": {
+            "format": "timeline-snapshot",
+            "formatVersion": 1,
+            "manifest": {
+              "workspaceId": "example",
+              "scope": {
+                "workspaceId": "example",
+                "sourceIds": [
+                  "manual"
+                ]
+              },
+              "recordCount": 3,
+              "completeness": "complete-for-declared-universe"
+            },
+            "models": [],
+            "filters": [],
+            "records": [
+              {
+                "id": "session-1",
+                "workspaceId": "example",
+                "sourceId": "manual",
+                "kind": "session",
+                "parentSessionId": null,
+                "start": "2026-10-01T12:00:00.000Z",
+                "end": "2026-10-01T14:00:00.000Z",
+                "originalStart": null,
+                "originalEnd": null,
+                "title": "session-1",
+                "data": {
+                  "status": "planned"
+                },
+                "render": {
+                  "color": "#2563eb"
+                },
+                "extensions": {},
+                "groupIds": [],
+                "tags": [],
+                "order": 0,
+                "schemaId": null,
+                "schemaVersion": null,
+                "version": 1,
+                "createdAt": "2026-10-01T12:00:00.000Z",
+                "createdBy": "example-user",
+                "updatedAt": "2026-10-01T12:00:00.000Z",
+                "updatedBy": "example-user",
+                "deletedAt": null
+              },
+              {
+                "id": "activity-1",
+                "workspaceId": "example",
+                "sourceId": "manual",
+                "kind": "event",
+                "parentSessionId": "session-1",
+                "start": "2026-10-01T12:30:00.000Z",
+                "end": null,
+                "originalStart": null,
+                "originalEnd": null,
+                "title": "activity-1",
+                "data": {
+                  "status": "planned"
+                },
+                "render": {
+                  "color": "#2563eb"
+                },
+                "extensions": {},
+                "groupIds": [],
+                "tags": [],
+                "order": 0,
+                "schemaId": null,
+                "schemaVersion": null,
+                "version": 1,
+                "createdAt": "2026-10-01T12:00:00.000Z",
+                "createdBy": "example-user",
+                "updatedAt": "2026-10-01T12:00:00.000Z",
+                "updatedBy": "example-user",
+                "deletedAt": null
+              },
+              {
+                "id": "event-1",
+                "workspaceId": "example",
+                "sourceId": "manual",
+                "kind": "event",
+                "parentSessionId": null,
+                "start": "2026-10-01T15:00:00.000Z",
+                "end": null,
+                "originalStart": null,
+                "originalEnd": null,
+                "title": "event-1",
+                "data": {
+                  "status": "planned"
+                },
+                "render": {
+                  "color": "#2563eb"
+                },
+                "extensions": {},
+                "groupIds": [],
+                "tags": [],
+                "order": 0,
+                "schemaId": null,
+                "schemaVersion": null,
+                "version": 1,
+                "createdAt": "2026-10-01T12:00:00.000Z",
+                "createdBy": "example-user",
+                "updatedAt": "2026-10-01T12:00:00.000Z",
+                "updatedBy": "example-user",
+                "deletedAt": null
+              }
+            ]
+          },
+          "modelOwnedFilter": {
+            "id": "planned",
+            "modelId": "operations-model",
+            "name": "Planned",
+            "expression": "expr: status = \"planned\"",
+            "sortBy": "NONE",
+            "visibility": "shared",
+            "createdBy": "example-user",
+            "revision": 1
+          }
+        }
+      }
+    }
+  },
+  "hypergraph": {
+    "class": [
+      {
+        "id": "obt24_access",
+        "name": "Identity and access",
+        "type": "hyperclass",
+        "attributes": [],
+        "position": {
+          "x": -17,
+          "y": 20,
+          "z": 0
+        },
+        "size": {
+          "width": 32,
+          "height": 38
+        },
+        "children": [
+          "obt24_Organization",
+          "obt24_Workspace",
+          "obt24_User",
+          "obt24_Membership",
+          "obt24_Entitlement",
+          "obt24_ModelRole",
+          "obt24_ModelAccess"
+        ],
+        "rendering": {
+          "class": {
+            "color": "#2563eb",
+            "borderColor": "#2563eb",
+            "opacity": 0.08,
+            "material": "flat"
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "purpose": "Semantic domain grouping, also used for visual containment."
+          }
+        }
+      },
+      {
+        "id": "obt24_Organization",
+        "name": "Organization",
+        "type": "roundedRectangle",
+        "description": "Tenant or personal account; owns workspaces and commercial eligibility.",
+        "attributes": [
+          {
+            "id": "obt24_Organization_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Organization_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Organization_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "active",
+                  "suspended",
+                  "closed"
+                ]
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -27.5,
+          "y": 34.9,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.2
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace",
+        "name": "Workspace",
+        "type": "roundedRectangle",
+        "description": "Isolation boundary for models, data, configuration and AI.",
+        "attributes": [
+          {
+            "id": "obt24_Workspace_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Workspace_organizationId",
+            "name": "organizationId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Workspace_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Workspace_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "active",
+                  "archived"
+                ]
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -17,
+          "y": 34.795,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.41
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_User",
+        "name": "User",
+        "type": "roundedRectangle",
+        "description": "Authenticated person. Identity subject is unique per configured issuer.",
+        "attributes": [
+          {
+            "id": "obt24_User_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_User_identityIssuer",
+            "name": "identityIssuer",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_User_identitySubject",
+            "name": "identitySubject",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_User_displayName",
+            "name": "displayName",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_User_email",
+            "name": "email",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_User_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "active",
+                  "disabled"
+                ]
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -6.5,
+          "y": 34.455,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.09
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_Membership",
+        "name": "Membership",
+        "type": "roundedRectangle",
+        "description": "A user in one workspace; unique workspaceId plus userId.",
+        "attributes": [
+          {
+            "id": "obt24_Membership_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Membership_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Membership_userId",
+            "name": "userId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Membership_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "invited",
+                  "active",
+                  "suspended",
+                  "removed"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Membership_joinedAt",
+            "name": "joinedAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -27.5,
+          "y": 22.625,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.75
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_Entitlement",
+        "name": "Entitlement",
+        "type": "roundedRectangle",
+        "description": "Commercial or exempt eligibility. Verification and entitlement status are independent. Never grants access to a timeline model.",
+        "attributes": [
+          {
+            "id": "obt24_Entitlement_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_organizationId",
+            "name": "organizationId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_plan",
+            "name": "plan",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "commercial",
+                  "exempt"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "pending",
+                  "active",
+                  "suspended",
+                  "expired",
+                  "revoked"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_eligibilityCategory",
+            "name": "eligibilityCategory",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "commercial",
+                  "student",
+                  "researcher",
+                  "charity",
+                  "nonprofit",
+                  "other-approved"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_verificationStatus",
+            "name": "verificationStatus",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "pending",
+                  "approved",
+                  "rejected",
+                  "revoked"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_validFrom",
+            "name": "validFrom",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_validUntil",
+            "name": "validUntil",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_featureLimits",
+            "name": "featureLimits",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Entitlement_policyVersion",
+            "name": "policyVersion",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -17,
+          "y": 21.775,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.45
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelRole",
+        "name": "ModelRole",
+        "type": "roundedRectangle",
+        "description": "Role belongs to one model. Built-ins are admin, readWrite and readOnly; custom permissions cannot grant editor access to non-admins.",
+        "attributes": [
+          {
+            "id": "obt24_ModelRole_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelRole_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelRole_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelRole_builtIn",
+            "name": "builtIn",
+            "type": "boolean",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelRole_permissions",
+            "name": "permissions",
+            "type": "string[]",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -6.5,
+          "y": 22.625,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.75
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelAccess",
+        "name": "ModelAccess",
+        "type": "roundedRectangle",
+        "description": "One active assignment per membership and model. roleId must belong to the same model.",
+        "attributes": [
+          {
+            "id": "obt24_ModelAccess_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_membershipId",
+            "name": "membershipId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_roleId",
+            "name": "roleId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "active",
+                  "revoked"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_grantedBy",
+            "name": "grantedBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelAccess_grantedAt",
+            "name": "grantedAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_access",
+        "position": {
+          "x": -27.5,
+          "y": 10.285,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.4300000000000006
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#2563eb",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_configuration",
+        "name": "Models and configuration",
+        "type": "hyperclass",
+        "attributes": [],
+        "position": {
+          "x": 17,
+          "y": 20,
+          "z": 0
+        },
+        "size": {
+          "width": 32,
+          "height": 38
+        },
+        "children": [
+          "obt24_TimelineModel",
+          "obt24_ModelVersion",
+          "obt24_ConfigurationDocument",
+          "obt24_DocumentRevision",
+          "obt24_DocumentBinding",
+          "obt24_Filter",
+          "obt24_ModelPreference"
+        ],
+        "rendering": {
+          "class": {
+            "color": "#7c3aed",
+            "borderColor": "#7c3aed",
+            "opacity": 0.08,
+            "material": "flat"
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "purpose": "Semantic domain grouping, also used for visual containment."
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel",
+        "name": "TimelineModel",
+        "type": "roundedRectangle",
+        "description": "A model owns roles, filters and version history; it selects explicitly scoped datasets.",
+        "attributes": [
+          {
+            "id": "obt24_TimelineModel_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_description",
+            "name": "description",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_currentVersionId",
+            "name": "currentVersionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_createdBy",
+            "name": "createdBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineModel_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 6.5,
+          "y": 34.115,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.7700000000000005
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelVersion",
+        "name": "ModelVersion",
+        "type": "roundedRectangle",
+        "description": "Immutable validated configuration revision; params, bands, rendering, dataSource and unknown legacy keys survive.",
+        "attributes": [
+          {
+            "id": "obt24_ModelVersion_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_revision",
+            "name": "revision",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_schemaId",
+            "name": "schemaId",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_schemaVersion",
+            "name": "schemaVersion",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "draft",
+                  "validated",
+                  "published",
+                  "retired"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_configuration",
+            "name": "configuration",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_parentVersionId",
+            "name": "parentVersionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_createdBy",
+            "name": "createdBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelVersion_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 17,
+          "y": 33.775,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.45
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ConfigurationDocument",
+        "name": "ConfigurationDocument",
+        "type": "roundedRectangle",
+        "description": "Logical JSON or YAML document. Shared deployment documents require an additional system permission.",
+        "attributes": [
+          {
+            "id": "obt24_ConfigurationDocument_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_ownerModelId",
+            "name": "ownerModelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_kind",
+            "name": "kind",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "model",
+                  "source",
+                  "deployment",
+                  "snapshot"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_format",
+            "name": "format",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "json",
+                  "yaml"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_schemaId",
+            "name": "schemaId",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_scope",
+            "name": "scope",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "model",
+                  "workspace",
+                  "system"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_currentRevisionId",
+            "name": "currentRevisionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ConfigurationDocument_restartRequired",
+            "name": "restartRequired",
+            "type": "boolean",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 27.5,
+          "y": 33.945,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.11
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_DocumentRevision",
+        "name": "DocumentRevision",
+        "type": "roundedRectangle",
+        "description": "Immutable original text, preserving YAML comments, anchors, aliases and extension keys.",
+        "attributes": [
+          {
+            "id": "obt24_DocumentRevision_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_documentId",
+            "name": "documentId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_revision",
+            "name": "revision",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_text",
+            "name": "text",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_checksum",
+            "name": "checksum",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_validationStatus",
+            "name": "validationStatus",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "unchecked",
+                  "valid",
+                  "invalid"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_createdBy",
+            "name": "createdBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentRevision_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 6.5,
+          "y": 22.115,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.7700000000000005
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_DocumentBinding",
+        "name": "DocumentBinding",
+        "type": "roundedRectangle",
+        "description": "Pins a model version to an exact document revision with an explicit purpose.",
+        "attributes": [
+          {
+            "id": "obt24_DocumentBinding_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentBinding_modelVersionId",
+            "name": "modelVersionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentBinding_documentRevisionId",
+            "name": "documentRevisionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DocumentBinding_purpose",
+            "name": "purpose",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "model",
+                  "source",
+                  "deployment-reference",
+                  "snapshot"
+                ]
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 17,
+          "y": 22.795,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.41
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_Filter",
+        "name": "Filter",
+        "type": "roundedRectangle",
+        "description": "Saved filter owned by one model; private/shared visibility remains subject to that model access. Preserve the existing sortBy string (NONE or a grouping/sort field) separately from the expression.",
+        "attributes": [
+          {
+            "id": "obt24_Filter_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_expression",
+            "name": "expression",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_query",
+            "name": "query",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_sortBy",
+            "name": "sortBy",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_visibility",
+            "name": "visibility",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "private",
+                  "shared"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_createdBy",
+            "name": "createdBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Filter_revision",
+            "name": "revision",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 27.5,
+          "y": 21.945,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.11
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelPreference",
+        "name": "ModelPreference",
+        "type": "roundedRectangle",
+        "description": "Per-user model state, independent of the shared filter definition.",
+        "attributes": [
+          {
+            "id": "obt24_ModelPreference_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_membershipId",
+            "name": "membershipId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_activeFilterId",
+            "name": "activeFilterId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_viewMode",
+            "name": "viewMode",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "timeline",
+                  "table",
+                  "split"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_timeWindow",
+            "name": "timeWindow",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelPreference_perspective",
+            "name": "perspective",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_configuration",
+        "position": {
+          "x": 6.5,
+          "y": 10.285,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.4300000000000006
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#7c3aed",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_data",
+        "name": "Timeline data",
+        "type": "hyperclass",
+        "attributes": [],
+        "position": {
+          "x": -17,
+          "y": -20,
+          "z": 0
+        },
+        "size": {
+          "width": 32,
+          "height": 38
+        },
+        "children": [
+          "obt24_Dataset",
+          "obt24_DataSource",
+          "obt24_ModelDataset",
+          "obt24_DatasetSource",
+          "obt24_TimelineItem",
+          "obt24_Session",
+          "obt24_Event",
+          "obt24_Snapshot"
+        ],
+        "rendering": {
+          "class": {
+            "color": "#047857",
+            "borderColor": "#047857",
+            "opacity": 0.08,
+            "material": "flat"
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "purpose": "Semantic domain grouping, also used for visual containment."
+          }
+        }
+      },
+      {
+        "id": "obt24_Dataset",
+        "name": "Dataset",
+        "type": "roundedRectangle",
+        "description": "Owns canonical records and one explicit time-axis contract.",
+        "attributes": [
+          {
+            "id": "obt24_Dataset_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Dataset_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Dataset_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Dataset_timeAxis",
+            "name": "timeAxis",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Dataset_schemaVersion",
+            "name": "schemaVersion",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Dataset_revision",
+            "name": "revision",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -27.5,
+          "y": -5.545,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.09
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_DataSource",
+        "name": "DataSource",
+        "type": "roundedRectangle",
+        "description": "Stable source identity and conversion mapping; connectionRef references a secret store, never a credential.",
+        "attributes": [
+          {
+            "id": "obt24_DataSource_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_namespace",
+            "name": "namespace",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_type",
+            "name": "type",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_enabled",
+            "name": "enabled",
+            "type": "boolean",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_connectionRef",
+            "name": "connectionRef",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_converter",
+            "name": "converter",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DataSource_fieldMapping",
+            "name": "fieldMapping",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -17,
+          "y": -5.885,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.7700000000000005
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelDataset",
+        "name": "ModelDataset",
+        "type": "roundedRectangle",
+        "description": "Explicit binding: shared data is readable/writable only within the granted source and record scope.",
+        "attributes": [
+          {
+            "id": "obt24_ModelDataset_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelDataset_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelDataset_datasetId",
+            "name": "datasetId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelDataset_sourceScope",
+            "name": "sourceScope",
+            "type": "string[]",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelDataset_recordScope",
+            "name": "recordScope",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ModelDataset_accessMode",
+            "name": "accessMode",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "read",
+                  "readWrite"
+                ]
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -6.5,
+          "y": -5.545,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.09
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_DatasetSource",
+        "name": "DatasetSource",
+        "type": "roundedRectangle",
+        "description": "Associates a source with a dataset; both must belong to the same workspace.",
+        "attributes": [
+          {
+            "id": "obt24_DatasetSource_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_DatasetSource_datasetId",
+            "name": "datasetId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_DatasetSource_sourceId",
+            "name": "sourceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -27.5,
+          "y": -17.1,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.2
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineItem",
+        "name": "TimelineItem",
+        "type": "roundedRectangle",
+        "description": "Read-only conceptual view of existing item fields, not a replacement wire schema. Preserve existing legacy events/activities and snapshot records exactly; keep dataset ownership and all new access/HBDS metadata outside the item.",
+        "attributes": [
+          {
+            "id": "obt24_TimelineItem_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_sourceId",
+            "name": "sourceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_kind",
+            "name": "kind",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "session",
+                  "event"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_parentSessionId",
+            "name": "parentSessionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_start",
+            "name": "start",
+            "type": "timeValue",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_end",
+            "name": "end",
+            "type": "timeValue",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_originalStart",
+            "name": "originalStart",
+            "type": "timeValue",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_originalEnd",
+            "name": "originalEnd",
+            "type": "timeValue",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_title",
+            "name": "title",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_data",
+            "name": "data",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_render",
+            "name": "render",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_extensions",
+            "name": "extensions",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_groupIds",
+            "name": "groupIds",
+            "type": "string[]",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_tags",
+            "name": "tags",
+            "type": "string[]",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_order",
+            "name": "order",
+            "type": "number",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_schemaId",
+            "name": "schemaId",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_schemaVersion",
+            "name": "schemaVersion",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_version",
+            "name": "version",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_createdBy",
+            "name": "createdBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_updatedAt",
+            "name": "updatedAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_updatedBy",
+            "name": "updatedBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_TimelineItem_deletedAt",
+            "name": "deletedAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -17,
+          "y": -20.605,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 9.21
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": true
+          }
+        }
+      },
+      {
+        "id": "obt24_Session",
+        "name": "Session",
+        "type": "roundedRectangle",
+        "description": "TimelineItem specialization: kind=session. May contain child records and may itself be a child. Attributes are inherited.",
+        "attributes": [],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -6.5,
+          "y": -17.1,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.2
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false,
+            "discriminator": {
+              "attributeId": "obt24_TimelineItem_kind",
+              "equals": "session"
+            },
+            "constraints": [
+              "Conceptual classification only. Preserve original kind/data.kind, end, activities and all metadata exactly; existing adapters retain their established behavior."
+            ]
+          }
+        }
+      },
+      {
+        "id": "obt24_Event",
+        "name": "Event",
+        "type": "roundedRectangle",
+        "description": "TimelineItem specialization: kind=event. Instant or point item; attributes are inherited.",
+        "attributes": [],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -27.5,
+          "y": -29.1,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 2.2
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false,
+            "discriminator": {
+              "attributeId": "obt24_TimelineItem_kind",
+              "equals": "event"
+            },
+            "constraints": [
+              "Conceptual classification only. Do not add a kind field, force end=null, or rewrite an existing item to fit this diagram."
+            ]
+          }
+        }
+      },
+      {
+        "id": "obt24_Snapshot",
+        "name": "Snapshot",
+        "type": "roundedRectangle",
+        "description": "Import/export envelope. Preserve formatVersion 1 interoperability; scope and completeness are explicit.",
+        "attributes": [
+          {
+            "id": "obt24_Snapshot_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_datasetId",
+            "name": "datasetId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_format",
+            "name": "format",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_formatVersion",
+            "name": "formatVersion",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_manifest",
+            "name": "manifest",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_models",
+            "name": "models",
+            "type": "array",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_filters",
+            "name": "filters",
+            "type": "array",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_records",
+            "name": "records",
+            "type": "array",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_Snapshot_checksum",
+            "name": "checksum",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_data",
+        "position": {
+          "x": -17,
+          "y": -30.225,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.45
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#047857",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ai",
+        "name": "Optional AI assistance",
+        "type": "hyperclass",
+        "attributes": [],
+        "position": {
+          "x": 17,
+          "y": -20,
+          "z": 0
+        },
+        "size": {
+          "width": 32,
+          "height": 38
+        },
+        "children": [
+          "obt24_AIProvider",
+          "obt24_AIModel",
+          "obt24_AIRequest",
+          "obt24_ImageAsset"
+        ],
+        "rendering": {
+          "class": {
+            "color": "#b45309",
+            "borderColor": "#b45309",
+            "opacity": 0.08,
+            "material": "flat"
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "purpose": "Semantic domain grouping, also used for visual containment."
+          }
+        }
+      },
+      {
+        "id": "obt24_AIProvider",
+        "name": "AIProvider",
+        "type": "roundedRectangle",
+        "description": "Workspace-controlled provider adapter configuration; credentials remain server-side.",
+        "attributes": [
+          {
+            "id": "obt24_AIProvider_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_workspaceId",
+            "name": "workspaceId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_name",
+            "name": "name",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_adapter",
+            "name": "adapter",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_endpoint",
+            "name": "endpoint",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_credentialRef",
+            "name": "credentialRef",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_enabled",
+            "name": "enabled",
+            "type": "boolean",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIProvider_policy",
+            "name": "policy",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_ai",
+        "position": {
+          "x": 6.5,
+          "y": -5.885,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.7700000000000005
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#b45309",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_AIModel",
+        "name": "AIModel",
+        "type": "roundedRectangle",
+        "description": "Provider model identifier, distinct from a TimelineModel; capability discovery is extensible.",
+        "attributes": [
+          {
+            "id": "obt24_AIModel_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_providerId",
+            "name": "providerId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_externalModelId",
+            "name": "externalModelId",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_capabilities",
+            "name": "capabilities",
+            "type": "string[]",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_limits",
+            "name": "limits",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_enabled",
+            "name": "enabled",
+            "type": "boolean",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIModel_discoveredAt",
+            "name": "discoveredAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_ai",
+        "position": {
+          "x": 17,
+          "y": -5.715,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 3.4300000000000006
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#b45309",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_AIRequest",
+        "name": "AIRequest",
+        "type": "roundedRectangle",
+        "description": "Optional admin assistance: draft, validate, preview diff, accept or discard; no automatic publication.",
+        "attributes": [
+          {
+            "id": "obt24_AIRequest_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_baseVersionId",
+            "name": "baseVersionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_requestedBy",
+            "name": "requestedBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_aiModelId",
+            "name": "aiModelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_inputAssetId",
+            "name": "inputAssetId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_task",
+            "name": "task",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "generate",
+                  "explain",
+                  "repair",
+                  "image-to-model"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_instruction",
+            "name": "instruction",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_status",
+            "name": "status",
+            "type": "enum",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false,
+                "allowedValues": [
+                  "queued",
+                  "running",
+                  "validating",
+                  "ready",
+                  "failed",
+                  "cancelled",
+                  "accepted",
+                  "discarded"
+                ]
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_candidateConfiguration",
+            "name": "candidateConfiguration",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_validationReport",
+            "name": "validationReport",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_acceptedVersionId",
+            "name": "acceptedVersionId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_usage",
+            "name": "usage",
+            "type": "object",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_AIRequest_createdAt",
+            "name": "createdAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_ai",
+        "position": {
+          "x": 27.5,
+          "y": -6.905,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 5.8100000000000005
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#b45309",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      },
+      {
+        "id": "obt24_ImageAsset",
+        "name": "ImageAsset",
+        "type": "roundedRectangle",
+        "description": "Optional timeline reference image; model-scoped access, deletion policy and explicit provider sharing.",
+        "attributes": [
+          {
+            "id": "obt24_ImageAsset_id",
+            "name": "id",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": true
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_modelId",
+            "name": "modelId",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_uploadedBy",
+            "name": "uploadedBy",
+            "type": "ID",
+            "extensions": {
+              "timeline24": {
+                "required": true,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_mediaType",
+            "name": "mediaType",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_storageRef",
+            "name": "storageRef",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_checksum",
+            "name": "checksum",
+            "type": "string",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_width",
+            "name": "width",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_height",
+            "name": "height",
+            "type": "integer",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": false,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_consentAt",
+            "name": "consentAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          },
+          {
+            "id": "obt24_ImageAsset_expiresAt",
+            "name": "expiresAt",
+            "type": "timestamp",
+            "extensions": {
+              "timeline24": {
+                "required": false,
+                "nullable": true,
+                "identity": false
+              }
+            }
+          }
+        ],
+        "parentClassId": "obt24_ai",
+        "position": {
+          "x": 6.5,
+          "y": -18.225,
+          "z": 0.08
+        },
+        "size": {
+          "width": 7.3,
+          "height": 4.45
+        },
+        "rendering": {
+          "class": {
+            "color": "#ffffff",
+            "borderColor": "#b45309",
+            "material": "flat"
+          },
+          "textColor": "#172033",
+          "attributes": {
+            "shape": "square",
+            "size": {
+              "width": 0.07,
+              "height": 0.07
+            }
+          }
+        },
+        "extensions": {
+          "timeline24": {
+            "abstract": false
+          }
+        }
+      }
+    ],
+    "link": [
+      {
+        "id": "obt24_Organization_Workspace_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Organization",
+        "targetClassId": "obt24_Workspace",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Organization_Entitlement_0",
+        "name": "holds",
+        "description": "",
+        "sourceClassId": "obt24_Organization",
+        "targetClassId": "obt24_Entitlement",
+        "rendering": {
+          "labelText": "holds [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_Membership_0",
+        "name": "has",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_Membership",
+        "rendering": {
+          "labelText": "has [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_User_Membership_0",
+        "name": "joins through",
+        "description": "",
+        "sourceClassId": "obt24_User",
+        "targetClassId": "obt24_Membership",
+        "rendering": {
+          "labelText": "joins through [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_TimelineModel_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_TimelineModel",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_Dataset_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_Dataset",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_DataSource_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_DataSource",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_ConfigurationDocument_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_ConfigurationDocument",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Workspace_AIProvider_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_Workspace",
+        "targetClassId": "obt24_AIProvider",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Membership_ModelAccess_0",
+        "name": "receives",
+        "description": "",
+        "sourceClassId": "obt24_Membership",
+        "targetClassId": "obt24_ModelAccess",
+        "rendering": {
+          "labelText": "receives [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelAccess_0",
+        "name": "authorizes",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelAccess",
+        "rendering": {
+          "labelText": "authorizes [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelRole_0",
+        "name": "defines",
+        "description": "Every model has admin, readWrite and readOnly built-ins.",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelRole",
+        "rendering": {
+          "labelText": "defines [1 : 3..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "3..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelRole_ModelAccess_0",
+        "name": "assigned through",
+        "description": "",
+        "sourceClassId": "obt24_ModelRole",
+        "targetClassId": "obt24_ModelAccess",
+        "rendering": {
+          "labelText": "assigned through [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelVersion_0",
+        "name": "versions",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelVersion",
+        "rendering": {
+          "labelText": "versions [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelVersion_1",
+        "name": "current revision",
+        "description": "Current version must belong to this model; draft models may have none.",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelVersion",
+        "rendering": {
+          "labelText": "current revision [0..1 : 0..1]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..1"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelVersion_ModelVersion_0",
+        "name": "precedes",
+        "description": "No version cycles; parent remains in the same model.",
+        "sourceClassId": "obt24_ModelVersion",
+        "targetClassId": "obt24_ModelVersion",
+        "allowSelfLink": true,
+        "rendering": {
+          "labelText": "precedes [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ConfigurationDocument_0",
+        "name": "scopes",
+        "description": "Shared infrastructure documents have no ownerModelId and need system authorization.",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ConfigurationDocument",
+        "rendering": {
+          "labelText": "scopes [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ConfigurationDocument_DocumentRevision_0",
+        "name": "versions",
+        "description": "",
+        "sourceClassId": "obt24_ConfigurationDocument",
+        "targetClassId": "obt24_DocumentRevision",
+        "rendering": {
+          "labelText": "versions [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ConfigurationDocument_DocumentRevision_1",
+        "name": "current revision",
+        "description": "",
+        "sourceClassId": "obt24_ConfigurationDocument",
+        "targetClassId": "obt24_DocumentRevision",
+        "rendering": {
+          "labelText": "current revision [0..1 : 0..1]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..1"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelVersion_DocumentBinding_0",
+        "name": "binds",
+        "description": "",
+        "sourceClassId": "obt24_ModelVersion",
+        "targetClassId": "obt24_DocumentBinding",
+        "rendering": {
+          "labelText": "binds [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_DocumentRevision_DocumentBinding_0",
+        "name": "pinned by",
+        "description": "",
+        "sourceClassId": "obt24_DocumentRevision",
+        "targetClassId": "obt24_DocumentBinding",
+        "rendering": {
+          "labelText": "pinned by [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_Filter_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_Filter",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Membership_ModelPreference_0",
+        "name": "remembers",
+        "description": "",
+        "sourceClassId": "obt24_Membership",
+        "targetClassId": "obt24_ModelPreference",
+        "rendering": {
+          "labelText": "remembers [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelPreference_0",
+        "name": "has preferences",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelPreference",
+        "rendering": {
+          "labelText": "has preferences [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Filter_ModelPreference_0",
+        "name": "selected by",
+        "description": "Selected filter must belong to the preference model and be visible to its member.",
+        "sourceClassId": "obt24_Filter",
+        "targetClassId": "obt24_ModelPreference",
+        "rendering": {
+          "labelText": "selected by [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ModelDataset_0",
+        "name": "binds",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ModelDataset",
+        "rendering": {
+          "labelText": "binds [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Dataset_ModelDataset_0",
+        "name": "shared through",
+        "description": "",
+        "sourceClassId": "obt24_Dataset",
+        "targetClassId": "obt24_ModelDataset",
+        "rendering": {
+          "labelText": "shared through [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Dataset_DatasetSource_0",
+        "name": "accepts",
+        "description": "",
+        "sourceClassId": "obt24_Dataset",
+        "targetClassId": "obt24_DatasetSource",
+        "rendering": {
+          "labelText": "accepts [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_DataSource_DatasetSource_0",
+        "name": "feeds",
+        "description": "",
+        "sourceClassId": "obt24_DataSource",
+        "targetClassId": "obt24_DatasetSource",
+        "rendering": {
+          "labelText": "feeds [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Dataset_TimelineItem_0",
+        "name": "contains",
+        "description": "External ownership/index only. Never add datasetId or other ownership fields to an existing item.",
+        "sourceClassId": "obt24_Dataset",
+        "targetClassId": "obt24_TimelineItem",
+        "rendering": {
+          "labelText": "contains [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_DataSource_TimelineItem_0",
+        "name": "originates",
+        "description": "",
+        "sourceClassId": "obt24_DataSource",
+        "targetClassId": "obt24_TimelineItem",
+        "rendering": {
+          "labelText": "originates [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Session_TimelineItem_0",
+        "name": "parent of",
+        "description": "parentSessionId; same dataset/workspace, acyclic. Children may be Session or Event.",
+        "sourceClassId": "obt24_Session",
+        "targetClassId": "obt24_TimelineItem",
+        "rendering": {
+          "labelText": "parent of [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Dataset_Snapshot_0",
+        "name": "exports",
+        "description": "",
+        "sourceClassId": "obt24_Dataset",
+        "targetClassId": "obt24_Snapshot",
+        "rendering": {
+          "labelText": "exports [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_AIProvider_AIModel_0",
+        "name": "offers",
+        "description": "",
+        "sourceClassId": "obt24_AIProvider",
+        "targetClassId": "obt24_AIModel",
+        "rendering": {
+          "labelText": "offers [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_AIModel_AIRequest_0",
+        "name": "executes",
+        "description": "",
+        "sourceClassId": "obt24_AIModel",
+        "targetClassId": "obt24_AIRequest",
+        "rendering": {
+          "labelText": "executes [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_AIRequest_0",
+        "name": "assisted by",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_AIRequest",
+        "rendering": {
+          "labelText": "assisted by [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Membership_AIRequest_0",
+        "name": "requests",
+        "description": "Actor must be an active admin of the target model.",
+        "sourceClassId": "obt24_Membership",
+        "targetClassId": "obt24_AIRequest",
+        "rendering": {
+          "labelText": "requests [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_TimelineModel_ImageAsset_0",
+        "name": "owns",
+        "description": "",
+        "sourceClassId": "obt24_TimelineModel",
+        "targetClassId": "obt24_ImageAsset",
+        "rendering": {
+          "labelText": "owns [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Membership_ImageAsset_0",
+        "name": "uploads",
+        "description": "",
+        "sourceClassId": "obt24_Membership",
+        "targetClassId": "obt24_ImageAsset",
+        "rendering": {
+          "labelText": "uploads [1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ImageAsset_AIRequest_0",
+        "name": "optional input",
+        "description": "",
+        "sourceClassId": "obt24_ImageAsset",
+        "targetClassId": "obt24_AIRequest",
+        "rendering": {
+          "labelText": "optional input [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_ModelVersion_AIRequest_0",
+        "name": "base revision",
+        "description": "",
+        "sourceClassId": "obt24_ModelVersion",
+        "targetClassId": "obt24_AIRequest",
+        "rendering": {
+          "labelText": "base revision [0..1 : 0..*]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..*"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_AIRequest_ModelVersion_0",
+        "name": "accepted as",
+        "description": "Accepting requires revalidation and a conflict check against baseVersionId.",
+        "sourceClassId": "obt24_AIRequest",
+        "targetClassId": "obt24_ModelVersion",
+        "rendering": {
+          "labelText": "accepted as [0..1 : 0..1]",
+          "arrowType": "triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "solid",
+          "lineColor": "#64748b",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "cardinality": {
+              "source": "0..1",
+              "target": "0..1"
+            },
+            "enforcedBy": "proposed Timeline 2.4 application rules"
+          }
+        }
+      },
+      {
+        "id": "obt24_Session_TimelineItem_1",
+        "name": "inherits",
+        "description": "Visual mirror only; formal inheritance is in hypergraph.inheritance.",
+        "sourceClassId": "obt24_Session",
+        "targetClassId": "obt24_TimelineItem",
+        "rendering": {
+          "labelText": "inherits",
+          "arrowType": "hollow-triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "dashed",
+          "lineColor": "#047857",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "enforcedBy": "proposed Timeline 2.4 application rules",
+            "relationshipKind": "inheritanceIllustration"
+          }
+        }
+      },
+      {
+        "id": "obt24_Event_TimelineItem_0",
+        "name": "inherits",
+        "description": "Visual mirror only; formal inheritance is in hypergraph.inheritance.",
+        "sourceClassId": "obt24_Event",
+        "targetClassId": "obt24_TimelineItem",
+        "rendering": {
+          "labelText": "inherits",
+          "arrowType": "hollow-triangle",
+          "arrowDirection": "source-to-target",
+          "lineStyle": "dashed",
+          "lineColor": "#047857",
+          "labelColor": "#334155",
+          "labelBackgroundColor": "#ffffff",
+          "labelFontSize": 13,
+          "lineWidth": 0.015
+        },
+        "extensions": {
+          "timeline24": {
+            "enforcedBy": "proposed Timeline 2.4 application rules",
+            "relationshipKind": "inheritanceIllustration"
+          }
+        }
+      }
+    ],
+    "membership": [
+      {
+        "id": "obt24_member_Organization",
+        "classId": "obt24_Organization",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_Workspace",
+        "classId": "obt24_Workspace",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_User",
+        "classId": "obt24_User",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_Membership",
+        "classId": "obt24_Membership",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_Entitlement",
+        "classId": "obt24_Entitlement",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_ModelRole",
+        "classId": "obt24_ModelRole",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_ModelAccess",
+        "classId": "obt24_ModelAccess",
+        "hyperclassId": "obt24_access"
+      },
+      {
+        "id": "obt24_member_TimelineModel",
+        "classId": "obt24_TimelineModel",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_ModelVersion",
+        "classId": "obt24_ModelVersion",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_ConfigurationDocument",
+        "classId": "obt24_ConfigurationDocument",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_DocumentRevision",
+        "classId": "obt24_DocumentRevision",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_DocumentBinding",
+        "classId": "obt24_DocumentBinding",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_Filter",
+        "classId": "obt24_Filter",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_ModelPreference",
+        "classId": "obt24_ModelPreference",
+        "hyperclassId": "obt24_configuration"
+      },
+      {
+        "id": "obt24_member_Dataset",
+        "classId": "obt24_Dataset",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_DataSource",
+        "classId": "obt24_DataSource",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_ModelDataset",
+        "classId": "obt24_ModelDataset",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_DatasetSource",
+        "classId": "obt24_DatasetSource",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_TimelineItem",
+        "classId": "obt24_TimelineItem",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_Session",
+        "classId": "obt24_Session",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_Event",
+        "classId": "obt24_Event",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_Snapshot",
+        "classId": "obt24_Snapshot",
+        "hyperclassId": "obt24_data"
+      },
+      {
+        "id": "obt24_member_AIProvider",
+        "classId": "obt24_AIProvider",
+        "hyperclassId": "obt24_ai"
+      },
+      {
+        "id": "obt24_member_AIModel",
+        "classId": "obt24_AIModel",
+        "hyperclassId": "obt24_ai"
+      },
+      {
+        "id": "obt24_member_AIRequest",
+        "classId": "obt24_AIRequest",
+        "hyperclassId": "obt24_ai"
+      },
+      {
+        "id": "obt24_member_ImageAsset",
+        "classId": "obt24_ImageAsset",
+        "hyperclassId": "obt24_ai"
+      }
+    ],
+    "inheritance": [
+      {
+        "id": "obt24_Session_inherits_TimelineItem",
+        "subClassId": "obt24_Session",
+        "superClassId": "obt24_TimelineItem"
+      },
+      {
+        "id": "obt24_Event_inherits_TimelineItem",
+        "subClassId": "obt24_Event",
+        "superClassId": "obt24_TimelineItem"
+      }
+    ],
+    "object": [
+      {
+        "id": "obt24_example_session-1",
+        "classId": "obt24_Session",
+        "name": "session-1",
+        "attributeValues": [
+          {
+            "attributeId": "obt24_TimelineItem_id",
+            "value": "session-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_workspaceId",
+            "value": "example"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_sourceId",
+            "value": "manual"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_kind",
+            "value": "session"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_parentSessionId",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_start",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_end",
+            "value": "2026-10-01T14:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalStart",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalEnd",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_title",
+            "value": "session-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_data",
+            "value": {
+              "status": "planned"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_render",
+            "value": {
+              "color": "#2563eb"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_extensions",
+            "value": {}
+          },
+          {
+            "attributeId": "obt24_TimelineItem_groupIds",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_tags",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_order",
+            "value": 0
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaId",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaVersion",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_version",
+            "value": 1
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_deletedAt",
+            "value": null
+          }
+        ]
+      },
+      {
+        "id": "obt24_example_activity-1",
+        "classId": "obt24_Event",
+        "name": "activity-1",
+        "attributeValues": [
+          {
+            "attributeId": "obt24_TimelineItem_id",
+            "value": "activity-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_workspaceId",
+            "value": "example"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_sourceId",
+            "value": "manual"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_kind",
+            "value": "event"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_parentSessionId",
+            "value": "session-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_start",
+            "value": "2026-10-01T12:30:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_end",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalStart",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalEnd",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_title",
+            "value": "activity-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_data",
+            "value": {
+              "status": "planned"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_render",
+            "value": {
+              "color": "#2563eb"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_extensions",
+            "value": {}
+          },
+          {
+            "attributeId": "obt24_TimelineItem_groupIds",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_tags",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_order",
+            "value": 0
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaId",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaVersion",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_version",
+            "value": 1
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_deletedAt",
+            "value": null
+          }
+        ]
+      },
+      {
+        "id": "obt24_example_event-1",
+        "classId": "obt24_Event",
+        "name": "event-1",
+        "attributeValues": [
+          {
+            "attributeId": "obt24_TimelineItem_id",
+            "value": "event-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_workspaceId",
+            "value": "example"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_sourceId",
+            "value": "manual"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_kind",
+            "value": "event"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_parentSessionId",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_start",
+            "value": "2026-10-01T15:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_end",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalStart",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_originalEnd",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_title",
+            "value": "event-1"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_data",
+            "value": {
+              "status": "planned"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_render",
+            "value": {
+              "color": "#2563eb"
+            }
+          },
+          {
+            "attributeId": "obt24_TimelineItem_extensions",
+            "value": {}
+          },
+          {
+            "attributeId": "obt24_TimelineItem_groupIds",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_tags",
+            "value": []
+          },
+          {
+            "attributeId": "obt24_TimelineItem_order",
+            "value": 0
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaId",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_schemaVersion",
+            "value": null
+          },
+          {
+            "attributeId": "obt24_TimelineItem_version",
+            "value": 1
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_createdBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedAt",
+            "value": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_updatedBy",
+            "value": "example-user"
+          },
+          {
+            "attributeId": "obt24_TimelineItem_deletedAt",
+            "value": null
+          }
+        ]
+      }
+    ],
+    "objectLink": [
+      {
+        "id": "obt24_example_parent_activity",
+        "classLinkId": "obt24_Session_TimelineItem_0",
+        "sourceObjectId": "obt24_example_session-1",
+        "targetObjectId": "obt24_example_activity-1"
+      }
+    ]
+  }
+}

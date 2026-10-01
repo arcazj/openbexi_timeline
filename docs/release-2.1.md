@@ -27,4 +27,4 @@ Run the documented checks in the [browser guide](browser-tests.md) and [demo hos
 
 Package, Maven, browser source and Help identify this release as **2.1.0**. The REST API contract remains **1.0.0**. Existing explicit model selection remains supported.
 
-`npm run release:source` creates the reviewed source archive and SHA-256 checksum. Its 442-file manifest excludes local deployments, credentials, runtime output and private captures. The existing [GPL license](../LICENSE) and [third-party notices](third-party-notices.md) apply. Previous changes are recorded in [2.0 release notes](release-2.0.md).
+`npm run release:source` creates the reviewed source archive and SHA-256 checksum. Its 442-file manifest excludes local deployments, credentials, runtime output and private captures. The [historical GPL license](licenses/GPL-3.0-legacy.txt) applies to this release, alongside applicable third-party notices. Previous changes are recorded in [2.0 release notes](release-2.0.md).

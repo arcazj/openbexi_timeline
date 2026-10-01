@@ -130,25 +130,32 @@ public final class TimelineConfigFiles {
             JSONTokener parser = new JSONTokener(text, new JSONParserConfiguration().withStrictMode().withMaxNestingDepth(100));
             JSONObject model = new JSONObject(parser);
             if (parser.nextClean() != 0) throw new ApiException(422, "Unexpected content after the model JSON.");
-            if (model.has("dataSource")) models.validate(model);
-            else {
-                legacySchema.validate(model);
-                TimelineModels.validateRendering(model);
-                Set<String> names = new HashSet<>();
-                for (Object item : model.getJSONArray("bands")) if (!names.add(((JSONObject)item).getString("name")))
-                    throw new ApiException(422, "Band names must be unique.");
-            }
+            validateModel(model);
             return model.toMap();
         } catch (ApiException e) { throw e; }
         catch (ValidationException e) { throw new ApiException(422, String.join("; ", e.getAllMessages())); }
         catch (RuntimeException e) { throw new ApiException(422, "Invalid " + input.getString("kind") + " document: " + e.getMessage()); }
     }
-    private static Object yaml(String text) {
+    private void validateModel(JSONObject model) {
+        if (model.has("dataSource")) models.validate(model);
+        else {
+            legacySchema.validate(model);
+            TimelineModels.validateRendering(model);
+            Set<String> names = new HashSet<>();
+            for (Object item : model.getJSONArray("bands")) if (!names.add(((JSONObject)item).getString("name")))
+                throw new ApiException(422, "Band names must be unique.");
+        }
+    }
+    private Object yaml(String text) {
         LoaderOptions options = new LoaderOptions();
         options.setAllowDuplicateKeys(false); options.setMaxAliasesForCollections(50);
         options.setNestingDepthLimit(40); options.setCodePointLimit(MAX_BYTES);
         Object value = new Yaml(new SafeConstructor(options)).load(text);
         if (!(value instanceof Map<?,?> map)) throw new ApiException(422, "YAML configuration must contain one mapping document.");
+        if(map.containsKey("params") && map.containsKey("bands")) {
+            validateModel(new JSONObject(map));
+            return value;
+        }
         if (map.get("model") != null && !(map.get("model") instanceof String)) throw new ApiException(422, "YAML model must be a path string or null.");
         if (map.containsKey("data_sources")) {
             if (!(map.get("data_sources") instanceof List<?> sources)) throw new ApiException(422, "data_sources must be a list.");
@@ -165,7 +172,7 @@ public final class TimelineConfigFiles {
                 if (source.get("render") instanceof Map<?,?> render) strings(render, "source.render", "color", "textColor", "dateColor", "alternateColor");
             }
         } else if (!(map.containsKey("model") || map.containsKey("server") || map.containsKey("snapshot") || map.containsKey("apiVersion") || map.containsKey("rules"))) {
-            throw new ApiException(422, "Unsupported YAML type. Use a source, snapshot/server, deployment, or metrics configuration.");
+            throw new ApiException(422, "Unsupported YAML type. Use a timeline model, source, snapshot/server, deployment, or metrics configuration.");
         }
         if (map.containsKey("server")) {
             if (!(map.get("server") instanceof Map<?,?> server)) throw new ApiException(422, "server must be a mapping.");

@@ -46,7 +46,9 @@ try {
     for(const {file,bytes} of payload) {
         const destination=path.join(bundle,file);await fs.mkdir(path.dirname(destination),{recursive:true});await fs.writeFile(destination,bytes);
     }
-    const manifest={version:pkg.version,license:'Existing LICENSE and individual file notices apply',
+    const manifest={version:pkg.version,license:pkg.license,
+        licenseFile:'LICENSE',thirdPartyNotices:'docs/third-party-notices.md',
+        priorLicenseFile:'docs/licenses/GPL-3.0-legacy.txt',
         files:payload.map(({file,bytes,sha256})=>({file,bytes:bytes.length,sha256}))};
     await fs.writeFile(path.join(bundle,'SOURCE-MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
     const archive=path.join(dist,name+'-source.tar.gz');

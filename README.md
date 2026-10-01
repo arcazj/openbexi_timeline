@@ -48,4 +48,6 @@ Explore the [gallery](https://arcazj.github.io/openbexi_timeline/) in your brows
 
 ## License
 
-See the [GPL license](LICENSE) and [third-party notices](docs/third-party-notices.md).
+See the [license](LICENSE) for paid commercial use and free-use exemptions.
+The [licensing guide](docs/commercial-licensing.md) explains eligibility and contact
+details. [Third-party notices](docs/third-party-notices.md) also apply.

@@ -3,13 +3,32 @@
 Open **Settings → Edit models → Model and YAML editor** in any timeline. The editor opens
 `openbexi_timeline_model.html` with that timeline's model and data source.
 You can also open the editor directly and choose any of the seven public demos.
+See the [desktop, narrow and phone views](ui/model-editor/README.md).
 
 ## Edit and preview
 
-The **Properties** tab provides color pickers, choices, numeric inputs, toggles,
-and controls to add, remove or reorder array items. Use **Add optional property**
-to expose a setting that currently uses its default. Search the form with
-**Find a property**. **Advanced text** edits the same JSON or YAML document.
+The form groups work into **Overview**, **Data**, **Appearance**, **Filters** and
+**Access**. It provides color pickers, choices, numeric inputs, toggles, and
+controls to add, remove or reorder array items. Use **Add optional property** to
+expose a setting that currently uses its default. Search with **Find a property**.
+**Advanced text** edits the same JSON or YAML draft.
+
+Managed model documents require that model's administrator role. Open the editor
+with `?modelId=<id>` and connect using your user token. Access controls, saved
+filters and configuration history use separate server resources. See
+[model access](model-access.md) for setup and role boundaries. Local example
+copies retain import, preview and export.
+
+Selecting a workspace model opens its saved configuration. **Save to server**
+updates that model with its current revision check; an intervening server edit
+leaves your draft intact and asks you to reconcile it. Use the **Managed model**
+entry in Open document to reload the current server version. Saved filters share
+the dataset revision but remain separate from configuration edits.
+
+Overview lists saved model versions. **Open as draft** opens a historical
+configuration as a local copy. **Save as server copy** stores it as a separate
+scoped configuration document; it does not replace the active managed model.
+There is no automatic rollback or deployment action.
 
 **Live preview** uses the application's actual renderer in an isolated frame.
 Valid edits refresh it automatically after a short typing delay. Invalid edits
@@ -40,6 +59,20 @@ which preserves legacy extension keys. Both accept optional `rendering` settings
 See the [rendering inventory](model-rendering-inventory.md) for supported properties,
 defaults, precedence and the configuration intentionally retained in code.
 
+Event, session and activity JSON metadata is a fixed contract. Configuration,
+access and AI changes must not add fields or reshape items; see the
+[compatibility rule](event-session-contract.md).
+
+## Optional AI
+
+Connect as a model administrator to use a configured AI provider. Ask for an
+explanation, a generated configuration, or a repair. A vision-capable model can
+use a dropped timeline image as a rendering reference. Review the proposed
+changes and preview before accepting them into the draft; saving remains separate.
+Cancellation, failure and invalid candidates retain the existing draft. Provider
+keys stay on the server. Model JSON/YAML is supported; source and deployment YAML
+remain manual. See [AI setup and capabilities](ai-assistance.md).
+
 ## Documents and YAML
 
 - Create a model or source YAML draft, import a file, or duplicate an example.
@@ -48,7 +81,8 @@ defaults, precedence and the configuration intentionally retained in code.
 - Export downloads the current validated document. It does not overwrite the source.
 - YAML form edits preserve comments, unrelated keys and document structure. Edit
   anchored or aliased values in Advanced text so their shared meaning stays explicit.
-- A YAML preview renders its referenced model. Connection, permission, converter and
+- Model YAML with `params` and `bands` can be validated, previewed and saved directly.
+  Source YAML previews its referenced model. Connection, permission, converter and
   deployment changes take effect in the server, so the editor reports restart requirements.
 
 On GitHub Pages, use local import, preview and export. Server CRUD is available when
@@ -74,6 +108,9 @@ $env:OPENBEXI_CONFIG_ROOTS = 'C:\projects\openbexi_timeline\models;C:\projects\o
 ```
 
 All file listing, reading and mutation requires administrator authentication.
+The global file API requires a system administrator. Model administrators use
+isolated `/api/v1/models/{id}/config-files` resources and cannot edit unrelated
+models or shared deployment roots.
 The public `/openbexi_timeline/config` response remains limited to model and data
 URLs. Registered files appear under server-issued IDs; the API does not accept
 arbitrary filesystem paths from the browser.

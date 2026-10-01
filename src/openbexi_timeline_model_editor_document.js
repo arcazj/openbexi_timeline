@@ -24,6 +24,20 @@ export function parseEditorDocument(text, kind = 'model') {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('The document root must be an object.');
     return {value, ast};
 }
+/** Editor drafts may carry legacy records, but configuration edits never rewrite them. */
+export function assertRecordsUnchanged(before, after, path = []) {
+    if (!before || typeof before !== 'object') before={};
+    for (const [key, value] of Object.entries(before)) {
+        const nextPath = [...path, key];
+        if (['events', 'records', 'activities'].includes(key) && Array.isArray(value)) {
+            if (JSON.stringify(value) !== JSON.stringify(after?.[key])) throw new Error(`Timeline records are immutable in this editor (${nextPath.join('.')}). Edit configuration only.`);
+        } else if (value && typeof value === 'object') assertRecordsUnchanged(value, after?.[key], nextPath);
+    }
+    for (const [key, value] of Object.entries(after || {})) {
+        if (['events', 'records', 'activities'].includes(key) && Array.isArray(value) && !Array.isArray(before[key])) throw new Error('AI and configuration edits cannot introduce timeline records.');
+        if((!before[key] || typeof before[key]!=='object') && value && typeof value==='object')assertRecordsUnchanged({},value,[...path,key]);
+    }
+}
 
 // YAML nodes are edited in place so comments, unknown keys, anchors and key order survive.
 export class EditorDocument {
@@ -36,6 +50,7 @@ export class EditorDocument {
     remember() { this.history.push(this.text); if (this.history.length > 100) this.history.shift(); this.future = []; }
     replace(text, remember = true) {
         const parsed = parseEditorDocument(text, this.kind);
+        assertRecordsUnchanged(this.value, parsed.value);
         if (remember && this.text !== text) this.remember();
         this.text = text; this.value = parsed.value; this.ast = parsed.ast;
         return this.value;
@@ -67,7 +82,9 @@ export class EditorDocument {
         if (this.ast) {
             const node = this.ast.getIn(path,true);
             if (!isSeq(node)) throw new Error('This YAML sequence must be reordered in Advanced text.');
-            const [item] = node.items.splice(from,1); node.items.splice(to,0,item); this.replace(this.ast.toString());
+            const previous=this.text;
+            const [item] = node.items.splice(from,1); node.items.splice(to,0,item);
+            try {this.replace(this.ast.toString());} catch(error) {this.replace(previous,false);throw error;}
         } else { const values = clone(sequence); values.splice(to,0,values.splice(from,1)[0]); this.mutate(path,values); }
     }
     undo() { if (!this.history.length) return; const previous=this.history.pop(); this.future.push(this.text); this.replace(previous,false); }

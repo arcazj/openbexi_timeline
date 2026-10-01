@@ -1,0 +1,699 @@
+{
+  "baseline": "2.3.2 existing item representations; do not regenerate to accept 2.4 metadata changes.",
+  "cases": [
+    {
+      "name": "legacy events, sessions and nested activities",
+      "source": {},
+      "input": {
+        "dateTimeFormat": "iso8601",
+        "events": [
+          {
+            "id": "session-a",
+            "start": "2026-10-01T10:00:00.000Z",
+            "end": "2026-10-01T12:00:00.000Z",
+            "data": {
+              "title": "Session",
+              "kind": "session",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "render": {
+              "color": "#123456",
+              "custom": {
+                "show": true
+              }
+            },
+            "extra": {
+              "preserve": [
+                1,
+                2
+              ]
+            },
+            "activities": [
+              {
+                "id": "activity-a",
+                "start": "2026-10-01T10:30:00.000Z",
+                "data": {
+                  "title": "Activity",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "render": {
+                  "size": 3
+                }
+              },
+              {
+                "id": "subsession-a",
+                "start": "2026-10-01T11:00:00.000Z",
+                "end": "2026-10-01T11:30:00.000Z",
+                "data": {
+                  "title": "Nested duration",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "activities": []
+              }
+            ]
+          },
+          {
+            "id": "event-a",
+            "start": "2026-10-01T14:00:00.000Z",
+            "data": {
+              "title": "Point event",
+              "kind": "event",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "render": {
+              "color": "#abcdef"
+            },
+            "nullable": null
+          }
+        ]
+      },
+      "expectedRenderer": {
+        "dateTimeFormat": "iso8601",
+        "events": [
+          {
+            "id": "session-a",
+            "start": "2026-10-01T10:00:00.000Z",
+            "data": {
+              "title": "Session",
+              "kind": "session",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "extra": {
+                "preserve": [
+                  1,
+                  2
+                ]
+              },
+              "description": "",
+              "namespace": ""
+            },
+            "namespace": "",
+            "render": {
+              "color": "#123456",
+              "custom": {
+                "show": true
+              }
+            },
+            "end": "2026-10-01T12:00:00.000Z",
+            "activities": [
+              {
+                "id": "activity-a",
+                "start": "2026-10-01T10:30:00.000Z",
+                "data": {
+                  "title": "Activity",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  },
+                  "description": "",
+                  "namespace": ""
+                },
+                "namespace": "",
+                "render": {
+                  "size": 3
+                }
+              },
+              {
+                "id": "subsession-a",
+                "start": "2026-10-01T11:00:00.000Z",
+                "data": {
+                  "title": "Nested duration",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  },
+                  "description": "",
+                  "namespace": ""
+                },
+                "namespace": "",
+                "render": {},
+                "end": "2026-10-01T11:30:00.000Z",
+                "activities": []
+              }
+            ]
+          },
+          {
+            "id": "event-a",
+            "start": "2026-10-01T14:00:00.000Z",
+            "data": {
+              "title": "Point event",
+              "kind": "event",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "nullable": null,
+              "description": "",
+              "namespace": ""
+            },
+            "namespace": "",
+            "render": {
+              "color": "#abcdef"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "flat snapshot records retain existing metadata and parent links",
+      "source": {
+        "format": "json",
+        "recordsPath": "records"
+      },
+      "input": {
+        "format": "timeline-snapshot",
+        "formatVersion": 1,
+        "manifest": {
+          "workspaceId": "example"
+        },
+        "models": [],
+        "filters": [],
+        "records": [
+          {
+            "id": "record-a",
+            "workspaceId": "example",
+            "sourceId": "manual",
+            "kind": "session",
+            "parentSessionId": null,
+            "start": "2026-10-01T10:00:00.000Z",
+            "end": "2026-10-01T12:00:00.000Z",
+            "originalStart": null,
+            "originalEnd": null,
+            "title": "Session",
+            "data": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "render": {
+              "color": "#123456"
+            },
+            "extensions": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "groupIds": [],
+            "tags": [
+              "existing"
+            ],
+            "order": 1,
+            "schemaId": null,
+            "schemaVersion": null,
+            "version": 1,
+            "createdAt": "2026-10-01T09:00:00.000Z",
+            "createdBy": "example",
+            "updatedAt": "2026-10-01T09:00:00.000Z",
+            "updatedBy": "example",
+            "deletedAt": null
+          },
+          {
+            "id": "child-a",
+            "workspaceId": "example",
+            "sourceId": "manual",
+            "kind": "event",
+            "parentSessionId": "record-a",
+            "start": "2026-10-01T10:30:00.000Z",
+            "end": null,
+            "title": "Activity",
+            "data": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "render": {},
+            "extensions": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "version": 1
+          }
+        ]
+      },
+      "expectedRenderer": {
+        "dateTimeFormat": "iso8601",
+        "events": [
+          {
+            "id": "record-a",
+            "start": "2026-10-01T10:00:00.000Z",
+            "data": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "workspaceId": "example",
+              "sourceId": "manual",
+              "kind": "session",
+              "parentSessionId": null,
+              "originalStart": null,
+              "originalEnd": null,
+              "title": "Session",
+              "extensions": {
+                "custom": {
+                  "nullable": null,
+                  "number": 3,
+                  "boolean": false,
+                  "nested": {
+                    "list": [
+                      "x",
+                      2,
+                      null,
+                      {
+                        "keep": "yes"
+                      }
+                    ]
+                  }
+                }
+              },
+              "groupIds": [],
+              "tags": [
+                "existing"
+              ],
+              "order": 1,
+              "schemaId": null,
+              "schemaVersion": null,
+              "version": 1,
+              "createdAt": "2026-10-01T09:00:00.000Z",
+              "createdBy": "example",
+              "updatedAt": "2026-10-01T09:00:00.000Z",
+              "updatedBy": "example",
+              "description": "",
+              "namespace": "manual"
+            },
+            "namespace": "manual",
+            "render": {
+              "color": "#123456"
+            },
+            "end": "2026-10-01T12:00:00.000Z"
+          },
+          {
+            "id": "child-a",
+            "start": "2026-10-01T10:30:00.000Z",
+            "data": {
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "workspaceId": "example",
+              "sourceId": "manual",
+              "kind": "event",
+              "parentSessionId": "record-a",
+              "title": "Activity",
+              "extensions": {
+                "custom": {
+                  "nullable": null,
+                  "number": 3,
+                  "boolean": false,
+                  "nested": {
+                    "list": [
+                      "x",
+                      2,
+                      null,
+                      {
+                        "keep": "yes"
+                      }
+                    ]
+                  }
+                }
+              },
+              "version": 1,
+              "description": "",
+              "namespace": "manual"
+            },
+            "namespace": "manual",
+            "render": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "numeric and uncertain source values",
+      "source": {
+        "time": {
+          "kind": "numeric",
+          "unit": "Ma",
+          "direction": -1,
+          "millisecondsPerUnit": 31557600000,
+          "approximatePrefixes": [
+            "?"
+          ]
+        }
+      },
+      "input": {
+        "events": [
+          {
+            "id": "numeric-a",
+            "start": "?70",
+            "end": 60,
+            "data": {
+              "title": "Numeric session",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "render": {
+              "color": "#abcdef"
+            },
+            "activities": [
+              {
+                "id": "numeric-child",
+                "start": 65,
+                "data": {
+                  "title": "Numeric event",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectedRenderer": {
+        "dateTimeFormat": "iso8601",
+        "events": [
+          {
+            "id": "numeric-a",
+            "start": "1899-12-31T12:00:00.000Z",
+            "data": {
+              "title": "Numeric session",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "description": "",
+              "namespace": "",
+              "startValue": "?70",
+              "endValue": 60
+            },
+            "namespace": "",
+            "render": {
+              "color": "#abcdef"
+            },
+            "end": "1910-01-01T00:00:00.000Z",
+            "activities": [
+              {
+                "id": "numeric-child",
+                "start": "1904-12-31T18:00:00.000Z",
+                "data": {
+                  "title": "Numeric event",
+                  "custom": {
+                    "nullable": null,
+                    "number": 3,
+                    "boolean": false,
+                    "nested": {
+                      "list": [
+                        "x",
+                        2,
+                        null,
+                        {
+                          "keep": "yes"
+                        }
+                      ]
+                    }
+                  },
+                  "description": "",
+                  "namespace": "",
+                  "startValue": 65
+                },
+                "namespace": "",
+                "render": {}
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "BCE source dates and unknown metadata",
+      "source": {},
+      "input": {
+        "events": [
+          {
+            "id": "bce-a",
+            "start": "500 BCE",
+            "data": {
+              "title": "Ancient point",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              }
+            },
+            "originalLabel": "500 BCE"
+          }
+        ]
+      },
+      "expectedRenderer": {
+        "dateTimeFormat": "iso8601",
+        "events": [
+          {
+            "id": "bce-a",
+            "start": "-000499-01-01T00:00:00.000Z",
+            "data": {
+              "title": "Ancient point",
+              "custom": {
+                "nullable": null,
+                "number": 3,
+                "boolean": false,
+                "nested": {
+                  "list": [
+                    "x",
+                    2,
+                    null,
+                    {
+                      "keep": "yes"
+                    }
+                  ]
+                }
+              },
+              "originalLabel": "500 BCE",
+              "description": "",
+              "namespace": ""
+            },
+            "namespace": "",
+            "render": {}
+          }
+        ]
+      }
+    }
+  ]
+}

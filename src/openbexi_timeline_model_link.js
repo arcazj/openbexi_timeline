@@ -1,6 +1,18 @@
 const root = new URL('../', import.meta.url);
 const pendingKey = (modelPath, instanceId) => 'openbexi-model-apply:' + location.href + ':' + instanceId + ':' + (modelPath || '$default');
 
+/** Infer a protected editor context from an API model URL without touching item data. */
+export function managedModelId(timeline) {
+    if (typeof timeline.modelId === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(timeline.modelId)) return timeline.modelId;
+    const path = timeline.modelPath || timeline.demoContext?.modelURL;
+    if (!path) return null;
+    try {
+        const url = new URL(path, document.baseURI);
+        if (url.origin !== location.origin) return null;
+        return url.pathname.match(/\/api\/v1\/models\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/?$/)?.[1] || null;
+    } catch { return null; }
+}
+
 /** Stage an explicitly applied draft for this instance's next normal startup. */
 export function stageEditorModel(timeline, model) {
     timeline.validateModel(model, 'Editor draft');
@@ -21,9 +33,12 @@ export function takeEditorModel(modelPath, fallback, instanceId) {
 }
 
 export function openModelEditor(timeline) {
+    if (timeline.modelAccess?.permissions?.admin === false) return;
     const context = 'openbexi-model-editor:' + crypto.randomUUID();
     const url = new URL('openbexi_timeline_model.html', root);
     const modelPath = timeline.modelPath || timeline.demoContext?.modelURL;
+    const modelId = managedModelId(timeline);
+    if (modelId) url.searchParams.set('modelId', modelId);
     if (modelPath) url.searchParams.set('model', new URL(modelPath, document.baseURI).href);
     const value = {model:timeline.modelDocument, modelPath, source:timeline.modelSource,
         dataset:timeline.demoContext?.datasetURL || timeline.localSource?.url,

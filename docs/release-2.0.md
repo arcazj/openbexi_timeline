@@ -2,8 +2,10 @@
 
 **Current build: 2.0.0.** This release includes responsive views,
 buffered navigation, complete descriptors and connected diagnostics.
-The commercial licensing plan is a [draft](commercial-licensing.md); the existing
-[license](../LICENSE) remains in force.
+Version 2.0 was distributed under the
+[historical GPL license](licenses/GPL-3.0-legacy.txt). Commercial licensing was
+still a proposal at that release; see the [current licensing guide](commercial-licensing.md)
+for the later transition.
 
 ## Changes
 
@@ -151,6 +153,6 @@ toolbar, centered Overview, navigation, descriptor and server-diagnostics follow
 [the implementation prompt](../prompt4auto_scale.md). Planned connected resource
 browsing and transactional YAML/model editing (phases 5–6) remain separate work.
 There is no payment service, paid support commitment, or license enforcement.
-The licensing draft lists the ownership, contact, and legal decisions needed for
-the requested future commercial offering. Version 2.0 is distributed under the
-existing license; the proposed separate commercial terms are not adopted.
+At the time of version 2.0, ownership, contact and commercial terms remained
+unresolved. Version 2.0 was distributed under GPL; later commercial terms do
+not replace the rights granted with those copies.

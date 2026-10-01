@@ -1,0 +1,21 @@
+{
+  "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
+  "jsonSchema": "passed (Draft 2020-12, v1 core + v2 semantics)",
+  "hbdsServerValidator": "passed",
+  "hbdsSemanticValidator": "passed",
+  "domainReferences": "passed",
+  "existingTimelineImporter": "passed (legacy nested and snapshot flat examples preserve IDs and activity parent relationships)",
+  "existingModelSchema": "passed",
+  "exampleYamlRoundTrip": "passed",
+  "counts": {
+    "classes": 26,
+    "hyperclasses": 4,
+    "attributes": 191,
+    "links": 44,
+    "memberships": 26,
+    "inheritance": 2,
+    "objects": 3,
+    "objectLinks": 1
+  },
+  "limitation": "These checks validate design artifacts, not future application enforcement of permissions or licensing."
+}

@@ -70,3 +70,18 @@ settings for your installation. The static demo gallery needs no deployment YAML
 Both Java launchers serve static files through an explicit public-asset allowlist. Browser modules, dependency assets, models, the catalog, `json/test-data`, documentation, schemas, and icons remain public. Repository internals, deployment YAML, arbitrary JSON files, Java sources, build output, dotfiles, and directory listings are unavailable. Symlinks cannot expose an unpublished file or escape the document root. The two existing browser view-test files remain available; other tests and developer tools are linked through GitHub. Add new public asset locations to `PublicAssetServlet` deliberately.
 
 Keep writable API data outside the static document root, provide tokens through environment variables or the deployment's secret manager, and terminate TLS at a trusted reverse proxy. Never place credentials in shared URLs or checked-in configuration. See [REST API deployment](rest-api.md) for role tokens and storage settings.
+
+Managed models can use explicit workspace membership and model grants. User
+tokens are stored as hashes; the system administrator service token remains a
+recovery credential. Legacy reader/writer service tokens apply only to unscoped
+models. Configure grants before distributing a managed model, and back up the
+private access state with its datasets. Model administrators can edit only their
+scoped configuration documents; global deployment documents require the system
+administrator. See [model access](model-access.md) for the boundaries and setup.
+
+AI providers are disabled until configured by the operator. Keys stay on the
+server, provider endpoints cannot be supplied by browser requests, and model
+administration plus a workspace AI entitlement are required for generation.
+Requests have input/output limits, timeouts and in-memory rate/concurrency limits.
+Provider proposals require user review and cannot mutate datasets. See
+[AI assistance](ai-assistance.md) for configuration and privacy details.

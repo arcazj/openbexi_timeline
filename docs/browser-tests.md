@@ -29,6 +29,12 @@ npx playwright show-report
 
 - Every catalog entry loads its expected number of records without uncaught errors
   and renders actual WebGL geometry.
+- The Model and YAML editor covers all public examples, five editing areas,
+  keyboard and phone layouts, YAML preservation, scoped access and filters,
+  conditional model saves, version history, and AI preview/accept/undo/cancel.
+  Browser API fixtures test failures and stale writes deterministically.
+  After `mvn verify`, `npm run test:integration` also exercises a real local Java
+  server and mock AI provider with isolated synthetic data and credentials.
 - Search, previous/next activity, view locking and Resync exercise local and
   connected records. Selected activities glow without changing their size;
   compact 3D labels remain readable through rotation and resizing.
