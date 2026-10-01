@@ -405,5 +405,7 @@ test('Auto clustering reduces drawing rows while preserving original records and
         r.explorer.expandCluster(cluster);await waitFor(()=>!r.pending);
         assert.ok(cluster.keys.every(key=>rows().some(record=>record.matchKey===key)));
         assert.equal(r.snapshot.counts.eligible.events,30);
+        assert.match(r.explorer.notice.textContent,/Expanded \d+ events/);
+        assert.equal(r.explorer.notice.hidden,false);
     } finally {f.close();}
 });

@@ -114,6 +114,10 @@ test('OrbitControls rotate, pan and zoom independently; perspective and appearan
     await expect.poll(async()=>(await state(page)).camera.position).not.toEqual(panned.camera.position);
     const after=await state(page);
     expect(after.range).toEqual(before.range);expect(after.count).toBe(before.count);expect(after.selected).toBe(before.selected);
+    const canvas=page.locator('.ob_paged_frame canvas');await expect(canvas).toBeFocused();
+    const viewport=page.viewportSize();
+    await page.setViewportSize({width:viewport.width-40,height:viewport.height});await ready(page);
+    await expect(canvas).toBeFocused();
     await page.keyboard.press('Escape');
     await expect.poll(async()=>(await state(page)).adjusting).toBe(false);
     await page.getByAltText('Settings',{exact:true}).click();

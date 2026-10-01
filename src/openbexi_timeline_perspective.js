@@ -90,6 +90,7 @@ export class TimelinePerspective {
 
     detach(capture=true) {
         if(capture)this.capture();
+        this.restoreFocus=Boolean(this.canvas && document.activeElement===this.canvas);
         const scene=this.timeline.ob_scene?.[this.index ?? 0];
         if(scene)scene.environment=null;
         this.controls?.dispose();this.controls=null;
@@ -100,6 +101,7 @@ export class TimelinePerspective {
     attach(index) {
         this.index=index;
         const t=this.timeline,scene=t.ob_scene[index],camera=scene.ob_camera;
+        const restoreFocus=this.restoreFocus;this.restoreFocus=false;
         scene.ob_renderer.toneMapping=camera.isPerspectiveCamera?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
         if(!camera.isPerspectiveCamera) {this.adjusting=false;this.syncInteraction();this.syncFields();return;}
         const {center,scale}=this.basis();
@@ -122,11 +124,15 @@ export class TimelinePerspective {
         controls.minPolarAngle=.02;controls.maxPolarAngle=Math.PI-.02;
         controls.rotateSpeed=.65*renderingFor(t).camera.rotationSensitivity/.002;controls.update();
         controls.addEventListener('change',()=>{this.cameraChanged=true;this.capture();this.syncFields();t.ob_render(index);});
-        controls.addEventListener('start',()=>{scene.cancelPan?.();t.ob_results?.beginGesture();});
+        controls.addEventListener('start',()=>{
+            this.canvas.focus({preventScroll:true});
+            scene.cancelPan?.();t.ob_results?.beginGesture();
+        });
         controls.addEventListener('end',()=>{this.capture();t.ob_results?.endGesture();});
         this.canvas.tabIndex=0;
         this.escape=event=>{if(event.key==='Escape' && this.adjusting){event.preventDefault();this.setAdjusting(false);}};
         this.canvas.addEventListener('keydown',this.escape);
+        if(restoreFocus)this.canvas.focus({preventScroll:true});
         // One adjustable light rig replaces per-mesh legacy lights in 3D.
         scene.traverse(object=>{if(object.isLight)object.visible=false;});
         const ambient=t.track[index](new THREE.AmbientLight()),directional=t.track[index](new THREE.DirectionalLight());
