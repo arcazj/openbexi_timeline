@@ -28,3 +28,16 @@ The packaging command rejects symlinks and runtime artifacts, strips local file
 owner names from archive metadata, and records checksums. Review that list when
 adding files; it intentionally does not discover arbitrary local files. Build a
 distribution from this archive rather than copying an entire development tree.
+
+Model grants, user token hashes, entitlements, saved model configurations and AI
+provider configuration belong in the private API data directory outside the web
+root. Provider credentials are read from server environment variables. The editor
+keeps an entered API token in memory; it does not export it with a model or save
+it to browser storage.
+
+AI is optional. Only an explicit request sends the selected model configuration,
+prompt and optional image to the configured provider. Review those inputs before
+sending; do not include private event content or credentials. Requests and
+responses are not persisted by this AI service, but the selected provider has
+its own retention policy. See [AI assistance](ai-assistance.md). Event and session
+payloads are never extended with access, licensing or AI metadata.

@@ -5,7 +5,15 @@ async function ready(page) {
     await expect(page.locator('#demo-status')).toHaveAttribute('data-state', 'ready');
     await expect.poll(() => page.evaluate(async () => {
         const t = await (await import('/src/openbexi_demo.js')).demoReady;
-        return !t.ob_results.pending && t.ob_viewport.headerHeight === t.ob_timeline_header.offsetHeight;
+        const viewport=t.ob_viewport,scene=t.ob_scene[0],camera=scene.ob_camera;
+        const panel=t.ob_timeline_right_panel,panelOpen=Boolean(panel?.children.length && panel.style.visibility!=='hidden');
+        const availableWidth=innerWidth-(viewport.panelOpen && !viewport.overlay?viewport.sideWidth:0);
+        // A resize is debounced before results become pending; unchanged header
+        // height alone can report readiness while the previous camera is active.
+        return !t.ob_results.pending && viewport.headerHeight === t.ob_timeline_header.offsetHeight &&
+            viewport.panelOpen === panelOpen && viewport.width === availableWidth && viewport.height === innerHeight &&
+            scene.width === viewport.plotWidth &&
+            (!camera.isPerspectiveCamera || Math.abs(camera.aspect-scene.width/scene.ob_height)<1e-6);
     })).toBe(true);
 }
 
@@ -58,8 +66,8 @@ test('Perspective preserves complete readable plot bounds without black areas af
     for (const width of [page.viewportSize().width, 960, 640]) {
         await page.setViewportSize({width,height:700}); await ready(page);
         const state=await page.evaluate(async () => {
-            const t=await (await import('/src/openbexi_demo.js')).demoReady, s=t.ob_scene[0], c=s.ob_camera;
-            const {Vector3}=await import('three');
+            const [{demoReady},{Vector3}]=await Promise.all([import('/src/openbexi_demo.js'),import('three')]);
+            const t=await demoReady, s=t.ob_scene[0], c=s.ob_camera;
             t.ob_render(0);
             const corners=[[-s.width/2,0],[-s.width/2,s.ob_height],[s.width/2,0],[s.width/2,s.ob_height]]
                 .map(([x,y])=>new Vector3(x,y,24).project(c).toArray());

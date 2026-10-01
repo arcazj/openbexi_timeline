@@ -28,6 +28,10 @@ export function createTimelineSettings(timeline, index) {
     const models = section('models', '1. Edit models', true);
     models.append(node('p', 'Edit the active model and YAML configuration with a live preview.'));
     const editor = button('Model and YAML editor', () => openModelEditor(timeline)); editor.className = 'ob_model_editor_launch';
+    if (timeline.modelAccess?.permissions?.admin === false) {
+        editor.disabled = true;
+        editor.title = 'Only this model’s administrators can edit its configuration.';
+    }
     models.append(editor);
 
     const info = section('info', '2. Timeline info');

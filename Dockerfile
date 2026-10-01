@@ -23,6 +23,7 @@ COPY --from=java-build /build/target/runtime /opt/openbexi/runtime
 COPY --from=browser-dependencies /build/node_modules ./node_modules
 COPY *.html *.png favicon.ico README.md LICENSE ./
 COPY src/*.js ./src/
+COPY src/vendor ./src/vendor/
 COPY css ./css
 COPY json ./json
 COPY models ./models

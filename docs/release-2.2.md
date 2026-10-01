@@ -63,7 +63,7 @@ activity, 3D and the Settings editor. Local data and captures are excluded from
 the release. See the [browser testing guide](browser-tests.md).
 
 `npm run release:source` builds the 535-file reviewed source archive and SHA-256
-checksum from the explicit public-file manifest. The existing [GPL license](../LICENSE)
+checksum from the explicit public-file manifest. The [historical GPL license](licenses/GPL-3.0-legacy.txt)
 and [third-party notices](third-party-notices.md) apply, including the vendored
 YAML parser's ISC license. Previous changes are recorded in the
 [2.1 release notes](release-2.1.md).

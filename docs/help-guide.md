@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.3.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.4.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -120,6 +120,13 @@ groups remain distinct. Hover, keyboard focus, selected and disabled controls
 have clear visual states.
 
 ## Model and YAML editor
+
+The editor organizes work into Overview, Data, Appearance, Filters and Access,
+with an Advanced text view of the same draft. Managed configuration requires
+model administrator access. Optional AI can propose configuration from text or a
+timeline image; review changes before accepting them. Event/session item JSON
+metadata remains unchanged. See [model access](model-access.md),
+[AI assistance](ai-assistance.md), and the [item contract](event-session-contract.md).
 
 Open **Settings → Edit models → Model and YAML editor** to edit the current model with color
 pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes

@@ -1,5 +1,5 @@
 {
-  "version": "2.3.2",
+  "version": "2.4.0",
   "repository": "https://github.com/arcazj/openbexi_timeline",
   "sections": [
     {
@@ -77,6 +77,11 @@
           "label": "Architecture",
           "href": "docs/help-guide.html#architecture",
           "icon": "layers"
+        },
+        {
+          "label": "Model access and AI",
+          "href": "docs/model-access.md",
+          "icon": "book"
         },
         {
           "label": "Tests",

@@ -109,6 +109,33 @@ class TimelineConfigFilesTest {
         assertEquals(model, json(created, 201).getString("text"));
         assertEquals(model, Files.readString(temporary.resolve("data/config-files/legacy.json")));
     }
+    @Test void yamlModelDraftsSaveVerbatimAndInvalidReplacementsKeepThePreviousFile() throws Exception {
+        JSONObject model=new JSONObject(Files.readString(root.resolve("models/demos/monet.json")));
+        String yaml="# Generated AI draft; review before publishing\n"+new org.yaml.snakeyaml.Yaml().dump(model.toMap())+"# Keep this final comment\n";
+        HttpResponse<String> created=call("POST",null,admin,null,document("timeline-model.yaml","yaml",yaml));
+        JSONObject saved=json(created,201);String id=saved.getString("id");
+        assertEquals("yaml",saved.getString("kind"));assertEquals(yaml,saved.getString("text"));
+        assertEquals(yaml,Files.readString(temporary.resolve("data/config-files/timeline-model.yaml")));
+        JSONObject invalid=new JSONObject(model.toString());invalid.put("bands",new JSONArray());
+        String invalidYaml=new org.yaml.snakeyaml.Yaml().dump(invalid.toMap());
+        json(call("PUT",id,admin,tag(created),document("timeline-model.yaml","yaml",invalidYaml)),422);
+        assertEquals(yaml,json(call("GET",id,admin,null,null),200).getString("text"));
+        String changed=yaml.replace("Generated AI draft","Reviewed model draft");
+        HttpResponse<String> updated=call("PUT",id,admin,tag(created),document("timeline-model.yaml","yaml",changed));
+        assertEquals(changed,json(updated,200).getString("text"));
+        assertEquals(changed,Files.readString(temporary.resolve("data/config-files/timeline-model.yaml")));
+    }
+    @Test void legacyYamlModelsKeepExtensionsAndRejectDuplicateBandNames() throws Exception {
+        JSONObject model=new JSONObject(Files.readString(root.resolve("models/regular_timeline_earthquake.json")))
+                .put("futureExtension",new JSONObject().put("enabled",true));
+        String yaml="# Preserve this extension and model layout\n"+new org.yaml.snakeyaml.Yaml().dump(model.toMap());
+        HttpResponse<String> created=call("POST",null,admin,null,document("legacy-model.yaml","yaml",yaml));
+        String id=json(created,201).getString("id");
+        assertEquals(yaml,Files.readString(temporary.resolve("data/config-files/legacy-model.yaml")));
+        model.getJSONArray("bands").put(new JSONObject(model.getJSONArray("bands").getJSONObject(0).toString()));
+        json(call("PUT",id,admin,tag(created),document("legacy-model.yaml","yaml",new org.yaml.snakeyaml.Yaml().dump(model.toMap()))),422);
+        assertEquals(yaml,json(call("GET",id,admin,null,null),200).getString("text"));
+    }
     @Test void nonstandardJsonAndInvalidRenderingCombinationsAreRejectedBeforeSaving() throws Exception {
         String model = Files.readString(root.resolve("models/demos/monet.json"));
         for (String text : List.of(model.replace("\"params\"", "'params'"), model.replace("\"params\"", "params"),

@@ -1,23 +1,14 @@
 /**
- * This notice must be untouched at all times.
- *
- * Copyright (c) 2026 arcazj All rights reserved.
- *     OpenBEXI Timeline version 2.3.2
+ * Copyright (c) 2026 Jean-Christophe Arcaz.
+ *     OpenBEXI Timeline version 2.4.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
- *     This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 1 and 2
- * of the License, or (at your option) any later version.
+ * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
+ * in LICENSE. Commercial use requires an agreement unless a free-use exemption
+ * applies. Licensing contact: arcazj@gmail.com.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- * as long with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Prior GPL grants and third-party licenses remain applicable to the copies
+ * and components they cover. See LICENSE for scope and warranty terms.
  */
 
 import * as THREE from 'three';

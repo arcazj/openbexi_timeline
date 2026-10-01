@@ -85,7 +85,7 @@ public final class TimelineRepository {
                 .put("capabilities", new JSONObject().put("read", true).put("create", writable).put("update", writable).put("delete", writable))
                 .put("links", new JSONObject().put("self", "/api/v1/datasets/" + id).put("model", "/api/v1/models/" + id)
                         .put("events", "/api/v1/datasets/" + id + "/events").put("sessions", "/api/v1/datasets/" + id + "/sessions")
-                        .put("filters", "/api/v1/datasets/" + id + "/filters"));
+                        .put("filters", "/api/v1/models/" + id + "/filters"));
     }
     public static String etag(JSONObject dataset) {
         try {
@@ -97,6 +97,10 @@ public final class TimelineRepository {
         if (!etag(current).equals(expected)) throw new ApiException(412, "Dataset changed. Fetch its current ETag and retry your edit.");
     }
     public JSONObject create(JSONObject request) throws IOException {
+        return create(request,null);
+    }
+    @FunctionalInterface public interface CreationObserver { void beforePublish(JSONObject dataset) throws IOException; }
+    public JSONObject create(JSONObject request,CreationObserver observer) throws IOException {
         if (!Set.of("id", "title", "description", "sourceId", "model", "events").containsAll(request.keySet())) throw new ApiException(422, "Unknown dataset property.");
         if (request.has("sourceId") && (request.has("model") || request.has("events"))) throw new ApiException(422, "Choose a sourceId clone or a model and events, not both.");
         for (String key : List.of("id", "title", "description", "sourceId")) if (request.has(key) && !(request.get(key) instanceof String)) throw new ApiException(422, key + " must be a string.");
@@ -113,17 +117,27 @@ public final class TimelineRepository {
             }
             value.put("id", id).put("title", request.optString("title", value.optString("title", id)))
                     .put("description", request.optString("description", value.optString("description"))).put("readOnly", false);
-            validate(value); save(id, value); return value;
+            for(Object entry:value.getJSONArray("filters"))((JSONObject)entry).put("modelId",id);
+            validate(value);
+            if(observer!=null)observer.beforePublish(value);
+            save(id, value); return value;
         });
     }
     public JSONObject mutate(String id, String expected, UnaryOperator<JSONObject> edit) throws IOException {
+        return mutate(id,expected,edit,null);
+    }
+    @FunctionalInterface public interface ModelSaveObserver { void saved(JSONObject previousModel,JSONObject currentModel); }
+    public JSONObject mutate(String id, String expected, UnaryOperator<JSONObject> edit,ModelSaveObserver observer) throws IOException {
         validId(id);
         if (isPublic(id)) throw new ApiException(405, "Bundled datasets are read-only. Clone one with POST /api/v1/datasets to edit it.");
         return locked(id, () -> {
             JSONObject current = read(id); requireMatch(expected, current);
+            JSONObject previousModel=observer==null?null:TimelineRecords.copy(current.getJSONObject("model"));
             JSONObject next = edit.apply(current);
             if (next == null) Files.delete(storage.resolve(id + ".json"));
             else { validate(next); save(id, next); }
+            // Keep configuration history in the same per-dataset lock, including across server processes.
+            if(observer!=null && next!=null)observer.saved(previousModel,next.getJSONObject("model"));
             return next;
         });
     }

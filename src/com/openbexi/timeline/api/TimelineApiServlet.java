@@ -14,8 +14,13 @@ import java.util.*;
 public final class TimelineApiServlet extends HttpServlet {
     private TimelineRepository repository;
     private TimelineConfigFiles configFiles;
-    private Path root;
+    private TimelineAccessStore accessStore;
+    private TimelineAiService aiService;
+    private TimelineModelHistory modelHistory;
+    private Path root, storage;
+    private final Map<String,TimelineConfigFiles> modelConfigFiles = new java.util.concurrent.ConcurrentHashMap<>();
     private String adminToken, writeToken, readToken;
+    private String applicationVersion="unknown";
     private Set<String> corsOrigins;
     public TimelineApiServlet() {}
     public TimelineApiServlet(Path root, Path data, String admin, String writer, String reader) throws IOException {
@@ -34,7 +39,10 @@ public final class TimelineApiServlet extends HttpServlet {
         return System.getProperty(property, System.getenv(env) == null ? fallback : System.getenv(env));
     }
     private void configure(Path root, Path data, String admin, String writer, String reader, String origins) throws IOException {
-        this.root = root.toRealPath(); repository = new TimelineRepository(root, data);
+        this.root = root.toRealPath(); this.storage=data.toAbsolutePath().normalize(); repository = new TimelineRepository(root, data);
+        Path packageFile=this.root.resolve("package.json");
+        if(Files.isRegularFile(packageFile))applicationVersion=new JSONObject(Files.readString(packageFile)).optString("version","unknown");
+        accessStore = new TimelineAccessStore(data); aiService = new TimelineAiService(root,data); modelHistory=new TimelineModelHistory(data);
         String configured = setting("openbexi.api.configRoots", "OPENBEXI_CONFIG_ROOTS", "");
         List<Path> configurationRoots = configured.isBlank() ? List.of() : Arrays.stream(configured.split(java.util.regex.Pattern.quote(File.pathSeparator)))
                 .filter(value -> !value.isBlank()).map(Paths::get).toList();
@@ -50,18 +58,21 @@ public final class TimelineApiServlet extends HttpServlet {
     private static boolean matches(String actual, String expected) {
         return expected != null && MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8), actual.getBytes(StandardCharsets.UTF_8));
     }
-    private int role(HttpServletRequest request) {
+    private TimelineAccessStore.Principal principal(HttpServletRequest request) throws IOException {
         String header = request.getHeader("Authorization");
-        if (header == null) return 0;
+        if (header == null) return new TimelineAccessStore.Principal("anonymous",0);
         if (!header.startsWith("Bearer ")) throw new ApiException(401, "Use Bearer authentication.");
         String token = header.substring(7);
-        if (matches(token, adminToken)) return 3;
-        if (matches(token, writeToken)) return 2;
-        if (matches(token, readToken)) return 1;
-        throw new ApiException(401, "Invalid API credentials.");
+        if (matches(token, adminToken)) return new TimelineAccessStore.Principal("service-admin",3);
+        if (matches(token, writeToken)) return new TimelineAccessStore.Principal("service-writer",2);
+        if (matches(token, readToken)) return new TimelineAccessStore.Principal("service-reader",1);
+        return accessStore.authenticate(token);
     }
     private static void require(int role, int needed) {
         if (role < needed) throw new ApiException(role == 0 ? 401 : 403, "This operation requires " + (needed == 3 ? "administrator" : needed == 2 ? "writer" : "reader") + " access.");
+    }
+    private static void requireSystemAdmin(TimelineAccessStore.Principal principal) {
+        if(!principal.systemAdmin())throw new ApiException(principal.authenticated()?403:401,"This operation requires system administrator access.");
     }
     @Override protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
         com.openbexi.timeline.servlets.TimelineRequestLog diagnostics=com.openbexi.timeline.servlets.TimelineRequestLog.begin(request,response);
@@ -73,7 +84,7 @@ public final class TimelineApiServlet extends HttpServlet {
             String origin = request.getHeader("Origin");
             if (origin != null && corsOrigins.contains(origin)) {
                 response.setHeader("Access-Control-Allow-Origin", origin);
-                response.setHeader("Access-Control-Expose-Headers", "ETag, Location");
+                response.setHeader("Access-Control-Expose-Headers", "ETag, Location, X-OpenBEXI-History-Warning");
             }
             if (request.getMethod().equals("OPTIONS")) {
                 if (origin != null && !corsOrigins.contains(origin)) throw new ApiException(403, "Cross-origin API access is not configured for this origin.");
@@ -81,7 +92,7 @@ public final class TimelineApiServlet extends HttpServlet {
                 response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, If-Match, If-None-Match");
                 response.setStatus(204); return;
             }
-            route(request, response, role(request));
+            route(request, response, principal(request));
         } catch (ApiException e) { problem(request, response, e.status, e.getMessage()); }
         catch (JSONException | IllegalArgumentException e) { problem(request, response, 400, "Malformed JSON, parameter, or resource path."); }
         catch (Exception e) {
@@ -98,16 +109,52 @@ public final class TimelineApiServlet extends HttpServlet {
             case 400 -> "Bad Request"; case 401 -> "Unauthorized"; case 403 -> "Forbidden"; case 404 -> "Not Found";
             case 405 -> "Method Not Allowed"; case 409 -> "Conflict"; case 412 -> "Precondition Failed";
             case 413 -> "Content Too Large"; case 415 -> "Unsupported Media Type"; case 422 -> "Unprocessable Content";
-            case 428 -> "Precondition Required"; default -> "Internal Server Error";
+            case 428 -> "Precondition Required"; case 429 -> "Too Many Requests";
+            case 502 -> "Bad Gateway"; case 503 -> "Service Unavailable"; case 504 -> "Gateway Timeout"; default -> "Internal Server Error";
         }).put("status", status).put("detail", detail).put("instance", request.getRequestURI());
         if (!request.getMethod().equals("HEAD")) response.getWriter().write(body.toString());
     }
-    private void route(HttpServletRequest req, HttpServletResponse res, int role) throws IOException {
+    private void route(HttpServletRequest req, HttpServletResponse res, TimelineAccessStore.Principal principal) throws IOException {
+        int role=principal.serviceRole();
         String path = Optional.ofNullable(req.getPathInfo()).orElse("");
         String[] parts = path.replaceFirst("^/", "").split("/", -1);
         String method = req.getMethod(); boolean get = method.equals("GET") || method.equals("HEAD");
+        // A request owner can still stop an in-flight provider call after a grant or entitlement is revoked.
+        // The AI service checks the exact model/principal/request tuple; this cannot start or inspect generation.
+        if(parts.length==4 && parts[0].equals("models") && parts[2].equals("ai") && parts[3].equals("cancel")) {
+            if(!principal.authenticated())throw new ApiException(401,"Authenticate to cancel your AI request.");
+            if(!method.equals("POST"))methodNotAllowed(res,"POST");
+            JSONObject input=body(req);
+            if(!Set.of("requestId").containsAll(input.keySet()) || !(input.opt("requestId") instanceof String))throw new ApiException(422,"Provide a requestId string.");
+            send(req,res,200,aiService.cancel(TimelineRepository.validId(parts[1]),principal.id(),input.getString("requestId")),null);return;
+        }
+        if(parts.length==1 && parts[0].equals("me")) {
+            readOnly(get,res);if(!principal.authenticated())throw new ApiException(401,"Authenticate to inspect access.");
+            send(req,res,200,accessStore.me(principal),null);return;
+        }
+        if(parts[0].equals("access") && parts.length==2 && parts[1].equals("users")) {
+            requireSystemAdmin(principal);
+            if(get){send(req,res,200,new JSONObject().put("items",accessStore.users()),null);return;}
+            if(!method.equals("POST"))methodNotAllowed(res,"GET, HEAD, POST");
+            JSONObject input=body(req);String supplied=input.optString("token");
+            if(!supplied.isEmpty() && (matches(supplied,adminToken)||matches(supplied,writeToken)||matches(supplied,readToken)))throw new ApiException(409,"User credentials must differ from service credentials.");
+            send(req,res,201,accessStore.createUser(input),null);return;
+        }
+        if(parts[0].equals("workspaces")) {
+            requireSystemAdmin(principal);
+            if(parts.length==1){
+                if(get){send(req,res,200,new JSONObject().put("items",accessStore.workspaces()),null);return;}
+                if(!method.equals("POST"))methodNotAllowed(res,"GET, HEAD, POST");send(req,res,201,accessStore.createWorkspace(body(req)),null);return;
+            }
+            if(parts.length!=3 || !parts[2].equals("entitlement"))throw new ApiException(404,"Workspace resource not found.");
+            String workspace=TimelineRepository.validId(parts[1]);
+            JSONObject result;
+            if(get)result=accessStore.entitlement(workspace);
+            else {if(!method.equals("PUT"))methodNotAllowed(res,"GET, HEAD, PUT");result=accessStore.updateEntitlement(workspace,req.getHeader("If-Match"),body(req));}
+            send(req,res,200,result,TimelineRepository.etag(result));return;
+        }
         if (parts[0].equals("config-files")) {
-            require(role, 3);
+            requireSystemAdmin(principal);
             if (parts.length == 1) {
                 if (get) { send(req, res, 200, new JSONObject().put("items", configFiles.list()), null); return; }
                 if (!method.equals("POST")) methodNotAllowed(res, "GET, HEAD, POST");
@@ -132,7 +179,7 @@ public final class TimelineApiServlet extends HttpServlet {
         if (parts.length == 1 && (parts[0].isEmpty() || parts[0].equals("health"))) {
             readOnly(get, res);
             send(req, res, 200, new JSONObject().put("status", "ok").put("apiVersion", "1")
-                    .put("applicationVersion", "1.1").put("openapi", "/api/v1/openapi.json")
+                    .put("applicationVersion", applicationVersion).put("openapi", "/api/v1/openapi.json")
                     .put("datasets", "/api/v1/datasets").put("models", "/api/v1/models")
                     .put("writesConfigured", adminToken != null || writeToken != null), null); return;
         }
@@ -140,9 +187,24 @@ public final class TimelineApiServlet extends HttpServlet {
             readOnly(get, res); send(req, res, 200, new JSONObject(Files.readString(root.resolve("swagger/openapi-v1.json"))), null); return;
         }
         if (parts.length == 1 && (parts[0].equals("datasets") || parts[0].equals("models"))) {
-            if (get) { send(req, res, 200, new JSONObject().put("items", repository.list(role > 0)), null); return; }
+            if (get) {
+                JSONArray visible=new JSONArray();
+                for(Object entry:repository.list(principal.authenticated())) {
+                    JSONObject metadata=(JSONObject)entry;String modelId=metadata.getString("id");JSONObject access=accessStore.access(modelId,principal);
+                    if(repository.isPublic(modelId)||access.getJSONObject("permissions").getBoolean("read")) {
+                        if(parts[0].equals("models"))metadata.put("modelId",modelId).put("workspaceId",access.getString("workspaceId"))
+                                .put("role",access.getString("role")).put("permissions",access.getJSONObject("permissions")).put("scoped",access.getBoolean("scoped"));
+                        visible.put(metadata);
+                    }
+                }
+                send(req, res, 200, new JSONObject().put("items",visible), null); return;
+            }
             if (parts[0].equals("datasets") && method.equals("POST")) {
-                require(role, 3); JSONObject created = repository.create(body(req));
+                requireSystemAdmin(principal); JSONObject input=body(req);
+                JSONObject created = repository.create(input,value -> {
+                    if(accessStore.reservedModelId(value.getString("id")))throw new ApiException(409,"Reserved model identities cannot be reused. Choose a new ID.");
+                    if(input.has("sourceId"))accessStore.inheritModel(input.getString("sourceId"),value.getString("id"));
+                });
                 res.setHeader("Location", "/api/v1/datasets/" + created.getString("id"));
                 send(req, res, 201, repository.metadata(created), TimelineRepository.etag(created)); return;
             }
@@ -150,8 +212,47 @@ public final class TimelineApiServlet extends HttpServlet {
         }
         if (parts.length < 2 || !(parts[0].equals("datasets") || parts[0].equals("models"))) throw new ApiException(404, "Resource not found.");
         String id = TimelineRepository.validId(parts[1]);
-        if (!repository.isPublic(id)) require(role, 1);
+        if (!repository.isPublic(id)) accessStore.require(principal,id,"read");
         JSONObject dataset = repository.read(id);
+        JSONObject modelAccess=accessStore.access(id,principal);
+        JSONObject permissions=modelAccess.getJSONObject("permissions");
+        role=permissions.getBoolean("admin")?3:permissions.getBoolean("write")?2:permissions.getBoolean("read")?1:0;
+        if(parts[0].equals("models") && parts.length>=3) {
+            String resource=parts[2];
+            if(resource.equals("preview") && parts.length==3) {
+                accessStore.require(principal,id,"admin");readOnly(get,res);
+                send(req,res,200,new JSONObject().put("dateTimeFormat","iso8601").put("events",dataset.getJSONArray("events")),TimelineRepository.etag(dataset));return;
+            }
+            if(resource.equals("access") && parts.length==3) {
+                if(get) {send(req,res,200,modelAccess,TimelineAccessStore.etag(modelAccess));return;}
+                if(!method.equals("PUT"))methodNotAllowed(res,"GET, HEAD, PUT");
+                accessStore.require(principal,id,"admin");
+                if(repository.isPublic(id))throw new ApiException(405,"Clone a public example before assigning private access.");
+                JSONObject updated=accessStore.update(id,principal,req.getHeader("If-Match"),body(req));
+                send(req,res,200,accessStore.access(id,principal),TimelineAccessStore.etag(updated));return;
+            }
+            if(resource.equals("config-files")) {
+                accessStore.require(principal,id,"admin");
+                if(repository.isPublic(id))throw new ApiException(405,"Clone a public example before creating model documents.");
+                TimelineConfigFiles scoped=modelConfigFiles.get(id);
+                if(scoped==null){scoped=new TimelineConfigFiles(root,storage.resolve("config-files-models").resolve(id),List.of());modelConfigFiles.put(id,scoped);}
+                configurationRoute(req,res,parts,scoped,id);return;
+            }
+            if(resource.equals("ai") && parts.length==4) {
+                accessStore.require(principal,id,"admin");accessStore.requireFeature(id,"ai");
+                if(parts[3].equals("providers")){readOnly(get,res);send(req,res,200,aiService.providers(),null);return;}
+                if(!method.equals("POST"))methodNotAllowed(res,"POST");
+                JSONObject input=body(req),result;
+                if(parts[3].equals("generate"))result=aiService.generate(id,principal.id(),input);
+                else throw new ApiException(404,"AI resource not found.");
+                send(req,res,200,result,null);return;
+            }
+            if(resource.equals("versions") && (parts.length==3 || parts.length==4)) {
+                accessStore.require(principal,id,"admin");readOnly(get,res);
+                send(req,res,200,parts.length==3?modelHistory.list(id):modelHistory.read(id,parts[3]),null);return;
+            }
+            if(resource.equals("filters"))parts[0]="datasets";
+        }
         if (parts[0].equals("models")) {
             if (parts.length != 2) throw new ApiException(404, "Resource not found.");
             if (get) { send(req, res, 200, dataset.getJSONObject("model"), TimelineRepository.etag(dataset)); return; }
@@ -161,6 +262,9 @@ public final class TimelineApiServlet extends HttpServlet {
                 if (value.getJSONArray("events").length() > 0 && !TimelineRecords.axis(value.getJSONObject("model")).similar(TimelineRecords.axis(model)))
                     throw new ApiException(409, "A populated dataset's time axis cannot be reinterpreted. Create another dataset for a different axis.");
                 return value.put("model", repository.models.canonical(model));
+            },(previous,current) -> {
+                try {modelHistory.record(id,principal.id(),previous,current);}
+                catch(IOException | RuntimeException error){log("Model saved but configuration history could not be recorded",error);res.setHeader("X-OpenBEXI-History-Warning","Model saved; history unavailable");}
             });
             send(req, res, 200, updated.getJSONObject("model"), TimelineRepository.etag(updated)); return;
         }
@@ -168,6 +272,8 @@ public final class TimelineApiServlet extends HttpServlet {
             if (get) { send(req, res, 200, repository.metadata(dataset), TimelineRepository.etag(dataset)); return; }
             if (!Set.of("PATCH", "DELETE").contains(method)) methodNotAllowed(res, "GET, HEAD, PATCH, DELETE");
             require(role, 3); JSONObject patch = method.equals("PATCH") ? body(req) : null;
+            // Keep old grants, private documents and history from attaching to a future model reusing this identity.
+            if(patch==null && !repository.isPublic(id)) {TimelineRepository.requireMatch(req.getHeader("If-Match"),dataset);accessStore.reserveRetiredId(id);}
             if (patch != null && !Set.of("title", "description").containsAll(patch.keySet())) throw new ApiException(422, "Only title and description can be changed here.");
             JSONObject updated = repository.mutate(id, req.getHeader("If-Match"), value -> {
                 if (patch == null) return null;
@@ -186,14 +292,16 @@ public final class TimelineApiServlet extends HttpServlet {
         JSONArray items = dataset.getJSONArray(filters ? "filters" : "events");
         if (get) {
             Object result;
-            if (itemId != null) result = item(items, itemId, sessions);
-            else if (filters) result = new JSONObject().put("items", items).put("total", items.length());
-            else result = query(dataset, req, sessions);
+            if (itemId != null) {result = item(items, itemId, sessions);if(filters)requireFilter((JSONObject)result,principal,permissions);}
+            else if (filters) {JSONArray visible=new JSONArray();for(Object entry:items)if(canReadFilter((JSONObject)entry,principal,permissions))visible.put(entry);
+                result = new JSONObject().put("items",visible).put("total",visible.length()).put("modelId",id);}
+            else {if(req.getParameter("filterId")!=null)requireFilter(item(dataset.getJSONArray("filters"),req.getParameter("filterId"),false),principal,permissions);
+                result = query(dataset, req, sessions);}
             send(req, res, 200, result, TimelineRepository.etag(dataset)); return;
         }
         if (itemId == null && !method.equals("POST")) methodNotAllowed(res, "GET, HEAD, POST");
         if (itemId != null && !Set.of("PUT", "PATCH", "DELETE").contains(method)) methodNotAllowed(res, "GET, HEAD, PUT, PATCH, DELETE");
-        require(role, 2);
+        accessStore.require(principal,id,filters?"writeFilters":"writeRecords");
         JSONObject input = method.equals("DELETE") ? null : body(req);
         if (itemId == null && !input.has("id")) input.put("id", UUID.randomUUID().toString());
         final String target = itemId == null ? input.optString("id") : itemId;
@@ -201,12 +309,18 @@ public final class TimelineApiServlet extends HttpServlet {
             JSONArray records = value.getJSONArray(filters ? "filters" : "events");
             int index = index(records, target);
             if (itemId == null && index >= 0) throw new ApiException(409, "Record id already exists.");
-            if (itemId != null) item(records, target, sessions);
+            if (itemId != null) {JSONObject existing=item(records,target,sessions);if(filters)requireFilter(existing,principal,permissions);}
             if (input == null) { records.remove(index); return value; }
             JSONObject replacement = method.equals("PATCH") ? TimelineRecords.merge(records.getJSONObject(index), input) : TimelineRecords.copy(input);
             if (replacement.has("id") && !target.equals(replacement.optString("id"))) throw new ApiException(422, "Record id is immutable.");
             replacement.put("id", target);
-            if (filters) validateFilter(replacement, TimelineRecords.axis(value.getJSONObject("model")));
+            if (filters) {
+                String owner=index<0?principal.id():records.getJSONObject(index).optString("createdBy",principal.id());
+                if(input.has("createdBy") && !input.optString("createdBy").equals(owner))throw new ApiException(422,"Filter creator is immutable.");
+                if(input.has("modelId") && !input.optString("modelId").equals(id))throw new ApiException(422,"Filter belongs to another model.");
+                replacement.put("createdBy",owner).put("modelId",id);
+                validateFilter(replacement, TimelineRecords.axis(value.getJSONObject("model")));
+            }
             else {
                 TimelineRecords.validate(replacement, TimelineRecords.axis(value.getJSONObject("model")), 0);
                 if (sessions && !TimelineRecords.session(replacement)) throw new ApiException(422, "A session needs an end, activities, or data.kind=session.");
@@ -214,9 +328,29 @@ public final class TimelineApiServlet extends HttpServlet {
             if (index < 0) records.put(replacement); else records.put(index, replacement);
             return value;
         });
-        if (itemId == null) res.setHeader("Location", "/api/v1/datasets/" + id + "/" + collection + "/" + URLEncoder.encode(target, StandardCharsets.UTF_8).replace("+", "%20"));
+        if (itemId == null) res.setHeader("Location", "/api/v1/" + (filters && path.startsWith("/models/")?"models/":"datasets/") + id + "/" + collection + "/" + URLEncoder.encode(target, StandardCharsets.UTF_8).replace("+", "%20"));
         send(req, res, input == null ? 204 : itemId == null ? 201 : 200,
                 input == null ? null : item(updated.getJSONArray(filters ? "filters" : "events"), target, sessions), TimelineRepository.etag(updated));
+    }
+    private static boolean canReadFilter(JSONObject filter,TimelineAccessStore.Principal principal,JSONObject permissions) {
+        return !filter.optString("visibility","shared").equals("personal") || permissions.optBoolean("admin") || filter.optString("createdBy").equals(principal.id());
+    }
+    private static void requireFilter(JSONObject filter,TimelineAccessStore.Principal principal,JSONObject permissions) {
+        if(!canReadFilter(filter,principal,permissions))throw new ApiException(404,"Filter not found.");
+    }
+    private static void configurationRoute(HttpServletRequest req,HttpServletResponse res,String[] parts,TimelineConfigFiles files,String modelId) throws IOException {
+        String method=req.getMethod();boolean get=method.equals("GET")||method.equals("HEAD");
+        if(parts.length==3){
+            if(get){send(req,res,200,new JSONObject().put("modelId",modelId).put("items",files.list()),null);return;}
+            if(!method.equals("POST"))methodNotAllowed(res,"GET, HEAD, POST");
+            JSONObject created=files.create(body(req));res.setHeader("Location","/api/v1/models/"+modelId+"/config-files/"+created.getString("id"));
+            send(req,res,201,created,TimelineConfigFiles.etag(created));return;
+        }
+        if(parts.length!=4)throw new ApiException(404,"Model document not found.");
+        if(get){JSONObject value=files.read(parts[3]);send(req,res,200,value,TimelineConfigFiles.etag(value));return;}
+        if(method.equals("PUT")){JSONObject value=files.update(parts[3],req.getHeader("If-Match"),body(req));send(req,res,200,value,TimelineConfigFiles.etag(value));return;}
+        if(method.equals("DELETE")){files.delete(parts[3],req.getHeader("If-Match"));send(req,res,204,null,null);return;}
+        methodNotAllowed(res,"GET, HEAD, PUT, DELETE");
     }
     private static int index(JSONArray items, String id) {
         for (int i = 0; i < items.length(); i++) if (id.equals(items.getJSONObject(i).optString("id"))) return i;
@@ -246,6 +380,14 @@ public final class TimelineApiServlet extends HttpServlet {
         JSONObject query = filter.optJSONObject("query");
         if (query == null || !QUERY.containsAll(query.keySet())) throw new ApiException(422, "Filter query accepts from, to, search, namespace, and kind.");
         queryValues(query, axis);
+        if(!Set.of("shared","personal").contains(filter.optString("visibility","shared")))throw new ApiException(422,"Filter visibility must be shared or personal.");
+        if(filter.has("sortBy")) {
+            Object sort=filter.get("sortBy");
+            if(sort instanceof String text){if(text.length()>200)throw new ApiException(422,"Filter sortBy is too long.");}
+            else if(sort instanceof JSONObject object){
+                if(!Set.of("field","direction").containsAll(object.keySet()) || !object.optString("field").matches("[A-Za-z_][A-Za-z0-9_.]{0,99}") || !Set.of("asc","desc").contains(object.optString("direction")))throw new ApiException(422,"Invalid filter sorting metadata.");
+            } else throw new ApiException(422,"sortBy must be text or a field/direction object.");
+        }
     }
     private static double[] queryValues(JSONObject params, JSONObject axis) {
         double from = params.has("from") ? TimelineRecords.coordinate(params.get("from"), axis) : Double.NEGATIVE_INFINITY;
