@@ -191,8 +191,9 @@ export class TimelineExplorer {
     expandCluster(cluster) {
         for(const key of cluster.keys)this.expanded.add(key);
         const r=this.results;
-        this.message=`Expanded ${cluster.count} events. All records remain available in Table.`;
         r.navigationMap=null;r.navigate(fitRange(cluster,r.domain),true);
+        this.message=`Expanded ${cluster.count} events. All records remain available in Table.`;
+        r.updateUI();
     }
     update() {
         if(!this.lock)return;

@@ -21,6 +21,9 @@ loading, completion and failures easier to distinguish.
   states in both bars while preserving the status colors.
 - The Narrow time window button is removed. Wheel and keyboard zoom narrow
   the interval when loading reaches a data limit.
+- Expanding a dense event group preserves its confirmation in the report.
+  Camera interaction retains keyboard focus across scene rebuilds, so Escape
+  still exits 3D adjustment after a resize.
 
 ## Documentation and upgrade
 
@@ -44,6 +47,8 @@ reviewed public-file manifest.
   keyboard focus, filters, search, loading, cancellation and recovery. The
   status suite passed **12 cases** across all five themes, including High contrast.
   All **28** catalog screenshot comparisons passed against reviewed captures.
+  Group expansion and 3D keyboard focus passed **eight repeated browser checks**
+  after their fixes, alongside **29 related unit tests**.
 - Static-site build and verification: **14 demo flows passed** across seven
   demos at desktop and narrow widths. The four dense/connected gallery capture
   scenarios also passed.

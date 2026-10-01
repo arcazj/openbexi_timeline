@@ -64,8 +64,12 @@ test('Saved 3D preferences survive rebuilds and reload into 2D; Restore and Rese
         const raw=h.window.localStorage.getItem(p.key),saved=JSON.parse(raw),old=p.controls;
         assert.equal(saved.version,2);assert.equal(saved.mode,'Orthographic');
         let disposed=0;const dispose=old.dispose.bind(old);old.dispose=()=>{disposed++;dispose();};
+        p.setAdjusting(true);p.canvas.focus();
         t.ob_results.request();await waitFor(()=>!t.ob_results.pending && p.controls!==old);
         assert.equal(disposed,1);nearState(p.cameraState,saved.camera);
+        assert.equal(h.window.document.activeElement,p.canvas,'Scene rebuild preserves camera keyboard focus');
+        p.canvas.dispatchEvent(new h.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+        assert.equal(p.adjusting,false,'Escape still exits adjustment after rebuilding the scene');
         assert.equal(t.ob_activity_focus.items[0].mesh.material.metalness,.7);
         p.changeCamera('zoom',2);p.appearance.metalness=.1;p.applyAppearance();
         assert.equal(h.window.localStorage.getItem(p.key),raw,'Previews do not overwrite Save');
