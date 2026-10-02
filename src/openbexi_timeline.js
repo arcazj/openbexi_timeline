@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.5.0
+ *     OpenBEXI Timeline version 2.5.1
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License

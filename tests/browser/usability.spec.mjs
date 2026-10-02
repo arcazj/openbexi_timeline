@@ -1,7 +1,9 @@
 import {test,expect} from '@playwright/test';
 
 const ready=async page=>{
-    await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
+    const status=page.locator('#demo-status');
+    await expect(status).toHaveAttribute('data-state',/^(ready|error)$/);
+    expect(await status.getAttribute('data-state'),await status.textContent()).toBe('ready');
     await page.waitForFunction(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady;
         return !t.ob_results.pending && !t.ob_results.fetching && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
