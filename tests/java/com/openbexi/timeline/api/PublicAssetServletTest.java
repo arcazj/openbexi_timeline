@@ -30,6 +30,10 @@ class PublicAssetServletTest {
         for (String path : List.of(".git/config", ".env", "pom.xml", "package-lock.json", "yaml/credentials.yml", "json/sources_default.json",
                 "target/classes/Secret.class", "src/com/example/Secret.java", "tests/java/Secret.java", "tools/internal.js", "private.json", "icon/.secret.png")) file(path, "private");
         // Use a real published demo reference image to catch changes to the asset allowlist.
+        for (String path : List.of("openbexi_timeline_embed.html", "src/openbexi_timeline_embed.js",
+                "src/openbexi_timeline_embed_frame.js", "src/openbexi_timeline_earth_orbit.js",
+                "demos/embedded-earth-orbit.html", "demos/embedded-earth-orbit.js")) file(path, "public");
+        file("demos/private.html", "private"); file("demos/internal.js", "private");
         try (var images = Files.list(Paths.get("json/test-data"))) {
             Path image = images.filter(path -> path.getFileName().toString().endsWith(".png")).sorted().findFirst().orElseThrow();
             Files.copy(image, root.resolve("json/test-data/reference.png"));
@@ -75,6 +79,18 @@ class PublicAssetServletTest {
         }
         for (String method : List.of("POST", "PUT", "PATCH", "DELETE", "TRACE")) assertEquals(405, request(method, "demos.html").statusCode(), method);
         assertEquals("public", Files.readString(root.resolve("demos.html")));
+    }
+    @Test void servesTheReviewedEmbeddingExampleWithoutOpeningOtherDemoScripts() throws Exception {
+        for (String path : List.of("openbexi_timeline_embed.html", "src/openbexi_timeline_embed.js",
+                "src/openbexi_timeline_embed_frame.js", "src/openbexi_timeline_earth_orbit.js",
+                "demos/embedded-earth-orbit.html", "demos/embedded-earth-orbit.js")) {
+            HttpResponse<String> result = request("GET", path);
+            assertEquals(200, result.statusCode(), path);
+            assertTrue(result.headers().firstValue("Content-Type").orElseThrow()
+                    .startsWith(path.endsWith(".html") ? "text/html" : "text/javascript"), path);
+        }
+        assertEquals(404, request("GET", "demos/private.html").statusCode());
+        assertEquals(404, request("GET", "demos/internal.js").statusCode());
     }
     @Test void symlinksCannotExposeFilesOutsideTheRootOrAnUnpublishedFileInsideIt() throws Exception {
         Path external = temporary.resolve("secret.txt"); Files.writeString(external, "private");

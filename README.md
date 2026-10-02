@@ -36,6 +36,7 @@ Explore the [gallery](https://arcazj.github.io/openbexi_timeline/) in your brows
 
 - [User guide](docs/help-guide.md): controls, search, filters, status and Settings.
 - [Models and datasets](docs/demos.md) and [the live model editor](docs/model-editor.md).
+- [Embed a timeline](docs/embedding.md) in another application, with a satellite example.
 - [Deployment](docs/security.md) and [development and testing](docs/development.md).
 - [Documentation index](docs/README.md): all guides and reference material.
 

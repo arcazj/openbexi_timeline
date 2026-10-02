@@ -6,6 +6,17 @@ isolated configuration documents, model-owned filters and saved configuration
 history. Private clones inherit their source model's scope. Public examples and
 local import, preview and export remain available.
 
+When launched from a connected application, the editor hides document management
+and keeps Save/Export, Undo, Redo and Revert in a compact toolbar. Demo and standalone
+launches retain the full layout. The header puts the subtitle beside the title and
+omits the former home link. Both layouts preserve authorization and live preview.
+
+The [embedded edition](embedding.md) supplies an isolated iframe and a small host
+API for data updates, navigation, selection, appearance and cleanup. It preserves
+original item metadata and supports multiple same-origin or cross-origin instances.
+A working Earth Orbit example adapts launches, confirmed decays and predicted
+re-entry windows; the Earth Orbit application itself is not modified.
+
 Optional AI assistance supports explanations, generation and repair through
 configured OpenAI, Anthropic, Hugging Face, compatible and local providers.
 Vision-capable models can use a timeline image as a reference. Proposals are
@@ -50,38 +61,35 @@ Package, browser, Help and Maven versions are **2.4.0**; the API contract remain
 
 ## Validation
 
-- JavaScript: **279 tests passed**; **19 editor and compatibility tests** also
-  passed in focused checks.
-- Java: **114 tests passed**, **34 existing legacy tests skipped**, no failures
-  or errors; Maven verification and packaging used JDK 21 with the Java 17 target.
-- Editor browser checks: **54 cases passed** across desktop and narrow layouts,
-  including phone-width captures, YAML model saves, conflicts and delayed saves.
-- Real browser-to-Java integration: **six checks passed**, including a local mock
-  AI image proposal and exact preservation of all **27** original item payloads.
-- Static-site verification: **14 demo flows passed** across all seven datasets at
-  desktop and narrow widths, including the model editor under a path prefix.
-- Generated schemas, API specification, demo models and resource checks passed.
-  HBDS core/semantic validation, existing importers, YAML round-trip and actual
-  HBDS viewer checks passed for **26 classes, 191 attributes and 44 links**.
-- Broader timeline browser run: **200 passed**, **seven existing skips**, and one
-  initial resize-readiness failure. The test sampled the camera before the
-  viewport's resize debounce completed. After correcting its readiness checks,
-  all **six** related desktop/narrow cases and **three** repeated narrow cases
-  passed. Original geometry tolerances and screenshot baselines were retained.
-  Combined with the editor checks, **255 distinct browser cases** passed across
-  the suite and focused follow-ups, with seven skips.
+Verified locally on **2026-10-02**. The
+[delivery record](design/2.4/delivery-checklist.md) maps the consolidated
+requirements to implementation and lists reproducible commands.
+
+- **289 JavaScript tests passed**, with no failures or skips.
+- Maven verification and packaging passed: **115 Java tests passed**,
+  **34 skipped** (33 disabled legacy cases and one Windows symlink case),
+  no failures or errors. JDK 21 was used with the Java 17 target.
+- The complete Chromium suite passed **277 cases**, with **seven existing
+  duplicate narrow-drag cases skipped**. Two additional capture-readiness checks
+  passed. Desktop, narrow and phone captures were reviewed; existing screenshot
+  baselines and frozen item fixtures were retained.
+- Real browser-to-Java integration passed **six checks**, including a loopback AI
+  image proposal and exact preservation of all **27** original item payloads.
+- Static deployment verification passed **16 flows**: all seven public demos
+  and the embedded satellite example at both viewport sizes under a path prefix.
+- Generated browser validators, OpenAPI, all seven demo models and README links
+  match their sources. HBDS core/semantic/server validation, existing importers,
+  YAML round-trip and actual viewer checks passed for **26 classes,
+  191 attributes and 44 links**.
+- The reviewed source archive contains **629 public files**; extracted file
+  hashes and the archive checksum were verified. Java and static packages retain
+  the current license, applicable third-party notices and historical GPL text.
 
 AI provider tests use local mock services. They do not verify a live provider
-account, billing, model quality or account-specific availability.
+account, billing, model quality or account-specific availability. Docker build
+and CI testing remain deferred as requested.
 
-After the licensing update, **12 focused Java tests** and **13 JavaScript
-compatibility/Help tests** passed. The entitlement API accepts `nonprofit` and
-rejects superseded preview categories without changing the saved entitlement.
-The Event schema and original item sources remain unchanged. HBDS schema and
-viewer checks passed again. The packaged Java artifact includes the current
-license, third-party notices and the byte-identical historical GPL text.
-The source and Pages packages include the licensing guide and order form.
-The container recipe now includes the vendored YAML parser and its ISC notice;
-the container image was not rebuilt because Docker is unavailable in this environment.
+The implementation remains **2.4.0**. Source/static packaging and pushing to
+`master` are separate from publishing a tagged GitHub release.
 
 Previous release: [2.3.2](release-2.3.2.md).

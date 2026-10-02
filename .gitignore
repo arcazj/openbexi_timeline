@@ -35,6 +35,7 @@
 !/openbexi_timeline_earthquake.html
 !/openbexi_timeline_model.html
 !/openbexi_timeline_model_preview.html
+!/openbexi_timeline_embed.html
 
 # Deployment-specific models remain local; keep the public examples explicit.
 /models/*

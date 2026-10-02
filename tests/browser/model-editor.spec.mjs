@@ -38,6 +38,9 @@ test('Settings opens the active model and Apply updates the originating timeline
     await page.getByAltText('Settings',{exact:true}).click();
     const popupPromise=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popupPromise;
     await ready(editor);await expect(editor.getByRole('textbox',{name:'params.0.title',exact:true})).toHaveValue('Claude Monet');
+    await expect(editor.locator('#document-management')).toBeVisible();
+    await expect(editor.locator('#editing-actions')).toBeHidden();
+    await expect(editor.locator('.editor-heading a')).toHaveCount(0);
     await editor.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Monet from editor');
     await expect(editor.locator('#preview-state')).toContainText('Monet from editor');
     const reloaded=page.waitForEvent('domcontentloaded');await editor.getByRole('button',{name:'Apply to original timeline'}).click();await reloaded;
@@ -179,9 +182,78 @@ test('Editor remains usable at desktop, narrow and phone widths',async({page})=>
     for(const [name,width,height] of [['desktop',1440,900],['narrow',800,900],['phone',390,844]]){
         await page.setViewportSize({width,height});
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+        await expect.poll(()=>previewValue(page,()=>{
+            const t=window.previewTimeline;return t && t.ob_viewport.width<=innerWidth && !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
+        })).toBe(true);
         await expect(page.getByRole('button',{name:'Overview',exact:true})).toBeVisible();
         await page.screenshot({path:`.local-private/editor24-${name}.png`,fullPage:true});
     }
+});
+
+test('A server-configured application opens a focused editor with a compact heading, responsive preview and working Apply',async({page,context})=>{
+    const errors=[];context.on('page',target=>target.on('pageerror',error=>errors.push(error.message)));
+    const html=(await fs.readFile('openbexi_timeline.html','utf8')).replace('const ob_timeline = new OB_TIMELINE();','const ob_timeline = window.connectedTimeline = new OB_TIMELINE();');
+    const model=JSON.parse(await fs.readFile('models/demos/monet.json','utf8'));
+    model.params[0].title='Connected model';model.dataSource.url='/json/test-data/monet.json';
+    await context.route('**/openbexi_timeline.html',route=>route.fulfill({contentType:'text/html',body:html}));
+    await context.route('**/openbexi_timeline/config',route=>route.fulfill({json:{model:'models/connected-model.json'}}));
+    await context.route('**/models/connected-model.json',route=>route.fulfill({json:model}));
+    await page.goto('/openbexi_timeline.html');await page.evaluate(()=>connectedTimeline.ready);
+    const before=await page.evaluate(()=>JSON.stringify(connectedTimeline.staticData));
+    await page.getByAltText('Settings',{exact:true}).click();
+    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popup;
+    await ready(editor);expect(new URL(editor.url()).searchParams.get('launch')).toBe('connected');
+    await expect(editor.locator('#document-management')).toBeHidden();await expect(editor.locator('#documents')).toBeHidden();
+    await expect(editor.locator('#workspace-model')).toBeHidden();await expect(editor.locator('.editor-heading a')).toHaveCount(0);
+    await expect(editor.locator('#editing-actions #save')).toBeVisible();await expect(editor.locator('#notice')).toBeHidden();
+    await editor.reload();await ready(editor);await expect(editor.locator('#document-management')).toBeHidden();
+    for(const [name,width,height] of [['desktop',1440,900],['narrow',800,900],['phone',390,844]]) {
+        await editor.setViewportSize({width,height});
+        await expect.poll(()=>editor.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+        await expect.poll(()=>previewValue(editor,()=>{
+            const t=window.previewTimeline;return t && t.ob_viewport.width<=innerWidth && !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
+        })).toBe(true);
+        await expect(editor.getByRole('button',{name:'Apply to original timeline',exact:true})).toBeVisible();
+        if(width===1440) {
+            const title=await editor.locator('.editor-title h1').boundingBox(),subtitle=await editor.locator('.editor-title p').boundingBox();
+            expect(subtitle.x).toBeGreaterThan(title.x+title.width);expect(subtitle.y).toBeLessThan(title.y+title.height);
+        }
+        await editor.screenshot({path:`.local-private/editor24-connected-${name}.png`,fullPage:true});
+    }
+    await editor.setViewportSize({width:1440,height:900});
+    const title=editor.getByRole('textbox',{name:'params.0.title',exact:true});await title.fill('Edited connected model');
+    await expect(editor.locator('#dirty')).toHaveText('Unsaved changes');await editor.locator('#undo').click();await expect(title).toHaveValue('Connected model');
+    await editor.locator('#redo').click();await expect(title).toHaveValue('Edited connected model');
+    const download=editor.waitForEvent('download');await editor.locator('#export').click();expect((await download).suggestedFilename()).toBe('connected-model.json');
+    const reloaded=page.waitForEvent('domcontentloaded');await editor.locator('#apply').click();await reloaded;await page.evaluate(()=>connectedTimeline.ready);
+    expect(await page.evaluate(()=>connectedTimeline.params[0].title)).toBe('Edited connected model');
+    expect(await page.evaluate(()=>JSON.stringify(connectedTimeline.staticData))).toBe(before);
+    await expect(editor.locator('#notice')).toContainText('applied');expect(errors).toEqual([]);await editor.close();
+});
+
+test('Focused managed editing preserves authorization, undo, save, conflicts and visible errors',async({page})=>{
+    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?launch=connected&modelId=monet');
+    await expect(page.locator('#editor-lock')).toBeVisible();await expect(page.locator('#document-management')).toBeHidden();
+    await expect(page.locator('#editing-actions #save')).toBeDisabled();await connectModel(page);await ready(page);
+    const title=page.getByRole('textbox',{name:'params.0.title',exact:true});await title.fill('Focused saved model');
+    await page.locator('#undo').click();await expect(title).toHaveValue('Claude Monet');await page.locator('#redo').click();
+    await page.locator('#save').click();await expect(page.locator('#dirty')).toHaveText('Saved on server');
+    await expect(page.locator('#notice')).toBeVisible();await expect(page.locator('#notice')).toContainText('Model saved');
+    const saved=calls.find(call=>call.path==='/api/v1/models/monet' && call.method==='PUT');expect(saved.body.params[0].title).toBe('Focused saved model');
+    calls.modelConflict=true;await title.fill('Keep my conflicting draft');await page.locator('#save').click();
+    await expect(page.locator('#errors')).toBeVisible();await expect(title).toHaveValue('Keep my conflicting draft');
+    await page.getByRole('tab',{name:'Advanced text'}).click();await page.locator('#raw').fill('{invalid');
+    await expect(page.locator('#save')).toBeDisabled();await expect(page.locator('#export')).toBeDisabled();
+    await page.locator('#undo').click();await expect(page.locator('#errors')).toBeHidden();
+});
+
+test('Focused read-only access cannot use relocated actions or protected editor resources',async({page})=>{
+    const calls=await workspaceServer(page,{admin:false});await page.goto('/openbexi_timeline_model.html?launch=connected&modelId=monet');await connectModel(page);
+    await expect(page.locator('#editor-lock')).toBeVisible();await expect(page.locator('#document-management')).toBeHidden();
+    for(const id of ['save','export','undo','redo','revert'])await expect(page.locator('#editing-actions #'+id)).toBeDisabled();
+    await expect(page.locator('#raw')).not.toBeEditable();
+    expect(calls.some(call=>/config-files|ai\/providers|filters|versions/.test(call.path))).toBe(false);
+    await page.locator('#connect').click();await expect(page.locator('#document-management')).toBeHidden();
 });
 
 test('Connected model access gates the editor and avoids protected requests for a reader',async({page})=>{

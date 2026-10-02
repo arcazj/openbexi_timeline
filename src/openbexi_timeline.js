@@ -5336,6 +5336,19 @@ function OB_TIMELINE(options = {}) {
             this.staticData={dateTimeFormat:'iso8601',events:[]};
             if(['current_time','Date.now()'].includes(this.params[0].date))this.params[0].date=new Date().toISOString();
         };
+        // Hosts may supply an existing JSON payload without a URL, credentials,
+        // or a provider request. Normalization stays inside the renderer.
+        if (Object.hasOwn(options,'inlineData')) {
+            const source=data.dataSource || {};
+            this.staticData=parseTimelineData(JSON.stringify(options.inlineData),source);
+            this.staticTimeAxis=source.time;
+            if(this.staticTimeAxis?.kind==='numeric')this.params[0].date=new Date(timelineValueToTime(this.params[0].date,this.staticTimeAxis)).toISOString();
+            else if(['current_time','Date.now()'].includes(this.params[0].date))this.params[0].date=new Date().toISOString();
+            this.formatEventDate=value=>formatTimelineValue(value,this.staticTimeAxis,'yyyy-MM-dd HH:mm',this.params[0].displayOffsetMinutes || 0);
+            this.params[0].data='';
+            this.initializeTimeline();
+            return this;
+        }
         if(options.offline) {
             useLocalData();
             this.formatEventDate=value=>formatTimelineValue(value,null,'yyyy-MM-dd HH:mm');

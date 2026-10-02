@@ -13,6 +13,14 @@ export function managedModelId(timeline) {
     } catch { return null; }
 }
 
+/** Presentation context only: server permissions remain independently enforced. */
+export function editorLaunchMode(timeline) {
+    if(timeline.demoContext || /(?:^|\/)demos\.html$/i.test(location.pathname))return 'demo';
+    if(managedModelId(timeline) || timeline.modelSource==='yaml' ||
+        !timeline.staticData && typeof timeline.data==='string' && timeline.data.trim())return 'connected';
+    return 'standalone';
+}
+
 /** Stage an explicitly applied draft for this instance's next normal startup. */
 export function stageEditorModel(timeline, model) {
     timeline.validateModel(model, 'Editor draft');
@@ -38,9 +46,11 @@ export function openModelEditor(timeline) {
     const url = new URL('openbexi_timeline_model.html', root);
     const modelPath = timeline.modelPath || timeline.demoContext?.modelURL;
     const modelId = managedModelId(timeline);
+    const launchMode=editorLaunchMode(timeline);
+    url.searchParams.set('launch',launchMode);
     if (modelId) url.searchParams.set('modelId', modelId);
     if (modelPath) url.searchParams.set('model', new URL(modelPath, document.baseURI).href);
-    const value = {model:timeline.modelDocument, modelPath, source:timeline.modelSource,
+    const value = {model:timeline.modelDocument, modelPath, source:timeline.modelSource, launchMode,
         dataset:timeline.demoContext?.datasetURL || timeline.localSource?.url,
         providerUrl:timeline.staticData ? undefined : timeline.data,
         previewState:{query:timeline.ob_results?.state?.query || '',searchMode:timeline.ob_results?.state?.searchMode || 'text',center:timeline.ob_scene?.sync_time,

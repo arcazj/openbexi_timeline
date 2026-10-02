@@ -21,11 +21,12 @@
     "test:browser:update": "playwright test --update-snapshots",
     "test:integration": "node tests/integration/model-workspace.mjs",
     "test:model": "node --experimental-vm-modules --test tests/model-validation.test.mjs",
-    "test:demos": "node --experimental-vm-modules --test --test-concurrency=2 tests/filter-expressions.test.mjs tests/timeline-controls.test.mjs tests/timeline-perspective.test.mjs tests/demo-data.test.mjs tests/demo-http.test.mjs tests/timeline-interactions.test.mjs tests/demo-layout.test.mjs tests/overview-projection.test.mjs tests/timeline-scale.test.mjs tests/overview-panel.test.mjs tests/timeline-ticks.test.mjs tests/timeline-share.test.mjs tests/timeline-help.test.mjs tests/model-validation.test.mjs tests/timeline-model-startup.test.mjs tests/timeline-matches.test.mjs tests/timeline-results.test.mjs tests/timeline-adaptive.test.mjs tests/timeline-exploration.test.mjs tests/timeline-paging.test.mjs tests/timeline-loading.test.mjs tests/descriptor-resize.test.mjs tests/calendar-navigation.test.mjs tests/timeline-rendering.test.mjs tests/model-editor.test.mjs tests/event-session-compatibility.test.mjs tests/model-editor-access-link.test.mjs tests/model-editor-workspace.test.mjs",
+    "test:demos": "node --experimental-vm-modules --test --test-concurrency=2 tests/filter-expressions.test.mjs tests/timeline-controls.test.mjs tests/timeline-perspective.test.mjs tests/demo-data.test.mjs tests/demo-http.test.mjs tests/timeline-interactions.test.mjs tests/demo-layout.test.mjs tests/overview-projection.test.mjs tests/timeline-scale.test.mjs tests/overview-panel.test.mjs tests/timeline-ticks.test.mjs tests/timeline-share.test.mjs tests/timeline-help.test.mjs tests/model-validation.test.mjs tests/timeline-model-startup.test.mjs tests/timeline-matches.test.mjs tests/timeline-results.test.mjs tests/timeline-adaptive.test.mjs tests/timeline-exploration.test.mjs tests/timeline-paging.test.mjs tests/timeline-loading.test.mjs tests/descriptor-resize.test.mjs tests/calendar-navigation.test.mjs tests/timeline-rendering.test.mjs tests/model-editor.test.mjs tests/event-session-compatibility.test.mjs tests/model-editor-access-link.test.mjs tests/model-editor-workspace.test.mjs tests/earth-orbit-adapter.test.mjs tests/timeline-embed.test.mjs",
     "release:source": "node tools/package-source.mjs",
     "test": "npm run test:demos && node --experimental-vm-modules --test tests/timeline-descriptor.test.mjs",
     "pages:build": "node tools/build-pages.mjs",
-    "pages:verify": "node tools/verify-pages.mjs"
+    "pages:verify": "node tools/verify-pages.mjs",
+    "test:embed": "node --experimental-vm-modules --test tests/earth-orbit-adapter.test.mjs tests/timeline-embed.test.mjs tests/event-session-compatibility.test.mjs"
   },
   "name": "openbexi-timeline",
   "version": "2.4.0",
