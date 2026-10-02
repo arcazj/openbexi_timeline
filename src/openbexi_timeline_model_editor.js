@@ -2,6 +2,7 @@ import {EditorDocument, ConfigFileClient, DocumentOpenGate, documentKind, resolv
 import {buildDefaultModel} from './openbexi_timeline_model_startup.js';
 import {validateDemoModel,validateLegacyModel} from './openbexi_timeline_model_validation.js';
 import {EDITOR_AREAS, propertyArea, isModelConfiguration, isScopedApiUrl, validateConfiguration, assertRecordsUnchanged, ConfigurationReview, ModelWorkspaceClient} from './openbexi_timeline_model_editor_workspace.js';
+import {createEditorApplyClient} from './openbexi_timeline_model_link.js';
 
 const appRoot=new URL('../',import.meta.url);
 const $=id=>document.getElementById(id);
@@ -529,8 +530,9 @@ function bindActions(){
     };
     const contextKey=new URLSearchParams(location.search).get('context');
     $('apply').hidden=!window.opener || !contextKey;
-    $('apply').onclick=()=>{if(!validate() || state.document.kind!=='model'){status('Only validated model documents can be applied to the originating timeline.');return;}window.opener?.postMessage({type:'ob-model-apply',context:contextKey,model:clone(state.document.value)},location.origin);status('Applying this model to the originating timeline…');};
-    window.addEventListener('message',event=>{if(event.origin===location.origin && event.source===window.opener && event.data?.type==='ob-model-apply-result' && event.data.context===contextKey)status(event.data.error || 'The model was applied to the originating timeline. Save separately to persist it.');});
+    const applyClient=createEditorApplyClient({context:contextKey,onStatus:status});
+    $('apply').onclick=()=>{if(!validate() || state.document.kind!=='model'){status('Only validated model documents can be applied to the originating timeline.');return;}applyClient.apply(clone(state.document.value));};
+    window.addEventListener('pagehide',()=>applyClient.dispose(),{once:true});
     window.addEventListener('beforeunload',event=>{if(unsaved()){event.preventDefault();event.returnValue='';}});
 }
 async function start(){

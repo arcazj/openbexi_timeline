@@ -1,0 +1,19 @@
+.ob_table_tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; background: var(--ob-panel,#f7f9fc); border-bottom: 1px solid var(--ob-border,#dce4ea); color: var(--ob-text,#25475f); font: 12px var(--ob-font,Arial,sans-serif); }
+.ob_table_tools button, .ob_table_columns > summary { box-sizing: border-box; padding: 5px 9px; border: 1px solid var(--ob-border,#a5b6c4); border-radius: var(--ob-radius,4px); background: var(--ob-button,white); color: inherit; font: inherit; cursor: pointer; }
+.ob_table_tools button:disabled { cursor: default; opacity: .6; }
+.ob_table_export_status { flex-basis: 100%; font-size: 11px; line-height: 16px; }
+.ob_table_columns { position: relative; }
+.ob_table_columns > fieldset { position: absolute; z-index: 40; top: 100%; left: 0; min-width: 150px; max-height: min(280px, 50vh); overflow: auto; margin: 3px 0 0; padding: 8px 10px; border: 1px solid var(--ob-border,#a5b6c4); border-radius: var(--ob-radius,4px); background: var(--ob-button,white); box-shadow: 0 3px 10px #0002; }
+.ob_table_columns legend { padding: 0 4px; font-weight: bold; }
+.ob_table_columns label { display: flex; align-items: center; gap: 6px; padding: 4px 0; cursor: pointer; }
+.ob_table_columns input { margin: 0; accent-color: var(--ob-accent,#1767a4); }
+.ob_table_sort { display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.ob_table_sort_label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ob_table_sort_icon { flex: 0 0 auto; font-size: 15px; line-height: 1; }
+.ob_table_sort:focus-visible, .ob_table_tools button:focus-visible, .ob_table_columns summary:focus-visible { outline: 2px solid var(--ob-accent,#1767a4); outline-offset: 2px; }
+:root[data-ob-theme]:not([data-ob-theme=default]) .ob_event_table { color: var(--ob-text); background: var(--ob-panel); }
+:root[data-ob-theme]:not([data-ob-theme=default]) .ob_event_table th { background: var(--ob-heading); color: var(--ob-text); }
+:root[data-ob-theme=contrast] .ob_table_tools :is(button,summary), :root[data-ob-theme=contrast] .ob_table_columns > fieldset { border-width: 2px; }
+:root[data-ob-theme=contrast] .ob_table_tools button:disabled { opacity: 1; background: #ddd; border-style: dashed; }
+:root[data-ob-theme=contrast] .ob_table_tools :is(button,summary):not(:disabled):hover { background: #c5e8ff; }
+:root[data-ob-theme=contrast] :is(.ob_table_sort,.ob_table_tools button,.ob_table_columns summary):focus-visible { outline-width: 3px; }

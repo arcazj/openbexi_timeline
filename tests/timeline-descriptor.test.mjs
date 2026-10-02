@@ -68,3 +68,77 @@ test('Occurrence keys stay internal while descriptor requests use the original e
         cancelDescriptor(t);
     } finally {h.close();}
 });
+
+test('Details show readable dates, duration, source/status and collapsed complete metadata with safe copy controls',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'summary',staticData:{},ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
+        const record={id:'external-1',start:'2026-09-12T12:00:00Z',end:'2026-09-12T13:30:00Z',namespace:'Operations',
+            data:{title:'Inspection',status:'Ready',custom:'Detailed metadata',description:'<b>Safe description</b>'}};
+        renderDescriptor(t,0,record);
+        const summary=panel.querySelector('.ob_descriptor_summary');
+        assert.match(summary.textContent,/2026-09-12 12:00:00 UTC/);
+        assert.match(summary.textContent,/1 hour 30 minutes/);
+        assert.match(summary.textContent,/Operations/);assert.match(summary.textContent,/Ready/);
+        assert.equal(panel.querySelector('.ob_descriptor_fields').open,false);
+        assert.match(panel.querySelector('.ob_descriptor_fields').textContent,/Detailed metadata/);
+        assert.equal(panel.querySelector('.ob_descriptor_description b').textContent,'Safe description');
+        let copied;
+        Object.defineProperty(h.window.navigator,'clipboard',{value:{writeText:async value=>{copied=value;}}});
+        await summary.querySelector('[aria-label="Copy Start"]').onclick();
+        assert.equal(copied,record.start);
+        assert.equal(panel.querySelector('.ob_descriptor_copy_status').textContent,'Start copied.');
+        panel.querySelector('.ob_descriptor_fields').open=true;
+        renderDescriptor(t,0,{...record,data:{...record.data,custom:'Updated metadata'}});
+        assert.equal(panel.querySelector('.ob_descriptor_fields').open,true,'Fetching details preserves the expanded fields');
+        renderDescriptor(t,0,{id:'different',start:record.start,data:{title:'Instant'}});
+        assert.equal(panel.querySelector('.ob_descriptor_fields').open,false);
+        assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/Instant event/);
+    } finally {h.close();}
+});
+
+test('Clipboard restrictions fall back to selectable original values and announce the outcome',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'copy',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
+        renderDescriptor(t,0,{id:'original-id',start:0,data:{title:'At epoch'}});
+        const button=panel.querySelector('[aria-label="Copy ID"]');
+        await button.onclick();
+        const fallback=panel.querySelector('textarea');
+        assert.equal(fallback.value,'original-id');assert.equal(fallback.readOnly,true);
+        assert.equal(h.window.document.activeElement,fallback);assert.equal(fallback.selectionEnd,'original-id'.length);
+        assert.match(panel.querySelector('.ob_descriptor_copy_status').textContent,/Select and copy/);
+        assert.equal(panel.querySelector('[aria-label="Copy Start"]').disabled,false,'Zero timestamps have a copy control');
+    } finally {h.close();}
+});
+
+test('Descriptor duration follows numeric-axis units and handles historical timestamps',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'dates',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{},
+            staticTimeAxis:{kind:'numeric',millisecondsPerUnit:1000,unit:'Ma'},formatEventDate:value=>(Number(value)/1000)+' Ma'};
+        renderDescriptor(t,0,{start:1000,end:2500,data:{title:'Numeric period'}});
+        assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/Duration1.5 Ma/);
+        delete t.staticTimeAxis;delete t.formatEventDate;
+        renderDescriptor(t,0,{start:'2 BCE',end:'1 BCE',data:{title:'Historical period'}});
+        assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/Duration365 days/);
+    } finally {h.close();}
+});
+
+test('Descriptor summary falls back to source metadata when normalized namespaces are empty',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'source',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
+        renderDescriptor(t,0,{id:'report',start:0,namespace:'',data:{title:'Report',namespace:'',source:'Original provider'}});
+        const source=[...panel.querySelectorAll('.ob_descriptor_summary dt')].find(term=>term.textContent==='Source');
+        assert.equal(source.nextElementSibling.textContent,'Original provider');
+    } finally {h.close();}
+});

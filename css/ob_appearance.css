@@ -1,0 +1,79 @@
+/* Keep the editor action distinct from explanatory text in every application theme. */
+.ob_timeline_right_panel.ob_viewport_side .ob_settings_panel button.ob_model_editor_launch {
+    min-height:44px; padding:9px 14px; border:2px solid #00305b;
+    background:#00549b; color:#fff; font-weight:700;
+}
+.ob_timeline_right_panel.ob_viewport_side .ob_settings_panel button.ob_model_editor_launch:hover { background:#003b6e; color:#fff; }
+.ob_timeline_right_panel.ob_viewport_side .ob_settings_panel button.ob_model_editor_launch:focus-visible { outline:3px solid #00305b; outline-offset:3px; }
+.ob_timeline_right_panel.ob_viewport_side .ob_settings_panel button.ob_model_editor_launch:disabled {
+    background:#ddd; color:#444; border-color:#666; border-style:dashed; cursor:not-allowed;
+}
+.ob_timeline_right_panel .ob_contrast_colors {
+    flex:1 0 100%; box-sizing:border-box; min-width:0; width:100%; margin:2px 0 0; padding:10px;
+    border:1px solid var(--ob-border,#000);
+}
+.ob_timeline_right_panel .ob_contrast_colors[hidden] { display:none; }
+.ob_contrast_colors legend { font-weight:600; }
+.ob_contrast_colors p { margin:0 0 8px; line-height:1.4; }
+.ob_timeline_right_panel .ob_contrast_colors label { display:flex; width:100%; justify-content:space-between; gap:12px; margin:4px 0; }
+.ob_timeline_right_panel.ob_viewport_side .ob_contrast_colors input[type=color] {
+    appearance:auto; flex:0 0 54px; width:54px; min-width:54px; height:38px; padding:2px;
+    border:2px solid #000; background:#fff; cursor:pointer;
+}
+.ob_contrast_colors button { margin-top:8px; min-height:40px; }
+
+/* Scoped to High contrast: saved colors never override another chosen theme. */
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] :is(.ob_timeline_panel,.ob_timeline_body_frame,.ob_timeline_right_panel.ob_viewport_side,.ob_help_panel),
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] .ob_timeline_right_panel.ob_viewport_side :is(.ob_panel_heading,.ob_descriptor_head) {
+    background:var(--ob-contrast-background) !important; color:var(--ob-contrast-background-text);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_settings_panel :is(fieldset,.ob_settings_section) { border-color:currentColor; }
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] .ob_timeline_right_panel .ob_descriptor_table,
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] .ob_help_panel :is(.ob_help_note,a.ob_help_action) { color:var(--ob-contrast-background-text); }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_help_panel a.ob_help_action:hover { background:#c5e8ff; color:#000; }
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] .ob_timeline_right_panel.ob_viewport_side :focus-visible { outline-color:var(--ob-contrast-background-text); }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_timeline_panel .ob_results_header {
+    background:var(--ob-contrast-background) !important; color:var(--ob-contrast-background-text);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-background=true] .ob_results_header .ob_more_panel {
+    background:var(--ob-contrast-background); color:var(--ob-contrast-background-text);
+    border:2px solid var(--ob-contrast-background-text);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header .ob_activity_toolbar { border-color:var(--ob-contrast-background-text); }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header .ob_toolbar_separator { background:var(--ob-contrast-background-text); }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header [data-ob-contrast-group],
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header [data-ob-contrast-group] :where(button,label,select,input.ob_search_input),
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header .ob_time_marker[data-ob-contrast-group] {
+    background:var(--ob-group-background); color:var(--ob-group-text); border-color:var(--ob-group-text);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header img[role=button] {
+    /* A white inner surface keeps existing multicolor image assets recognizable. */
+    background:linear-gradient(#fff,#fff) content-box,var(--ob-group-background,#fff) border-box;
+    border-color:var(--ob-group-text,#000);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header input.ob_search_input::placeholder { color:var(--ob-group-text); opacity:1; }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header :is(button,img[role=button]):where(:not(:disabled):not([aria-disabled=true])):hover,
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header label:has(input:not(:disabled)):hover {
+    background:#c5e8ff; color:#000; border-color:#000;
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header :is(button,img[role=button]):where(:not(.ob_results_status):not(:disabled):not([aria-disabled=true])):is(:active,[aria-pressed=true],[aria-expanded=true]),
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header label:has(input:checked:not(:disabled)) {
+    background:#ffe74a; color:#000; border-color:#000; box-shadow:inset 0 0 0 1px #000;
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header :is(:disabled,[aria-disabled=true]),
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header label:has(input:disabled) {
+    background:#ddd; color:#444; border-color:#666; border-style:dashed; opacity:1;
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header :focus-visible {
+    outline:3px solid var(--ob-contrast-background-text); outline-offset:2px;
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true][data-ob-contrast-background=false] .ob_results_header .ob_more_panel .ob_toolbar_separator { background:#000; }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true][data-ob-contrast-background=false] .ob_results_header .ob_more_panel :focus-visible { outline-color:#000; }
+/* A contrasting inner ring keeps focus visible against both group and bar colors. */
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header [data-ob-contrast-group]:focus-visible,
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header [data-ob-contrast-group] :focus-visible {
+    box-shadow:inset 0 0 0 2px var(--ob-group-text);
+}
+:root[data-ob-theme=contrast][data-ob-contrast-custom=true] .ob_results_header button.ob_results_status[data-state] {
+    background:var(--ob-status-background); color:var(--ob-status-text); border-color:var(--ob-status-border);
+}

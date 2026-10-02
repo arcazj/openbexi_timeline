@@ -170,6 +170,7 @@ function dispose() {
         try { scene?.ob_renderer?.setAnimationLoop(null);scene?.ob_renderer?.dispose();scene?.ob_renderer?.forceContextLoss(); } catch {}
     }
     for(const tracker of timeline.resTracker || []) try { tracker?.dispose(); } catch {}
+    timeline.disposeTextures?.();
 }
 let queue=Promise.resolve();
 const validParent=(()=>{try {const url=new URL(parentOrigin);return ['http:','https:'].includes(url.protocol) && url.origin===parentOrigin;}catch{return false;}})();

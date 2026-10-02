@@ -162,7 +162,7 @@ public final class TimelineRepository {
                 while (buffer.hasRemaining()) channel.write(buffer);
                 channel.force(true);
             }
-            Files.move(temporary, storage.resolve(id + ".json"), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            TimelineAtomicFiles.replace(temporary, storage.resolve(id + ".json"));
         } finally { Files.deleteIfExists(temporary); }
     }
     private interface IOOperation { JSONObject run() throws IOException; }

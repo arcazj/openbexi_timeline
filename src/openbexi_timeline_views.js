@@ -1,5 +1,22 @@
 import {renderingFor} from './openbexi_timeline_rendering.js';
 import {dateAxisHeight} from './openbexi_timeline_paging.js';
+import {parseTimelineDate} from './openbexi_timeline_data_parser.js';
+
+const tableFields={title:'Title',start:'Start',end:'End',source:'Source',status:'Status',description:'Description',id:'ID'};
+const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
+const recordSource=record=>[record?.namespace,record?.data?.namespace,record?.data?.source,record?.source]
+    .find(value=>value!==undefined && value!==null && (typeof value!=='string' || value.trim()!==''));
+const recordValues=({activity,session,source})=>({
+    title:activity.data.title,start:activity.start,end:activity.end,
+    source:source ?? recordSource(activity) ?? recordSource(session),
+    status:activity.data.status,description:activity.data.description,id:activity.id
+});
+const csvCell=value=>{
+    let text=String(value ?? '');
+    // Spreadsheet programs evaluate formulas even in quoted CSV cells.
+    if(/^[\s\uFEFF]*[=+\-@]/.test(text) || /^[\t\r\n]/.test(text)) text="'"+text;
+    return '"'+text.replaceAll('"','""')+'"';
+};
 /** Timeline presentation controls. The WebGL scene stays intact when switching views. */
 export class TimelineViews {
     constructor(timeline) {
@@ -170,10 +187,108 @@ export class TimelineViews {
         marker.style.visibility = this.mode === "table" || center < 0 || center > width ? "hidden" : "visible";
     }
 
+    tableColumns() {
+        const configured=renderingFor(this.timeline).table.columns;
+        const columns=[...configured,...Object.entries(tableFields).filter(([field])=>!configured.some(column=>column.field===field))
+            .map(([field,label])=>({field,label,visible:false}))];
+        return columns.map(column=>({...column,visible:this.columnVisibility?.[column.field] ?? column.visible!==false}));
+    }
+
+    capturePresentation() {
+        return {sort:this.tableSort?{...this.tableSort}:null,columns:Object.fromEntries(this.tableColumns().map(column=>[column.field,column.visible]))};
+    }
+
+    restorePresentation(value) {
+        if(!value || typeof value!=='object' || Array.isArray(value) || !('sort' in value || 'columns' in value)) return false;
+        if(value.sort!=null && (!Object.hasOwn(tableFields,value.sort.field) || !['ascending','descending'].includes(value.sort.direction))) return false;
+        if(value.columns!==undefined && (!value.columns || typeof value.columns!=='object' || Array.isArray(value.columns) ||
+            !Object.entries(value.columns).every(([field,visible])=>Object.hasOwn(tableFields,field) && typeof visible==='boolean'))) return false;
+        this.tableSort=Object.hasOwn(tableFields,value.sort?.field) && ['ascending','descending'].includes(value.sort?.direction)?
+            {field:value.sort.field,direction:value.sort.direction}:undefined;
+        this.columnVisibility={};
+        for(const [field,visible] of Object.entries(value.columns || {}))
+            if(Object.hasOwn(tableFields,field) && typeof visible==='boolean')this.columnVisibility[field]=visible;
+        if(!this.tableColumns().some(column=>column.visible))this.columnVisibility={};
+        this.tablePage=0;this.tableAnchor=undefined;this.dirty=true;
+        return true;
+    }
+
+    sortTable(entries) {
+        if(!this.tableSort) return;
+        const {field,direction}=this.tableSort;
+        const value=entry=>{
+            const raw=recordValues(entry)[field];
+            if(raw===undefined || raw===null || raw==='') return null;
+            if(field==='start' || field==='end') {
+                const time=parseTimelineDate(raw);
+                return Number.isFinite(time)?time:null;
+            }
+            return String(raw);
+        };
+        const values=new Map(entries.map(entry=>[entry,value(entry)]));
+        entries.sort((first,second)=>{
+            const a=values.get(first),b=values.get(second);
+            if(a===null || b===null) return a===b?0:a===null?1:-1;
+            const result=typeof a==='number'?a-b:tableCollator.compare(a,b);
+            return direction==='ascending'?result:-result;
+        });
+    }
+
+    exportTableCSV(columns,feedback) {
+        const axis=this.timeline.staticTimeAxis,numeric=axis?.kind==='numeric';
+        const lines=[columns.map(column=>csvCell(column.label+(numeric && axis.unit && ['start','end'].includes(column.field)?' ('+axis.unit+')':''))).join(',')];
+        for(const entry of this.tableEntries || []) {
+            const values=recordValues(entry);
+            if(numeric)for(const field of ['start','end'])if(values[field]!==undefined && values[field]!==null && values[field]!=='') {
+                // Display labels round numeric scales. Export the source value,
+                // including approximate prefixes and precision, whenever retained.
+                const original=entry.activity.data[field+'Value'];
+                values[field]=original!==undefined && original!==null && original!==''?original:
+                    parseTimelineDate(values[field])/axis.millisecondsPerUnit/(axis.direction || 1);
+            }
+            lines.push(columns.map(column=>csvCell(values[column.field])).join(','));
+        }
+        let url;
+        try {
+            const blob=new Blob(['\uFEFF'+lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
+            url=URL.createObjectURL(blob);
+            const link=document.createElement('a');link.href=url;
+            link.download=(this.timeline.name || 'timeline').replace(/[^a-z\d_-]/gi,'_')+'-events.csv';
+            document.body.append(link);link.click();link.remove();
+            feedback.textContent='Exported '+this.tableEntries.length+' records'+(this.tableComplete?' in the current table.':' from loaded data; coverage is incomplete.');
+        } catch {feedback.textContent='CSV export is unavailable in this browser.';}
+        finally {if(url)setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    }
+
+    renderTableTools(columns,count,open) {
+        const tools=document.createElement('div');tools.className='ob_table_tools';
+        const choices=document.createElement('details');choices.className='ob_table_columns';choices.open=Boolean(open);
+        const summary=document.createElement('summary');summary.textContent='Columns';summary.dataset.tableControl='columns';
+        const list=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent='Visible columns';list.append(legend);
+        for(const column of this.tableColumns()) {
+            const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=column.visible;
+            input.dataset.column=column.field;input.disabled=column.visible && !columns.some(other=>other.field!==column.field);
+            input.onchange=()=>{this.columnVisibility ??={};this.columnVisibility[column.field]=input.checked;this.renderTable();};
+            label.append(input,document.createTextNode(column.label));list.append(label);
+        }
+        choices.append(summary,list);
+        choices.addEventListener('keydown',event=>{if(event.key==='Escape'){choices.open=false;summary.focus();event.stopPropagation();}});
+        const exportButton=document.createElement('button');exportButton.type='button';exportButton.dataset.tableControl='export';
+        exportButton.textContent=this.tableComplete?'Export CSV':'Export CSV (loaded records)';exportButton.disabled=count===0;
+        const feedback=document.createElement('span');feedback.className='ob_table_export_status';feedback.setAttribute('role','status');
+        feedback.id=this.timeline.name+'_table_export_status';
+        feedback.textContent='All '+count+' records across table pages'+(this.tableComplete?'.':' \u00b7 Coverage incomplete; loaded records only.');
+        exportButton.setAttribute('aria-describedby',feedback.id);
+        exportButton.onclick=()=>this.exportTableCSV(columns,feedback);
+        tools.append(choices,exportButton,feedback);return tools;
+    }
+
     renderTable() {
         const t=this.timeline,scene=t.ob_scene[this.sceneIndex],vp=t.ob_viewport;
         const active=document.activeElement;
-        const focused=this.tablePanel.contains(active)?{page:active.dataset.page,key:active.dataset.record}:null;
+        const focused=this.tablePanel.contains(active)?{page:active.dataset.page,key:active.dataset.record,
+            sort:active.dataset.sort,column:active.dataset.column,control:active.dataset.tableControl}:null;
+        const columnsOpen=this.tablePanel.querySelector('.ob_table_columns')?.open;
         const entries=[];
         const recordBands=new Map();
         for(const band of vp?.fullBands || scene.bands || []) {
@@ -181,21 +296,51 @@ export class TimelineViews {
             for(const session of band.sessions || [])for(const record of session.activities || [session])
                 recordBands.set(record.matchKey || (record.namespace || '')+':'+record.id,band);
         }
+        // densityRecords flattens the normalized tree. Retain its actual parent
+        // source context, including structural parents in matches-only views.
+        const sources=new Map();
+        const collectSources=(records,inherited)=>{
+            for(const record of records || []) {
+                if(!record)continue;
+                const source=recordSource(record) ?? inherited;
+                sources.set(record.matchKey || record,source);
+                collectSources(record.activities,source);
+            }
+        };
+        collectSources(scene.sessions?.events);
         const records=scene.sessions?.densityRecords || scene.sessions?.events;
         for(const session of Array.isArray(records)?records:[]) {
             if(!session || session.zone!==undefined) continue;
             const activities=scene.sessions?.densityRecords?[session]:Array.isArray(session.activities)?session.activities:[session];
             for(const activity of activities) if(activity?.data && activity.zone===undefined)
-                entries.push({activity,session,key:activity.matchKey || (activity.namespace || '')+':'+activity.id});
+                entries.push({activity,session,source:sources.get(activity.matchKey || activity),
+                    key:activity.matchKey || (activity.namespace || '')+':'+activity.id});
         }
+        this.sortTable(entries);this.tableEntries=entries;
+        this.tableComplete=Boolean(t.ob_results?.complete ?? t.staticData) && !t.ob_results?.remoteMetadata?.warnings?.length;
         const table=document.createElement('table');table.className='ob_event_table';
         const caption=table.createCaption(),header=table.createTHead().insertRow(),body=table.createTBody();
-        const columns=renderingFor(t).table.columns.filter(column=>column.visible!==false);
+        const columns=this.tableColumns().filter(column=>column.visible);
         for(const column of columns) {
-            const cell=document.createElement('th');cell.scope='col';cell.textContent=column.label;
+            const cell=document.createElement('th');cell.scope='col';
+            const direction=this.tableSort?.field===column.field?this.tableSort.direction:'none';
+            cell.setAttribute('aria-sort',direction);
+            const sort=document.createElement('button');sort.type='button';sort.className='ob_table_sort';
+            const label=document.createElement('span');label.className='ob_table_sort_label';label.textContent=column.label;
+            const indicator=document.createElement('span');indicator.className='ob_table_sort_icon';indicator.setAttribute('aria-hidden','true');
+            indicator.textContent=direction==='ascending'?'\u2191':direction==='descending'?'\u2193':'\u2195';
+            sort.append(label,indicator);
+            sort.setAttribute('aria-label',column.label);
+            sort.dataset.sort=column.field;sort.title='Sort '+column.label+' '+(direction==='ascending'?'descending':'ascending');
+            sort.onclick=()=>{
+                this.tableSort={field:column.field,direction:direction==='ascending'?'descending':'ascending'};
+                this.tablePage=0;this.tableAnchor=undefined;this.renderTable();
+            };
+            cell.append(sort);
             if(column.width)cell.style.width=column.width+'px';header.append(cell);
         }
-        const render=({activity,session,key})=>{
+        const render=entry=>{
+            const {activity,session,key}=entry;
             const data=activity.data,row=body.insertRow();
             if ((activity.searchMatch===true && t.ob_results?.state.highlight!==false) ||
                 (!t.ob_results?.supported && String(activity.render?.backgroundColor).toUpperCase()==='#F8DF09')) {
@@ -217,10 +362,9 @@ export class TimelineViews {
                 }
                 return marker;
             };
-            const date=value=>value && t.formatEventDate?t.formatEventDate(value):value;
-            const values={title:data.title,start:date(activity.start),end:date(activity.end),
-                source:activity.namespace ?? data.namespace ?? session.namespace ?? session.data?.namespace,
-                status:data.status,description:data.description,id:activity.id};
+            const values=recordValues(entry);
+            for(const field of ['start','end'])if(values[field]!==undefined && values[field]!==null && values[field]!=='' && t.formatEventDate)
+                values[field]=t.formatEventDate(values[field]);
             for(const column of columns) {
                 const value=values[column.field];
                 const cell=row.insertCell();cell.textContent=value===undefined || value===null || value===''?'\u2014':String(value);
@@ -235,7 +379,7 @@ export class TimelineViews {
                 button.onclick=()=>t.ob_open_descriptor(this.sceneIndex,activity);
                 const titleColumn=columns.findIndex(column=>column.field==='title');
                 if(titleColumn>=0)row.cells[titleColumn].replaceChildren(button);
-                else {row.tabIndex=0;row.setAttribute('aria-label','Details: '+button.textContent);
+                else {row.tabIndex=0;row.dataset.record=key;row.setAttribute('aria-label','Details: '+button.textContent);
                     row.onclick=button.onclick;row.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();button.onclick();}};}
             }
             return row;
@@ -243,14 +387,15 @@ export class TimelineViews {
         const count=entries.length;
         caption.textContent=count+(count===1?' event':' events');
         const oldScroll=[this.tablePanel.scrollTop,this.tablePanel.scrollLeft];
-        this.tablePanel.replaceChildren(table);
+        const tools=this.renderTableTools(columns,count,columnsOpen);
+        this.tablePanel.replaceChildren(tools,table);
         let from=0,to=count,pages=1;
         if(vp && count) {
             // All rows use one nowrap style; measure a real row before rendering
             // only the current page. Record count does not increase DOM size.
             const sample=render(entries[0]);
             const rowHeight=Math.max(34,sample.getBoundingClientRect().height || 34);
-            const headerSpace=(caption.offsetHeight || 32)+(table.tHead.offsetHeight || 34);
+            const headerSpace=(caption.offsetHeight || 32)+(table.tHead.offsetHeight || 34)+(tools.offsetHeight || 64);
             const space=Math.max(1,vp.height-vp.headerHeight-headerSpace);
             let capacity=Math.max(1,Math.floor(space/rowHeight));
             if(count>capacity) capacity=Math.max(1,Math.floor((space-36)/rowHeight));
@@ -278,14 +423,16 @@ export class TimelineViews {
             const next=document.createElement('button');next.type='button';next.textContent='Next';next.dataset.page='next';
             next.disabled=this.tablePage===pages-1;next.onclick=()=>move(1);
             const status=document.createElement('span');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-            status.textContent='Page '+(this.tablePage+1)+' of '+pages+(t.ob_results.complete?'':' \u00b7 loaded scope');
+            status.textContent='Page '+(this.tablePage+1)+' of '+pages+(this.tableComplete?'':' \u00b7 loaded scope');
             pager.append(previous,status,next);this.tablePanel.append(pager);
             caption.textContent='Showing '+(from+1)+'\u2013'+to+' of '+count+' events';
         }
         this.tablePanel.scrollTop=vp?0:oldScroll[0];this.tablePanel.scrollLeft=vp?0:oldScroll[1];
         if(focused) {
-            const target=[...this.tablePanel.querySelectorAll('button')].find(button=>
-                focused.key?button.dataset.record===focused.key:button.dataset.page===focused.page);
+            const target=[...this.tablePanel.querySelectorAll('button,input,summary,[data-record]')].find(button=>
+                focused.key?button.dataset.record===focused.key:focused.sort?button.dataset.sort===focused.sort:
+                    focused.column?button.dataset.column===focused.column:focused.control?button.dataset.tableControl===focused.control:
+                        focused.page?button.dataset.page===focused.page:false);
             (target && !target.disabled?target:this.tablePanel).focus({preventScroll:true});
         }
         this.dirty=false;

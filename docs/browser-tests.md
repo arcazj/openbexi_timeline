@@ -21,11 +21,74 @@ It does not connect to a deployed server or modify a database. Failure screensho
 expected/actual/diff images, traces, and the HTML report are saved under
 `test-results/` and `playwright-report/` (both ignored by Git).
 
+## Touch, keyboard and other browsers
+
+```sh
+npx playwright install firefox webkit
+npm run test:browser:compat
+```
+
+The compatibility configuration runs `usability.spec.mjs` on a 390 × 844 touch
+device in Chromium and in desktop Firefox and WebKit. It exercises search,
+view switching, event details, keyboard activation, and opening/closing More.
+These are functional checks; the reviewed pixel baselines remain Chromium-only.
+Set `TIMELINE_TEST_PORT` to use a different local port when running suites
+independently. Playwright projects and device emulation follow the
+[official configuration guide](https://playwright.dev/docs/test-projects).
+
+## Performance measurements
+
+```sh
+npm run test:browser:performance
+```
+
+This separate run uses 1,000 and 10,000 synthetic records and attaches
+`performance.json` for each case: time to the usable view, search and grouping
+through the next paint, drag frame intervals, long tasks, observed interaction
+durations, worker starts and renderer resource counts. Compare repeated runs on
+the same hardware without other tests running. These lab samples are not field
+INP, and software WebGL timings are not hardware-independent performance budgets.
+For real user monitoring, assess the 75th percentile separately for mobile and
+desktop; [good INP is at most 200 ms](https://web.dev/articles/inp).
+
+The regular `local-data-performance.spec.mjs` additionally verifies real module
+worker startup on 20,000 synthetic records, UI responsiveness during parsing,
+cancellation, retained old records and Retry. Large JSON decoding and normalization
+run in the worker; final snapshot construction and rendering still run on the
+main thread. XML and browsers that cannot start module workers use the original
+parser. The original drag checks continue to enforce scene and Overview reuse.
+
+Final 2.5.0 validation on October 2, 2026 repeated each fixture three times on
+Windows with Chromium and software WebGL, without other test suites running.
+The medians were:
+
+| Synthetic records | Usable view | Search through paint | Grouping through paint | Drag frame interval, p95 |
+| --- | --- | --- | --- | --- |
+| 1,000 | 3.71 s | 0.85 s | 0.80 s | 33.3 ms |
+| 10,000 | 3.55 s | 1.88 s | 3.36 s | 83.4 ms |
+
+Usable-view times ranged from 2.87–3.77 seconds for 1,000 records and 3.50–4.41
+seconds for 10,000. The 1,000-record fixture ran first in each repeat, so renderer
+startup and caching affect comparisons between sizes. Every 10,000-record case
+started one parsing worker, but its longest main-thread task still took
+2.25–3.24 seconds. These measurements establish a local reference, not a
+before/after speedup. Layout and rendering remain the next performance target
+for large datasets. Connected-data loading limits retain their previous values.
+
 ```sh
 npx playwright show-report
 ```
 
 ## What is checked
+
+- `event-targets.spec.mjs` hovers and clicks actual canvas shapes and text in 2D
+  and 3D, checks full captions and retained record identity, and drags from text.
+- `filter-reliability.spec.mjs` re-selects saved exclusions after changing chips,
+  builder expressions and grouping, and checks the new-filter editor at phone
+  width. `appearance-colors.spec.mjs` checks Model and YAML button contrast,
+  saved custom colors, menu grouping, background restoration and reset.
+- Node loader tests confirm the existing record, character, nested-record and
+  page limits stop loading safely while retaining accepted data.
 
 - The embedded edition covers real same-origin and cross-origin frames, exact
   event/session metadata callbacks, data updates, invalid input, appearance and
@@ -47,13 +110,18 @@ npx playwright show-report
   compact 3D labels remain readable through rotation and resizing.
 - Exactly two menu bars hold all controls. Latest data and activity navigation,
   followed by a separator, Auto scale and Lock current view, follow search on
-  wide screens and move to the secondary bar when needed. Checks include
-  horizontal scrolling within each bar, retained keyboard focus, keyboard zoom
-  and no page-level horizontal overflow on phone screens.
+  wide screens and move to the secondary bar when needed. At phone widths,
+  secondary controls move into More while search, previous/next activity and
+  status remain visible. Checks include retained keyboard focus, keyboard zoom,
+  menu dismissal and no page-level horizontal overflow.
   The filter builder and removable labels preserve other criteria.
   Text, Pattern and Legacy share browser/server fixtures; checks cover invalid
   patterns, debounce, immediate Enter, mode changes and obsolete responses.
   Back restores the previous range. The application starts in 2D.
+- Saved-view checks restore the visible range, selection, scale, filters, grouping
+  and table presentation through browser-local named views and public demo links.
+  Table/details checks cover sorting, column selection, CSV downloads across
+  loaded pages, copy controls, clipboard failure and high contrast.
 - Startup checks cover explicit HTML models, YAML configuration, a missing
   model setting, offline/time-limited discovery, and explicit model errors.
 - The timeline fills the window, reserving space for an open panel on wide screens
@@ -149,6 +217,7 @@ them into documentation or reviewed baselines.
 1. Node.js 24: install from the lockfile, audit dependencies, rebuild/check validators,
    validate the demo catalog and models, check the generated README, and run tests.
 2. Windows Chromium: run all browser checks and publish report/trace artifacts.
+   A separate compatibility job runs phone touch checks and Firefox/WebKit workflows.
 3. Java 17: run `mvn --batch-mode verify`, including the API tests, and audit the
    resolved runtime dependency graph against OSV advisories.
 
@@ -210,8 +279,8 @@ operational files.
 ### Menu bars and Settings
 
 `toolbar-ux.spec.mjs` checks exactly two menu rows, navigation immediately after
-search when it fits, fallback to the secondary row, and horizontal scrolling at
-desktop, narrow and phone widths. The secondary filter group follows
+search when it fits, fallback to the secondary row, and the compact More menu at
+phone widths. The secondary filter group follows
 Calendar, Filter: \<filter name\>, Filters, a separator and Timeline details.
 Checks include the separator between 3D and Settings, removal of the old time-window
 button, and opening and closing the Status report with the same control.

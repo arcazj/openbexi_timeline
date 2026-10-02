@@ -3,7 +3,7 @@ import {createStaticMatchSnapshot, createProviderMatchSnapshot, projectMatchSnap
 import {ADAPTIVE_LIMITS, finiteRange, fitRange, densityMap, chooseDensityMap, projectMap, zoomMappedRange} from './openbexi_timeline_adaptive.js';
 import {measureCandidateLayout} from './openbexi_timeline_data.js';
 import {recordKey} from './openbexi_timeline_paging.js';
-import {filterLocalData} from './openbexi_timeline_filters.js';
+import {filterLocalData,syncFilterSelection} from './openbexi_timeline_filters.js';
 import {projectOverviewSessions} from './openbexi_timeline_overview.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
 import {TimelineExplorer} from './openbexi_timeline_explorer.js';
@@ -111,6 +111,7 @@ export class TimelineResults {
     }
 
     focusRecord(record) {
+        this.mapRestoration=null;
         this.controls.rememberView();
         this.cancelFocus(false);
         this.explorer.interrupt();this.selectRecord(record);
@@ -184,6 +185,7 @@ export class TimelineResults {
         }
         this.explorer.changed(patch);
         const keys = Object.keys(patch);
+        if (keys.length) this.mapRestoration = null;
         if(keys.length)this.cancelFocus(false);
         this.presentationUpdate = keys.length === 0 && Boolean(this.snapshot) &&
             (Boolean(this.timeline.staticData) || this.remoteMetadata?.query === this.state.query);
@@ -296,7 +298,7 @@ export class TimelineResults {
         return true;
     }
 
-    beginGesture() { this.cancelFocus(false);this.explorer.interrupt();this.gesture = true; this.overviewDefaultsFrozen=true; }
+    beginGesture() { this.mapRestoration=null;this.cancelFocus(false);this.explorer.interrupt();this.gesture = true; this.overviewDefaultsFrozen=true; }
     endGesture() {
         this.gesture = false;
         this.captureRanges();
@@ -307,6 +309,19 @@ export class TimelineResults {
         this.explorer.schedule();
     }
 
+    mapSettings() {
+        const t=this.timeline;
+        return JSON.stringify([this.state.query,this.state.searchMode,this.state.mode,this.state.auto,this.state.ratio,
+            this.explorer.locked,t.ob_scene?.[0]?.ob_filter_value,t.ob_sortBy,t.ob_user_name,t.params?.[0]?.data]);
+    }
+
+    beginMapRestoration(requireFresh = false) {
+        const map=densityMap([],this.domain);
+        this.mapRestoration={settings:this.mapSettings(), requireFresh, previous:this.remoteMetadata, map};
+        this.map=map;
+        this.navigationMap=null;
+    }
+
     computeMap() {
         const timeline = this.timeline;
         this.pruneRanges();
@@ -314,7 +329,16 @@ export class TimelineResults {
         if (!(width > 0)) return;
         if (this.lastWidth !== width) this.navigationMap = null;
         this.lastWidth = width;
-        if (this.map && this.state.auto && (this.explorer.locked || this.explorer.reading())) this.navigationMap=this.map;
+        if (this.mapRestoration && this.mapRestoration.settings!==this.mapSettings()) this.mapRestoration=null;
+        const restoration=this.mapRestoration;
+        if (restoration) {
+            // Keep a single linear map through partial batches, then reconstruct
+            // the saved presentation once authoritative coverage is complete.
+            this.map=restoration.map;this.navigationMap=null;
+            if (!this.complete || restoration.requireFresh && restoration.previous===this.remoteMetadata) return;
+            this.mapRestoration=null;
+        }
+        if (!restoration && this.map && this.state.auto && (this.explorer.locked || this.explorer.reading())) this.navigationMap=this.map;
         if (this.navigationMap) {
             // Keep the pinned slopes during navigation, but use the current
             // loaded domain for zoom bounds after a distant calendar jump.
@@ -334,7 +358,7 @@ export class TimelineResults {
         // Keep small density changes from moving labels after every refresh.
         const old=this.map;
         const movement=old && candidate.segments.reduce((sum,s)=>sum+Math.abs(candidate.map(s.from)-old.map(s.from)),0)/candidate.segments.length;
-        if(!old || old.domain.from!==this.domain.from || old.domain.to!==this.domain.to || old.ratio>this.state.ratio ||
+        if(restoration || !old || old.domain.from!==this.domain.from || old.domain.to!==this.domain.to || old.ratio>this.state.ratio ||
             old.ratio===1 && candidate.ratio>1 || movement>.015) this.map=candidate;
     }
 
@@ -393,6 +417,7 @@ export class TimelineResults {
 
     navigate(range, fitVisible = false, {immediate = false, automatic = false, centerBounds = null, render = true} = {}) {
         if (!Number.isFinite(range?.from) || !Number.isFinite(range?.to) || range.to<=range.from) return;
+        this.mapRestoration=null;
         this.cancelFocus(false);
         if(!automatic)this.explorer.interrupt();
         this.centerBounds=centerBounds;
@@ -596,7 +621,7 @@ export class TimelineResults {
         this.details.addEventListener('toggle',syncDetails);
         const closeDetails=event=>{
             if(event.key==='Escape' && this.details.open){event.preventDefault();this.details.open=false;syncDetails();
-                (event.currentTarget===this.status?this.status:this.detailsToggle).focus({preventScroll:true});}
+                (event.currentTarget===this.status || this.controls.compact?this.status:this.detailsToggle).focus({preventScroll:true});}
         };
         this.details.addEventListener('keydown',closeDetails);
         this.detailsToggle.addEventListener('keydown',closeDetails);
@@ -687,12 +712,13 @@ export class TimelineResults {
             }
         }, true);
         const guard = event => {
+            if(event.type==='keydown' && event.key==='Escape' && this.controls.morePanel && !this.controls.morePanel.hidden)return;
             if (event.type==='keydown' && event.key==='Escape' && this.details.open && (this.details.contains(event.target) || event.target===this.detailsToggle || event.target===this.status)) return;
             if (event.type==='keydown' && event.key==='Escape' && t.ob_perspective?.adjusting && t.ob_timeline_body_frame.contains(event.target)) return;
             if ((this.loading || this.fetching) && event.type === 'keydown' && event.key === 'Escape') {
                 event.preventDefault(); this.cancelLoad(); return;
             }
-            if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help ||
+            if (!this.loading || event.target === t.ob_stop || event.target === t.ob_help || event.target===this.controls.moreButton || event.target===this.controls.morePanel?.firstElementChild ||
                 event.target === this.status || event.target === this.liveStatus || event.target===this.detailsToggle || event.target===this.explorer.stop || this.details.contains(event.target)) return;
             if (event.type === 'keydown' && event.key === 'Tab') return;
             event.preventDefault(); event.stopImmediatePropagation();
@@ -716,11 +742,12 @@ export class TimelineResults {
     }
 
     cancelLoad() {
+        this.mapRestoration=null;
         clearTimeout(this.searchTimer);
         this.explorer.interrupt();
         const t = this.timeline;
         t.ob_loader?.cancel();
-        t.localDataAbort?.abort(); this.fetching=false;
+        t.localDataAbort?.abort(); this.fetching=false; this.localProgress='';
         t.dataAbort?.abort(); t.eventSource?.close();
         this.requestRevision++; this.revision++;
         clearTimeout(this.timer); this.queued = false;
@@ -753,7 +780,7 @@ export class TimelineResults {
         this.disabledControls ??= new Map();
         if (busy) {
             for (const control of t.ob_timeline_header.querySelectorAll('button,input,select,img')) {
-                if (control === t.ob_stop || control === t.ob_help || control === this.status || control === this.liveStatus || control===this.detailsToggle || control===this.explorer.stop) continue;
+                if (control === t.ob_stop || control === t.ob_help || control === this.controls.moreButton || control === this.controls.morePanel?.firstElementChild || control === this.status || control === this.liveStatus || control===this.detailsToggle || control===this.explorer.stop) continue;
                 if (!this.disabledControls.has(control)) this.disabledControls.set(control, Boolean(control.disabled));
                 control.disabled = true; control.setAttribute('aria-disabled', 'true');
             }
@@ -827,6 +854,7 @@ export class TimelineResults {
         if (!this.loading) this.updateLoadingUI();
         const t = this.timeline;
         if(!this.searchError)this.searchMode.value=this.state.searchMode;
+        syncFilterSelection(t);
         this.searchErrorLabel.textContent=this.searchError || '';
         this.searchErrorLabel.hidden=!this.searchError;
         this.auto.checked = this.state.auto; this.mode.checked = this.state.mode === 'only';
@@ -849,6 +877,7 @@ export class TimelineResults {
                 this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No matches' : '';
         this.statusMessage.textContent = status;
         this.loadingStatus.hidden=!working;
+        this.loadingStatus.textContent=this.localProgress || 'Loading items…';
         this.retryButton.hidden = !this.error && !this.cancelled;
         this.refreshButton.hidden=false;
         this.refreshButton.disabled=this.fetching || this.loading;
@@ -899,7 +928,7 @@ export class TimelineResults {
         this.status.classList.toggle('ob_connection_warning',presentation.tone==='warning');
         const loadedItems=counts?counts.eligible.events+counts.eligible.sessions:null;
         const progress=working && Number.isFinite(loadedItems)?`${loadedItems} ${loadedItems===1?'item':'items'} loaded`:'';
-        const statusText=[this.statusMessage.textContent,!this.loadingStatus.hidden?'Loading items…':'',progress,this.liveState,
+        const statusText=[this.statusMessage.textContent,!this.loadingStatus.hidden?this.loadingStatus.textContent:'',progress,this.liveState,
             this.searchError,this.explorer.message].filter(Boolean).join(' · ') || presentation.label;
         this.status.title=statusText;
         this.status.setAttribute('aria-description',statusText);
@@ -913,7 +942,7 @@ export class TimelineResults {
             'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.explorer.outcome==='stopped' ?
             'The search was stopped. Use the activity buttons or submit the search again to continue.' : this.remoteMetadata?.loadLimited ?
             'The loading limit was reached. Narrow the time window to continue.' : working && !this.remoteMetadata?.warnings?.length ?
-            'Items are loading in batches. Records already displayed remain available.' :
+            this.localProgress ? this.localProgress+' Stop loading or press Escape to cancel.' : 'Items are loading in batches. Records already displayed remain available.' :
             !this.supported || !this.complete || this.remoteMetadata?.complete===false || this.remoteMetadata?.warnings?.length ?
             'Coverage is incomplete in one or more loaded or prefetched time ranges. Counts describe loaded records. Review the warnings and ranges below; Refresh checks the sources again.' :
             this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No loaded records match the current search and filters.' :

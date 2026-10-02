@@ -62,6 +62,30 @@ jobs:
             test-results/
           retention-days: 14
 
+  browser-compatibility:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --only-shell
+      - run: npx playwright install firefox webkit
+      - run: npm run test:browser:compat
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ !cancelled() }}
+        with:
+          name: browser-compatibility-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
   java-api:
     runs-on: ubuntu-latest
     timeout-minutes: 15

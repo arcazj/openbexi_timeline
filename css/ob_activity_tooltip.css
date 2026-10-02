@@ -1,0 +1,18 @@
+.ob_event_caption {
+    position: fixed;
+    z-index: 1000001;
+    box-sizing: border-box;
+    max-width: min(360px, calc(100vw - 16px));
+    max-height: calc(100vh - 16px);
+    padding: 8px 10px;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    font: 14px/1.4 Arial, sans-serif;
+    color: var(--ob-text, #17354d);
+    background: var(--ob-panel, #fff);
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px #0004;
+}
+.ob_event_caption[hidden] { display: none; }

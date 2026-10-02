@@ -1,7 +1,12 @@
 import {defineConfig} from '@playwright/test';
 
+const port=Number(process.env.TIMELINE_TEST_PORT || 8782);
+if(!Number.isInteger(port) || port<1024 || port>65535)throw new Error('TIMELINE_TEST_PORT must be between 1024 and 65535.');
+const baseURL=`http://127.0.0.1:${port}`;
+
 export default defineConfig({
     testDir: './tests/browser',
+    testIgnore: /(?:^|[\\/])performance\.spec\.mjs$/,
     fullyParallel: false,
     workers: 1,
     timeout: 90_000,
@@ -12,7 +17,7 @@ export default defineConfig({
     // Baselines are reviewed on Windows, the same platform as the visual CI job.
     snapshotPathTemplate: '{testDir}/snapshots/{platform}/{projectName}/{arg}{ext}',
     use: {
-        baseURL: 'http://127.0.0.1:8782',
+        baseURL,
         browserName: 'chromium',
         deviceScaleFactor: 1,
         locale: 'en-US',
@@ -29,8 +34,8 @@ export default defineConfig({
         {name: 'narrow', use: {viewport: {width: 800, height: 700}}}
     ],
     webServer: {
-        command: 'node tools/serve-demos.mjs --port 8782',
-        url: 'http://127.0.0.1:8782/demos.html',
+        command: `node tools/serve-demos.mjs --port ${port}`,
+        url: `${baseURL}/demos.html`,
         reuseExistingServer: false,
         timeout: 30_000
     }

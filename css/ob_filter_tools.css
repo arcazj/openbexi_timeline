@@ -1,0 +1,5 @@
+.ob_new_filter { margin-top: 8px; }
+.ob_filter_name_row { display: flex; align-items: center; gap: 8px; width: 90%; }
+.ob_filter_name_row label { flex: 0 0 auto; font-weight: 600; }
+.ob_filter_name_row input { flex: 1 1 auto; min-width: 0; width: 100%; }
+.ob_new_filter .ob_filter_advanced textarea { display: block; width: 90%; min-height: 100px; resize: vertical; margin-bottom: 8px; }

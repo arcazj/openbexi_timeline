@@ -5,6 +5,9 @@ views. Search, filter and group records, navigate through time, and inspect thei
 details. Use local JSON datasets or connect to a Java server for progressive
 loading and managed data.
 
+Save named views, share a demo's exact time range and filters, and export filtered
+table results as CSV. On small screens, **More** keeps secondary controls within reach.
+
 ## Quick start
 
 Install **Node.js 24**, then run:

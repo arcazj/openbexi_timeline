@@ -75,6 +75,20 @@ td.ob_descriptor_td2 {
 .ob_record_details pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font: inherit; }
 .ob_descriptor_description table { width: 100%; table-layout: fixed; }
 .ob_descriptor_status { font-size: 12px; }
+.ob_descriptor_summary { display: grid; grid-template-columns: minmax(64px, 24%) minmax(0, 1fr); gap: 8px 12px; margin: 16px 0 6px; }
+.ob_descriptor_summary dt { font-weight: 600; }
+.ob_descriptor_summary dd { margin: 0; overflow-wrap: anywhere; }
+.ob_descriptor_copy { margin-left: 8px; padding: 2px 6px; border: 1px solid var(--ob-border,#a5b6c4); border-radius: var(--ob-radius,4px); background: var(--ob-button,#f7f9fc); color: var(--ob-text,#25475f); cursor: pointer; font: inherit; font-size: 11px; }
+.ob_descriptor_copy:focus-visible { outline: 2px solid var(--ob-accent,#1767a4); outline-offset: 2px; }
+.ob_descriptor_copy_status { font-size: 12px; margin: 6px 0; }
+.ob_descriptor_copy_status:empty { display: none; }
+.ob_descriptor_copy_fallback { display: block; box-sizing: border-box; width: 100%; margin-top: 6px; }
+.ob_descriptor_fields { margin-top: 16px; border-top: 1px solid var(--ob-border,#dce4ea); padding-top: 12px; }
+.ob_descriptor_fields > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+:root[data-ob-theme=contrast] .ob_descriptor_copy { border-width: 2px; }
+:root[data-ob-theme=contrast] .ob_descriptor_copy:not(:disabled):hover { background: #c5e8ff; }
+:root[data-ob-theme=contrast] .ob_descriptor_copy:focus-visible { outline-width: 3px; }
+:root[data-ob-theme=contrast] .ob_descriptor_copy:disabled { opacity: 1; background: #ddd; border-style: dashed; }
 
 .ob_descriptor_resizer {
     position: absolute;

@@ -38,7 +38,13 @@ test('High contrast gives both menu bars distinct controls and strong separators
         const header = page.locator('.ob_results_header');
         const background = await header.evaluate(node => getComputedStyle(node).backgroundColor);
         expect(background).toBe('rgb(17, 17, 17)');
-        for (const bar of ['.ob_primary_toolbar', '.ob_activity_toolbar']) {
+        const compact=width<600;
+        const bars=['.ob_primary_toolbar', '.ob_activity_toolbar'];
+        if(compact) {
+            await page.getByRole('button',{name:'More',exact:true}).click();
+            bars.push('.ob_more_panel');
+        }
+        for (const bar of bars) {
             const styles = await page.locator(bar).evaluate(node => {
                 const visible = element => element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0;
                 const controls = [...node.querySelectorAll('button, img[role=button], label')]
@@ -53,18 +59,21 @@ test('High contrast gives both menu bars distinct controls and strong separators
                 return {controls: controls.map(style), separators: separators.map(style)};
             });
             expect(styles.controls.length).toBeGreaterThan(0);
-            expect(styles.separators.length).toBeGreaterThan(0);
+            if(compact && bar!=='.ob_more_panel')expect(styles.separators).toHaveLength(0);
+            else expect(styles.separators.length).toBeGreaterThan(0);
+            const surface=bar==='.ob_more_panel'?await page.locator(bar).evaluate(node=>getComputedStyle(node).backgroundColor):background;
             for (const control of styles.controls) {
                 expect(contrastRatio(control.color, control.background), control.name).toBeGreaterThanOrEqual(4.5);
-                expect(contrastRatio(control.background, background), control.name).toBeGreaterThanOrEqual(3);
+                expect(Math.max(contrastRatio(control.background,surface),contrastRatio(control.border,surface)),control.name).toBeGreaterThanOrEqual(3);
                 expect(control.borderWidth, control.name).toBeGreaterThanOrEqual(2);
                 expect(control.opacity, control.name).toBe('1');
             }
             for (const separator of styles.separators) {
                 expect(separator.width).toBeGreaterThanOrEqual(3);
-                expect(contrastRatio(separator.background, background)).toBeGreaterThanOrEqual(3);
+                expect(contrastRatio(separator.background,surface)).toBeGreaterThanOrEqual(3);
             }
         }
+        if(compact)await page.keyboard.press('Escape');
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         await page.screenshot({path: info.outputPath(`high-contrast-${width}.png`)});
     }

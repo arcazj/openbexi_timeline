@@ -235,6 +235,7 @@ test('Dense 3D activity uses readable pages and navigation brings later records 
     }
     const selected=(await timelineState(page)).selected;
     await page.setViewportSize({width:390,height:844});await ready(page);
+    await page.getByRole('button',{name:'More',exact:true}).click();
     await page.getByAltText('2D or 3D view',{exact:true}).click();await ready(page);
     expect((await timelineState(page)).pages).toBeGreaterThan(1);await readableLabels(page);
     await expect(page.locator('.ob_activity_selected')).toHaveAttribute('data-activity-key',selected);

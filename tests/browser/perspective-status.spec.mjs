@@ -42,7 +42,7 @@ test('Overview band backgrounds follow filtered and sorted bands, including save
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await page.getByRole('button',{name:'Add a new filter',exact:true}).click();
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Grouped sample');
-    await page.locator('.ob_filter_advanced > summary').click();
+    await expect(page.locator('.ob_filter_advanced')).toHaveAttribute('open','');
     await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: namespace = '+JSON.stringify(namespace));
     await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('namespace');
     await page.getByRole('button',{name:'Save new filter',exact:true}).click();await ready(page);

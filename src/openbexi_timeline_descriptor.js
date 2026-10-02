@@ -1,4 +1,5 @@
 import {cleanTimelineURL,readTimelineResponse} from './openbexi_timeline_transport.js';
+import {parseTimelineDate} from './openbexi_timeline_data_parser.js';
 
 const element = (tag,text,className) => {
     const node=document.createElement(tag);
@@ -35,6 +36,53 @@ function appendValue(target,value) {
     for(const child of template.content.childNodes) copy(child,target);
 }
 
+function displayDate(t,value) {
+    if(value===undefined || value===null || value==='') return '\u2014';
+    if(t.formatEventDate) return t.formatEventDate(value);
+    const time=parseTimelineDate(value);
+    return Number.isFinite(time)?new Date(time).toISOString().replace('T',' ').replace('.000Z',' UTC'):String(value);
+}
+
+function duration(t,record) {
+    if(record?.end===undefined || record.end===null || record.end==='') return 'Instant event';
+    let milliseconds=parseTimelineDate(record.end)-parseTimelineDate(record.start);
+    if(!Number.isFinite(milliseconds) || milliseconds<0) return '\u2014';
+    if(t.staticTimeAxis?.kind==='numeric') {
+        const axis=t.staticTimeAxis;
+        return Number((milliseconds/axis.millisecondsPerUnit).toFixed(4))+(axis.unit?' '+axis.unit:'');
+    }
+    if(milliseconds===0) return '0 seconds';
+    const parts=[];
+    for(const [size,label] of [[86400000,'day'],[3600000,'hour'],[60000,'minute'],[1000,'second']]) {
+        const count=Math.floor(milliseconds/size);
+        if(count) {parts.push(count+' '+label+(count===1?'':'s'));milliseconds-=count*size;}
+        if(parts.length===2) break;
+    }
+    return parts.join(' ') || milliseconds+' ms';
+}
+
+function appendCopy(target,label,value,feedback) {
+    if(value===undefined || value===null || value==='') return;
+    const button=element('button','Copy','ob_descriptor_copy');button.type='button';
+    button.setAttribute('aria-label','Copy '+label);button.title='Copy original '+label;
+    button.onclick=async()=>{
+        const text=String(value);
+        try {
+            if(!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+            await navigator.clipboard.writeText(text);
+            feedback.textContent=label+' copied.';
+        } catch {
+            const field=element('textarea',text,'ob_descriptor_copy_fallback');field.readOnly=true;
+            field.setAttribute('aria-label',label+' to copy');target.append(field);field.focus();field.select();
+            let copied=false;
+            try {copied=document.execCommand?.('copy')===true;} catch {}
+            if(copied) {field.remove();button.focus();feedback.textContent=label+' copied.';}
+            else {feedback.textContent='Select and copy the '+label+' below.';button.disabled=true;}
+        }
+    };
+    target.append(button);
+}
+
 export function cancelDescriptor(t) {
     t.ob_descriptor_revision=(t.ob_descriptor_revision || 0)+1;
     t.ob_descriptor_abort?.abort();
@@ -44,15 +92,30 @@ export function cancelDescriptor(t) {
 export function renderDescriptor(t,index,record,{status='',retry}={}) {
     const panel=t.ob_timeline_right_panel;
     const previous=panel.querySelector('.ob_record_details');
+    const sameRecord=previous?.dataset.record===String(record?.id)+':'+String(record?.start);
+    const fieldsOpen=sameRecord && previous.querySelector('.ob_descriptor_fields')?.open;
     const scroll=panel.scrollTop;
     previous?.remove();document.getElementById(t.name+'_descriptor')?.remove();
     const details=element('section',undefined,'ob_descriptor ob_record_details');details.id=t.name+'_descriptor';
+    details.dataset.record=String(record?.id)+':'+String(record?.start);
     if(t.staticData) details.classList.add('ob_static_description');
     const heading=element('div',undefined,'ob_panel_heading'),close=element('button','Close');
     close.type='button';close.setAttribute('aria-label','Close event details');close.onclick=()=>t.ob_remove_descriptor();
     heading.append(document.createTextNode('Data'),close);details.append(heading);
     const data=record?.data || {};
     details.append(element('h2',data.title || record?.title || 'Record details'));
+    const copyFeedback=element('p','','ob_descriptor_copy_status');copyFeedback.setAttribute('role','status');
+    const summary=element('dl',undefined,'ob_descriptor_summary');
+    const source=[record?.namespace,data.namespace,data.source,record?.source]
+        .find(value=>value!==undefined && value!==null && (typeof value!=='string' || value.trim()!==''));
+    for(const [label,value,original] of [
+        ['Start',displayDate(t,record?.start),record?.start],['End',displayDate(t,record?.end),record?.end],
+        ['Duration',duration(t,record)],['Source',source],['Status',data.status ?? record?.status],['ID',record?.id,record?.id]
+    ]) {
+        const term=element('dt',label),definition=element('dd',value===undefined || value===null || value===''?'\u2014':String(value));
+        appendCopy(definition,label,original,copyFeedback);summary.append(term,definition);
+    }
+    details.append(summary,copyFeedback);
     const table=element('table',undefined,'ob_descriptor_table');
     const fields={};
     for(const key of ['id','start','end','original_start','original_end']) if(record?.[key]!==undefined) fields[key]=record[key];
@@ -64,12 +127,17 @@ export function renderDescriptor(t,index,record,{status='',retry}={}) {
     for(const [key,value] of Object.entries(fields)) {
         const row=element('tr'),label=element('th',key),cell=element('td',undefined,'ob_descriptor_value');
         label.scope='row';
-        appendValue(cell,value);row.append(label,cell);table.append(row);
+        appendValue(cell,value);
+        if(['id','start','end','original_start','original_end'].includes(key)) appendCopy(cell,key,value,copyFeedback);
+        row.append(label,cell);table.append(row);
     }
-    details.append(table,element('h3','Description'));
+    const allFields=element('details',undefined,'ob_descriptor_fields');allFields.open=Boolean(fieldsOpen);
+    allFields.append(element('summary','All fields'),table);
+    details.append(element('h3','Description'));
     const description=element('div',undefined,'ob_descriptor_description');
     appendValue(description,data.description || (status==='Loading details…'?'Description is loading…':'No description available.'));
     details.append(description);
+    details.append(allFields);
     if(record?.activities?.length) {
         const children=element('details'),summary=element('summary',`Activities (${record.activities.length})`);
         children.append(summary);appendValue(children.appendChild(element('div')),record.activities);details.append(children);

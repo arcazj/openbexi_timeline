@@ -297,3 +297,28 @@ test('Help reports unavailable resources while keeping Share and Diagnostics usa
         assert.equal(panel.isConnected, false);
     } finally { harness.close(); }
 });
+
+test('Share supports named views with Enter, open and delete while remaining in the panel', async () => {
+    const harness = await fixture();
+    try {
+        const {timeline, window} = harness;
+        const panel = await harness.open(); tab(panel, 'Share').click();
+        const name = panel.querySelector('[aria-label="Saved view name"]');
+        const selector = panel.querySelector('[aria-label="Saved views"]');
+        assert.equal(button(panel, 'Open saved view').disabled, true);
+        timeline.ob_views.setMode('split');
+        name.value = 'Review <script>'; name.focus();
+        name.dispatchEvent(new window.KeyboardEvent('keydown', {key:'Enter', bubbles:true, cancelable:true}));
+        assert.equal(selector.value, 'Review <script>');
+        assert.equal(panel.querySelectorAll('script').length, 0);
+        timeline.ob_views.setMode('table');
+        button(panel, 'Open saved view').click();
+        assert.equal(timeline.ob_views.mode, 'split');
+        assert.ok(panel.isConnected);
+        assert.match(panel.querySelector('.ob_saved_views [role="status"]').textContent, /Opened/);
+        button(panel, 'Delete saved view').click();
+        assert.equal(button(panel, 'Open saved view').disabled, true);
+        assert.equal(button(panel, 'Delete saved view').disabled, true);
+        assert.match(panel.querySelector('.ob_saved_views [role="status"]').textContent, /Deleted/);
+    } finally { harness.close(); }
+});

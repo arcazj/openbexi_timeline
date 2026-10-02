@@ -1,3 +1,5 @@
+import {applyAppearanceBackground} from './openbexi_timeline_appearance.js';
+
 /** Declarative presentation contract. Engine safety limits and runtime state stay in code. */
 const number = (value, minimum, maximum, description) => ({type:'number',default:value,minimum,maximum,description});
 const color = (value, description) => ({type:'string',default:value,minLength:1,maxLength:80,pattern:'^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$',description});
@@ -176,6 +178,7 @@ export function resolveRendering(value) {
 export const renderingFor=timeline=>timeline?.rendering || RENDERING_DEFAULTS;
 export const bandRendering=band=>band?._rendering || RENDERING_DEFAULTS;
 export function applyRenderingTheme(timeline) {
+    applyAppearanceBackground(timeline);
     const theme=renderingFor(timeline).theme;
     for(const [element,key,property] of [[timeline.ob_timeline_header,'headerBackground','background'],
         [timeline.ob_timeline_panel,'panelBackground','background'],[timeline.ob_timeline_panel,'panelText','color']])
