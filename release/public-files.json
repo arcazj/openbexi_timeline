@@ -655,5 +655,6 @@
   "tests/timeline-event-targets.test.mjs",
   "tests/browser/appearance-colors.spec.mjs",
   "tests/browser/filter-reliability.spec.mjs",
-  "tests/browser/event-targets.spec.mjs"
+  "tests/browser/event-targets.spec.mjs",
+  "docs/release-2.5.1.md"
 ]

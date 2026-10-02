@@ -81,9 +81,9 @@ references before publishing.
 5. Run `npm run release:source`. It creates
    `dist/openbexi-timeline-<version>-source.tar.gz`, its `.sha256` file and
    `dist/SOURCE-MANIFEST.json` from the explicit public manifest.
-6. Commit the reviewed changes to `master`, tag that commit as `v<version>`,
-   and push the commit and tag without rewriting remote history. Confirm the
-   Verify and Publish live demos workflows complete successfully.
+6. Commit the reviewed changes to `master` and push without rewriting remote
+   history. Confirm the Verify and Publish live demos workflows complete
+   successfully for that commit, then tag it as `v<version>` and push the tag.
 7. Publish the release notes and source archive with its checksum on the
    matching GitHub release. Confirm the deployed `version.json` identifies the
    release commit, then verify the live demo flows.

@@ -63,8 +63,12 @@ jobs:
           retention-days: 14
 
   browser-compatibility:
-    runs-on: windows-2025
+    # Functional checks need WebGL2. GPU-less Windows Firefox blocks that API;
+    # Ubuntu uses Mesa software rendering while visual baselines stay on Windows.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -74,9 +78,11 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx playwright install chromium --only-shell
-      - run: npx playwright install firefox webkit
-      - run: npm run test:browser:compat
+      - run: npx playwright install --with-deps chromium --only-shell
+      - run: npx playwright install --with-deps firefox webkit
+      - name: Install software WebGL drivers
+        run: sudo apt-get install -y libgl1-mesa-dri libglx-mesa0 libegl-mesa0
+      - run: xvfb-run -a npm run test:browser:compat
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ !cancelled() }}
         with:

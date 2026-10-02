@@ -32,6 +32,11 @@ The compatibility configuration runs `usability.spec.mjs` on a 390 × 844 touch
 device in Chromium and in desktop Firefox and WebKit. It exercises search,
 view switching, event details, keyboard activation, and opening/closing More.
 These are functional checks; the reviewed pixel baselines remain Chromium-only.
+CI runs these functional checks on Ubuntu 24.04 with Playwright's browser and
+system dependencies installed. Windows runners remain dedicated to the reviewed
+Chromium screenshots; their graphics configuration can deny Firefox WebGL 2
+context creation before a timeline can start (see
+[Mozilla's WebGL 2 report](https://bugzilla.mozilla.org/show_bug.cgi?id=1970486)).
 Set `TIMELINE_TEST_PORT` to use a different local port when running suites
 independently. Playwright projects and device emulation follow the
 [official configuration guide](https://playwright.dev/docs/test-projects).

@@ -112,6 +112,34 @@ test('Empty tables keep column and sort controls and disable CSV export',async()
     } finally {h.close();}
 });
 
+test('Table tolerates non-array event and nested activity collections without losing valid records or source context',async()=>{
+    const h=await setup([]);
+    try {
+        h.t.ob_viewport.height=1000;
+        const unavailable=[undefined,null,{},'unavailable',true,42];
+        for(const events of unavailable) {
+            h.t.ob_scene[0].sessions={events};h.views.renderTable();
+            assert.match(h.views.tablePanel.textContent,/No events to display/);
+            assert.equal(h.views.tablePanel.querySelector('[data-table-control="export"]').disabled,true);
+        }
+        const entries=unavailable.map((activities,index)=>record('Record '+index,'2026-01-01',{
+            activities,data:{title:'Record '+index,...(index===0?{source:'Explicit provider'}:{})}
+        }));
+        h.t.ob_scene[0].sessions={events:entries};h.views.renderTable();
+        assert.equal(allTableRows(h.views).length,entries.length,'Invalid activity collections keep their parent record visible');
+        const sessions={events:[record('Parent','2026-01-01',{namespace:'Inherited provider',activities:[
+            record('Intermediate','2026-01-01',{activities:entries})
+        ]})],densityRecords:entries};
+        const original=JSON.stringify(sessions);
+        h.t.ob_scene[0].sessions=sessions;h.views.renderTable();
+        const visible=allTableRows(h.views);
+        assert.equal(visible.length,entries.length);
+        assert.deepEqual(visible.map(row=>row.cells[3].textContent),
+            entries.map((_,index)=>index===0?'Explicit provider':'Inherited provider'));
+        assert.equal(JSON.stringify(sessions),original);
+    } finally {h.close();}
+});
+
 test('Saved table presentation restores visible columns and sort while rejecting invalid state safely',async()=>{
     const h=await setup([record('Later','2 CE'),record('Earlier','2 BCE')]);
     try {

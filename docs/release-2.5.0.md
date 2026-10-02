@@ -2,6 +2,10 @@
 
 Version 2.5.0 improves event interaction, filtering, table tools and accessibility.
 
+The initial tag was superseded by [2.5.1](release-2.5.1.md) after CI found an
+invalid legacy event collection was not handled by the table-source lookup.
+Use 2.5.1 for the corrected 2.5 release.
+
 ## Changes
 
 - Hover event text, icons, circles and duration bars for full captions. Clicking
@@ -42,8 +46,10 @@ Existing model and server configurations remain compatible.
 
 ## Validation
 
-- JavaScript: 338 tests passed across the full suite and focused reruns after
-  the final fixes and restoration of the original loading limits.
+- JavaScript: a full local run passed 333 tests, followed by focused checks
+  covering five additional cases and the restored loading limits. CI then
+  caught the legacy view regression above in the final table-source change;
+  2.5.1 records the complete verification of its correction.
 - Chromium: 313 browser cases passed across the full desktop/narrow run and
   the new Apply-acknowledgement checks; seven duplicate narrow drag cases remain
   intentionally skipped. Changed screenshot baselines were reviewed.

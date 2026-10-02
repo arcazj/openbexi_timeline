@@ -300,7 +300,7 @@ export class TimelineViews {
         // source context, including structural parents in matches-only views.
         const sources=new Map();
         const collectSources=(records,inherited)=>{
-            for(const record of records || []) {
+            for(const record of Array.isArray(records)?records:[]) {
                 if(!record)continue;
                 const source=recordSource(record) ?? inherited;
                 sources.set(record.matchKey || record,source);
