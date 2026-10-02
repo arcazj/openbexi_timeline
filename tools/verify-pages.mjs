@@ -40,11 +40,14 @@ try {
     if(option('--commit')) assert.equal(version.commit,option('--commit'),'Deployed commit');
     const catalog=await json('demos/catalog.json');
     const resources=['index.html','docs/help-guide.html','help/resources.json','openbexi_timeline_model.html',
-        'openbexi_timeline_model_preview.html','schemas/legacy-model.schema.json','src/vendor/yaml/index.js',
+        'openbexi_timeline_model_preview.html','openbexi_timeline_embed.html','src/openbexi_timeline_embed.js',
+        'src/openbexi_timeline_embed_frame.js','src/openbexi_timeline_earth_orbit.js',
+        'demos/embedded-earth-orbit.html','demos/embedded-earth-orbit.js','docs/embedding.md',
+        'schemas/legacy-model.schema.json','src/vendor/yaml/index.js',
         'src/vendor/yaml/LICENSE',...catalog.demos.flatMap(d=>[d.dataset,d.model,d.reference].filter(Boolean))];
     for(const resource of resources) assert.equal((await fetch(new URL(resource,baseURL))).status,200,resource);
     for(const viewport of [{width:1440,height:900},{width:800,height:700}]) {
-        for(const demo of catalog.demos) {
+        for(const demo of process.argv.includes('--embed-only')?[]:catalog.demos) {
             const context=await browser.newContext({viewport,reducedMotion:'reduce',timezoneId:'UTC'});
             const page=await context.newPage();page.setDefaultTimeout(30000);
             const errors=[];
@@ -96,6 +99,29 @@ try {
             console.log(`PASS ${demo.id} (${viewport.width}px): assets, views, search, navigation, scaling, 3D, Help, live model editor`);
             await context.close();
         }
+        const context=await browser.newContext({viewport,reducedMotion:'reduce',timezoneId:'UTC'});
+        const page=await context.newPage(),errors=[];
+        page.on('pageerror',error=>errors.push(error.message));
+        page.on('response',response=>{if(response.status()>=400)errors.push(`${response.status()} ${response.url()}`);});
+        page.on('requestfailed',request=>{if(request.failure()?.errorText!=='net::ERR_ABORTED')errors.push(`${request.failure()?.errorText} ${request.url()}`);});
+        await page.goto(new URL('demos/embedded-earth-orbit.html',baseURL).href);
+        await expect(page.locator('#status')).toHaveText('Status: Ready',{timeout:30000});
+        await page.locator('#view').selectOption('table');
+        const embedded=page.frameLocator('#satellite-timeline iframe');
+        await embedded.getByRole('button',{name:'Details: Launch: Example Aurora',exact:true}).click();
+        await expect(page.locator('#selection')).toContainText('NORAD 900001: launch');
+        await page.getByRole('button',{name:'Add a launch',exact:true}).click();
+        await expect(embedded.getByRole('button',{name:'Details: Launch: Example Solstice',exact:true})).toBeVisible();
+        assert.deepEqual(errors,[],'Embedding assets under the deployment prefix');
+        if(option('--screenshots')) {
+            await fs.mkdir(option('--screenshots'),{recursive:true});
+            await page.locator('#view').selectOption('timeline');
+            await expect(embedded.getByRole('button',{name:'Timeline',exact:true})).toHaveAttribute('aria-pressed','true');
+            await page.screenshot({path:path.join(option('--screenshots'),`embedded-earth-orbit-${viewport.width}.png`)});
+        }
+        results.push({demo:'embedded-earth-orbit',width:viewport.width,status:'passed'});
+        console.log(`PASS embedded satellite timeline (${viewport.width}px): deployed assets, selection and data refresh`);
+        await context.close();
     }
     console.log(JSON.stringify({baseURL,version,checks:results},null,2));
 } finally {

@@ -15,6 +15,7 @@
 
 ## Setup and integration
 
+- [Embedding API and Earth Orbit example](embedding.md)
 - [Connected setup and diagnostics](connected-diagnostics.md)
 - [REST API guide](rest-api.md) · [API reference](api.html) · [OpenAPI contract](../swagger/openapi-v1.json)
 - [Security, Docker and deployment](security.md)
@@ -25,6 +26,8 @@
 - [Development, validation and releases](development.md)
 - [Browser tests and screenshot review](browser-tests.md)
 - [2.4 design proposal and HBDS model](design/2.4/README.md)
+- [Consolidated 2.4 prompt and requirements](design/2.4/implementation-prompt.md) ·
+  [Delivery and validation record](design/2.4/delivery-checklist.md)
 - [Release history](https://github.com/arcazj/openbexi_timeline/releases)
 - Release notes: [2.4.0](release-2.4.0.md), [2.3.2](release-2.3.2.md), [2.3.1](release-2.3.1.md),
   [2.3.0](release-2.3.0.md), [2.2.3](release-2.2.3.md), [2.2.2](release-2.2.2.md),

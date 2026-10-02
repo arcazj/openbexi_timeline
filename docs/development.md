@@ -23,6 +23,11 @@ baselines and review process. CI also audits npm and Java runtime dependencies.
 Use public or synthetic fixtures in tests and bug reports, following the
 [privacy guide](privacy.md).
 
+For the [embedded timeline](embedding.md), run `npm run test:embed` for its data
+adapter and unchanged item contract, then
+`npx playwright test tests/browser/embedding.spec.mjs` for actual rendering and
+cross-origin integration. Both are included in the normal test suites.
+
 Keep the [event/session JSON contract](event-session-contract.md) fixed. The
 frozen compatibility fixture covers legacy nested items, snapshots, numeric/BCE
 dates and extension metadata; do not regenerate it to hide a format change.

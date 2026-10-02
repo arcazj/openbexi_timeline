@@ -27,11 +27,18 @@ npx playwright show-report
 
 ## What is checked
 
+- The embedded edition covers real same-origin and cross-origin frames, exact
+  event/session metadata callbacks, data updates, invalid input, appearance and
+  resize isolation, forged-message rejection, cleanup and the satellite example.
 - Every catalog entry loads its expected number of records without uncaught errors
   and renders actual WebGL geometry.
 - The Model and YAML editor covers all public examples, five editing areas,
   keyboard and phone layouts, YAML preservation, scoped access and filters,
   conditional model saves, version history, and AI preview/accept/undo/cancel.
+  Connected application launches hide document management while retaining compact
+  Save/Export and history actions, visible errors and scoped Apply. Checks cover
+  reload, the inline heading, all three viewport sizes, read-only denial and save
+  conflicts; demo and standalone launches retain the full document manager.
   Browser API fixtures test failures and stale writes deterministically.
   After `mvn verify`, `npm run test:integration` also exercises a real local Java
   server and mock AI provider with isolated synthetic data and credentials.

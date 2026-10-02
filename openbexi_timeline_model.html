@@ -8,10 +8,11 @@
 </head>
 <body>
 <header class="editor-heading">
-  <div><a href="demos.html">OpenBEXI Timeline</a><h1>Model and YAML editor</h1><p>Edit a property and see its effect in the live timeline.</p></div>
+  <div class="editor-title"><h1>Model and YAML editor</h1><p>Edit a property and see its effect in the live timeline.</p></div>
   <button id="connect">Connect to server</button>
 </header>
 <main>
+  <section id="document-management" aria-label="Document management" hidden>
   <nav class="document-bar" aria-label="Document actions">
     <label>Open document <select id="documents"><option value="">Loading examples…</option></select></label>
     <button id="new-model">New model</button><button id="new-yaml">New YAML</button>
@@ -23,8 +24,10 @@
     <strong id="document-name">Loading…</strong><span id="document-source"></span><span id="dirty"></span>
     <button id="undo" title="Undo the last valid edit">Undo</button><button id="redo">Redo</button><button id="revert">Revert</button>
   </section>
-  <div id="notice" role="status" aria-live="polite"></div>
   <div class="workspace-context"><label for="workspace-model">Workspace model</label><select id="workspace-model" disabled><option value="">Local examples and drafts</option></select><span id="workspace-role">Local editing</span></div>
+  </section>
+  <nav id="editing-actions" aria-label="Editing actions" hidden></nav>
+  <div id="notice" role="status" aria-live="polite"></div>
   <p id="editor-lock" class="access-notice" role="alert" hidden>Only model administrators can use this editor. Select an authorized model or disconnect to edit public examples locally.</p>
   <div class="editor-workspace">
     <section class="property-panel" aria-label="Configuration properties">

@@ -1,5 +1,9 @@
 # Data-driven demos
 
+For a timeline inside another application, try the
+[embedded satellite example](../demos/embedded-earth-orbit.html) and its
+[integration guide](embedding.md).
+
 Use Node.js 24 or later for the demo tools and tests.
 
 ```sh

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Embedded satellite timeline</title>
+<style>
+body{margin:0;padding:24px;font:16px/1.5 system-ui,sans-serif;background:#f3f6fa;color:#223147}
+main{max-width:1200px;margin:auto}h1{font-size:24px;margin:0}p{margin:8px 0 16px}
+#satellite-timeline{height:440px;resize:vertical;overflow:hidden;min-height:300px;border:1px solid #9aabbe;border-radius:8px;background:white}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}button,select{font:inherit;padding:6px 12px}
+#selection{padding:12px;background:white;border-radius:6px}a{color:#165ea3}
+@media(max-width:600px){body{padding:12px}#satellite-timeline{height:510px}}
+</style></head><body><main>
+<h1>Satellite launches and re-entry</h1>
+<p>A reusable timeline inside a host page. These records are fictional integration examples.</p>
+<nav aria-label="Host controls"><button id="select">Select satellite 900001</button><button id="refresh">Add a launch</button>
+<label>View <select id="view"><option value="timeline">Timeline</option><option value="table">Table</option><option value="split">Split</option></select></label></nav>
+<div id="satellite-timeline"></div>
+<p id="status" role="status">Loading timeline…</p>
+<p id="selection" aria-live="polite">Select an event to show the corresponding satellite in this host page.</p>
+<p><a href="../docs/embedding.md">Integration guide</a> · <a href="https://github.com/arcazj/openbexi_earth_orbit">Earth Orbit project</a></p>
+</main><script type="module" src="embedded-earth-orbit.js"></script></body></html>

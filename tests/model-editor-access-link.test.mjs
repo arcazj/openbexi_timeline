@@ -25,3 +25,35 @@ test('Known read-only model access cannot open the model editor',async()=>{
         assert.equal(popups,0);
     }finally{harness.close();}
 });
+
+test('Editor launch distinguishes connected applications, demos and standalone local timelines',async()=>{
+    const harness=await createTimelineHarness({url:'http://localhost/app/timeline.html'});
+    try {
+        const api=await harness.importModule('src/openbexi_timeline_model_link.js');
+        assert.equal(api.editorLaunchMode({data:'http://localhost/openbexi_timeline/sessions'}),'connected');
+        assert.equal(api.editorLaunchMode({modelSource:'yaml',staticData:{events:[]}}),'connected');
+        assert.equal(api.editorLaunchMode({modelId:'private-model'}),'connected');
+        assert.equal(api.editorLaunchMode({staticData:{events:[]},modelSource:'html'}),'standalone');
+        assert.equal(api.editorLaunchMode({demoContext:{id:'monet'},modelId:'private-model'}),'demo');
+    }finally{harness.close();}
+    const demo=await createTimelineHarness({url:'http://localhost/project/demos.html?demo=monet'});
+    try {
+        const api=await demo.importModule('src/openbexi_timeline_model_link.js');
+        assert.equal(api.editorLaunchMode({data:'/openbexi_timeline/sessions',modelSource:'yaml'}),'demo');
+    }finally{demo.close();}
+});
+
+test('Connected editor links retain presentation and model scope when session storage is unavailable',async()=>{
+    const harness=await createTimelineHarness();
+    try {
+        const api=await harness.importModule('src/openbexi_timeline_model_link.js');
+        Object.defineProperty(harness.window,'sessionStorage',{get(){throw new Error('Storage unavailable');}});
+        let opened;
+        harness.window.open=url=>{opened=new URL(url);return null;};
+        api.openModelEditor({modelId:'private-model',modelPath:'/api/v1/models/private-model'});
+        assert.equal(opened.searchParams.get('launch'),'connected');
+        assert.equal(opened.searchParams.get('modelId'),'private-model');
+        assert.equal(opened.searchParams.has('context'),false);
+        assert.equal(opened.searchParams.has('token'),false);
+    }finally{harness.close();}
+});

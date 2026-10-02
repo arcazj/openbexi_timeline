@@ -119,7 +119,7 @@ try {
     const datasetPath = path.join(storage, modelId + '.json');
     const records = () => fs.readFile(datasetPath, 'utf8').then(text => JSON.parse(text).events);
     const before = await records();
-    const editorUrl = base + `/openbexi_timeline_model.html?modelId=${modelId}&model=` + encodeURIComponent(`/api/v1/models/${modelId}`);
+    const editorUrl = base + `/openbexi_timeline_model.html?launch=connected&modelId=${modelId}&model=` + encodeURIComponent(`/api/v1/models/${modelId}`);
     browser = await chromium.launch({executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
         args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
     context = await browser.newContext({viewport: {width: 1440, height: 900}});
@@ -135,6 +135,9 @@ try {
     });
     await page.goto(editorUrl);
     await expect(page.locator('#editor-lock')).toBeVisible();
+    await expect(page.locator('#document-management')).toBeHidden();
+    await expect(page.locator('#editing-actions #save')).toBeVisible();
+    await expect(page.locator('.editor-heading a')).toHaveCount(0);
     assert.equal(requests.length, 0);
     checks.push('protected loading waits for authentication');
 

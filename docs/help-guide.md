@@ -133,6 +133,11 @@ pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes
 refresh a live timeline preview; invalid changes keep the last valid preview.
 The preview starts with your current date, search, view and camera.
 
+Opening from a connected application focuses the editor on the current model:
+document management is hidden, with Save/Export, Undo, Redo and Revert in a compact
+toolbar. Demo and standalone launches keep the full document manager. Server
+permissions and validation still apply in either layout.
+
 Use import/export on GitHub Pages or a local static server. **Apply to original
 timeline** reloads the original page with your draft once; save or export the
 file to keep the change. An authenticated Java server also supports file

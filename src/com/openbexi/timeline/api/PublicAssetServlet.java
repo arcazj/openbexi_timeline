@@ -44,7 +44,9 @@ public final class PublicAssetServlet extends HttpServlet {
                     (relative.getNameCount() > 3 && relative.getName(1).toString().equals("vendor") && relative.getName(2).toString().equals("yaml")))
                     && (Set.of("js", "mjs").contains(extension) || filename.equals("LICENSE"));
             case "node_modules", "icon", "css" -> BROWSER_EXTENSIONS.contains(extension);
-            case "models", "demos", "help", "schemas" -> extension.equals("json");
+            case "demos" -> extension.equals("json") || relative.getNameCount() == 2
+                    && Set.of("embedded-earth-orbit.html", "embedded-earth-orbit.js").contains(filename);
+            case "models", "help", "schemas" -> extension.equals("json");
             case "json" -> relative.getNameCount() > 2 && relative.getName(1).toString().equals("test-data")
                     && Set.of("json", "xml", "txt", "png").contains(extension);
             case "docs", "doc" -> Set.of("html", "md", "txt", "png", "jpg", "jpeg", "svg", "pdf", "css", "js").contains(extension);

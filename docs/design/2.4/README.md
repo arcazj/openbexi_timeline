@@ -1,7 +1,8 @@
 # OpenBEXI Timeline 2.4 design
 
 This is the 2.4 domain and editor design. Start with the
-[implementation prompt](implementation-prompt.md) and the overview below.
+[consolidated implementation prompt](implementation-prompt.md),
+[delivery and validation record](delivery-checklist.md) and the overview below.
 
 ![HBDS domain overview](timeline-2.4.overview.png)
 

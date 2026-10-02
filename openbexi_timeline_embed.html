@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Embedded OpenBEXI Timeline</title>
+<link rel="stylesheet" href="css/ob_timeline_modern.css"><link rel="stylesheet" href="css/ob_jsCalendar.css">
+<link rel="stylesheet" href="css/ob_descriptor.css"><link rel="stylesheet" href="css/ob_demos.css">
+<script src="node_modules/simple-jscalendar/source/jsCalendar.min.js"></script>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.min.js","drag_controls":"./node_modules/three/examples/jsm/controls/DragControls.js","three-spritetext":"./node_modules/three-spritetext/dist/three-spritetext.mjs"}}</script>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font:14px system-ui,sans-serif}
+#embed-workspace{position:relative;width:100%;height:100%;overflow:hidden}
+#embed-message{position:absolute;z-index:10000;inset:0 0 auto;margin:0;padding:10px;background:#fff4d4;color:#563800}
+#embed-message[data-state="error"]{background:#ffebeb;color:#831515}
+.ob_settings_section[data-settings-section="models"],.ob_settings_section[data-settings-section="info"]{display:none}
+</style></head><body>
+<main id="embed-workspace" aria-label="Embedded timeline"><section id="demo-timeline-slot"></section><aside id="demo-side-slot"></aside></main>
+<p id="embed-message" role="status" aria-live="polite">Waiting for the host application…</p>
+<script type="module" src="src/openbexi_timeline_embed_frame.js"></script>
+</body></html>

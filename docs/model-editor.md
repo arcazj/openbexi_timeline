@@ -5,6 +5,19 @@ Open **Settings → Edit models → Model and YAML editor** in any timeline. The
 You can also open the editor directly and choose any of the seven public demos.
 See the [desktop, narrow and phone views](ui/model-editor/README.md).
 
+An application using a server-selected model or connected source opens a focused
+editor. The document chooser, create/import/rename/delete controls, document-status
+row and workspace selector are hidden. Save/Export, Undo, Redo and Revert remain in
+a compact toolbar with the draft's change state. Apply, validation errors, operation
+messages and authorization warnings remain available. The subtitle sits beside the
+editor title when space permits; both wrap on phones.
+
+Demo launches (`demos.html`) and standalone editing retain the full document
+manager. Launch links carry `launch=connected`, `launch=demo` or `launch=standalone`;
+the layout survives reload and connecting or disconnecting from the server. This
+parameter controls presentation only. A direct `?modelId=<id>` link without a
+launch context retains the full layout and still requires administrator access.
+
 ## Edit and preview
 
 The form groups work into **Overview**, **Data**, **Appearance**, **Filters** and

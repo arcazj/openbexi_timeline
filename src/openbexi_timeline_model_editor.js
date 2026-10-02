@@ -7,6 +7,7 @@ const appRoot=new URL('../',import.meta.url);
 const $=id=>document.getElementById(id);
 const state={catalog:[],schemas:{},document:null,record:null,context:{},client:null,managed:[],locals:[],revision:0,valid:false,rawInvalid:false,area:'overview',workspace:null,identity:null,modelId:'',access:null,accessEtag:null,filters:[],providers:[],aiReview:null,aiRequest:null,aiImage:null,previewCandidate:null,requiredModelId:new URLSearchParams(location.search).get('modelId') || ''};
 const documentOpen=new DocumentOpenGate();
+const documentControls=()=>document.querySelectorAll('.document-bar button,.document-bar select,.document-state button,#editing-actions button');
 let previewTimer,rawTimer,previewFrame,pendingFrame,pendingPayload,previewTimeout;
 function retireFrame(frame){if(!frame)return;try{frame.contentWindow?.disposePreview?.();}catch{ /* A frame may still be navigating. */ }if(frame.dataset.previewBlob)URL.revokeObjectURL(frame.dataset.previewBlob);frame.remove();}
 const clone=value=>structuredClone(value);
@@ -23,13 +24,42 @@ function unsaved() {return state.rawInvalid || state.document?.dirty;}
 function canLeave() {return !unsaved() || confirm('Discard unsaved changes to this document?');}
 function canEdit(){return state.workspace?Boolean(state.modelId?state.access?.permissions?.admin:state.identity?.systemAdmin):!state.requiredModelId;}
 function requireEditor(){if(!canEdit())throw new Error('A model administrator must authorize this editor.');}
+function configureLaunch(query) {
+    // Keep this mode for the editor's lifetime, even when opening a saved version
+    // replaces the preview context. A query value conveys no authentication.
+    const mode=query.get('launch') || state.context.launchMode || (state.context.providerUrl && !state.context.demoId?'connected':'standalone');
+    state.focused=mode==='connected';
+    document.body.dataset.editorLaunch=state.focused?'connected':'full';
+    $('document-management').hidden=state.focused;
+    $('editing-actions').hidden=!state.focused;
+    if(!state.focused)return;
+    $('editor-lock').textContent='Only model administrators can use this editor. Connect with an administrator token authorized for this model.';
+    // Move the existing controls and listeners, keeping one source of truth for
+    // saving, validation, history and permission state.
+    $('editing-actions').append(...['save','export','undo','redo','revert','dirty'].map($));
+    let frame;
+    const layout=()=>{
+        cancelAnimationFrame(frame);
+        frame=requestAnimationFrame(()=>{
+            const workspace=document.querySelector('.editor-workspace');
+            const top=workspace.getBoundingClientRect().top+window.scrollY;
+            workspace.style.height=window.innerWidth>700?Math.max(520,window.innerHeight-top-16)+'px':'';
+        });
+    };
+    const observer=new ResizeObserver(layout);
+    for(const element of [document.querySelector('.editor-heading'),$('editing-actions'),$('notice'),$('editor-lock')])observer.observe(element);
+    window.addEventListener('resize',layout);
+    window.addEventListener('pagehide',()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',layout);},{once:true});
+    layout();
+}
 function updateState() {
     const record=state.record, doc=state.document;
-    for(const control of document.querySelectorAll('.document-bar button,.document-bar select,.document-state button'))control.disabled=false;
+    for(const control of documentControls())control.disabled=false;
     $('document-name').textContent=record?.name || 'No document';
     $('document-source').textContent=record?.apiModel?'Managed model':record?.managed?'Server document':record?.example?'Read-only example · edit a copy':'Local draft';
-    $('dirty').textContent=unsaved()?'Unsaved changes':record?.managed?'Saved on server':record?.example?'Original example':'Draft';
+    $('dirty').textContent=unsaved()?'Unsaved changes':record?.managed?'Saved on server':state.focused?'Unchanged':record?.example?'Original example':'Draft';
     $('save').textContent=record?.managed && state.client?'Save to server':state.client?'Save as server copy':'Export changes';
+    $('save').title=record?.name?$('save').textContent+': '+record.name:$('save').textContent;
     $('save').disabled=!state.valid || Boolean(state.client && state.yamlValidation?.supported===false);$('export').disabled=!state.valid;
     $('delete').disabled=!record || Boolean(record.example);
     if(record?.apiModel){$('rename').disabled=true;$('delete').disabled=true;}
@@ -41,7 +71,7 @@ function updateState() {
     $('raw').readOnly=locked;
     document.querySelector('.property-panel').inert=locked;
     document.querySelector('.preview-panel').inert=locked;
-    for(const control of document.querySelectorAll('.document-bar button,.document-bar select,.document-state button'))if(locked)control.disabled=true;
+    for(const control of documentControls())if(locked)control.disabled=true;
     $('document-revision').textContent=record?.revision?`Revision ${record.revision}`:record?.etag?`Revision ${record.etag}`:record?.managed?'Saved document':'Local draft';
     $('publication-state').textContent=record?.restartRequired?'Restart required':record?.published?'Published':record?.managed?'Saved · not published':'Not published';
     updateAiControls();
@@ -504,17 +534,19 @@ function bindActions(){
     window.addEventListener('beforeunload',event=>{if(unsaved()){event.preventDefault();event.returnValue='';}});
 }
 async function start(){
+    const query=new URLSearchParams(location.search),contextKey=query.get('context');
+    if(contextKey)try{state.context=JSON.parse(sessionStorage.getItem(contextKey) || '{}');}catch{status('The originating timeline context is unavailable.');}
+    configureLaunch(query);
     const responses=await Promise.all([fetchText('demos/catalog.json'),fetchText('schemas/demo-model.schema.json'),fetchText('schemas/legacy-model.schema.json').catch(()=>null)]);
     state.catalog=JSON.parse(responses[0]).demos;state.schemas.demo=JSON.parse(responses[1]);state.schemas.provider=responses[2]?JSON.parse(responses[2]):null;
     for(const demo of state.catalog)$('preview-data').append(new Option(demo.title,demo.id));
-    bindActions();const query=new URLSearchParams(location.search),contextKey=query.get('context');
-    if(contextKey)try{state.context=JSON.parse(sessionStorage.getItem(contextKey) || '{}');}catch{status('The originating timeline context is unavailable.');}
+    bindActions();
     const path=query.get('model') || state.context.modelPath;
     if(state.requiredModelId){state.pendingModelPath=new URL('api/v1/models/'+encodeURIComponent(state.requiredModelId),appRoot).href;openDocument(JSON.stringify(buildDefaultModel(),null,2)+'\n',{name:'Connect to open this model',kind:'model',example:true});}
     else if(state.context.model){openDocument(JSON.stringify(state.context.model,null,2)+'\n',{name:path || 'current-timeline.json',kind:'model',example:true,modelPath:path});}
     else if(path){const intent=documentOpen.begin(state.document),context=clone(state.context),url=new URL(path,appRoot);if(url.origin!==location.origin)throw new Error('Open a same-origin model or import the model file.');const entry=state.catalog.find(demo=>new URL(demo.model,appRoot).href===url.href);if(entry && !context.dataset)context.dataset=new URL(entry.dataset,appRoot).href;openDocument(await fetchText(url),{name:path,kind:documentKind(path),example:true,modelPath:url.href},intent,context);}
     else await openDemo(state.catalog[0].id);
-    status(state.requiredModelId?'Connect with a model administrator session to open this protected model.':'Local editing is ready. Changes refresh the preview automatically; saving is explicit.');
+    status(state.requiredModelId?'Connect with a model administrator session to open this protected model.':state.focused?'':'Local editing is ready. Changes refresh the preview automatically; saving is explicit.');
     // Expose read-only diagnostics useful for browser validation, without credentials.
     window.modelEditor={get document(){return state.document;},get record(){return {...state.record};},get revision(){return state.revision;}};
 }

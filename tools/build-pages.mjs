@@ -14,7 +14,7 @@ await fs.mkdir(output,{recursive:true});
 const manifest=JSON.parse(await fs.readFile(path.join(root,'release/public-files.json'),'utf8'));
 const publicAssets=manifest.filter(file=>/^(?:css|icon|help|docs|schemas|swagger|json\/test-data|models\/demos|demos)\//.test(file)
     || /^src\/[^/]+\.js$/.test(file) || /^src\/vendor\/yaml\//.test(file)
-    || ['demos.html','openbexi_timeline_model.html','openbexi_timeline_model_preview.html',
+    || ['demos.html','openbexi_timeline_model.html','openbexi_timeline_model_preview.html','openbexi_timeline_embed.html',
         'models/regular_timeline.json','models/regular_timeline_earthquake.json','README.md','LICENSE'].includes(file));
 const dependencies=[
     'node_modules/three/build/three.module.min.js','node_modules/three/examples/jsm/controls/DragControls.js',
