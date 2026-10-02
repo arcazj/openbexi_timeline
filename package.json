@@ -8,7 +8,7 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "ajv": "8.20.0",
-    "jsdom": "30.1.0"
+    "jsdom": "30.1.1"
   },
   "scripts": {
     "api:spec": "node tools/build-api-spec.mjs",
