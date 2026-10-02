@@ -188,6 +188,7 @@ for (const demo of catalog.demos) test(`${demo.id}: rendering, overview, panels,
     await page.setViewportSize({width: 390, height: 844});
     await expect.poll(async () => (await inspect(page)).width).toBe(390);
     await expect(sideSlot.getByRole('heading', {name: 'Help and sharing'})).toBeVisible();
+    await page.getByRole('button', {name: 'More', exact: true}).click();
     await page.getByRole('button', {name: 'Timeline', exact: true}).click();
     if (initial.dockOverview) await expect(overview).toBeVisible();
     expect((await inspect(page)).reference).toEqual(focused.reference);

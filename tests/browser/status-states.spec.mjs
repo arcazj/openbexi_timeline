@@ -8,9 +8,14 @@ async function ready(page) {
     })).toBe(false);
 }
 async function theme(page,name) {
+    await showMore(page);
     await page.getByAltText('Settings',{exact:true}).click();
     await page.getByRole('radio',{name,exact:true}).check();
     await page.getByRole('button',{name:'Close settings',exact:true}).click();await ready(page);
+}
+async function showMore(page) {
+    const more=page.getByRole('button',{name:'More',exact:true});
+    if(await more.isVisible() && await more.getAttribute('aria-expanded')==='false')await more.click();
 }
 function contrast(a,b) {
     const luminance=color=>color.match(/[\d.]+/g).slice(0,3).map(Number).map(c=>c/255)
@@ -84,6 +89,7 @@ test('Actual refresh requests move from green Ready through orange Loading to re
     await page.route('**/json/test-data/default-dataset.json',route=>requests.push(route));
     const refresh=page.getByRole('button',{name:'Refresh',exact:true});
     const start=async()=>{
+        await showMore(page);
         const count=requests.length;await refresh.click();
         await expect.poll(()=>requests.length).toBe(count+1);
         await expect(status(page)).toHaveText('Status: Loading…');

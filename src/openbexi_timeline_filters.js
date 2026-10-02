@@ -62,6 +62,7 @@ function filterBuilder(t) {
 
 function advancedEditor(text) {
     const details=element('details',undefined,{class:'ob_filter_advanced'});
+    details.open=true;
     details.append(element('summary','Advanced expression'),text);
     return details;
 }
@@ -137,7 +138,19 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     const panel=element('section',undefined,{class:'ob_descriptor',id:t.name+'_setting'});
     const heading=element('div','Sorting & Filtering',{class:'ob_panel_heading'});
     heading.append(button('Close',()=>t.ob_remove_setting())); panel.append(heading);
-    const sorting=element('fieldset');
+    const create=element('fieldset',undefined,{class:'ob_new_filter'});
+    create.append(element('legend','Add a new filter'));
+    if (request==='add_filter') {
+        const name=element('input',undefined,{id:`textarea_${t.name}_new`,'aria-label':'New filter name'});
+        const nameRow=element('div',undefined,{class:'ob_filter_name_row'});
+        nameRow.append(element('label','Filter name',{for:name.id}),name);
+        const text=element('textarea',undefined,{id:`textarea2_${t.name}_new`,'aria-label':'New filter expression',rows:'5'});
+        text.value=decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
+        create.append(nameRow,advancedEditor(text),button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
+    } else create.append(button('Add a new filter',()=>t.ob_add_filters(sceneIndex)));
+    if (!t.staticData)create.dataset.serverFilterControls='';
+    panel.append(create);
+    const sorting=element('fieldset',undefined,{'data-filter-sorting':''});
     sorting.append(element('legend','Timeline sorting by '+(t.ob_sortBy || 'NONE')));
     const label=element('label','Sort by ',{for:'ob_sort_by'});
     const select=element('select',undefined,{id:'ob_sort_by','aria-label':'Sort by'});
@@ -156,6 +169,7 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     const fieldset=element('fieldset'); fieldset.append(element('legend','Timeline Filtering'));
     if (!t.staticData) {
         fieldset.dataset.serverFilters='';
+        fieldset.dataset.serverFilterControls='';
         const offline=element('p','Reconnect to select or change server filters.',{'data-filter-connection':''});
         const retry=button('Retry filters',()=>t.ob_read_filter(sceneIndex,0));
         retry.dataset.filterAvailable='';
@@ -167,8 +181,8 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     filters.forEach((filter,index)=>{
         const row=element('div',undefined,{class:'ob_saved_filter'});
         const radio=element('input',undefined,{type:'radio',name:t.name+'_saved_filter','aria-label':filter.name});
-        radio.checked=(filterIndex===index || filterIndex===undefined && filter.current==='yes') &&
-            decodeFilter(filter.filter_value)===decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
+        radio.dataset.filterIndex=String(index);
+        radio.dataset.filterScene=String(sceneIndex);
         radio.onchange=()=>t.ob_select_filters(sceneIndex,index);
         const name=element('label'); name.append(radio,document.createTextNode(filter.name)); row.append(name);
         if (request==='edit_filter' && index===filterIndex) {
@@ -178,19 +192,25 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         } else row.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
         row.append(button('Delete',()=>t.ob_delete_filters(sceneIndex,index))); fieldset.append(row);
     });
-    if (request==='add_filter') {
-        const name=element('input',undefined,{id:`textarea_${t.name}_new`,'aria-label':'New filter name'});
-        const text=element('textarea',undefined,{id:`textarea2_${t.name}_new`,'aria-label':'New filter expression',rows:'3'});
-        text.value=decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
-        fieldset.append(name,advancedEditor(text),button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
-    } else fieldset.append(button('Add a new filter',()=>t.ob_add_filters(sceneIndex)));
     const syntax=button('Filter syntax',()=>t.ob_help_filters()); syntax.dataset.filterAvailable='';
     const help=element('pre',filterSyntax,{'data-filter-syntax':'',class:'ob_filter_syntax'});help.hidden=true;
     const error=element('p','',{'data-filter-error':'',role:'alert',class:'ob_filter_error'});error.hidden=true;
     fieldset.append(syntax,error,help); panel.append(fieldset);
     t.ob_timeline_right_panel.append(panel); t.ob_timeline_right_panel.style.visibility='visible';
+    syncFilterSelection(t);
     updateFilterAvailability(t);
     t.show_filters=false;
+}
+
+/** The active criteria can change through the builder, chips, grouping or a saved view. */
+export function syncFilterSelection(t) {
+    for (const radio of t.ob_timeline_right_panel?.querySelectorAll('input[data-filter-index]') || []) {
+        const filter=t.ob_filters?.[Number(radio.dataset.filterIndex)],scene=t.ob_scene?.[Number(radio.dataset.filterScene)];
+        radio.checked=Boolean(filter && scene &&
+            (scene.ob_filter_name ? scene.ob_filter_name===filter.name : filter.current==='yes') &&
+            decodeFilter(filter.filter_value)===decodeFilter(scene.ob_filter_value || '') &&
+            (filter.sortBy || 'NONE')===(t.ob_sortBy || 'NONE'));
+    }
 }
 
 export function updateFilterAvailability(t) {
@@ -198,7 +218,7 @@ export function updateFilterAvailability(t) {
     if (!fieldset) return;
     const unavailable=!t.ob_scene?.[0]?.connected;
     fieldset.querySelector('[data-filter-connection]').hidden=!unavailable;
-    for (const control of fieldset.querySelectorAll('input,textarea,button:not([data-filter-available])')) {
+    for (const control of t.ob_timeline_right_panel.querySelectorAll('[data-server-filter-controls] input,[data-server-filter-controls] textarea,[data-server-filter-controls] button:not([data-filter-available])')) {
         control.disabled=unavailable;
         control.title=unavailable ? 'Reconnect to use saved server filters.' : '';
     }

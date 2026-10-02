@@ -620,6 +620,40 @@ test('A saved profile with no active preset starts unfiltered without a stale pr
     } finally {f.close();}
 });
 
+test('Connected preset radios follow cleared criteria and reapply exclusions while obsolete pages are discarded',async()=>{
+    const f=await connected({abortRequests:false});const {h,t,r,requests,settings}=f;
+    try {
+        const name='NAMESPACE_Exclude_Nominal_RNG',expression='|system:RNG+status:FINISHED';
+        settings.filters[0].current='no';settings.filters.push({name,current:'yes',filter_value:expression,sortBy:'namespace'});
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[structuredClone(settings)]})});
+        await waitFor(()=>requests.length===2);
+        batch(requests[1],['warning'],'retired-page');
+        await waitFor(()=>requests.length===3 && !r.pending);
+        const obsolete=requests[2];
+        t.ob_create_filters(0,undefined,'select_filter');
+        const radio=()=>h.window.document.querySelector('input[aria-label="'+name+'"]');
+        assert.equal(radio().checked,true);
+        const offset=requests.length;
+        r.controls.changeFilter('');
+        assert.equal(radio().checked,false);
+        const cleared=()=>requests.slice(offset).find(req=>{const url=new URL(req.url);return url.searchParams.get('filter')==='' && !url.searchParams.has('cancel');});
+        await waitFor(()=>cleared());batch(cleared(),['warning','nominal'],'unfiltered-next');
+        await waitFor(()=>!r.pending && r.snapshot.entries.length===2);
+        radio().click();
+        const selected=requests.find(req=>new URL(req.url).searchParams.get('ob_request')==='updateFilter');
+        assert.ok(selected,'Clicking the cleared radio must send a new preset request');
+        assert.equal(new URL(selected.url).searchParams.get('filter'),'_PIPE_system:RNG_PLUS_status:FINISHED');
+        selected.resolve({ok:true,json:async()=>({openbexi_timeline:[structuredClone(settings)]})});
+        const resumed=()=>requests.slice(requests.indexOf(selected)+1).find(req=>{const url=new URL(req.url);return url.searchParams.get('progressive')==='1' && !url.searchParams.has('cancel');});
+        await waitFor(()=>resumed());batch(resumed(),['warning'],'current-next');
+        await waitFor(()=>!r.pending && r.snapshot.entries.length===1);
+        batch(obsolete,['stale-nominal']);
+        await new Promise(resolve=>setTimeout(resolve,40));
+        assert.deepEqual(Array.from(r.snapshot.entries,entry=>entry.record.id),['warning']);
+        assert.equal(radio().checked,true);assert.equal(t.ob_sortBy,'namespace');assert.equal(r.error,'');
+    } finally {f.close();}
+});
+
 test('Configured local JSON loads without a server and local saved exclusions compose with grouping',async()=>{
     const h=await createTimelineHarness();
     try {

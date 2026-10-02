@@ -1,4 +1,5 @@
 import {buildTimelineShareURL, applyTimelineShareState, getTimelineDiagnostics} from './openbexi_timeline_share.js';
+import {listTimelineSavedViews, saveTimelineView, openTimelineSavedView, deleteTimelineSavedView} from './openbexi_timeline_saved_views.js';
 
 const rootURL = new URL('../', import.meta.url);
 const paths = {
@@ -99,7 +100,11 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
     heading.append(element('h2', '', 'Help and sharing'));
     const close = action('Close', 'close');
     close.setAttribute('aria-label', 'Close help');
-    close.addEventListener('click', () => { timeline.ob_remove_help(); timeline.ob_help?.focus(); });
+    close.addEventListener('click', () => {
+        timeline.ob_remove_help();
+        const controls=timeline.ob_results?.controls;
+        (controls?.compact?controls.moreButton:timeline.ob_help)?.focus({preventScroll:true});
+    });
     heading.append(close);
     panel.append(heading);
     const tabs = element('div', 'ob_help_tabs');
@@ -146,8 +151,12 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
         element('p', '', 'Choose a search mode under Filters > Search options. Text search finds literal words and phrases without case sensitivity. Pattern uses a case-insensitive regular expression; Legacy preserves the older case-sensitive expressions, including spaces and semicolons as OR. Typing pauses briefly before searching; Enter searches immediately. Invalid patterns retain the current results. Connected Text and Pattern modes require an updated server.'),
         element('p', '', 'Entering a search centers the first matching event or session as results arrive, while keeping the current zoom. When no match is loaded, connected searches scan earlier configured history until a match is found or eligible history is exhausted. Stop search retains the current view. No matching records is final only after complete coverage; unreadable sources, failed requests and older limited servers report an incomplete search. Open Status for file counts and details; its tooltip also shows the current state.'),
         element('p', '', 'Settings is organized into Edit models, Timeline info, Update perspective, and Change look and feel. Timeline info and Update perspective start collapsed. The theme radio buttons offer Default, Apple style, Windows style, Minimal and High contrast. Themes apply immediately, support arrow keys, and persist in this browser. High contrast strengthens icons, buttons and group separators in both menu bars, with clear hover, focus, selected and disabled states. A separator divides 3D and Settings.'),
-        element('p', '', 'The interface has exactly two menu bars: main and secondary. When space permits, Go to latest data, Find previous activity and Find next activity follow the search field, then a separator, Auto scale and Lock current view. They move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. The secondary filter group contains Calendar, Filter: <filter name>, Filters, a separator and Timeline details. Refresh, search results and removable filter labels share these two bars. Use the mouse wheel or plus/minus keys to zoom. Back to previous view restores the date and zoom before search or selection moved the timeline, keeping the current query and filters.'),
-        element('p', '', 'Active filters and grouping appear as removable labels. Sorting & Filtering offers a Field → Operator → Value builder; select a text, number or boolean value type. Advanced expression retains the existing filter syntax. Apply filter changes the current view; Add a new filter saves it as a preset.'),
+        element('p', '', 'The interface has two menu bars. When space permits, Go to latest data, Find previous activity and Find next activity follow search, then Auto scale and Lock current view. They move to the secondary bar when needed. On phone screens, search, previous/next activity and status stay visible; More holds the other controls. Escape closes More and returns focus to its button. Calendar, active filters, Filters and Timeline details stay together. Use the mouse wheel or plus/minus keys to zoom. Back to previous view restores the date and zoom before search or selection moved the timeline, keeping the current query and filters.'),
+        element('p', '', 'Every sortable table header shows an arrow before sorting begins. Click the heading or arrow to sort; click again to reverse the direction. Columns chooses the visible fields, and Export CSV downloads those fields across all loaded pages in the current filtered result. Incomplete coverage is labeled as loaded records only. Event details starts with a summary; All fields exposes the remaining metadata. Copy buttons preserve the original ID and timestamps.'),
+        element('p', '', 'Hover event text, icons, circles or duration bars to read their full captions. Click text or shapes to open the same Data panel in 2D or 3D. Dragging from ordinary 2D text still pans. Escape dismisses a caption.'),
+        element('p', '', 'Selecting High contrast in Settings reveals color pickers below it. Overall background changes the workspace, panels and clear canvas; other pickers color menu-bar groups, including controls moved into More. Text adjusts for readability. Model band backgrounds, event colors and status indicators retain their meaning. Choices save in this browser; Reset high contrast colors restores defaults.'),
+        element('p', '', 'Help > Share saves named views in this browser and restores their time range, search, filters, grouping, selection and table settings. Public demo links include the same view settings. Large local JSON datasets display download and processing progress; Stop or Escape cancels loading while retaining records already displayed.'),
+        element('p', '', 'Active filters and grouping appear as removable labels. Sorting & Filtering offers a Field → Operator → Value builder; select a text, number or boolean value type. Add a new filter appears first and opens a labeled name field and wide, expanded Advanced expression editor. Apply filter changes the current view; Save new filter saves a preset. Saved selections follow changes to the active filter and grouping.'),
         element('p', '', 'Fit matches includes all matching timestamps when coverage is complete. Auto scale expands busy periods, compresses quiet ones and adapts time labels. Overview keeps uniform time spacing.'),
         element('p', '', 'Find previous activity and Find next activity respect active search and filters and center the result they find. Status: Loading… and Status: Searching… are orange; Status: Ready is green after successful completion. Partial data, limits and interrupted connections stay orange; errors are red and cancelled work is gray. Click Status to open its report, then click again to close it, matching Timeline details. The tooltip and report include progress and recovery details. Stop remains available while work is running; Escape cancels loading or closes an open status report. The no-results panel stays hidden during startup and unfinished searches.'),
         element('p', '', 'With Auto scale enabled, a confirmed empty view can move to earlier activity. Lock current view stops that automatic movement and scale changes. Reading details and dragging pause automatic navigation. Previous and next activity searches retain the view until a result arrives, with Cancel search available. Resync centers the current date and time and keeps the view there even when only historical records are available.'),
@@ -242,7 +251,7 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
     const share = sections[1];
     share.append(element('h3', '', 'Share this view'), element('p', 'ob_help_note',
         timeline.staticData && timeline.demoContext ?
-            'Copy a link with the selected dataset, date, view, search, and overview setting.' :
+            'Copy a link with the dataset, visible range and zoom, grouping, filters, search, overview, and selected event.' :
             'Copy a link to this page. View settings are included for catalog demos.'));
     const shareURL = element('textarea', 'ob_help_text');
     shareURL.readOnly = true; shareURL.rows = 4;
@@ -257,6 +266,58 @@ export function createTimelineHelp(timeline, sceneIndex = 0) {
     const copyLink = action('Copy link', 'copy');
     copyLink.addEventListener('click', () => { updateShare(); return copyText(shareURL, shareStatus); });
     share.append(shareURL, copyLink, shareStatus);
+
+    const saved = element('div', 'ob_saved_views');
+    saved.append(element('h4', '', 'Saved views'), element('p', 'ob_help_note',
+        'Keep up to 20 named views for this source in this browser. Saved views include search and filter text. Saving with the same name replaces that view.'));
+    const savedStatus = element('p', 'ob_help_note');
+    savedStatus.setAttribute('role', 'status');
+    const savedName = element('input');
+    savedName.type = 'text'; savedName.maxLength = 80; savedName.placeholder = 'Name this view';
+    savedName.setAttribute('aria-label', 'Saved view name');
+    const selector = element('select');
+    selector.setAttribute('aria-label', 'Saved views');
+    const refreshSaved = (selected = selector.value) => {
+        try {
+            const views = listTimelineSavedViews(timeline);
+            selector.replaceChildren();
+            if (!views.length) {
+                const option = element('option', '', 'No saved views'); option.value = ''; selector.append(option);
+            }
+            for (const view of views) {
+                const option = element('option', '', view.name); option.value = view.name; selector.append(option);
+            }
+            if (views.some(view => view.name === selected)) selector.value = selected;
+            selector.disabled = openSaved.disabled = deleteSaved.disabled = !views.length;
+        } catch (error) { savedStatus.textContent = error.message; selector.disabled = openSaved.disabled = deleteSaved.disabled = true; }
+    };
+    const save = action('Save view', 'folder');
+    const saveCurrent = () => {
+        try {
+            const view = saveTimelineView(timeline, savedName.value);
+            savedName.value = view.name; refreshSaved(view.name); savedStatus.textContent = `Saved "${view.name}" in this browser.`;
+        } catch (error) { savedStatus.textContent = error.message; }
+    };
+    save.addEventListener('click', saveCurrent);
+    savedName.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); saveCurrent(); } });
+    selector.addEventListener('change', () => { savedName.value = selector.value; });
+    const openSaved = action('Open saved view', 'layout');
+    openSaved.addEventListener('click', () => {
+        try {
+            openTimelineSavedView(timeline, selector.value); updateShare();
+            savedStatus.textContent = timeline.staticData ? `Opened "${selector.value}".` : `Loading "${selector.value}". Follow progress in Status.`;
+        } catch (error) { savedStatus.textContent = error.message; }
+    });
+    const deleteSaved = action('Delete saved view', 'close');
+    deleteSaved.addEventListener('click', () => {
+        try {
+            const name = selector.value; deleteTimelineSavedView(timeline, name); refreshSaved();
+            savedStatus.textContent = `Deleted "${name}".`;
+        } catch (error) { savedStatus.textContent = error.message; }
+    });
+    const savedActions = element('div', 'ob_help_actions');
+    savedActions.append(savedName, save, selector, openSaved, deleteSaved);
+    saved.append(savedActions, savedStatus); share.append(saved); refreshSaved();
 
     const diagnostics = sections[2];
     diagnostics.append(element('h3', '', 'Current timeline'), element('p', 'ob_help_note',

@@ -111,7 +111,12 @@ export class TimelineActivityFocus {
             label=document.createElement('button');label.type='button';label.className='ob_activity_label';
             label.dataset.activityKey=item.key;
             for(const type of ['pointerdown','mousedown'])label.addEventListener(type,event=>event.stopPropagation());
-            label.onclick=()=>this.timeline.ob_open_descriptor(this.index,label.record);
+            const interaction=()=>this.timeline.ob_scene[this.index]?.eventInteraction;
+            label.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch')interaction()?.show(label.record,event,label);});
+            label.addEventListener('pointermove',event=>{if(event.pointerType!=='touch')interaction()?.position(event);});
+            label.addEventListener('focus',()=>interaction()?.show(label.record,null,label));
+            for(const type of ['pointerleave','pointerdown','blur'])label.addEventListener(type,()=>interaction()?.hide());
+            label.onclick=()=>{interaction()?.hide();this.timeline.ob_open_descriptor(this.index,label.record);};
             this.layer.append(label);this.labels.set(item.id,label);
         }
         label.record=item.record;

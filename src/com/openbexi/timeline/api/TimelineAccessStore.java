@@ -50,7 +50,7 @@ public final class TimelineAccessStore {
                             ByteBuffer bytes=ByteBuffer.wrap(state.toString().getBytes(StandardCharsets.UTF_8));
                             while(bytes.hasRemaining())channel.write(bytes); channel.force(true);
                         }
-                        Files.move(temporary,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                        TimelineAtomicFiles.replace(temporary,file);
                     } finally {Files.deleteIfExists(temporary);}
                 }
                 return result;

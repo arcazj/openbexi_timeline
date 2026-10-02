@@ -130,7 +130,7 @@ test('Advanced filter help, validation and saved sorting remain available in the
     await expect(page.locator('[data-filter-syntax]')).toContainText('Legacy:');
     await expect(page.locator('[data-filter-syntax]')).toContainText('expr:');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Advanced');
-    await page.locator('.ob_filter_advanced > summary').click();
+    await expect(page.locator('.ob_filter_advanced')).toHaveAttribute('open','');
     const input=page.getByRole('textbox',{name:'New filter expression',exact:true});
     await input.fill('expr: namespace =');
     await page.getByRole('button',{name:'Save new filter',exact:true}).click();

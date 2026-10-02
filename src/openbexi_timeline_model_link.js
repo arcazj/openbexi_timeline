@@ -22,9 +22,77 @@ export function editorLaunchMode(timeline) {
 }
 
 /** Stage an explicitly applied draft for this instance's next normal startup. */
-export function stageEditorModel(timeline, model) {
+export function stageEditorModel(timeline, model, requestId) {
     timeline.validateModel(model, 'Editor draft');
-    sessionStorage.setItem(pendingKey(timeline.modelPath, timeline.modelInstanceId), JSON.stringify({created:Date.now(), model}));
+    sessionStorage.setItem(pendingKey(timeline.modelPath, timeline.modelInstanceId), JSON.stringify({created:Date.now(), model, requestId}));
+}
+
+function discardEditorModel(timeline, requestId) {
+    try {
+        const key=pendingKey(timeline.modelPath,timeline.modelInstanceId);
+        if(JSON.parse(sessionStorage.getItem(key) || '{}').requestId===requestId)sessionStorage.removeItem(key);
+    } catch { /* An unavailable store cannot retain a pending draft. */ }
+}
+
+/** Acknowledge delivery before navigating: a queued postMessage can be lost on reload. */
+export function receiveEditorApply({editor,context,stage,discard,reload,host=window,timeoutMs=15000}) {
+    const origin=host.location.origin;let pending;
+    const reply=(requestId,error,ack)=>editor.postMessage({type:'ob-model-apply-result',context,requestId,...(error?{error}:{}),...(ack?{ack}:{})},origin);
+    const clear=()=>{if(pending)host.clearTimeout(pending.timer);pending=undefined;};
+    const listener=event=>{
+        const message=event.data;
+        if(event.origin!==origin || event.source!==editor || message?.context!==context)return;
+        if(message.type==='ob-model-apply-ack') {
+            if(!pending || message.requestId!==pending.requestId || message.ack!==pending.ack)return;
+            clear();host.removeEventListener('message',listener);reload();return;
+        }
+        if(message.type!=='ob-model-apply' || typeof message.requestId!=='string' || !message.requestId || message.requestId.length>100)return;
+        if(pending) {reply(message.requestId,'Another Apply is awaiting confirmation. Wait before trying again.');return;}
+        try {
+            stage(message.model,message.requestId);
+            const requestId=message.requestId,ack=host.crypto.randomUUID();
+            pending={requestId,ack,timer:host.setTimeout(()=>{
+                discard(requestId);clear();
+                try {reply(requestId,'Apply canceled because the editor did not confirm receipt. Try Apply again.');} catch { /* The popup may have closed. */ }
+            },timeoutMs)};
+            reply(requestId,undefined,ack);
+        } catch(error) {
+            discard(message.requestId);clear();
+            try {reply(message.requestId,error.message || String(error));} catch { /* The popup may have closed. */ }
+        }
+    };
+    host.addEventListener('message',listener);
+    return ()=>{if(pending)discard(pending.requestId);clear();host.removeEventListener('message',listener);};
+}
+
+/** Match replies to one explicit Apply action and always leave the waiting state. */
+export function createEditorApplyClient({context,onStatus,host=window,timeoutMs=20000}) {
+    const origin=host.location.origin,opener=host.opener;let pending,lastRequestId;
+    const clear=()=>{if(pending)host.clearTimeout(pending.timer);pending=undefined;};
+    const listener=event=>{
+        const message=event.data;
+        if(event.origin!==origin || event.source!==opener || message?.context!==context ||
+            message.type!=='ob-model-apply-result' || message.requestId!==lastRequestId)return;
+        if(message.error) {clear();onStatus(message.error);return;}
+        if(!pending || typeof message.ack!=='string' || !message.ack)return;
+        clear();
+        onStatus('The model was applied to the originating timeline. Save separately to persist it.');
+        try {opener.postMessage({type:'ob-model-apply-ack',context,requestId:message.requestId,ack:message.ack},origin);}
+        catch {onStatus('Apply could not be confirmed. Reopen the editor from Settings and try again.');}
+    };
+    host.addEventListener('message',listener);
+    return {
+        apply(model) {
+            if(pending)return false;
+            if(!opener || opener.closed){onStatus('The originating timeline is closed. Reopen the editor from Settings and try again.');return false;}
+            const requestId=host.crypto.randomUUID();lastRequestId=requestId;
+            pending={requestId,timer:host.setTimeout(()=>{clear();onStatus('The originating timeline did not respond. Reopen the editor from Settings and try again.');},timeoutMs)};
+            onStatus('Applying this model to the originating timeline…');
+            try {opener.postMessage({type:'ob-model-apply',context,requestId,model},origin);return true;}
+            catch(error){clear();onStatus(error.message || 'The model could not be sent to the originating timeline.');return false;}
+        },
+        dispose(){clear();host.removeEventListener('message',listener);}
+    };
 }
 
 /** Consume only an explicit editor Apply action, once, during normal startup. */
@@ -62,16 +130,8 @@ export function openModelEditor(timeline) {
     catch { /* Public model URL remains usable if browser storage is disabled. */ }
     const editor = window.open(url.href, '_blank');
     if (!editor) return;
-    timeline.editorListener && window.removeEventListener('message', timeline.editorListener);
-    const listener = event => {
-        if (event.origin !== location.origin || event.source !== editor || event.data?.context !== context || event.data?.type !== 'ob-model-apply') return;
-        try {
-            stageEditorModel(timeline, event.data.model);
-            editor.postMessage({type:'ob-model-apply-result',context}, location.origin);
-            window.removeEventListener('message', listener);
-            location.reload();
-        } catch (error) { editor.postMessage({type:'ob-model-apply-result',context,error:error.message}, location.origin); }
-    };
-    timeline.editorListener = listener;
-    window.addEventListener('message', listener);
+    timeline.editorConnection?.();
+    timeline.editorConnection=receiveEditorApply({editor,context,
+        stage:(model,requestId)=>stageEditorModel(timeline,model,requestId),
+        discard:requestId=>discardEditorModel(timeline,requestId),reload:()=>location.reload()});
 }

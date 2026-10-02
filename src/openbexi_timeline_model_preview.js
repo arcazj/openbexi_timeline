@@ -5,7 +5,7 @@ let used=false,disposed=false,currentTimeline;
 window.disposePreview=()=>{
     if(disposed)return;disposed=true;used=true;
     const timeline=currentTimeline;if(!timeline)return;
-    timeline.modelStartup?.cancel();timeline.ob_loader?.cancel();timeline.localController?.abort();
+    timeline.modelStartup?.cancel();timeline.ob_loader?.cancel();timeline.localController?.abort();timeline.localDataAbort?.abort();
     timeline.ob_results?.controls.resizeObserver?.disconnect();
     clearTimeout(timeline.ob_results?.timer);clearTimeout(timeline.ob_results?.navigationTimer);clearTimeout(timeline.ob_results?.searchTimer);
     if(timeline.ob_activity_focus?.frame)cancelAnimationFrame(timeline.ob_activity_focus.frame);
@@ -14,6 +14,7 @@ window.disposePreview=()=>{
         try{scene?.ob_renderer?.setAnimationLoop?.(null);scene?.ob_renderer?.dispose?.();scene?.ob_renderer?.forceContextLoss?.();}catch{ /* Continue releasing the remaining scenes. */ }
     }
     for(const tracker of timeline.resTracker || [])try{tracker?.dispose();}catch{ /* The iframe also owns and releases its DOM resources. */ }
+    timeline.disposeTextures?.();
 };
 window.addEventListener('pagehide',window.disposePreview);
 window.addEventListener('message',async event=>{

@@ -190,6 +190,31 @@ test('Editor remains usable at desktop, narrow and phone widths',async({page})=>
     }
 });
 
+test('Apply receives the editor acknowledgement before reloading the originating timeline',async({page})=>{
+    await page.goto('/demos.html?demo=monet');
+    await page.evaluate(async()=>await(await import('/src/openbexi_demo.js')).demoReady);
+    await page.getByAltText('Settings',{exact:true}).click();
+    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popup;
+    await ready(editor);
+    const before=await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).params[0].title);
+    await editor.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Acknowledged edit');
+    // Hold only the receipt acknowledgement. The request and success result still
+    // cross actual windows, exposing the former postMessage/navigation race.
+    await editor.evaluate(()=>{
+        const send=window.opener.postMessage.bind(window.opener);
+        window.opener.postMessage=(data,...args)=>{
+            if(data?.type==='ob-model-apply-ack')window.deliverApplyAcknowledgement=()=>send(data,...args);
+            else send(data,...args);
+        };
+    });
+    await editor.getByRole('button',{name:'Apply to original timeline',exact:true}).click();
+    await expect.poll(()=>editor.evaluate(()=>typeof window.deliverApplyAcknowledgement)).toBe('function');
+    expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).params[0].title)).toBe(before);
+    const reloaded=page.waitForEvent('domcontentloaded');await editor.evaluate(()=>window.deliverApplyAcknowledgement());await reloaded;
+    await expect.poll(()=>page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).params[0].title)).toBe('Acknowledged edit');
+    await expect(editor.locator('#notice')).toContainText('applied');await editor.close();
+});
+
 test('A server-configured application opens a focused editor with a compact heading, responsive preview and working Apply',async({page,context})=>{
     const errors=[];context.on('page',target=>target.on('pageerror',error=>errors.push(error.message)));
     const html=(await fs.readFile('openbexi_timeline.html','utf8')).replace('const ob_timeline = new OB_TIMELINE();','const ob_timeline = window.connectedTimeline = new OB_TIMELINE();');

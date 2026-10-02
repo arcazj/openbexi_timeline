@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.4.0
+ *     OpenBEXI Timeline version 2.5.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -18,9 +18,12 @@ import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
+import {readLocalTimelineData, describeLocalProgress} from './openbexi_timeline_local_data.js';
+import {TimelineTextureCache} from './openbexi_timeline_textures.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
 import {createTimelineSettings} from './openbexi_timeline_settings.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
+import {bindEventTextHitTarget, TimelineEventInteraction} from './openbexi_timeline_event_interaction.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {compileFilter,decodeFilter} from './openbexi_timeline_filter_expression.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
@@ -89,80 +92,17 @@ class ResourceTracker {
 
 function OB_TIMELINE(options = {}) {
 
-    const ob_texture = new Map();
     const namespace = "";
-
-    // global texture
-    ob_texture.set("icon/ob_error.png", new THREE.TextureLoader().load("icon/ob_error.png"));
-    ob_texture.set("icon/ob_warning.png", new THREE.TextureLoader().load("icon/ob_warning.png"));
-    ob_texture.set("icon/ob_info.png", new THREE.TextureLoader().load("icon/ob_info.png"));
-    ob_texture.set("icon/ob_install.png", new THREE.TextureLoader().load("icon/ob_install.png"));
-    ob_texture.set("icon/ob_uninstall.png", new THREE.TextureLoader().load("icon/ob_uninstall.png"));
-    ob_texture.set("icon/ob_uninstall.png", new THREE.TextureLoader().load("icon/ob_uninstall.png"));
-    ob_texture.set("icon/ob_start.png", new THREE.TextureLoader().load("icon/ob_start.png"));
-    ob_texture.set("icon/ob_stop.png", new THREE.TextureLoader().load("icon/ob_stop.png"));
-    ob_texture.set("icon/ob_check_failed.png", new THREE.TextureLoader().load("icon/ob_check_failed.png"));
-    ob_texture.set("icon/ob_check_aborted.png", new THREE.TextureLoader().load("icon/ob_check_aborted.png"));
-    ob_texture.set("icon/ob_check_ok.png", new THREE.TextureLoader().load("icon/ob_check_ok.png"));
-    ob_texture.set("icon/ob_check_warning.png", new THREE.TextureLoader().load("icon/ob_check_warning.png"));
-    ob_texture.set("icon/ob_phone.png", new THREE.TextureLoader().load("icon/ob_phone.png"));
-    ob_texture.set("icon/ob_bug.png", new THREE.TextureLoader().load("icon/ob_bug.png"));
-    ob_texture.set("icon/ob_lost_connection.png", new THREE.TextureLoader().load("icon/ob_lost_connection.png"));
-    ob_texture.set("icon/ob_swap.png", new THREE.TextureLoader().load("icon/ob_swap.png"));
-    ob_texture.set("icon/ob_gate_open.png", new THREE.TextureLoader().load("icon/ob_gate_open.png"));
-    ob_texture.set("icon/ob_gate_close.png", new THREE.TextureLoader().load("icon/ob_gate_close.png"));
-    ob_texture.set("icon/ob_red_flag.png", new THREE.TextureLoader().load("icon/ob_red_flag.png"));
-    ob_texture.set("icon/ob_green_flag.png", new THREE.TextureLoader().load("icon/ob_green_flag.png"));
-    ob_texture.set("icon/ob_yellow_flag.png", new THREE.TextureLoader().load("icon/ob_yellow_flag.png"));
-    ob_texture.set("icon/ob_orange_flag.png", new THREE.TextureLoader().load("icon/ob_orange_flag.png"));
-    ob_texture.set("icon/ob_yellow_square.png", new THREE.TextureLoader().load("icon/ob_yellow_square.png"));
-    ob_texture.set("icon/ob_orange_square.png", new THREE.TextureLoader().load("icon/ob_orange_square.png"));
-    ob_texture.set("icon/ob_red_square.png", new THREE.TextureLoader().load("icon/ob_red_square.png"));
-    ob_texture.set("icon/ob_purple_square.png", new THREE.TextureLoader().load("icon/ob_purple_square.png"));
-    ob_texture.set("icon/ob_green_square.png", new THREE.TextureLoader().load("icon/ob_green_square.png"));
-    ob_texture.set("icon/ob_blue_square.png", new THREE.TextureLoader().load("icon/ob_blue_square.png"));
-    ob_texture.set("icon/ob_script.png", new THREE.TextureLoader().load("icon/ob_script.png"));
-    ob_texture.set("icon/ob_crontab.png", new THREE.TextureLoader().load("icon/ob_crontab.png"));
-    ob_texture.set("icon/ob_clock.png", new THREE.TextureLoader().load("icon/ob_clock.png"));
-    ob_texture.set("icon/ob_info2.png", new THREE.TextureLoader().load("icon/ob_info2.png"));
-    ob_texture.set("icon/ob_delete.png", new THREE.TextureLoader().load("icon/ob_delete.png"));
-    ob_texture.set("icon/ob_yellow_ring.png", new THREE.TextureLoader().load("icon/ob_yellow_ring.png"));
-    ob_texture.set("icon/ob_data_issue.png", new THREE.TextureLoader().load("icon/ob_data_issue.png"));
-    ob_texture.set("icon/ob_data.png", new THREE.TextureLoader().load("icon/ob_data.png"));
-    ob_texture.set("icon/ob_data_source.png", new THREE.TextureLoader().load("icon/ob_data_source.png"));
-    ob_texture.set("icon/ob_sync.png", new THREE.TextureLoader().load("icon/ob_sync.png"));
-    ob_texture.set("icon/ob_out_of_sync.png", new THREE.TextureLoader().load("icon/ob_out_of_sync.png"));
-    ob_texture.set("icon/ob_emergency.png", new THREE.TextureLoader().load("icon/ob_emergency.png"));
-    ob_texture.set("icon/ob_clone.png", new THREE.TextureLoader().load("icon/ob_clone.png"));
-    ob_texture.set("icon/ob_view.png", new THREE.TextureLoader().load("icon/ob_view.png"));
-
-
-    // Satellite/Communication texture
-    ob_texture.set("icon/ob_connect.png", new THREE.TextureLoader().load("icon/ob_connect.png"));
-    ob_texture.set("icon/ob_no_connect.png", new THREE.TextureLoader().load("icon/ob_no_connect.png"));
-    ob_texture.set("icon/ob_satellite.png", new THREE.TextureLoader().load("icon/ob_satellite.png"));
-    ob_texture.set("icon/ob_no_satellite.png", new THREE.TextureLoader().load("icon/ob_no_satellite.png"));
-    ob_texture.set("icon/ob_no_tlm_red.png", new THREE.TextureLoader().load("icon/ob_no_tlm_red.png"));
-    ob_texture.set("icon/ob_tlm_red.png", new THREE.TextureLoader().load("icon/ob_tlm_red.png"));
-    ob_texture.set("icon/ob_tlm_green.png", new THREE.TextureLoader().load("icon/ob_tlm_green.png"));
-    ob_texture.set("icon/ob_tlm_orange.png", new THREE.TextureLoader().load("icon/ob_tlm_orange.png"));
-
-    // geology texture
-    ob_texture.set("icon/ob_earthquake_mag_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_red.png"));
-    ob_texture.set("icon/ob_earthquake_mag_9_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_9_red.png"));
-    ob_texture.set("icon/ob_earthquake_mag_8_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_8_red.png"));
-    ob_texture.set("icon/ob_earthquake_mag_7_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_7_red.png"));
-    ob_texture.set("icon/ob_earthquake_mag_6_red.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_6_red.png"));
-    ob_texture.set("icon/ob_earthquake_mag_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_black.png"));
-    ob_texture.set("icon/ob_earthquake_mag_5_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_5_black.png"));
-    ob_texture.set("icon/ob_earthquake_mag_4_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_4_black.png"));
-    ob_texture.set("icon/ob_earthquake_mag_3_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_3_black.png"));
-    ob_texture.set("icon/ob_earthquake_mag_2_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_2_black.png"));
-    ob_texture.set("icon/ob_earthquake_mag_1_black.png", new THREE.TextureLoader().load("icon/ob_earthquake_mag_1_black.png"));
-    ob_texture.set("icon/ob_volcano_very_active.png", new THREE.TextureLoader().load("icon/ob_volcano_very_active.png"));
-    ob_texture.set("icon/ob_volcano_active.png", new THREE.TextureLoader().load("icon/ob_volcano_active.png"));
-    ob_texture.set("icon/ob_volcano.png", new THREE.TextureLoader().load("icon/ob_volcano.png"));
-    ob_texture.set("icon/ob_volcano_no_active.png", new THREE.TextureLoader().load("icon/ob_volcano_no_active.png"));
+    this.iconTextures = new TimelineTextureCache(new THREE.TextureLoader(), () => {
+        if (this.textureRenderFrame !== undefined) return;
+        this.textureRenderFrame = requestPanFrame(() => {
+            delete this.textureRenderFrame;
+            for (let index = 0; index < (this.ob_scene?.length || 0); index++) {
+                const scene = this.ob_scene[index];
+                if (scene?.ob_renderer && scene.ob_camera) this.ob_render(index);
+            }
+        });
+    });
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         if (this.staticData) return parseTimelineDate(this.date);
@@ -436,7 +376,7 @@ function OB_TIMELINE(options = {}) {
         if (this.ob_results?.loading) return;
         const scene = this.ob_scene[ob_scene_index];
         this.ob_sortBy = document.getElementById('ob_sort_by')?.value || 'NONE';
-        const legend = document.getElementById(this.name + '_setting')?.querySelector('legend');
+        const legend = document.getElementById(this.name + '_setting')?.querySelector('[data-filter-sorting] legend');
         if (legend) legend.textContent = 'Timeline sorting by ' + this.ob_sortBy;
         scene.cancelPan?.();
         if (this.ob_results?.supported) {
@@ -4138,8 +4078,13 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.load_texture = function (image) {
-        if (image === undefined || ob_texture === undefined) return undefined;
-        return ob_texture.get(image);
+        return this.iconTextures.get(image);
+    };
+
+    OB_TIMELINE.prototype.disposeTextures = function () {
+        cancelPanFrame(this.textureRenderFrame);
+        delete this.textureRenderFrame;
+        this.iconTextures.dispose();
     };
 
     OB_TIMELINE.prototype.add_event = function (
@@ -4323,6 +4268,7 @@ function OB_TIMELINE(options = {}) {
 
         if (ob_object !== undefined) {
             ob_object.add(ob_sprite);
+            if (ob_object.data) bindEventTextHitTarget(ob_sprite, ob_object);
         }
     };
 
@@ -4463,6 +4409,7 @@ function OB_TIMELINE(options = {}) {
         ob_scene.dragControls.addEventListener('dragstart', onDragStart);
         ob_scene.dragControls.addEventListener('dragend', onDragEnd);
         ob_scene.dragControls.addEventListener('drag', onDrag);
+        ob_scene.eventInteraction = this.track[ob_scene_index](new TimelineEventInteraction(this, ob_scene_index, ob_scene.dragControls));
 
         function onDragStart(e) {
             if (that.ob_results?.loading) return;
@@ -5297,20 +5244,27 @@ function OB_TIMELINE(options = {}) {
         this.localDataAbort?.abort();
         const controller=this.localDataAbort=new AbortController();
         const results=this.ob_results;
-        results.fetching=true; results.complete=false; results.cancelled=false; results.error=''; results.updateUI();
+        results.fetching=true; results.complete=false; results.cancelled=false; results.error='';
+        results.localProgress=describeLocalProgress({stage:'download'}); results.updateUI();
         try {
             const response=await fetch(this.localSource.url,{signal:controller.signal});
             if (!response.ok) throw new Error(`Dataset HTTP error: ${response.status}`);
-            const text=await response.text();
-            if (controller.signal.aborted) return this;
-            this.staticData=parseTimelineData(text,this.localSource.config);
+            const dataset=await readLocalTimelineData(response,this.localSource.config,{
+                signal:controller.signal,
+                onProgress:progress=>{
+                    if (controller.signal.aborted || this.localDataAbort!==controller) return;
+                    results.localProgress=describeLocalProgress(progress); results.updateUI();
+                }
+            });
+            if (controller.signal.aborted || this.localDataAbort!==controller) return this;
+            this.staticData=dataset;
             if (!this.localLoaded) {
                 results.domain=undefined; results.map=null; results.ranges.clear(); results.visibleRanges.clear();
             }
-            this.localLoaded=true; results.fetching=false; results.commit();
+            this.localLoaded=true; results.fetching=false; results.localProgress=''; results.commit();
         } catch(error) {
-            if (controller.signal.aborted) return this;
-            results.fetching=false; results.fail(error);
+            if (controller.signal.aborted || this.localDataAbort!==controller) return this;
+            results.fetching=false; results.localProgress=''; results.fail(error);
         }
         return this;
     };

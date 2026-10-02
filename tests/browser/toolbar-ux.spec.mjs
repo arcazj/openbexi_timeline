@@ -98,6 +98,7 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await page.getByRole('button',{name:'Remove Source: does not equal Operations',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toHaveLength(3);
     await page.setViewportSize({width:420,height:740});await ready(page);
+    await page.getByRole('button',{name:'More',exact:true}).click();
     await page.getByLabel('Lock current view',{exact:true}).scrollIntoViewIfNeeded();
     await expect(page.getByLabel('Lock current view',{exact:true})).toBeInViewport();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -114,6 +115,16 @@ test('Two menu bars keep ordered controls accessible and move navigation after S
         const header=page.locator('.ob_results_header');
         await expect(header).toHaveAttribute('data-toolbar-layout','two-rows');await ready(page);
         await expect(header).toHaveAttribute('data-activity-row',width===1920?'main':'secondary');
+        if(width<=600) {
+            for(const name of ['More','Find previous activity','Find next activity'])
+                await expect(page.getByRole('button',{name,exact:true})).toBeInViewport({ratio:1});
+            await expect(page.locator('.ob_results_status')).toBeInViewport({ratio:1});
+            await page.getByRole('button',{name:'More',exact:true}).click();
+            await expect(page.getByLabel('Lock current view',{exact:true})).toBeVisible();
+            await page.keyboard.press('Escape');
+            expect(await page.locator('.ob_primary_toolbar,.ob_activity_toolbar').evaluateAll(rows=>rows.every(row=>row.scrollWidth<=row.clientWidth+1))).toBe(true);
+            continue;
+        }
         await expect(header.getByRole('combobox',{name:'Search mode',exact:true})).toHaveCount(0);
         expect(await page.locator('.ob_activity_controls').evaluate(element=>[...element.children].map(child=>child.classList.contains('ob_toolbar_separator')?'|':child.textContent.trim())))
             .toEqual(['Go to latest data','Find previous activity','Find next activity','|','Auto scale','Lock current view']);
@@ -180,7 +191,7 @@ test('Two menu bars keep ordered controls accessible and move navigation after S
 
 test('Status and Timeline details toggle the same report by pointer and keyboard, including during loading',async({page})=>{
     const fixture=await setup(page),status=page.getByRole('button',{name:/^Status:/});
-    const details=page.getByRole('button',{name:'Timeline details',exact:true}),report=page.locator('.ob_results_details');
+    const details=page.getByRole('button',{name:'Timeline details',exact:true,includeHidden:true}),report=page.locator('.ob_results_details');
     await expect(status).toHaveText('Status: Ready');
     await expect(status).toHaveAttribute('aria-description',/\S/);
     await expect(report).toBeHidden();
@@ -191,6 +202,7 @@ test('Status and Timeline details toggle the same report by pointer and keyboard
         await expect(details).toHaveAttribute('aria-expanded','true');
         await status.click();await expect(report).toBeHidden();
         await expect(status).toHaveAttribute('aria-expanded','false');
+        if(width<=600)await page.getByRole('button',{name:'More',exact:true}).click();
         await details.click();await expect(report).toBeVisible();
         await status.click();await expect(report).toBeHidden();
         await status.focus();await page.keyboard.press('Space');await expect(report).toBeVisible();
@@ -227,6 +239,8 @@ for(const standalone of [false,true])test(`${standalone?'Standalone':'Demo'} too
                 bodyScroll:document.body.scrollLeft,documentScroll:document.documentElement.scrollLeft};
         });
         expect(geometry).toEqual({panelX:0,panelScroll:0,workspaceX:0,workspaceScroll:0,bodyScroll:0,documentScroll:0});
+        if(width<=600 && await page.getByRole('button',{name:'More',exact:true}).getAttribute('aria-expanded')==='false')
+            await page.getByRole('button',{name:'More',exact:true}).click();
         await lock.scrollIntoViewIfNeeded();await expect(lock).toBeInViewport({ratio:1});
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     }

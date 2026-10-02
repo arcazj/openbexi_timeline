@@ -29,7 +29,7 @@
 - [Consolidated 2.4 prompt and requirements](design/2.4/implementation-prompt.md) ·
   [Delivery and validation record](design/2.4/delivery-checklist.md)
 - [Release history](https://github.com/arcazj/openbexi_timeline/releases)
-- Release notes: [2.4.0](release-2.4.0.md), [2.3.2](release-2.3.2.md), [2.3.1](release-2.3.1.md),
+- Release notes: [2.5.0](release-2.5.0.md), [2.4.0](release-2.4.0.md), [2.3.2](release-2.3.2.md), [2.3.1](release-2.3.1.md),
   [2.3.0](release-2.3.0.md), [2.2.3](release-2.2.3.md), [2.2.2](release-2.2.2.md),
   [2.2.1](release-2.2.1.md), [2.2.0](release-2.2.md), [2.1.0](release-2.1.md),
   [2.0.0](release-2.0.md)

@@ -86,7 +86,7 @@ test('Configured values reach WebGL axes, SVG overview, table columns, search an
         assert.equal(t.ob_views.buttons.get('table').getAttribute('aria-label'),'Records');
         t.ob_views.mode='split';t.ob_viewport.measure();assert.equal(t.ob_viewport.plotWidth,Math.floor(t.ob_viewport.width*.6));
         t.ob_views.renderTable();
-        assert.deepEqual([...t.ob_views.tablePanel.querySelectorAll('th')].map(cell=>cell.textContent),['When','Painting']);
+        assert.deepEqual([...t.ob_views.tablePanel.querySelectorAll('th .ob_table_sort_label')].map(cell=>cell.textContent),['When','Painting']);
         assert.ok(t.ob_views.tablePanel.querySelector('tbody tr td:nth-child(2) button'));
     } finally {harness.close();}
 });

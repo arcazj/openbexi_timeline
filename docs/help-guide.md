@@ -1,19 +1,24 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.4.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.5.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
 - Use **Timeline**, **Table**, or **Split** on the main toolbar to change the presentation. Split places the chart beside the event table.
+- In **Table** or **Split**, each sortable heading shows **↕** before sorting begins. Select the heading or its arrow to sort; select it again to reverse the order. **↑** and **↓** identify the active direction. **Columns** chooses the fields to display. **Export CSV** includes the displayed columns and records across all table pages in the current results. Partial coverage is labeled as loaded records only; it does not export unread server history.
 - The time cursor sits above the visible span. Table titles show their icon or a color marker; an unavailable icon also falls back to the event or session color.
 - Selecting an event or session smoothly centers its timestamp or midpoint and preserves the visible time span. The gold selection glow remains visible, with a separate outlined marker above the Overview shading. A new gesture interrupts the movement; reduced motion makes centering immediate.
 - Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
+- Hover an event's text, icon, circle or duration bar to read its complete caption. Click either its text or its shape to open the same **Data** panel in 2D or 3D. Dragging from ordinary 2D event text still pans; Escape dismisses the caption.
+- **Data** starts with the event's time, duration, source and status. Expand **All fields** for other metadata. Copy controls beside identifiers and timestamps copy their original values; if clipboard access is blocked, select and copy the offered text manually.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
 - The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Go to latest data, Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
 - The secondary bar groups **Calendar → Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.
+- At widths of 600 pixels or less, search, previous/next activity and status stay visible in two rows. **More** opens view choices, settings, filters and other controls. Press Escape to close it and return focus to More. The menu also closes when you select a view or open a side panel.
 - Choose a search mode inside **Filters → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
 - **Back to previous view** restores the date and zoom before a search or selection moved the timeline, while retaining the current query and filters.
 - Active filters and grouping appear as removable labels. In **Sorting & Filtering**, use **Field → Operator → Value** and choose a text, number or boolean value type. **Apply filter** changes the current view; **Add a new filter** saves it as a preset. Existing syntax remains available under **Advanced expression**.
+- **Add a new filter** is at the top of that panel. The **Filter name** label sits beside the name field, and **Advanced expression** starts expanded with a text area spanning 90% of the available panel width. Saved-filter selections follow the active expression and grouping, including changes made through the builder or removable labels.
 - Drag the timeline or an activity to navigate through time. Clicking an activity selects it; dragging does not open Data or recenter it. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
 - Previous/next activity centers the result while preserving the current time span, widening only when needed for the activity's duration. A gold glow marks the result without enlarging its bar, icon or text, changing its depth, or adding rows. Reduced-motion settings disable the brief brightness pulse.
 - **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Open **Settings → Update perspective** and enable **Adjust perspective** to rotate, pan and zoom the camera. Turn adjustment off or press Escape to navigate the timeline. Save the viewpoint, lighting, metalness and roughness for later visits. The UI always opens in **2D**; enabling 3D restores your saved settings or the reference preset. Metalness affects the view span and activities while icons keep their colors. See [Perspective settings](perspective.md).
@@ -24,7 +29,28 @@ The Help panel collects project resources and local demo choices. The local demo
 
 In **Help**, selecting a local dataset immediately loads its default view. **Reset reference view** returns the current local demo to its model's initial date, Timeline view, default Overview setting, and first row, and clears the search.
 
-In **Share**, choose **Copy link** to copy the current local demo's dataset, time, view, search, and Overview setting. A localhost link works on a computer running the demo server at that address. Copying puts the link on your clipboard; it does not publish the data or send a message. Server-backed timelines share the page address without private server settings.
+In **Help → Share**, choose **Copy link** to copy the current local demo's dataset,
+exact visible range and zoom, view, search, filters, grouping, Overview settings,
+and selected event. A localhost link works on a computer running the demo server
+at that address. Copying puts the link on your clipboard; it does not publish
+data or send a message. Server-backed timelines share the page address without
+private server settings.
+
+The same section offers **Saved views**. Enter a name and choose **Save view**;
+select a saved name and choose **Open saved view** to return to it. Saving under
+the same name replaces that view. Up to 20 views are stored per source in this
+browser, including search and filter text. **Delete saved view** removes one.
+Storage failures appear next to the controls.
+
+Refreshing local JSON reports download and processing progress in **Status**.
+Large JSON files are parsed in a background worker when supported. **Stop loading**
+or Escape cancels the download or worker and retains the previous dataset.
+
+Connected loading retains its existing limits: 15,000 top-level records, 50,000
+records including activities, 8 Mi JSON payload characters, 32 pages per visible
+interval and four pages per neighboring interval.
+**Data limit reached** still identifies incomplete coverage and retains accepted
+records. See [loading limits](progressive-loading.md) for details.
 
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
 
@@ -118,6 +144,15 @@ controls without altering record colors or the selected time range.
 High contrast strengthens icons, buttons and separators in both menu bars so
 groups remain distinct. Hover, keyboard focus, selected and disabled controls
 have clear visual states.
+
+Selecting **High contrast** reveals color pickers directly below it. **Overall
+background** changes the workspace, panels and clear canvas; the other pickers
+customize separate menu-bar groups, including controls moved into **More**.
+Text adjusts to black or white for readability. Model-defined band backgrounds,
+event colors and status indicators retain their meaning. Choices persist in this
+browser; **Reset high contrast colors** restores the defaults. Switching themes
+restores that theme's appearance. The **Model and YAML editor** button has a
+stronger fill and outline in every theme.
 
 ## Model and YAML editor
 

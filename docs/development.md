@@ -14,6 +14,9 @@ npm run api:spec -- --check
 npm test
 npx playwright install chromium --only-shell
 npm run test:browser
+npx playwright install firefox webkit
+npm run test:browser:compat
+npm run test:browser:performance
 mvn --batch-mode --no-transfer-progress verify
 npm run test:integration
 ```
