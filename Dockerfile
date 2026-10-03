@@ -3,7 +3,7 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
-FROM maven:3.9.16-eclipse-temurin-17 AS java-build
+FROM maven:3-eclipse-temurin-26 AS java-build
 WORKDIR /build
 COPY pom.xml ./
 COPY src ./src
