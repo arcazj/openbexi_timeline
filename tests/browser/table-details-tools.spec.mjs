@@ -145,15 +145,15 @@ test('Clipboard denial exposes a keyboard-selectable fallback and partial tables
 test('Table tools and detail copy controls follow the high contrast theme',async({page})=>{
     await page.addInitScript(()=>localStorage.setItem('openbexi-timeline:appearance:v1','contrast'));
     const errors=await setup(page),panel=await table(page);
-    await expect(panel.locator('.ob_table_tools')).toHaveCSS('color','rgb(0, 0, 0)');
-    await expect(panel.locator('.ob_table_tools')).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await expect(panel.locator('.ob_table_tools')).toHaveCSS('color','rgb(20, 38, 56)');
+    await expect(panel.locator('.ob_table_tools')).toHaveCSS('background-color','rgb(225, 233, 240)');
     const exportButton=panel.getByRole('button',{name:'Export CSV',exact:true});
-    await expect(exportButton).toHaveCSS('border-top-color','rgb(0, 0, 0)');
+    await expect(exportButton).toHaveCSS('border-top-color','rgb(62, 92, 117)');
     await expect(exportButton).toHaveCSS('border-top-width','2px');
     await page.keyboard.press('Tab');await exportButton.focus();await expect(exportButton).toHaveCSS('outline-width','3px');
     await panel.locator('.ob_table_record').first().click();await ready(page);
     const copy=page.locator('.ob_descriptor_summary').getByRole('button',{name:'Copy ID',exact:true});
-    await expect(copy).toHaveCSS('color','rgb(0, 0, 0)');await expect(copy).toHaveCSS('background-color','rgb(255, 255, 255)');
-    await expect(copy).toHaveCSS('border-top-color','rgb(0, 0, 0)');await expect(copy).toHaveCSS('border-top-width','2px');
+    await expect(copy).toHaveCSS('color','rgb(20, 38, 56)');await expect(copy).toHaveCSS('background-color','rgb(243, 247, 250)');
+    await expect(copy).toHaveCSS('border-top-color','rgb(62, 92, 117)');await expect(copy).toHaveCSS('border-top-width','2px');
     expect(errors).toEqual([]);
 });
