@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.5.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.5.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -13,7 +13,7 @@ These notes describe the version 2.5.1 browser application and the local demos i
 - **Data** starts with the event's time, duration, source and status. Expand **All fields** for other metadata. Copy controls beside identifiers and timestamps copy their original values; if clipboard access is blocked, select and copy the offered text manually.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
 - The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Go to latest data, Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
-- The secondary bar groups **Calendar → Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.
+- The secondary bar groups **Calendar | Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.
 - At widths of 600 pixels or less, search, previous/next activity and status stay visible in two rows. **More** opens view choices, settings, filters and other controls. Press Escape to close it and return focus to More. The menu also closes when you select a view or open a side panel.
 - Choose a search mode inside **Filters → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
 - **Back to previous view** restores the date and zoom before a search or selection moved the timeline, while retaining the current query and filters.
@@ -24,6 +24,7 @@ These notes describe the version 2.5.1 browser application and the local demos i
 - **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Open **Settings → Update perspective** and enable **Adjust perspective** to rotate, pan and zoom the camera. Turn adjustment off or press Escape to navigate the timeline. Save the viewpoint, lighting, metalness and roughness for later visits. The UI always opens in **2D**; enabling 3D restores your saved settings or the reference preset. Metalness affects the view span and activities while icons keep their colors. See [Perspective settings](perspective.md).
 - Use row pagination to browse records that do not fit vertically. The timeline fills the browser window by default and recalculates page capacity when resized; long panel content can scroll independently.
 - Use **Resync** (Go to current time) to center the current date and time. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
+- When the red current-time line is enabled, **Current time** appears on its date axis if it fits between date labels and inside the viewport. Its position and visibility follow panning, zooming and resizing.
 
 The Help panel collects project resources and local demo choices. The local demos run from files and do not require a Java data service. They do not offer server login, saved server filters, or event creation.
 
@@ -49,16 +50,20 @@ or Escape cancels the download or worker and retains the previous dataset.
 Connected loading retains its existing limits: 15,000 top-level records, 50,000
 records including activities, 8 Mi JSON payload characters, 32 pages per visible
 interval and four pages per neighboring interval.
-**Data limit reached** still identifies incomplete coverage and retains accepted
-records. See [loading limits](progressive-loading.md) for details.
+**Data limit reached** identifies a limit that leaves the visible time span
+incompletely covered and retains accepted records. Limits outside that span
+remain in the status report. See [loading limits](progressive-loading.md) for details.
 
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
 
 Calendar month arrows browse dates without moving the timeline. Select a day to
 load that interval. The secondary menu bar shows **Status: Loading…** or
 **Status: Searching…** in orange while work continues, and **Status: Ready** in
-green after successful completion. Partial coverage, data limits and interrupted
-connections stay orange; **Status: Error** is red and **Status: Cancelled** is gray.
+green after successful completion when the visible time span is fully covered.
+Partial coverage and data limits within that span stay orange. Limits affecting
+only neighboring ranges do not prevent Ready; the report still lists them.
+Coverage is checked again after panning, zooming, filtering and refreshing.
+Interrupted connections stay orange; **Status: Error** is red and **Status: Cancelled** is gray.
 Click the **Status** button
 to open the current loading or search report; click it again to close the report,
 as with **Timeline details**. The tooltip also gives the current state. If loading
@@ -141,9 +146,10 @@ circular radio buttons in Change look and feel. They appear horizontally and
 wrap on narrow panels. Arrow keys move between choices. Themes apply immediately
 and persist in this browser; Default is selected initially. They change interface
 controls without altering record colors or the selected time range.
-High contrast strengthens icons, buttons and separators in both menu bars so
-groups remain distinct. Hover, keyboard focus, selected and disabled controls
-have clear visual states.
+Default uses soft metallic blue-grey shades to distinguish toolbar groups.
+High contrast uses a dark steel-blue bar and stronger blue-grey control surfaces,
+icons, buttons and separators. Hover, keyboard focus, selected and disabled
+controls have clear visual states.
 
 Selecting **High contrast** reveals color pickers directly below it. **Overall
 background** changes the workspace, panels and clear canvas; the other pickers

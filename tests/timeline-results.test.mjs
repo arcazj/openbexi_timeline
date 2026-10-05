@@ -40,7 +40,7 @@ test('Status buttons explain partial coverage and loading ends on completion, ca
             warnings:['A configured source is unavailable.']};
         r.remoteMetadata=metadata;
         r.fetching=true;r.updateUI();
-        assert.match(r.statusExplanation.textContent,/Coverage is incomplete.*prefetched time ranges/);
+        assert.match(r.statusExplanation.textContent,/Coverage is incomplete.*visible time span/);
         assert.equal(r.status.tagName,'BUTTON');assert.equal(r.status.textContent,'Status: Loading…');
         assert.match(r.statusMessage.textContent,/Partial data.*Loading items/);
         assert.match(r.status.getAttribute('aria-description'),/Partial data/);
@@ -92,6 +92,35 @@ test('Status prioritizes unfinished work, incomplete coverage, failures and canc
         r.searchError='';r.cancelled=true;status('Cancelled','cancelled','neutral');
         r.cancelled=false;r.explorer.searchQuery='Pending search';status('Searching…','searching','warning');
         r.explorer.interrupt();status('Ready','ready','success');
+    } finally {h.close();}
+});
+
+test('Ready uses visible coverage while offscreen limits remain in diagnostics',async()=>{
+    const {h,r}=await load();
+    try {
+        r.captureRanges();
+        const range={...r.visibleRanges.values().next().value},span=range.to-range.from;
+        const limited={from:range.from-span,to:range.from,complete:false,state:'limited',warnings:['Neighbor limit reached.']};
+        const complete={...range,complete:true,state:'complete',warnings:[]};
+        r.complete=false;
+        r.remoteMetadata={complete:false,progressive:true,loadLimited:true,warnings:limited.warnings,coverage:[limited,complete]};
+        r.updateUI();
+        assert.equal(r.status.dataset.state,'ready');assert.equal(r.status.title,'Ready');
+        assert.match(r.summary.textContent,/Neighbor limit reached/);
+        assert.match(r.statusExplanation.textContent,/visible time span is fully covered/);
+        const name=r.visibleRanges.keys().next().value;
+        r.visibleRanges.set(name,{from:range.from-span/2,to:range.to-span/2});r.updateUI();
+        assert.equal(r.status.dataset.state,'limited');
+        assert.match(r.statusExplanation.textContent,/visible time span/);
+        r.fetching=true;r.updateUI();assert.equal(r.status.dataset.state,'loading');
+        r.fetching=false;
+        r.visibleRanges.set(name,range);r.updateUI();assert.equal(r.status.dataset.state,'ready');
+        r.remoteMetadata.coverage=[{...complete,to:range.from+span/3},{...complete,from:range.from+span/2}];
+        r.updateUI();assert.equal(r.status.dataset.state,'partial','A gap inside the visible span is incomplete');
+        r.remoteMetadata.coverage=[{...complete,to:range.from+span/2},{...complete,from:range.from+span/2}];
+        r.updateUI();assert.equal(r.status.dataset.state,'ready','Adjacent completed intervals cover the span');
+        r.remoteMetadata.coverage[0].warnings=['Visible source unavailable.'];r.updateUI();
+        assert.equal(r.status.dataset.state,'partial','Warnings belonging to the visible span remain visible');
     } finally {h.close();}
 });
 

@@ -191,6 +191,11 @@
 .ob_results_status:empty { display: none; }
 .ob_model_error { margin:16px; padding:12px; color:#8a1c21; background:#fff3f3; border:1px solid #b85258; font:14px Arial,sans-serif; overflow-wrap:anywhere; }
 .ob_activity_labels { position:absolute; inset:0; pointer-events:none; z-index:100000; }
+.ob_current_time_label { position:absolute; z-index:100001; pointer-events:none; box-sizing:border-box;
+    padding:1px 5px; border-bottom:2px solid #b21e35; border-radius:3px; white-space:nowrap;
+    font:600 12px/16px Arial,sans-serif; color:#a11b30; background:#f7f9fc; }
+.ob_current_time_label[hidden] { display:none; }
+.ob_results_feedback:has(.ob_calendar[hidden]) .ob_calendar_separator { display:none; }
 .ob_activity_labels > svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
 .ob_activity_label { position:absolute; box-sizing:border-box; width:max-content; min-height:0; padding:0;
     white-space:normal; overflow-wrap:anywhere; text-align:left; font:12px/15px Arial,sans-serif;
@@ -333,7 +338,7 @@ body.ob_timeline_app { margin: 0; height: 100dvh; overflow: clip; }
 :root[data-ob-theme=apple] { --ob-font:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --ob-header:#f2f2f7; --ob-panel:#fafafa; --ob-heading:#e8e8ed; --ob-button:#fff; --ob-text:#1d1d1f; --ob-border:#b8b8c0; --ob-accent:#0066cc; --ob-radius:9px; }
 :root[data-ob-theme=windows] { --ob-font:"Segoe UI",sans-serif; --ob-header:#f3f3f3; --ob-panel:#fafafa; --ob-heading:#e8eef5; --ob-button:#fff; --ob-text:#202020; --ob-border:#a5a5a5; --ob-accent:#0067c0; --ob-radius:3px; }
 :root[data-ob-theme=minimal] { --ob-font:Arial,sans-serif; --ob-header:#fff; --ob-panel:#fff; --ob-heading:#f5f5f5; --ob-button:#fff; --ob-text:#262626; --ob-border:#b0b0b0; --ob-accent:#333; --ob-radius:0px; }
-:root[data-ob-theme=contrast] { --ob-font:Arial,sans-serif; --ob-header:#111; --ob-panel:#fff; --ob-heading:#fff; --ob-button:#fff; --ob-text:#000; --ob-border:#000; --ob-accent:#003cc5; --ob-radius:0px; }
+:root[data-ob-theme=contrast] { --ob-font:Arial,sans-serif; --ob-header:#263a4d; --ob-panel:#e1e9f0; --ob-heading:#c9d8e6; --ob-button:#f3f7fa; --ob-text:#142638; --ob-border:#3e5c75; --ob-accent:#124f85; --ob-radius:3px; }
 .ob_timeline_panel .ob_results_header { background:var(--ob-header,#eaf1f5) !important; color:var(--ob-text,#183c51); font-family:var(--ob-font,Arial,sans-serif) !important; }
 .ob_results_header button, .ob_results_header select, .ob_results_header input.ob_search_input,
 .ob_timeline_right_panel.ob_viewport_side button, .ob_timeline_right_panel.ob_viewport_side input,
@@ -382,6 +387,7 @@ body.ob_timeline_app { margin: 0; height: 100dvh; overflow: clip; }
 /* White control surfaces and bright dividers keep every group legible on both bars,
    including the legacy image controls that do not inherit button styles. */
 :root[data-ob-theme=contrast] .ob_results_header { color:#fff; }
+:root[data-ob-theme=contrast][data-ob-contrast-custom=false] .ob_results_header { background-image:linear-gradient(#ffffff0a,#ffffff00) !important; }
 :root[data-ob-theme=contrast] .ob_activity_toolbar { border-top:2px solid #fff; padding-top:6px; }
 :root[data-ob-theme=contrast] .ob_results_header .ob_toolbar_separator { width:3px; flex-shrink:0; height:28px; background:#ffe74a; }
 :root[data-ob-theme=contrast] .ob_results_header :where(button,select,input.ob_search_input,img[role=button]),

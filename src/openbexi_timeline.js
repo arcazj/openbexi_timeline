@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.5.1
+ *     OpenBEXI Timeline version 2.5.2
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -37,6 +37,7 @@ import {bandTimeToPixel, bandPixelToTime} from './openbexi_timeline_scale.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
 import {bandTicks, secondaryTicks} from './openbexi_timeline_ticks.js';
 import {dateAxisHeight, configureDateAxes} from './openbexi_timeline_paging.js';
+import {syncCurrentTime} from './openbexi_timeline_current_time.js';
 import {parseTimelineData, parseTimelineDate, formatTimelineDate, searchTimelineData,
     prepareStaticBands, layoutStaticSessions, positionPackedBands, timelineValueToTime, formatTimelineValue} from './openbexi_timeline_data.js';
 
@@ -124,7 +125,7 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.get_current_time = function () {
-        if (this.ob_results?.remoteData) return Date.now();
+        if (this.staticData || this.ob_results?.remoteData) return Date.now();
         return this.timeZone === "UTC" ? this.getUTCTime(Date.now()) : Date.now();
     };
 
@@ -2716,6 +2717,7 @@ function OB_TIMELINE(options = {}) {
         updateOverviewViewport(this, ob_scene_index);
         syncOverviewPanel(this, ob_scene_index);
         this.ob_activity_focus?.sync(ob_scene_index);
+        syncCurrentTime(this,ob_scene_index);
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
             this.ob_scene[ob_scene_index].ob_camera);
     };
@@ -4216,18 +4218,18 @@ function OB_TIMELINE(options = {}) {
 
     OB_TIMELINE.prototype.add_line_current_time = function (ob_scene_index, date, color) {
         color = color || this.track[ob_scene_index](new THREE.Color("rgb(243,23,51)"));
-
+        const scene=this.ob_scene[ob_scene_index];scene.currentTimeMarkers=[];
+        if(this.staticTimeAxis?.kind==='numeric')return;
         let ob_x;
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
-            ob_x = this.dateToPixelOffSet(ob_scene_index, date,
-                this.ob_scene[ob_scene_index].bands[i].gregorianUnitLengths,
-                this.ob_scene[ob_scene_index].bands[i].intervalPixels);
+            ob_x = this.dateToBandPixelOffSet(ob_scene_index,scene.bands[i],date);
             if (isNaN(ob_x)) return;
 
             const band = this.ob_scene[ob_scene_index].bands[i];
             const halfHeight = band.height / 2;
             const heightMax = band.heightMax;
             const bandColor = band.color;
+            const mesh=scene.getObjectByName(band.name),start=mesh?.children.length || 0;
 
             this.add_segment(ob_scene_index, band.name, ob_x, halfHeight, 20, heightMax, color, false);
             this.add_segment(ob_scene_index, band.name, ob_x + 0.45, halfHeight, 20, heightMax, bandColor, false);
@@ -4235,6 +4237,7 @@ function OB_TIMELINE(options = {}) {
             this.add_segment(ob_scene_index, band.name, ob_x, -halfHeight, 20, heightMax, color, false);
             this.add_segment(ob_scene_index, band.name, ob_x + 0.45, -halfHeight, 20, heightMax, bandColor, false);
             this.add_segment(ob_scene_index, band.name, ob_x + 0.90, -halfHeight, 20, heightMax, bandColor, false);
+            if(mesh)scene.currentTimeMarkers.push({band,mesh,x:ob_x,segments:mesh.children.slice(start)});
         }
     };
 

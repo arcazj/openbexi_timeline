@@ -37,7 +37,7 @@ test('High contrast gives both menu bars distinct controls and strong separators
         await ready(page);
         const header = page.locator('.ob_results_header');
         const background = await header.evaluate(node => getComputedStyle(node).backgroundColor);
-        expect(background).toBe('rgb(17, 17, 17)');
+        expect(background).toBe('rgb(38, 58, 77)');
         const compact=width<600;
         const bars=['.ob_primary_toolbar', '.ob_activity_toolbar'];
         if(compact) {
@@ -83,7 +83,7 @@ test('High contrast gives both menu bars distinct controls and strong separators
 test('High contrast preserves hover, focus, pressed, checked and disabled states', async ({page}) => {
     await enableContrast(page);
     const settings = page.getByAltText('Settings', {exact: true});
-    await expect(settings).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(settings).toHaveCSS('background-color', 'rgb(184, 205, 221)');
     await settings.hover();
     await expect(settings).toHaveCSS('background-color', 'rgb(197, 232, 255)');
     await page.mouse.move(0, 0);
@@ -93,7 +93,7 @@ test('High contrast preserves hover, focus, pressed, checked and disabled states
     await table.focus();
     await expect(table).toHaveCSS('outline-width', '3px');
     const outline = await table.evaluate(node => getComputedStyle(node).outlineColor);
-    expect(contrastRatio(outline, 'rgb(17, 17, 17)')).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(outline, 'rgb(38, 58, 77)')).toBeGreaterThanOrEqual(3);
     await table.hover();
     await page.mouse.down();
     await expect(table).toHaveCSS('background-color', 'rgb(255, 231, 74)');
@@ -110,7 +110,7 @@ test('High contrast preserves hover, focus, pressed, checked and disabled states
     await auto.uncheck();
     await ready(page);
     await page.mouse.move(0, 0);
-    await expect(auto.locator('..')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(auto.locator('..')).toHaveCSS('background-color', 'rgb(191, 210, 226)');
 
     const disabled = page.locator('.ob_results_header img[aria-disabled=true]').first();
     await expect(disabled).toBeVisible();
@@ -148,5 +148,5 @@ test('High contrast preserves hover, focus, pressed, checked and disabled states
     await page.getByAltText('Settings', {exact: true}).click();
     await page.getByRole('radio', {name: 'Default', exact: true}).check();
     await expect(page.locator('html')).toHaveAttribute('data-ob-theme', 'default');
-    await expect(page.locator('.ob_results_header')).not.toHaveCSS('background-color', 'rgb(17, 17, 17)');
+    await expect(page.locator('.ob_results_header')).not.toHaveCSS('background-color', 'rgb(38, 58, 77)');
 });

@@ -286,7 +286,7 @@ operational files.
 `toolbar-ux.spec.mjs` checks exactly two menu rows, navigation immediately after
 search when it fits, fallback to the secondary row, and the compact More menu at
 phone widths. The secondary filter group follows
-Calendar, Filter: \<filter name\>, Filters, a separator and Timeline details.
+Calendar, a separator, Filter: \<filter name\>, Filters, a separator and Timeline details.
 Checks include the separator between 3D and Settings, removal of the old time-window
 button, and opening and closing the Status report with the same control.
 It captures both menu layouts and all five themes.
@@ -304,3 +304,8 @@ states in every theme, including open reports and narrow layouts. Held data
 requests verify loading, failure, cancellation, recovery and successful completion;
 unit and historical-search tests ensure partial or unfinished work cannot show green.
 Theme changes must preserve records and the selected time range.
+
+The status also checks the union of completed intervals within the visible span.
+Neighbor scan limits remain in the report and allow Ready when the visible span
+is complete. Current-time checks cover alignment with the red line, date-label
+collisions, offscreen instants, zoom and responsive layouts.

@@ -445,6 +445,8 @@ test('An exhausted background scan pauses without failing the visible interval',
         assert.equal(r.error,'');assert.equal(r.complete,false);
         assert.ok(r.snapshot.entries.some(entry=>entry.record.id==='past-two'),'A page at the budget boundary remains visible');
         assert.ok(r.remoteMetadata.warnings.some(warning=>warning.includes('scan limit')));
+        assert.equal(r.status.textContent,'Status: Ready','An offscreen scan limit does not hide completed visible coverage');
+        assert.equal(r.status.dataset.tone,'success');
         assert.ok(requests.some(request=>{const url=new URL(request.url);return url.searchParams.get('cancel')==='1' && url.searchParams.get('cursor')==='past-three';}));
         const paused=t.ob_loader.cache.find(entry=>entry.paused);assert.ok(paused);
         t.ob_loader.targets({from:paused.from,to:paused.to});

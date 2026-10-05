@@ -76,7 +76,7 @@ test('Status explanations are keyboard accessible and the orange loading indicat
     await partial.focus();await page.keyboard.press('Space');
     await expect(page.locator('.ob_results_details')).toHaveAttribute('open','');
     await expect(loading).toBeVisible();
-    await expect(page.locator('.ob_status_explanation')).toContainText('prefetched time ranges');
+    await expect(page.locator('.ob_status_explanation')).toContainText('visible time span');
     await expect(page.locator('.ob_results_summary')).toContainText('configured source is unavailable');
     await expect(partial).toHaveAttribute('aria-expanded','true');
     await page.keyboard.press('Escape');await expect(page.locator('.ob_results_details')).not.toHaveAttribute('open','');

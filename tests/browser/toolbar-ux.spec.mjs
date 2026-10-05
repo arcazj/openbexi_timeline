@@ -82,7 +82,8 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await expect(page.getByRole('button',{name:'Remove Filter: Custom',exact:true})).toBeVisible();
     expect(await page.locator('.ob_active_filters').evaluate(labels=>
         labels.parentElement.classList.contains('ob_results_feedback') &&
-        labels.previousElementSibling.alt==='Calendar browser' &&
+        labels.previousElementSibling.classList.contains('ob_calendar_separator') &&
+        labels.previousElementSibling.previousElementSibling.alt==='Calendar browser' &&
         labels.nextElementSibling.getAttribute('aria-label')==='Filters')).toBe(true);
     await page.getByRole('button',{name:'Remove Group: namespace',exact:true}).click();await ready(page);
     expect((await state(page)).group).toBe('NONE');expect((await state(page)).ids).toEqual(['ground']);
