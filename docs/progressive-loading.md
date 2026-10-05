@@ -28,6 +28,10 @@ interval, preserving the search and display options. Coverage remains partial
 and exact Fit matches stays disabled until loading completes. At this limit the
 client releases remaining cursors; narrowing the view or changing the query
 resumes loading.
+After processing finishes, **Status: Ready** is green when completed intervals
+cover the visible time span. A data limit outside that span remains in the
+report and does not prevent Ready. Gaps and limits inside the visible span stay
+orange; navigating, zooming, changing filters or refreshing checks coverage again.
 Loading failures show a red **Status: Error** in the secondary menu bar. Click it or
 press Enter to inspect the error. Use Retry or Refresh, or navigate to another
 interval, to resume. Cancelled work shows **Status: Cancelled** in gray.

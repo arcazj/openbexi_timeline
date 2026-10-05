@@ -1,19 +1,19 @@
 export const APPEARANCE_KEY = 'openbexi-timeline:appearance:v1';
 export const CONTRAST_KEY = 'openbexi-timeline:contrast-colors:v1';
 export const CONTRAST_COLORS = [
-    ['background', 'Overall background', '#111111'],
-    ['navigation', 'Playback and synchronization', '#ffffff'],
-    ['search', 'Search', '#ffffff'],
-    ['views', 'Timeline and table views', '#ffffff'],
-    ['perspective', 'Overview and 3D', '#ffffff'],
-    ['settings', 'Settings and help', '#ffffff'],
-    ['activity', 'Activity navigation and refresh', '#ffffff'],
-    ['scale', 'Auto scale and view lock', '#ffffff'],
-    ['results', 'Search result actions', '#ffffff'],
-    ['filters', 'Calendar and filters', '#ffffff'],
-    ['details', 'Timeline details', '#ffffff'],
-    ['status', 'Loading and status group', '#111111'],
-    ['date', 'Current date', '#ffffff']
+    ['background', 'Overall background', '#263a4d'],
+    ['navigation', 'Playback and synchronization', '#d8e5ef'],
+    ['search', 'Search', '#f0f5f9'],
+    ['views', 'Timeline and table views', '#c7d9e8'],
+    ['perspective', 'Overview and 3D', '#e4edf4'],
+    ['settings', 'Settings and help', '#b8cddd'],
+    ['activity', 'Activity navigation and refresh', '#dce8f1'],
+    ['scale', 'Auto scale and view lock', '#bfd2e2'],
+    ['results', 'Search result actions', '#e8f0f6'],
+    ['filters', 'Calendar and filters', '#cadce9'],
+    ['details', 'Timeline details', '#b5ccde'],
+    ['status', 'Loading and status group', '#263a4d'],
+    ['date', 'Current date', '#d1e0ec']
 ];
 export const APPEARANCES = [
     ['default', 'Default'], ['apple', 'Apple style'], ['windows', 'Windows style'],
@@ -108,6 +108,9 @@ export function restoreAppearance() {
     try { theme = window.localStorage.getItem(APPEARANCE_KEY); } catch { /* Browser storage can be unavailable. */ }
     let saved;
     try { saved = JSON.parse(window.localStorage.getItem(CONTRAST_KEY)); } catch { /* Ignore invalid or unavailable storage. */ }
+    // A saved reset from earlier releases follows the new default palette.
+    if(saved?.backgroundApplied===false && CONTRAST_COLORS.every(([id])=>
+        saved[id]===(['background','status'].includes(id)?'#111111':'#ffffff')))saved=undefined;
     applyContrastColors(saved);
     return applyAppearance(theme);
 }

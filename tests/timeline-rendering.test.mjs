@@ -44,6 +44,29 @@ async function render(model,dataset='json/test-data/monet.json') {
     return {harness,timeline};
 }
 
+test('Current-time lines advance on legacy date scales',async()=>{
+    const model=await read('models/demos/monet.json');
+    const {harness,timeline:t}=await render(model);
+    try {
+        const {syncCurrentTime}=await harness.importModule('src/openbexi_timeline_current_time.js');
+        const scene=t.ob_scene[0],now=Date.parse('2026-10-02T00:00:00Z');
+        t.staticData=null;t.timeZone='LOCAL';t.params[0].showCurrentTime=true;
+        t.ob_scene.sync_time=Date.parse('2026-10-01T00:00:00Z');
+        t.get_current_time=()=>now;
+        for(const band of scene.bands)delete band.timeScale;
+        t.add_line_current_time(0,new Date(now-86400000),'red');
+        assert.ok(scene.currentTimeMarkers.length>0);
+        syncCurrentTime(t,0);
+        for(const marker of scene.currentTimeMarkers) {
+            assert.equal(marker.segments.length,6);
+            const x=marker.x+marker.segments[0].position.x;
+            assert.ok(Number.isFinite(x));
+            assert.equal(t.pixelOffSetToBandDate(0,marker.band,x).getTime(),now,
+                'the line follows the current instant through the legacy Date parser');
+        }
+    } finally {harness.close();}
+});
+
 function presentation(timeline) {
     const scene=timeline.ob_scene[0];
     return JSON.parse(JSON.stringify({background:scene.background.getHexString(),camera:scene.ob_camera_type,

@@ -44,7 +44,7 @@ test('Custom contrast colors persist, follow controls into More and reset cleanl
         return {scene:t.ob_scene[0].background.getHexString(),bands:t.ob_scene[0].bands.map(band=>band.color),rendering:JSON.stringify(t.rendering)};
     });
     await page.getByLabel('Search color',{exact:true}).fill('#004400');
-    await expect(page.locator('.ob_timeline_right_panel')).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await expect(page.locator('.ob_timeline_right_panel')).toHaveCSS('background-color','rgb(225, 233, 240)');
     expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_scene[0].background.getHexString())).toBe(original.scene);
     await page.getByLabel('Overall background color',{exact:true}).fill('#001122');
     await expect(page.locator('.ob_timeline_right_panel')).toHaveCSS('background-color','rgb(0, 17, 34)');
@@ -87,9 +87,9 @@ test('Custom contrast colors persist, follow controls into More and reset cleanl
     await page.getByAltText('Settings',{exact:true}).click();
     await page.getByRole('button',{name:'Reset high contrast colors',exact:true}).click();
     await expect(page.locator('html')).toHaveAttribute('data-ob-contrast-custom','false');
-    await expect(page.getByLabel('Overall background color',{exact:true})).toHaveValue('#111111');
+    await expect(page.getByLabel('Overall background color',{exact:true})).toHaveValue('#263a4d');
     expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_scene[0].background.getHexString())).toBe(original.scene);
     await page.getByRole('button',{name:'Close settings',exact:true}).click();
-    await expect(page.locator('.ob_results_header')).toHaveCSS('background-color','rgb(17, 17, 17)');
+    await expect(page.locator('.ob_results_header')).toHaveCSS('background-color','rgb(38, 58, 77)');
     expect(errors).toEqual([]);
 });

@@ -6,7 +6,7 @@ import {CONTRAST_COLORS, normalizeContrastColors, contrastText} from '../src/ope
 
 test('Saved contrast colors accept only known solid hex colors and choose readable text',()=>{
     const value = normalizeContrastColors({background:'#ABCDEF',filters:'url(https://example.invalid)',search:'#123',unknown:'#123456'});
-    assert.equal(value.background,'#abcdef'); assert.equal(value.filters,'#ffffff'); assert.equal(value.search,'#ffffff');
+    assert.equal(value.background,'#abcdef'); assert.equal(value.filters,'#cadce9'); assert.equal(value.search,'#f0f5f9');
     assert.equal(Object.hasOwn(value,'unknown'),false);
     assert.equal(contrastText('#000000'),'#ffffff'); assert.equal(contrastText('#ffffff'),'#000000');
     const luminance = color => color.slice(1).match(/../g).map(value=>parseInt(value,16)/255)
@@ -38,7 +38,7 @@ test('Contrast palette follows the selected theme, persists changes and resets w
         panel.querySelector('input[value=minimal]').click();assert.equal(palette.hidden,true);
         assert.equal(filters.value,'#003366');
         panel.querySelector('input[value=contrast]').click();palette.querySelector('button').click();
-        assert.equal(filters.value,'#ffffff');assert.equal(d.documentElement.dataset.obContrastCustom,'false');
+        assert.equal(filters.value,'#cadce9');assert.equal(d.documentElement.dataset.obContrastCustom,'false');
         assert.equal(d.documentElement.dataset.obTheme,'contrast');
     } finally {h.close();}
 });
@@ -48,14 +48,14 @@ test('Invalid saved JSON and blocked browser storage leave color controls usable
     try {
         const api=await h.importModule('src/openbexi_timeline_appearance.js'), d=h.window.document;
         h.window.localStorage.setItem(api.CONTRAST_KEY,'{invalid');api.restoreAppearance();
-        assert.equal(d.documentElement.style.getPropertyValue('--ob-contrast-background'),'#111111');
+        assert.equal(d.documentElement.style.getPropertyValue('--ob-contrast-background'),'#263a4d');
         Object.defineProperty(h.window,'localStorage',{get(){throw new Error('Storage blocked');}});
         api.restoreAppearance();const panel=d.createElement('section');d.body.append(panel);api.mountAppearance(panel,{name:'blocked'});
         panel.querySelector('input[value=contrast]').click();
         const input=panel.querySelector('[data-contrast-color=background]');input.value='#ffffff';input.oninput();
         assert.equal(d.documentElement.style.getPropertyValue('--ob-contrast-background'),'#ffffff');
         assert.match(panel.querySelector('[role=status]').textContent,/cannot be saved/);
-        panel.querySelector('.ob_contrast_colors button').click();assert.equal(input.value,'#111111');
+        panel.querySelector('.ob_contrast_colors button').click();assert.equal(input.value,'#263a4d');
     } finally {h.close();}
 });
 
@@ -91,7 +91,7 @@ test('Workspace contrast temporarily changes clear-canvas backgrounds and restor
         assert.equal(scene.background.getHexString(),'ffcc00');
         api.applyContrastColors({});api.applyAppearanceBackground(t);
         assert.equal(scene.background.getHexString(),'123456');assert.equal(other.background.getHexString(),'aabbcc');
-        api.applyContrastColors({background:'#111111',backgroundApplied:true});api.applyAppearanceBackground(t);
-        assert.equal(scene.background.getHexString(),'111111','Explicitly selecting the default black still customizes the workspace');
+        api.applyContrastColors({background:'#263a4d',backgroundApplied:true});api.applyAppearanceBackground(t);
+        assert.equal(scene.background.getHexString(),'263a4d','Explicitly selecting the default steel blue still customizes the workspace');
     } finally {h.close();}
 });

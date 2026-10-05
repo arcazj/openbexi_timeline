@@ -638,7 +638,8 @@ export class TimelineResults {
         this.filterButton.prepend(t.ob_filter);
         const openFilter=t.ob_filter.onclick;
         t.ob_filter.onclick=event=>{event.stopPropagation();openFilter.call(t.ob_filter,event);};
-        this.feedback.append(t.ob_calendar,this.filterButton,node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),this.detailsToggle);
+        this.feedback.append(t.ob_calendar,node('span',undefined,{class:'ob_toolbar_separator ob_calendar_separator','aria-hidden':'true'}),
+            this.filterButton,node('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'}),this.detailsToggle);
         this.retryButton = button('Retry', () => { this.explorer.interrupt();this.retrying=true;this.timeline.load_data(0); });
         this.refreshButton=button('Refresh',()=>{
             this.explorer.interrupt();
@@ -834,15 +835,34 @@ export class TimelineResults {
         return Number.isFinite(latest)?{from:new Date(latest).toISOString()}:null;
     }
 
-    statusPresentation(working) {
-        const search=this.explorer,metadata=this.remoteMetadata;
+    visibleCoverage() {
+        const metadata=this.remoteMetadata,range=this.visibleRanges.values().next().value || this.ranges.values().next().value;
+        const entries=metadata?.coverage;
+        if(!Array.isArray(entries) || !entries.length || !Number.isFinite(range?.from) || !(range.to>range.from))
+            return {complete:this.complete && metadata?.complete!==false,limited:Boolean(metadata?.loadLimited),warnings:metadata?.warnings || []};
+        const visible=entries.map(entry=>({...entry,from:instant(entry.from),to:instant(entry.to)}))
+            .filter(entry=>Number.isFinite(entry.from) && Number.isFinite(entry.to) && entry.to>entry.from && entry.from<range.to && entry.to>range.from)
+            .sort((a,b)=>a.from-b.from);
+        let edge=range.from;
+        for(const entry of visible.filter(entry=>entry.complete)) {
+            // Date serialization rounds sub-millisecond projection endpoints.
+            if(entry.from>edge+1)break;
+            edge=Math.max(edge,entry.to);
+        }
+        const complete=visible.some(entry=>entry.complete) && edge>=range.to-1;
+        return {complete,limited:!complete && visible.some(entry=>entry.state==='limited'),
+            warnings:visible.flatMap(entry=>entry.warnings || [])};
+    }
+
+    statusPresentation(working,coverage=this.visibleCoverage()) {
+        const search=this.explorer;
         if(this.error || this.searchError || search.failure)return {state:'error',label:'Error',tone:'error'};
         if(search.seeking || search.searchQuery)return {state:'searching',label:'Searching…',tone:'warning'};
         if(working)return {state:'loading',label:'Loading…',tone:'warning'};
         if(this.cancelled || search.outcome==='stopped')return {state:'cancelled',label:'Cancelled',tone:'neutral'};
-        if(metadata?.loadLimited)return {state:'limited',label:'Data limit reached',tone:'warning'};
+        if(coverage.limited)return {state:'limited',label:'Data limit reached',tone:'warning'};
         if(search.outcome==='incomplete')return {state:'incomplete',label:'Search incomplete',tone:'warning'};
-        if(!this.supported || !this.complete || metadata?.complete===false || metadata?.warnings?.length)
+        if(!this.supported || !coverage.complete || coverage.warnings.length)
             return {state:'partial',label:'Partial data',tone:'warning'};
         if(this.liveState && this.liveState!=='Live')return {state:'reconnecting',label:'Connection interrupted',tone:'warning'};
         return {state:'ready',label:'Ready',tone:'success'};
@@ -872,8 +892,9 @@ export class TimelineResults {
         for (const control of this.matchControls) control.hidden = !active;
         t.ob_search_input.setAttribute('aria-invalid', this.error || this.searchError ? 'true' : 'false');
         const working=Boolean(this.loading || this.fetching || this.pending && !this.presentationUpdate || this.explorer.seeking);
-        const status = this.error ? (this.snapshot?.entries.length?'Update unavailable — displayed records retained':'Source unavailable — open details') : this.cancelled ? 'Loading cancelled' : working && !this.remoteMetadata?.warnings?.length && !this.remoteMetadata?.loadLimited ? '' :
-            !this.supported ? 'Match controls unavailable' : this.remoteMetadata?.loadLimited ? 'Data limit reached' : !this.complete ? 'Partial data' :
+        const coverage=this.visibleCoverage();
+        const status = this.error ? (this.snapshot?.entries.length?'Update unavailable — displayed records retained':'Source unavailable — open details') : this.cancelled ? 'Loading cancelled' : working && !coverage.warnings.length && !coverage.limited ? '' :
+            !this.supported ? 'Match controls unavailable' : coverage.limited ? 'Data limit reached' : !coverage.complete ? 'Partial data' :
                 this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No matches' : '';
         this.statusMessage.textContent = status;
         this.loadingStatus.hidden=!working;
@@ -911,8 +932,8 @@ export class TimelineResults {
         this.availableButton.hidden=false;
         this.availableButton.disabled=!available || this.pending || this.loading;
         if(available)this.availableButton.title='Latest observed data: '+available.from+'; coverage may be partial.';
-        if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !this.remoteMetadata.loadLimited) {
-            this.statusMessage.textContent=working?'':this.complete?'No records in this interval':'No records loaded; coverage is partial';
+        if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !coverage.limited) {
+            this.statusMessage.textContent=working?'':coverage.complete?'No records in this interval':'No records loaded; coverage is partial';
             this.feedback.hidden=false;
         }
         this.empty.hidden = true;
@@ -920,7 +941,7 @@ export class TimelineResults {
         this.explorer.update();
         if(this.explorer.seeking)this.loadingStatus.hidden=true;
         this.controls.update();
-        const presentation=this.statusPresentation(working);
+        const presentation=this.statusPresentation(working,coverage);
         this.status.textContent='Status: '+presentation.label;
         this.status.dataset.state=presentation.state;
         this.status.dataset.tone=presentation.tone;
@@ -940,11 +961,12 @@ export class TimelineResults {
             this.explorer.failure ? this.explorer.failure+' Use the activity buttons or submit the search again to retry.' :
             this.error ? this.error+' Use Retry or Refresh to request data again.' : this.cancelled ?
             'Loading was stopped. Displayed records remain available. Use Retry to continue.' : this.explorer.outcome==='stopped' ?
-            'The search was stopped. Use the activity buttons or submit the search again to continue.' : this.remoteMetadata?.loadLimited ?
-            'The loading limit was reached. Narrow the time window to continue.' : working && !this.remoteMetadata?.warnings?.length ?
+            'The search was stopped. Use the activity buttons or submit the search again to continue.' : coverage.limited ?
+            'The loading limit was reached within the visible time span. Coverage is incomplete. Narrow the time window to continue.' : working && !coverage.warnings.length ?
             this.localProgress ? this.localProgress+' Stop loading or press Escape to cancel.' : 'Items are loading in batches. Records already displayed remain available.' :
-            !this.supported || !this.complete || this.remoteMetadata?.complete===false || this.remoteMetadata?.warnings?.length ?
-            'Coverage is incomplete in one or more loaded or prefetched time ranges. Counts describe loaded records. Review the warnings and ranges below; Refresh checks the sources again.' :
+            !this.supported || !coverage.complete || coverage.warnings.length ?
+            'Coverage is incomplete or has warnings within the visible time span. Counts describe loaded records. Review the warnings and ranges below; Refresh checks the sources again.' :
+            !this.complete ? 'The visible time span is fully covered and processing has finished. Neighboring ranges may still have gaps or loading limits; counts below describe loaded records.' :
             this.snapshot?.hasCondition && !this.snapshot.matchingKeys.length ? 'No loaded records match the current search and filters.' :
             'The requested data finished loading. The counts and time ranges below describe the current view.';
         const live=this.liveState==='Live' ? ' Live updates are connected; matching changes are loaded automatically.' : this.liveState ?
