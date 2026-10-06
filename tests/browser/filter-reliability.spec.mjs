@@ -50,12 +50,14 @@ test('Saved exclusion radios can be reapplied after chips, builder criteria and 
     await expect(radio).toBeChecked();expect(errors).toEqual([]);
 });
 
-test('New filter editor is first, expanded and labeled without overflowing a phone panel',async({page},info)=>{
+test('Add filter opens the first editor, expanded and labeled without overflowing a phone panel',async({page},info)=>{
     await page.setViewportSize({width:390,height:844});
     await page.goto('/demos.html?demo=default-dataset');await ready(page);await openFilters(page);
     const panel=page.locator('.ob_viewport_side');
+    const add=panel.locator('.ob_panel_heading').getByRole('button',{name:'Add a new filter',exact:true});
+    await expect(add).toBeVisible();await expect(panel.locator('.ob_new_filter')).toHaveCount(0);
+    await add.click();
     await expect(panel.locator('fieldset').first()).toHaveClass('ob_new_filter');
-    await page.getByRole('button',{name:'Add a new filter',exact:true}).click();
     await expect(panel.locator('.ob_filter_advanced')).toHaveAttribute('open','');
     const editor=page.getByRole('textbox',{name:'New filter expression',exact:true});
     await expect(editor).toBeVisible();
@@ -64,7 +66,7 @@ test('New filter editor is first, expanded and labeled without overflowing a pho
         const bounds=section.getBoundingClientRect(),field=text.getBoundingClientRect(),name=input.getBoundingClientRect(),caption=label.getBoundingClientRect();
         return {ratio:field.width/bounds.width,label:caption.right,input:name.left,overflow:node.scrollWidth-node.clientWidth,text:label.textContent};
     });
-    expect(layout.ratio).toBeGreaterThan(.88);expect(layout.ratio).toBeLessThan(.92);
+    expect(layout.ratio).toBeGreaterThan(.95);expect(layout.ratio).toBeLessThanOrEqual(1);
     expect(layout.label).toBeLessThan(layout.input);expect(layout.text).toBe('Filter name');expect(layout.overflow).toBeLessThanOrEqual(1);
     await page.screenshot({path:info.outputPath('phone-filter-editor.png')});
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Phone warnings');
