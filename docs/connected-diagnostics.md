@@ -175,6 +175,21 @@ on that listener used to return HTTP 405. Settings now use finite JSON requests.
 The live subscription starts with initial data loading and keeps the active range,
 filter, user and timeline parameters.
 
+If the Status report says **A configured source is unavailable**, the file scan
+could not resolve an enabled source's root path. Check the source YAML
+actually used to start the server: each enabled `json_file` source's `data_model`
+root must exist and be accessible to the server process. Restore the path, mount
+or permissions, or set `enable: false` for a source that should not be used, then
+restart the service with that configuration. Displayed records from other sources
+do not prove that every enabled source is available. This warning keeps coverage
+partial even after all accessible files finish loading.
+
+**Visible scan limit reached** and **Neighbor loading paused at the scan limit**
+describe page-budget stops. They are distinct from **Loaded-data limit reached**,
+which means retained records or payloads exceeded the cache budget. File scans
+that report per-page work have a larger finite page allowance so startup can
+populate past context before a drag; see [the limits](progressive-loading.md#bounds-and-compatibility).
+
 Connection failures and empty intervals appear in Status on the secondary menu
 bar. Loading, searching and incomplete coverage are orange; completed work is
 green, failures are red and cancelled work is gray. Click Status to open its

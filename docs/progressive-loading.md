@@ -32,6 +32,11 @@ After processing finishes, **Status: Ready** is green when completed intervals
 cover the visible time span. A data limit outside that span remains in the
 report and does not prevent Ready. Gaps and limits inside the visible span stay
 orange; navigating, zooming, changing filters or refreshing checks coverage again.
+File scans can return empty pages while reading records outside the requested
+interval or walking directories. Their visible and neighboring scans continue
+past the short fallback page limits, so past sessions can reach Overview before
+the first drag. A warning that a configured source is unavailable still prevents
+complete coverage; check its server configuration and filesystem access.
 Loading failures show a red **Status: Error** in the secondary menu bar. Click it or
 press Enter to inspect the error. Use Retry or Refresh, or navigate to another
 interval, to resume. Cancelled work shows **Status: Cancelled** in gray.
@@ -172,12 +177,18 @@ still require visiting the archive. An empty early page is not proof of no data.
   registry. Deployment concurrency tuning is separate from this default.
 - The client retains at most four aligned windows (three visible spans can cross
   four fixed boundaries), 15,000 top-level records, 50,000 total
-  records including activities, and 8 Mi JSON payload characters. It limits each
-  visible interval scan to 32 pages and each neighboring scan to four pages,
-  uses a 15-second timeout per connected request, and yields between
-  batches so input and rendering can run. The bounds count characters, not heap
+  records including activities, and 8 Mi JSON payload characters. File-provider
+  responses that report nonnegative integer `recordsExamined` and `charactersRead`
+  counters allow up to 512 pages per interval, including neighboring intervals.
+  This finite guard lets cold archive scans finish beyond the short fallback
+  budgets. Zero-work pages are allowed because directory traversal and cached
+  file exclusions may not read characters or examine individual records.
+  Providers without those counters retain the fallback of 32 pages per visible
+  interval and four per neighbor. A scan-page limit has a separate warning from
+  a retained-data limit. The client uses a 15-second timeout per connected request
+  and yields between batches so input and rendering can run. The bounds count characters, not heap
   bytes or compressed network bytes.
-  Historical searches have a separate continuation and do not use the 32-page
+  Historical searches have a separate continuation and do not use the
   interval limit as an aggregate search limit.
   Background intervals pause at the scan limit, leaving visible work available.
   An expired cursor restarts once with loaded records retained; repeated failures

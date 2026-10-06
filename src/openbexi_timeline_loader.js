@@ -25,6 +25,7 @@ function covers(entries, range) {
 const overlaps = (a,b) => a.from<b.to && a.to>b.from;
 const bufferWarning='Neighbor loading paused at the cache limit; visible records retain priority.';
 const scanWarning='Neighbor loading paused at the scan limit; navigate to that interval to continue.';
+const visibleScanWarning='Visible scan limit reached; coverage is partial. Refresh or narrow the time window to continue.';
 const loadedWarning='Loaded-data limit reached; coverage is partial. Narrow the time window to continue.';
 const recordIn = (record,range) => Date.parse(record.start)<=range.to &&
     Date.parse(record.end || record.start)>=range.from || record.activities?.some(item=>recordIn(item,range));
@@ -33,7 +34,7 @@ const recordIn = (record,range) => Date.parse(record.start)<=range.to &&
 export class TimelineLoader {
     constructor(timeline) {
         this.timeline=timeline;this.generation=0;this.cache=[];this.sequence=0;
-        this.limits={characters:8*1024*1024,records:15000,nestedRecords:50000,pages:32,bufferPages:4};
+        this.limits={characters:8*1024*1024,records:15000,nestedRecords:50000,pages:32,bufferPages:4,scanPages:512};
         this.live=new TimelineLive(this);
     }
 
@@ -118,7 +119,7 @@ export class TimelineLoader {
                     revision:parents.every(item=>item.revision===parents[0]?.revision)?parents[0]?.revision:null,
                     metadata:previous.find(item=>overlaps(item,range) && item.metadata)?.metadata};
                 if (entry.metadata) entry.metadata={...entry.metadata,warnings:(entry.metadata.warnings || [])
-                    .filter(warning=>![bufferWarning,scanWarning,loadedWarning].includes(warning))};
+                    .filter(warning=>![bufferWarning,scanWarning,visibleScanWarning,loadedWarning].includes(warning))};
             }
             entry.purpose=overlaps(range,visible)?'visible':range.to<=visible.from?'past-prefetch':'future-prefetch';
             if(entry.purpose==='visible' && entry.done && !entry.paused && entry.checkedAt && Date.now()-entry.checkedAt>30000)
@@ -159,6 +160,18 @@ export class TimelineLoader {
         entry.pauseReason=reason;
         entry.metadata={...entry.metadata,complete:false,warnings:[...new Set([...(entry.metadata?.warnings || []),reason])]};
         if (evict) {entry.events=[];entry.characters=0;}
+    }
+
+    pageBudget(entry) {
+        // File scans report work even when a page contains no eligible events.
+        // Four neighbor pages (or 32 visible pages) can end mid-file on a cold
+        // archive. Let these scans finish under a larger, still finite guard;
+        // the retained-data budgets and the provider's own scan bounds apply.
+        // Directory-only pages can legitimately report zero for both counters.
+        const measured=['recordsExamined','charactersRead'].every(name=>
+            Number.isSafeInteger(entry.metadata?.[name]) && entry.metadata[name]>=0);
+        return measured?this.limits.scanPages:
+            overlaps(entry,this.visible)?this.limits.pages:Math.min(this.limits.pages,this.limits.bufferPages);
     }
 
     async load(input,{refresh=false}={}) {
@@ -212,9 +225,9 @@ export class TimelineLoader {
                 // Each independent scan has its own work budget. Accumulating
                 // pages across both buffers and later drags stopped otherwise
                 // healthy navigation merely because the user kept browsing.
-                if (entry.pages>=(overlaps(entry,this.visible)?this.limits.pages:Math.min(this.limits.pages,this.limits.bufferPages))) {
+                if (entry.pages>=this.pageBudget(entry)) {
                     const visible=overlaps(entry,this.visible);
-                    this.pauseBuffer(entry,false,visible?loadedWarning:scanWarning);
+                    this.pauseBuffer(entry,false,visible?visibleScanWarning:scanWarning);
                     if(visible)entry.limitRange={...this.visible};
                     this.publish(generation,count,false);continue;
                 }
