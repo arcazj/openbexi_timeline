@@ -38,13 +38,63 @@ test('Editor preserves quoted syntax, reports errors inline, and keeps saved sor
         const saved=t.ob_filters.find(filter=>filter.name==='Advanced');
         assert.equal(saved.sortBy,'namespace');assert.equal(t.ob_sortBy,'namespace');
         t.ob_create_filters(0,t.ob_filters.indexOf(saved),'edit_filter');t.ob_help_filters();
-        assert.equal(panel.querySelector('textarea').value,'expr: title CONTAINS "A+B | ready"');
+        assert.equal(panel.querySelector('textarea:not([readonly])').value,'expr: title CONTAINS "A+B | ready"');
         assert.equal(panel.querySelector('[data-filter-syntax]').hidden,false);
         assert.match(panel.querySelector('[data-filter-syntax]').textContent,/Legacy:/);
         select.value='NONE';
         panel.querySelector('[aria-label="Sort by"]').value='NONE';t.ob_apply_timeline_sorting(0);
-        assert.equal(panel.querySelector('.ob_new_filter legend').textContent,'Add a new filter');
+        assert.ok(panel.querySelector('[aria-label="Add a new filter"]'));
         assert.equal(panel.querySelector('[data-filter-sorting] legend').textContent,'Timeline sorting by NONE');
+    } finally {h.close();}
+});
+
+test('Saved expressions are copyable previews; Edit, validation, Cancel and Save preserve exact syntax',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
+        const t=new OB_TIMELINE({autoStart:false});
+        await t.loadModel('/models/demos/default-dataset.json',{dataset:'/json/test-data/default-dataset.json'});
+        const original='expr: NOT title CONTAINS "A+B | 25% (planned)"';
+        t.ob_filters=[{name:'ALL',filter_value:'',sortBy:'NONE',current:'yes'},
+            {name:'Operations',filter_value:original,sortBy:'namespace',current:'no'}];
+        t.ob_create_filters(0,undefined,'select_filter');
+        const row=()=>t.ob_timeline_right_panel.querySelectorAll('.ob_saved_filter')[1];
+        const click=label=>[...row().querySelectorAll('button')].find(button=>button.textContent===label).click();
+        let input=row().querySelector('textarea');
+        assert.equal(input.value,original);assert.equal(input.readOnly,true);assert.equal(input.disabled,false);
+        click('Edit');input=row().querySelector('textarea');
+        assert.equal(input.readOnly,false);assert.equal(h.window.document.activeElement,input);
+        input.value='expr: priority >';click('Save');
+        assert.equal(t.ob_filters[1].filter_value,original);assert.equal(input.getAttribute('aria-invalid'),'true');
+        assert.ok(row().querySelector('[data-filter-error]').textContent);
+        click('Cancel');assert.equal(row().querySelector('textarea').value,original);
+        assert.equal(row().querySelector('textarea').readOnly,true);
+        click('Edit');input=row().querySelector('textarea');input.value=original+' AND EXISTS(title)';
+        const updated=input.value;click('Save');
+        assert.equal(row().querySelector('textarea').readOnly,true);assert.equal(row().querySelector('textarea').value,updated);
+        assert.ok(row().classList.contains('ob_filter_selected'));
+        assert.ok(h.window.localStorage.getItem(`openbexi:filters:/:${t.name}`).includes('Operations'));
+        // Copying previews remains available during a server outage.
+        t.staticData=null;t.ob_scene[0].connected=false;t.ob_create_filters(0,undefined,'select_filter');
+        assert.equal(row().querySelector('textarea').disabled,false);
+        assert.ok([...row().querySelectorAll('button')].every(button=>button.disabled));
+    } finally {h.close();}
+});
+
+test('A failed local save retains the draft and original saved criteria',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
+        const t=new OB_TIMELINE({autoStart:false});
+        await t.loadModel('/models/demos/default-dataset.json',{dataset:'/json/test-data/default-dataset.json'});
+        t.ob_create_filters(0,0,'edit_filter');
+        const input=t.ob_timeline_right_panel.querySelector('textarea:not([readonly])'),saved=JSON.stringify(t.ob_filters);
+        const before=t.ob_scene[0].ob_filter_value;input.value='expr: EXISTS(title)';
+        h.window.Storage.prototype.setItem=()=>{throw new Error('Storage full');};
+        t.ob_save_filter(0,0);
+        assert.equal(JSON.stringify(t.ob_filters),saved);assert.equal(t.ob_scene[0].ob_filter_value,before);
+        assert.equal(input.value,'expr: EXISTS(title)');assert.equal(input.readOnly,false);
+        assert.match(t.ob_timeline_right_panel.querySelector('[data-filter-error]').textContent,/Could not save/);
     } finally {h.close();}
 });
 

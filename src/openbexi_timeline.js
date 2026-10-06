@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.5.2
+ *     OpenBEXI Timeline version 2.6.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -5107,6 +5107,7 @@ function OB_TIMELINE(options = {}) {
                 }
             } else {
                 let that = this;
+                const savingFilter=['saveFilter','addFilter'].includes(new URL(this.data,window.location.href).searchParams.get('ob_request'));
                 this.ob_not_connected(ob_scene_index);
                 fetch(this.data, {
                     method: this.method,
@@ -5199,6 +5200,7 @@ function OB_TIMELINE(options = {}) {
                     if (!currentRequest() || err.name === 'AbortError') return;
                     clearTimeout(this.requestTimeout);
                     if (results) results.fetching=false;
+                    if(savingFilter)showFilterError(this,err);
                     results?.fail(err);
                     console.log('Error message:', err.statusText);
                     this.ob_not_connected(ob_scene_index);

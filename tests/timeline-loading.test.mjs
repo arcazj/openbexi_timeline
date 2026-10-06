@@ -158,6 +158,65 @@ function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
 
+test('A failed connected filter save retains the draft and shows the error beside its editor',async()=>{
+    const f=await connected(),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['current']));
+        t.ob_create_filters(0,0,'edit_filter');
+        const input=t.ob_timeline_right_panel.querySelector('textarea:not([readonly])');input.value='expr: EXISTS(title)';
+        t.ob_save_filter(0,0);
+        const save=requests.at(-1);assert.equal(new URL(save.url).searchParams.get('ob_request'),'saveFilter');
+        save.reject(new Error('Server could not save the filter'));await waitFor(()=>!!r.error);
+        assert.equal(input.value,'expr: EXISTS(title)');assert.equal(input.readOnly,false);
+        assert.match(input.closest('.ob_saved_filter').querySelector('[data-filter-error]').textContent,/Server could not save/);
+        assert.equal(t.ob_filters[0].filter_value,'');
+    } finally {f.close();}
+});
+
+for (const unavailable of [false,true]) test(`Startup finishes scanning and preloads past sessions before dragging (unavailable source: ${unavailable})`,async()=>{
+    const f=await connected(),{h,t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>requests.length===2);
+        const pages=new Map(),warnings=unavailable?['A configured source is unavailable.']:[];
+        await finishCycle(f,1,request=>{
+            const url=new URL(request.url),purpose=url.searchParams.get('purpose');
+            const side=purpose.includes('prefetch')?purpose:'visible';
+            const index=Number(url.searchParams.get('cursor') || 0);
+            pages.set(side,(pages.get(side) || 0)+1);
+            const from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
+            const nextCursor=index<(side==='visible'?35:side==='past-prefetch'?7:0)?String(index+1):null;
+            const id=side==='visible' && index===0?'current':side==='past-prefetch' && index===6?'past':null;
+            const events=id?[{id,namespace:'operations',searchMatch:false,start:new Date(from).toISOString(),end:new Date(to).toISOString(),
+                data:{title:id+' session'},activities:[{id:id+'-event',searchMatch:false,start:new Date((from+to)/2).toISOString(),data:{title:id+' event'}}]}]:[];
+            // Real file scans can read many pages that contain no records in
+            // this interval. The cursor still advances through source data.
+            request.resolve(new Response(JSON.stringify({events,timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,
+                progressive:true,complete:!nextCursor && !unavailable,nextCursor,recordsExamined:256,charactersRead:512*1024,
+                warnings,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})));
+        });
+        assert.equal(pages.get('visible'),36);
+        assert.equal(pages.get('past-prefetch'),8);
+        assert.equal(r.error,'');assert.equal(r.remoteMetadata.loadLimited,false);
+        assert.ok(!requests.some(request=>new URL(request.url).searchParams.has('cancel')),'Healthy scans keep their continuation');
+        assert.ok(r.snapshot.entries.some(entry=>entry.record.id==='past'));
+        assert.ok(r.snapshot.entries.some(entry=>entry.record.id==='past-event'));
+        assert.ok(h.window.document.querySelector('.ob_docked_overview [data-event-id="past-event"]'),'The past event is already in Overview');
+        assert.equal(r.status.dataset.state,unavailable?'partial':'ready');
+        assert.equal(r.status.dataset.tone,unavailable?'warning':'success');
+        assert.equal(r.complete,!unavailable);
+        assert.equal(r.remoteMetadata.warnings.length,warnings.length,'Loading must retain the source warning without adding a page-limit warning');
+        const retained=r.snapshot;
+        r.captureRanges();const before={...r.visibleRanges.values().next().value};
+        const scene=t.ob_scene[0],band=scene.bands.find(b=>!b.name.includes('overview_')),mesh=scene.getObjectByName(band.name);
+        r.beginGesture();t.move_band(0,band.name,mesh.position.x+scene.width*.5,mesh.position.y,mesh.position.z,true);t.ob_render(0);
+        r.captureRanges();
+        assert.ok(r.visibleRanges.values().next().value.from<before.from);
+        assert.equal(r.snapshot,retained,'Dragging reveals the prefetched data without rebuilding it');
+    } finally {f.close();}
+});
+
 test('An incompatible search mode is explicit and releases the rejected continuation cursor',async()=>{
     const f=await connected(),{t,r,requests,settings}=f;
     try {

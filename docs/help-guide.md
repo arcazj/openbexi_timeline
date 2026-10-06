@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.5.2 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.6.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -47,14 +47,23 @@ Refreshing local JSON reports download and processing progress in **Status**.
 Large JSON files are parsed in a background worker when supported. **Stop loading**
 or Escape cancels the download or worker and retains the previous dataset.
 
-Connected loading retains its existing limits: 15,000 top-level records, 50,000
-records including activities, 8 Mi JSON payload characters, 32 pages per visible
-interval and four pages per neighboring interval.
+Connected loading retains up to 15,000 top-level records, 50,000 records including
+activities and 8 Mi JSON payload characters. File scans can continue through up
+to 512 pages per interval to fill the visible view and neighboring context.
+Providers without scan-work counters use 32 pages per visible interval and four
+per neighboring interval.
 **Data limit reached** identifies a limit that leaves the visible time span
 incompletely covered and retains accepted records. Limits outside that span
 remain in the status report. See [loading limits](progressive-loading.md) for details.
 
 In **Diagnostics**, use **Refresh** for current view, scale, and record-count information, then **Copy diagnostics** if needed. The report excludes event contents, search text, backend URLs, and browser storage. If browser clipboard access is unavailable, the selected text can be copied manually.
+
+**Sorting & Filtering** shows each saved filter's expression beside its actions.
+The preview is read-only and can be selected and copied. Choose **Edit** to change
+it, **Save** to validate and store it, or **Cancel** (Escape in the editor) to
+restore the saved expression. Errors stay beside the editor and retain your draft.
+Use **Add filter** in the panel header to create a preset. Compact metallic rows
+highlight the active filter; narrow panels place the expression below the controls.
 
 Calendar month arrows browse dates without moving the timeline. Select a day to
 load that interval. The secondary menu bar shows **Status: Loading…** or

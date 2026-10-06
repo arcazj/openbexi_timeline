@@ -115,3 +115,53 @@ test('Cold connected frame, first records and cached past remain usable before a
     await page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;t.ob_results.cancelLoad();});
     if(pendingCurrent) await reply(pendingCurrent);
 });
+
+test('Cold file scans finish beyond the old page caps and populate past Overview before a drag',async({page})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
+    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    Object.assign(model.params[0],{data:new URL('/__startup-scan',test.info().project.use.baseURL).href,
+        date:'2026-09-12T12:30:00Z',showCurrentTime:false});
+    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    const requests=[];
+    await page.route('**/__startup-scan**',async route=>{
+        const url=new URL(route.request().url());
+        if(url.searchParams.has('cancel'))return route.fulfill({json:{events:[]}});
+        if(url.searchParams.get('ob_request'))return route.fulfill({json:{openbexi_timeline:[{name:model.params[0].name,user:'guest',
+            sortBy:'namespace',sources:[],filters:[{name:'ALL',current:'yes',filter_value:'',sortBy:'namespace'}]}]}});
+        requests.push(url);
+        const purpose=url.searchParams.get('purpose'),side=purpose.includes('prefetch')?purpose:'visible';
+        const index=Number(url.searchParams.get('cursor') || 0);
+        const from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
+        const nextCursor=index<(side==='visible'?35:side==='past-prefetch'?7:0)?String(index+1):null;
+        const id=side==='visible' && index===0?'current':side==='past-prefetch' && index===6?'past':null;
+        const events=id?[{id,namespace:'sample',searchMatch:false,start:new Date(from).toISOString(),end:new Date(to).toISOString(),
+            data:{title:id+' session'},activities:[{id:id+'-activity',searchMatch:false,start:new Date((from+to)/2).toISOString(),data:{title:id+' activity'}}]}]:[];
+        await route.fulfill({json:{events,timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,progressive:true,
+            complete:!nextCursor,nextCursor,recordsExamined:256,charactersRead:512*1024,warnings:[],
+            domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}}});
+    });
+    await page.goto('/demos.html?demo=default-dataset');
+    await expect(page.locator('.ob_results_status')).toHaveText('Status: Ready');await ready(page);
+    await expect(page.locator('.ob_results_status')).toHaveAttribute('data-tone','success');
+    expect(requests.filter(url=>['initial','visible'].includes(url.searchParams.get('purpose')))).toHaveLength(36);
+    expect(requests.filter(url=>url.searchParams.get('purpose')==='past-prefetch')).toHaveLength(8);
+    await expect(page.locator('.ob_docked_overview [data-event-id="past-activity"]')).toBeVisible();
+    const before=await state(page),box=await page.locator('.ob_paged_frame').boundingBox();
+    await page.mouse.move(box.x+box.width*.25,box.y+box.height*.7);await page.mouse.down();
+    await page.mouse.move(box.x+box.width*.85,box.y+box.height*.7,{steps:12});
+    expect((await state(page)).main.from).toBeLessThan(before.main.from);
+    expect(await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,scene=t.ob_scene[0];
+        const {Vector3}=await import('three');let visible=false;
+        scene.traverse(object=>{
+            if(!object.isMesh || object.data?.id!=='past-activity' || object.parent?.name.includes('overview_'))return;
+            const point=object.getWorldPosition(new Vector3()).project(scene.ob_camera);
+            if(point.x>=-1 && point.x<=1 && point.y>=-1 && point.y<=1)visible=true;
+        });
+        return visible;
+    })).toBe(true);
+    await page.mouse.up();
+    expect(errors).toEqual([]);
+    await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.cancelLoad());
+});

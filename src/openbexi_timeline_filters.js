@@ -82,7 +82,7 @@ export function showFilterSyntax(t) {
 export function showFilterError(t,error) {
     const message=t.ob_timeline_right_panel?.querySelector('[data-filter-error]');
     if(message){message.textContent=error?.message || '';message.hidden=!error;}
-    const input=t.ob_timeline_right_panel?.querySelector('textarea');
+    const input=t.ob_timeline_right_panel?.querySelector('textarea:not([readonly])');
     if(input)input.setAttribute('aria-invalid',String(Boolean(error)));
 }
 
@@ -109,7 +109,7 @@ export function restoreLocalFilter(t) {
 
 export function applyLocalFilterOperation(t, request, index, sceneIndex) {
     if (!t.staticData) return false;
-    const scene=t.ob_scene[sceneIndex], filters=localFilters(t);
+    const scene=t.ob_scene[sceneIndex], filters=localFilters(t).map(filter=>({...filter}));
     let selected=filters[index];
     if (request==='saveFilter' || request==='addFilter') {
         const name=t.ob_get_filter_name(sceneIndex,index), value=t.ob_get_filter_value(sceneIndex,index);
@@ -122,10 +122,12 @@ export function applyLocalFilterOperation(t, request, index, sceneIndex) {
     selected ??= filters.find(f=>f.current==='yes') || filters[0];
     if (selected) {
         filters.forEach(f=>{f.current=f===selected?'yes':'no';});
-        scene.ob_filter_name=selected.name; scene.ob_filter_value=selected.filter_value;
-        t.ob_sortBy=selected.sortBy || 'NONE';
-    } else { scene.ob_filter_name=''; scene.ob_filter_value=''; t.ob_sortBy='NONE'; }
-    try { localStorage.setItem(`openbexi:filters:${location.pathname}:${t.name}`,JSON.stringify(filters)); } catch {}
+    }
+    try { localStorage.setItem(`openbexi:filters:${location.pathname}:${t.name}`,JSON.stringify(filters)); }
+    catch { throw new Error('Could not save filters in this browser. Your changes are still in the editor; retry after restoring browser storage.'); }
+    t.ob_filters=filters;
+    scene.ob_filter_name=selected?.name || ''; scene.ob_filter_value=selected?.filter_value || '';
+    t.ob_sortBy=selected?.sortBy || 'NONE';
     const results=t.ob_results;
     results.captureRanges(); results.regroupRange=results.ranges.values().next().value;
     results.navigationMap=results.map; results.request();
@@ -135,9 +137,13 @@ export function applyLocalFilterOperation(t, request, index, sceneIndex) {
 
 export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     for (const close of ['ob_remove_descriptor','ob_remove_calendar','ob_remove_help','ob_remove_setting','ob_remove_login']) t[close]();
-    const panel=element('section',undefined,{class:'ob_descriptor',id:t.name+'_setting'});
+    const panel=element('section',undefined,{class:'ob_descriptor ob_filter_panel',id:t.name+'_setting','aria-label':'Sorting & Filtering'});
     const heading=element('div','Sorting & Filtering',{class:'ob_panel_heading'});
-    heading.append(button('Close',()=>t.ob_remove_setting())); panel.append(heading);
+    const headingActions=element('div',undefined,{class:'ob_filter_heading_actions'});
+    const add=button('Add filter',()=>t.ob_add_filters(sceneIndex));add.setAttribute('aria-label','Add a new filter');
+    if(!t.staticData) {const controls=element('span',undefined,{'data-server-filter-controls':''});controls.append(add);headingActions.append(controls);}
+    else headingActions.append(add);
+    headingActions.append(button('Close',()=>t.ob_remove_setting()));heading.append(headingActions);panel.append(heading);
     const create=element('fieldset',undefined,{class:'ob_new_filter'});
     create.append(element('legend','Add a new filter'));
     if (request==='add_filter') {
@@ -147,9 +153,11 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         const text=element('textarea',undefined,{id:`textarea2_${t.name}_new`,'aria-label':'New filter expression',rows:'5'});
         text.value=decodeFilter(t.ob_scene[sceneIndex].ob_filter_value || '');
         create.append(nameRow,advancedEditor(text),button('Save new filter',()=>t.ob_load_filters('addFilter',sceneIndex,undefined,true)));
-    } else create.append(button('Add a new filter',()=>t.ob_add_filters(sceneIndex)));
+        const cancel=button('Cancel',()=>t.ob_create_filters(sceneIndex,undefined,'select_filter'));cancel.dataset.filterAvailable='';create.append(cancel);
+    }
     if (!t.staticData)create.dataset.serverFilterControls='';
-    panel.append(create);
+    if(request==='add_filter')panel.append(create);
+    const options=element('div',undefined,{class:'ob_filter_options'});
     const sorting=element('fieldset',undefined,{'data-filter-sorting':''});
     sorting.append(element('legend','Timeline sorting by '+(t.ob_sortBy || 'NONE')));
     const label=element('label','Sort by ',{for:'ob_sort_by'});
@@ -160,13 +168,14 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         if (![...select.options].some(option=>option.value===field)) select.append(element('option',field,{value:field}));
     }
     select.value=t.ob_sortBy || 'NONE';
-    sorting.append(label,select,button('Apply',()=>t.ob_apply_timeline_sorting(sceneIndex))); panel.append(sorting,filterBuilder(t));
+    sorting.append(label,select,button('Apply',()=>t.ob_apply_timeline_sorting(sceneIndex)));options.append(sorting);
     if(t.ob_results?.searchMode) {
         const search=element('fieldset'),label=element('label','Search mode ');
         search.append(element('legend','Search options'));
-        label.append(t.ob_results.searchMode);search.append(label);panel.append(search);
+        label.append(t.ob_results.searchMode);search.append(label);options.append(search);
     }
-    const fieldset=element('fieldset'); fieldset.append(element('legend','Timeline Filtering'));
+    panel.append(options,filterBuilder(t));
+    const fieldset=element('fieldset',undefined,{class:'ob_saved_filters'}); fieldset.append(element('legend','Saved filters'));
     if (!t.staticData) {
         fieldset.dataset.serverFilters='';
         fieldset.dataset.serverFilterControls='';
@@ -185,21 +194,37 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
         radio.dataset.filterScene=String(sceneIndex);
         radio.onchange=()=>t.ob_select_filters(sceneIndex,index);
         const name=element('label'); name.append(radio,document.createTextNode(filter.name)); row.append(name);
-        if (request==='edit_filter' && index===filterIndex) {
-            const text=element('textarea',undefined,{id:`textarea2_${t.name}_${filter.name}`,'aria-label':'Filter expression',rows:'3'});
-            text.value=decodeFilter(filter.filter_value); const advanced=advancedEditor(text);advanced.open=true;
-            row.append(advanced,button('Save',()=>t.ob_save_filter(sceneIndex,index)));
-        } else row.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
-        row.append(button('Delete',()=>t.ob_delete_filters(sceneIndex,index))); fieldset.append(row);
+        const editing=request==='edit_filter' && index===filterIndex;
+        const text=element('textarea',undefined,{id:`textarea2_${t.name}_${filter.name}`,class:'ob_filter_expression',
+            'aria-label':editing?'Filter expression':filter.name+' filter expression',rows:'2',spellcheck:'false',wrap:'soft',placeholder:'All records'});
+        text.value=decodeFilter(filter.filter_value);text.readOnly=!editing;
+        const actions=element('div',undefined,{class:'ob_filter_actions'});
+        if(editing) {
+            text.dataset.filterEditing='';row.classList.add('ob_filter_editing');
+            const save=button('Save',()=>t.ob_save_filter(sceneIndex,index));save.className='ob_filter_primary';
+            const cancel=button('Cancel',()=>{
+                t.ob_create_filters(sceneIndex,index,'select_filter');
+                t.ob_timeline_right_panel.querySelectorAll('.ob_saved_filter')[index]?.querySelector('button')?.focus();
+            });
+            cancel.dataset.filterAvailable='';actions.append(save,cancel);
+            text.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();cancel.click();}};
+        } else actions.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
+        const remove=button('Delete',()=>t.ob_delete_filters(sceneIndex,index));remove.className='ob_filter_remove';actions.append(remove);
+        row.append(actions,text);fieldset.append(row);
     });
     const syntax=button('Filter syntax',()=>t.ob_help_filters()); syntax.dataset.filterAvailable='';
     const help=element('pre',filterSyntax,{'data-filter-syntax':'',class:'ob_filter_syntax'});help.hidden=true;
     const error=element('p','',{'data-filter-error':'',role:'alert',class:'ob_filter_error'});error.hidden=true;
-    fieldset.append(syntax,error,help); panel.append(fieldset);
+    fieldset.append(syntax,help); panel.append(fieldset);
+    const editor=panel.querySelector('textarea:not([readonly])');
+    (editor?.closest('.ob_saved_filter,.ob_new_filter') || fieldset).append(error);
+    error.id=t.name+'_filter_error';if(editor)editor.setAttribute('aria-describedby',error.id);
     t.ob_timeline_right_panel.append(panel); t.ob_timeline_right_panel.style.visibility='visible';
     syncFilterSelection(t);
     updateFilterAvailability(t);
     t.show_filters=false;
+    if(request==='edit_filter')editor?.focus();
+    if(request==='add_filter')panel.querySelector('[aria-label="New filter name"]')?.focus();
 }
 
 /** The active criteria can change through the builder, chips, grouping or a saved view. */
@@ -210,6 +235,7 @@ export function syncFilterSelection(t) {
             (scene.ob_filter_name ? scene.ob_filter_name===filter.name : filter.current==='yes') &&
             decodeFilter(filter.filter_value)===decodeFilter(scene.ob_filter_value || '') &&
             (filter.sortBy || 'NONE')===(t.ob_sortBy || 'NONE'));
+        radio.closest('.ob_saved_filter')?.classList.toggle('ob_filter_selected',radio.checked);
     }
 }
 
@@ -218,7 +244,7 @@ export function updateFilterAvailability(t) {
     if (!fieldset) return;
     const unavailable=!t.ob_scene?.[0]?.connected;
     fieldset.querySelector('[data-filter-connection]').hidden=!unavailable;
-    for (const control of t.ob_timeline_right_panel.querySelectorAll('[data-server-filter-controls] input,[data-server-filter-controls] textarea,[data-server-filter-controls] button:not([data-filter-available])')) {
+    for (const control of t.ob_timeline_right_panel.querySelectorAll('[data-server-filter-controls] input,[data-server-filter-controls] textarea:not([readonly]),[data-server-filter-controls] button:not([data-filter-available])')) {
         control.disabled=unavailable;
         control.title=unavailable ? 'Reconnect to use saved server filters.' : '';
     }
