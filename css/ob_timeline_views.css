@@ -187,6 +187,11 @@
 .ob_results_details { min-width: 0; flex:1 1 100%; }
 .ob_results_details > summary { cursor: pointer; color: #294e64; padding: 7px 4px; min-height: 32px; box-sizing: border-box; }
 .ob_results_summary { padding: 8px 12px; border: 1px solid #bdced9; border-radius: 4px; background: #f9fcfe; color: #3f5664; line-height: 1.5; overflow-wrap: anywhere; }
+.ob_source_diagnostics { min-width: 0; text-align: left; }
+.ob_source_diagnostics h3 { margin: 8px 0 4px; font-size: inherit; }
+.ob_source_warnings { max-height: 16rem; overflow: auto; margin: 0; padding: 0 8px 0 24px; line-height: 1.5; overflow-wrap: anywhere; }
+.ob_source_warnings li { margin-bottom: 8px; }
+.ob_source_warnings code { white-space: pre-wrap; }
 .ob_results_status { color: #67532b; font-size: 12px; }
 .ob_results_status:empty { display: none; }
 .ob_model_error { margin:16px; padding:12px; color:#8a1c21; background:#fff3f3; border:1px solid #b85258; font:14px Arial,sans-serif; overflow-wrap:anywhere; }

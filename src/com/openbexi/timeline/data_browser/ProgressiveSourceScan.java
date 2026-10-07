@@ -4,6 +4,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ContentHandler;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.nio.file.*;
@@ -18,6 +19,7 @@ import java.util.regex.PatternSyntaxException;
 final class ProgressiveSourceScan implements AutoCloseable {
     private static final Map<String, ProgressiveSourceScan> ACTIVE = new LinkedHashMap<>();
     private static final long TTL = 90_000, MAX_BYTES = 64L * 1024 * 1024;
+    private static final int MAX_WARNING_DETAILS = 100;
     static {
         var cleanup = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(task -> {
             Thread thread = new Thread(task, "timeline-cursor-cleanup"); thread.setDaemon(true); return thread;
@@ -29,14 +31,15 @@ final class ProgressiveSourceScan implements AutoCloseable {
             }
         }, 90, 90, java.util.concurrent.TimeUnit.SECONDS);
     }
-    private record Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter, Partition partition, int depth) {
-        Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter) { this(path, namespace, filter, null, 0); }
-        Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter, Partition partition) { this(path, namespace, filter, partition, 0); }
+    private record Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter, Source origin, Partition partition, int depth) {
+        Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter, Source origin) { this(path, namespace, filter, origin, null, 0); }
+        Directory(Path path, String namespace, java.util.function.Predicate<JSONObject> filter, Source origin, Partition partition) { this(path, namespace, filter, origin, partition, 0); }
         long priority() { return partition == null ? Long.MAX_VALUE : partition.latest(); }
     }
-    // All partitions of one configured source share a predicate instance. A
-    // different source must still evaluate this file with its own namespace/rules.
-    private record FileVisit(Path path, String namespace, java.util.function.Predicate<JSONObject> filter) {}
+    // Visit a file once per configured source, including sources with the same namespace.
+    private record FileVisit(Path path, int sourceIndex) {}
+    private record Source(int index, String namespace, Path root) {}
+    private static final class RecordSizeLimitException extends IOException {}
     /** Date components come from data_model, never from private file names sent to the client. */
     private record Partition(List<String> parts, int depth, Integer year, Integer month, Integer day) {
         Partition child(String name) {
@@ -76,6 +79,9 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private final Deque<Walk> walks = new ArrayDeque<>();
     private final Set<FileVisit> seen = new HashSet<>();
     private final JSONArray warnings = new JSONArray();
+    private final JSONArray warningDetails = new JSONArray();
+    private Source diagnosticSource;
+    private Path diagnosticPath;
     private long touched = System.currentTimeMillis(), bytes, deadline, pageStart;
     private int sequence, work, examined, totalExamined;
     private boolean done;
@@ -91,6 +97,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private List<JSONObject> collected;
     private List<SourceRecordCache.Record> cached;
     private int cachedIndex;
+    private int currentOrdinal;
     private long fileStart;
     private JSONObject last;
     private JSONArray page;
@@ -159,7 +166,11 @@ final class ProgressiveSourceScan implements AutoCloseable {
         List<Directory> archives = new ArrayList<>();
         Set<Directory> preferred = new LinkedHashSet<>();
         List<JSONObject> sources = new ArrayList<>();
-        for (Object value : (JSONArray) configuration.get("startup configuration")) sources.add((JSONObject)value);
+        Map<JSONObject, Integer> sourceNumbers = new IdentityHashMap<>();
+        for (Object value : (JSONArray) configuration.get("startup configuration")) {
+            sources.add((JSONObject)value);
+            sourceNumbers.put((JSONObject)value, sources.size());
+        }
         // A large unrelated archive must not delay a source named by the search.
         // Keep every source so highlighting and coverage retain their semantics.
         if (!query.isEmpty() && !query.equals("*")) {
@@ -169,8 +180,13 @@ final class ProgressiveSourceScan implements AutoCloseable {
         }
         for (JSONObject item : sources) {
             if ("false".equals(String.valueOf(item.get("enable")))) continue;
+            Source origin = new Source(sourceNumbers.get(item), Objects.toString(item.get("namespace"), ""), null);
             if (!"json_file".equals(item.get("type"))) {
-                if (history) { historySupported = false; warn("Historical search is unavailable for a configured source."); }
+                if (history) {
+                    historySupported = false;
+                    warn("history_unavailable", "Historical search is unavailable for a configured source.", origin, null,
+                            "This source type does not support historical file searches.", "Use a source that supports historical search.");
+                }
                 continue;
             }
             String model = String.valueOf(item.get("data_model")).replace('\\', '/');
@@ -178,11 +194,12 @@ final class ProgressiveSourceScan implements AutoCloseable {
             var sourceFilter=FilterExpression.source(item);
             try {
                 Path root = Paths.get(model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0]).toRealPath();
+                origin = new Source(origin.index, namespace, root);
                 if (history) {
                     String prefix = model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0];
                     String suffix = model.substring(prefix.length()).replaceAll("^/+|/+$", "");
                     List<String> parts = suffix.isEmpty() ? List.of() : List.of(suffix.split("/"));
-                    historyDirectories.add(new Directory(root, namespace, sourceFilter, new Partition(parts, 0, null, null, null)));
+                    historyDirectories.add(new Directory(root, namespace, sourceFilter, origin, new Partition(parts, 0, null, null, null)));
                     continue;
                 }
                 LocalDate date = Instant.ofEpochMilli(from).atZone(ZoneOffset.UTC).toLocalDate();
@@ -192,10 +209,13 @@ final class ProgressiveSourceScan implements AutoCloseable {
                             .replace("/mm", "/" + date.format(DateTimeFormatter.ofPattern("MM")))
                             .replace("/dd", "/" + date.format(DateTimeFormatter.ofPattern("dd")));
                     Path path = Paths.get(partition);
-                    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) preferred.add(new Directory(path, namespace,sourceFilter));
+                    if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) preferred.add(new Directory(path.toRealPath(), namespace,sourceFilter,origin));
                 }
-                archives.add(new Directory(root, namespace,sourceFilter));
-            } catch (IOException | InvalidPathException error) { warn("A configured source is unavailable."); }
+                archives.add(new Directory(root, namespace,sourceFilter,origin));
+            } catch (IOException | InvalidPathException | SecurityException error) {
+                warn("source_unavailable", "A configured source is unavailable.", origin, null, failureReason(error),
+                        "Check this source's data_model root, mount and permissions in the server startup YAML. Disable it only if unused, then restart the service.");
+            }
         }
         directories.addAll(preferred);
         // Old partitions can hold sessions that overlap the current window. They
@@ -206,6 +226,41 @@ final class ProgressiveSourceScan implements AutoCloseable {
 
     private void warn(String message) { if (!warnings.contains(message)) warnings.add(message); }
 
+    private void warn(String code, String message, Source origin, Path path, String reason, String action) {
+        warn(message);
+        JSONObject detail = new JSONObject(Map.of("code", code, "message", message, "reason", reason, "action", action));
+        if (origin != null) {
+            detail.put("sourceIndex", origin.index);
+            detail.put("namespace", origin.namespace);
+            if (path != null && origin.root != null) {
+                Path absolute = path.toAbsolutePath().normalize();
+                // Identify a file within its configured source without disclosing the server's absolute root.
+                Path relative = absolute.startsWith(origin.root) ? origin.root.relativize(absolute) : absolute.getFileName();
+                if (relative.toString().isEmpty()) relative = absolute.getFileName();
+                detail.put("path", relative == null ? "." : relative.toString().replace('\\', '/'));
+            }
+        }
+        if (warningDetails.contains(detail)) return;
+        if (warningDetails.size() < MAX_WARNING_DETAILS) warningDetails.add(detail);
+        else warn("Additional source warning details were omitted after the first 100 issues.");
+    }
+
+    private static String failureReason(Exception error) {
+        if (error instanceof RecordSizeLimitException) return "A record exceeds the limit of 2 Mi decoded characters.";
+        if (error instanceof ParseException parse) return "Malformed or truncated JSON at character " + parse.getPosition() + ".";
+        if (error instanceof NoSuchFileException) return "The path does not exist or is no longer available.";
+        if (error instanceof AccessDeniedException || error instanceof SecurityException) return "The server process does not have permission to read this path.";
+        if (error instanceof InvalidPathException) return "The configured data_model contains an invalid filesystem path.";
+        if (error instanceof java.nio.charset.CharacterCodingException) return "The file contains invalid UTF-8 text.";
+        if (error instanceof IOException) return "The file or directory could not be read (" + error.getClass().getSimpleName() + ").";
+        return "The source record could not be processed (" + error.getClass().getSimpleName() + ").";
+    }
+
+    private void diagnose(Directory directory, Path path) {
+        diagnosticSource = directory.origin;
+        diagnosticPath = path;
+    }
+
     private boolean budget() { return page.size() >= 256 || examined >= 4096 || work >= 512 || bytes - pageStart >= 512 * 1024 || System.nanoTime() >= deadline; }
 
     private JSONObject next() {
@@ -213,7 +268,11 @@ final class ProgressiveSourceScan implements AutoCloseable {
         long started = System.nanoTime(); deadline = started + 50_000_000;
         while (!done && !budget()) {
             if (!history && (bytes >= MAX_BYTES || seen.size() >= 10000 || totalExamined >= 100000)) {
-                warn("Scan limit reached; coverage is partial. Narrow the visible time window."); close(); break;
+                String limit = bytes >= MAX_BYTES ? "64 Mi decoded characters" : seen.size() >= 10000 ? "10,000 files" : "100,000 top-level records";
+                warn("scan_limit", "Scan limit reached; coverage is partial. Narrow the visible time window.", null, null,
+                        "The interval scan reached " + limit + ". Examined " + seen.size() + " files, " + totalExamined + " records and " + bytes + " decoded characters.",
+                        "Narrow the visible time window. If the limit persists, reduce the archive covered by the configured sources.");
+                close(); break;
             }
             try {
                 if (reader == null && cached == null && !openNext()) break;
@@ -225,12 +284,17 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 } else {
                     parser.parse(reader, handler, true);
                     if (handler.ended) {
-                        if(collected!=null && fileStamp.equals(SourceRecordCache.Stamp.of(Files.readAttributes(currentFile,java.nio.file.attribute.BasicFileAttributes.class))))
+                        if(handler.inEvents && collected!=null && fileStamp.equals(SourceRecordCache.Stamp.of(Files.readAttributes(currentFile,java.nio.file.attribute.BasicFileAttributes.class))))
                             SourceRecordCache.put(currentFile,fileStamp,collected,bytes-fileStart);
                         closeFile();
                     }
                 }
-            } catch (Exception error) { warn("Unreadable or oversized records were skipped; coverage is partial."); closeFile(); }
+            } catch (Exception error) {
+                warn(error instanceof RecordSizeLimitException ? "record_too_large" : "source_read_failed",
+                        "Unreadable or oversized records were skipped; coverage is partial.", diagnosticSource, diagnosticPath, failureReason(error),
+                        "Check file access and JSON syntax, finish any interrupted write, or split records larger than 2 Mi decoded characters. Then Refresh.");
+                closeFile();
+            }
         }
         JSONObject response = MatchResults.envelope(page, query, scene, from, to, done && warnings.isEmpty(), searchMode);
         JSONObject metadata = (JSONObject) response.get("timelineMatch");
@@ -263,6 +327,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
         metadata.put("elapsedMillis", (System.nanoTime() - started) / 1_000_000);
         JSONArray messages = new JSONArray(); messages.addAll(warnings);
         metadata.put("warnings", messages);
+        JSONArray details = new JSONArray(); details.addAll(warningDetails);
+        metadata.put("warningDetails", details);
         last = response;
         return response;
     }
@@ -276,6 +342,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 push(next);
             }
             Walk walk = walks.peek();
+            diagnose(walk.directory, walk.directory.path);
             try {
                 if (!walk.iterator.hasNext()) { walks.pop().stream.close(); continue; }
             } catch (DirectoryIteratorException error) {
@@ -285,24 +352,28 @@ final class ProgressiveSourceScan implements AutoCloseable {
             String name = file.getFileName().toString();
             if (name.startsWith("descriptors") || name.contains("noises") || Files.isSymbolicLink(file)) continue;
             if (Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS)) {
-                if (walk.directory.depth >= 31) warn("A source directory exceeds the scan depth limit.");
+                if (walk.directory.depth >= 31) warn("directory_depth", "A source directory exceeds the scan depth limit.",
+                        walk.directory.origin, file, "The directory is beyond the 32-level scan depth limit.",
+                        "Use a shallower source directory structure or configure a more specific data_model root.");
                 else if (history) {
                     Partition partition = walk.directory.partition == null ? null : walk.directory.partition.child(name);
-                    historyDirectories.add(new Directory(file, walk.directory.namespace, walk.directory.filter, partition, walk.directory.depth + 1));
-                } else push(new Directory(file, walk.directory.namespace, walk.directory.filter, null, walk.directory.depth + 1));
+                    historyDirectories.add(new Directory(file, walk.directory.namespace, walk.directory.filter, walk.directory.origin, partition, walk.directory.depth + 1));
+                } else push(new Directory(file, walk.directory.namespace, walk.directory.filter, walk.directory.origin, null, walk.directory.depth + 1));
             } else if (name.endsWith(".json") && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) && openFile(file, walk.directory)) return true;
         }
         return false;
     }
 
     private void push(Directory directory) throws IOException {
+        diagnose(directory, directory.path);
         DirectoryStream<Path> stream = Files.newDirectoryStream(directory.path);
         walks.push(new Walk(stream, stream.iterator(), directory));
     }
 
     private boolean openFile(Path file, Directory directory) throws IOException {
+        diagnose(directory, file);
         Path canonical=file.toRealPath();
-        if (!seen.add(new FileVisit(canonical, directory.namespace, directory.filter))) return false;
+        if (!seen.add(new FileVisit(canonical, directory.origin.index))) return false;
         source = directory;
         if (history && directory.partition != null) checkingRange = directory.partition.range();
         currentFile=canonical;fileStamp=SourceRecordCache.Stamp.of(Files.readAttributes(canonical,java.nio.file.attribute.BasicFileAttributes.class));
@@ -351,10 +422,16 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 copy.put("activities", scoped);
             }
             return copy;
-        } catch (RuntimeException error) { warn("Invalid records were skipped; coverage is partial."); return null; }
+        } catch (RuntimeException error) {
+            warn("invalid_record", "Invalid records were skipped; coverage is partial.", diagnosticSource, diagnosticPath,
+                    "Record " + currentOrdinal + " has invalid timestamps, nested records or nesting deeper than 32 levels.",
+                    "Check start/end timestamps and activities in this record, then Refresh.");
+            return null;
+        }
     }
 
     private void accept(JSONObject record,int ordinal) {
+        currentOrdinal = ordinal;
         examined++;totalExamined++;
         JSONObject selected=select(record,0,source.namespace,"source-"+fileIdentity+"-"+ordinal);
         if(selected!=null && source.filter.test(selected)) {
@@ -387,7 +464,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         @Override public int read(char[] buffer, int offset, int length) throws IOException {
             int count = super.read(buffer, offset, Math.min(length, 4096));
             if (count > 0) bytes += count;
-            if (bytes - boundary > 2 * 1024 * 1024) throw new IOException("Record size limit");
+            if (bytes - boundary > 2 * 1024 * 1024) throw new RecordSizeLimitException();
             return count;
         }
     }
@@ -405,7 +482,12 @@ final class ProgressiveSourceScan implements AutoCloseable {
             else ((JSONArray) frame.value).add(value);
         }
         public void startJSON() {}
-        public void endJSON() { if (!inEvents) warn("A source file has no events array; coverage is partial."); ended = true; }
+        public void endJSON() {
+            if (!inEvents) warn("missing_events", "A source file has no events array; coverage is partial.", diagnosticSource, diagnosticPath,
+                    "The JSON document has no top-level events array.",
+                    "Add the required events array to this event file, or move unrelated JSON outside the configured source tree. Then Refresh.");
+            ended = true;
+        }
         public boolean startObject() {
             documentDepth++;
             if (inEvents) { JSONObject object = new JSONObject(); add(object); stack.push(new Frame(object)); }

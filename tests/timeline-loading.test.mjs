@@ -180,6 +180,9 @@ for (const unavailable of [false,true]) test(`Startup finishes scanning and prel
         requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
         await waitFor(()=>requests.length===2);
         const pages=new Map(),warnings=unavailable?['A configured source is unavailable.']:[];
+        const warningDetails=unavailable?[{code:'source_unavailable',message:warnings[0],sourceIndex:2,namespace:'backup',
+            reason:'The path does not exist.',action:'Check the configured data_model root.'}]:[];
+        const pastDetails=unavailable?[{...warningDetails[0],sourceIndex:3,namespace:'archive'}]:[];
         await finishCycle(f,1,request=>{
             const url=new URL(request.url),purpose=url.searchParams.get('purpose');
             const side=purpose.includes('prefetch')?purpose:'visible';
@@ -194,7 +197,8 @@ for (const unavailable of [false,true]) test(`Startup finishes scanning and prel
             // this interval. The cursor still advances through source data.
             request.resolve(new Response(JSON.stringify({events,timelineMatch:{version:1,searchMode:'text',query:'',hasCondition:false,
                 progressive:true,complete:!nextCursor && !unavailable,nextCursor,recordsExamined:256,charactersRead:512*1024,
-                warnings,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})));
+                warnings,warningDetails:[...warningDetails,...(side==='past-prefetch'?pastDetails:[])],
+                domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})));
         });
         assert.equal(pages.get('visible'),36);
         assert.equal(pages.get('past-prefetch'),8);
@@ -207,6 +211,9 @@ for (const unavailable of [false,true]) test(`Startup finishes scanning and prel
         assert.equal(r.status.dataset.tone,unavailable?'warning':'success');
         assert.equal(r.complete,!unavailable);
         assert.equal(r.remoteMetadata.warnings.length,warnings.length,'Loading must retain the source warning without adding a page-limit warning');
+        assert.deepEqual(JSON.parse(JSON.stringify(r.remoteMetadata.warningDetails)),[...warningDetails,...pastDetails],
+            'Repeated diagnostics appear once, and diagnostics unique to neighboring scans are retained');
+        assert.equal(r.sourceWarnings.children.length,warningDetails.length+pastDetails.length);
         const retained=r.snapshot;
         r.captureRanges();const before={...r.visibleRanges.values().next().value};
         const scene=t.ob_scene[0],band=scene.bands.find(b=>!b.name.includes('overview_')),mesh=scene.getObjectByName(band.name);

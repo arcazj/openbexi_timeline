@@ -35,7 +35,7 @@ every other requirement; retain the frozen compatibility fixtures.
 
 3. **Use the confirmed commercial license for 2.4.** The licensor is
    Jean-Christophe Arcaz, individual owner, Maryland, USA; public licensing
-   contact: `arcazj@gmail.com`. Apply the existing
+   contact: `openbexi@gmail.com`. Apply the existing
    [Commercial and Exempt Use License](../../../LICENSE), including its student,
    educator, noncommercial researcher, charity, nonprofit organization and
    personal noncommercial exemptions. Use `nonprofit` in the entitlement API;

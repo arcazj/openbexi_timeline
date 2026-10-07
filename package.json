@@ -31,7 +31,7 @@
     "test:browser:performance": "playwright test --config=playwright.performance.config.mjs"
   },
   "name": "openbexi-timeline",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "private": true,
   "license": "SEE LICENSE IN LICENSE"
 }

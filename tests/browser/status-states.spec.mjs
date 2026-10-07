@@ -81,6 +81,41 @@ test(`${name}: Status labels and colors remain readable, including hover and an 
     expect(errors).toEqual([]);
 });
 
+test('Partial data opens actionable source diagnostics with readable file paths',async({page},info)=>{
+    await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
+    if(info.project.name==='narrow')await page.setViewportSize({width:420,height:740});
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    await present(page,'partial');
+    await page.evaluate(async()=>{
+        const r=(await(await import('/src/openbexi_demo.js')).demoReady).ob_results;
+        r.remoteMetadata.warningDetails=[
+            {code:'source_unavailable',message:'A configured source is unavailable.',sourceIndex:2,namespace:'backup',
+                reason:'The path does not exist or is no longer available.',action:'Check this source\'s data_model root, mount and permissions.'},
+            {code:'missing_events',message:'A source file has no events array; coverage is partial.',sourceIndex:1,namespace:'operations',
+                path:'2026/09/12/metadata-for-the-operations-and-maintenance-timeline.json',
+                reason:'The JSON document has no top-level events array.',action:'Correct the event file or move unrelated JSON outside the source tree. Then Refresh.'},
+            {code:'scan_limit',message:'Scan limit reached; coverage is partial. Narrow the visible time window.',
+                reason:'The interval scan reached 100,000 top-level records.',action:'Narrow the visible time window.'}
+        ];
+        r.updateUI();
+    });
+    const report=page.getByRole('region',{name:'Source diagnostics'});
+    await expect(report).toBeHidden();
+    await status(page).click();
+    await expect(report).toBeVisible();
+    await expect(report.locator('li')).toHaveCount(3);
+    await expect(report).toContainText('Source #2 (backup)');
+    await expect(report).toContainText('2026/09/12/metadata-for-the-operations-and-maintenance-timeline.json');
+    await expect(report).toContainText('Suggested fix:');
+    await expect(report).toContainText('100,000 top-level records');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect(await report.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
+    await page.locator('.ob_results_header').screenshot({path:info.outputPath('source-diagnostics.png')});
+    await status(page).click();await expect(report).toBeHidden();
+    await present(page,'ready');await expect(status(page)).toHaveText('Status: Ready');
+    await status(page).click();await expect(report).toBeHidden();
+});
+
 test('Actual refresh requests move from green Ready through orange Loading to red Error or gray Cancelled and recover',async({page},info)=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     if(info.project.name==='narrow')await page.setViewportSize({width:420,height:740});

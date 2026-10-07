@@ -422,6 +422,123 @@ class ProgressiveSourceScanTest {
         do { page=request(config); found.addAll((JSONArray)page.get("events")); config.put("cursor",meta(page).get("nextCursor")); }
         while(config.get("cursor")!=null);
         assertEquals(1,found.size()); assertEquals(false,meta(page).get("complete")); assertFalse(((JSONArray)meta(page).get("warnings")).isEmpty());
+        JSONObject detail = (JSONObject)((JSONArray)meta(page).get("warningDetails")).get(0);
+        assertEquals("operations", detail.get("namespace")); assertEquals(1, detail.get("sourceIndex"));
+        assertEquals("bad.json", detail.get("path"));
+        assertTrue(detail.get("reason").toString().contains("JSON at character"));
+        assertFalse(detail.toJSONString().contains(temporary.toString()));
+    }
+
+    private JSONObject finish(JSONObject config) {
+        JSONObject page; int pages = 0;
+        do {
+            page = request(config); assertNull(meta(page).get("error"));
+            config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 400);
+        } while (config.get("cursor") != null);
+        return page;
+    }
+
+    @Test void warningDetailsIdentifyEverySourceAndRelativeFileAndSurviveRefresh() throws Exception {
+        Files.createDirectories(temporary.resolve("2026/09/12"));
+        Files.writeString(temporary.resolve("2026/09/12/metadata.json"), "{\"title\":\"Unrelated JSON\"}");
+        Files.writeString(temporary.resolve("2026/09/12/broken.json"), "{\"events\":[{\"privateValue\": broken}");
+        JSONArray valid = new JSONArray(); valid.add(record("valid", "2026-09-12T12:00:00Z", null));
+        write("2026/09/12/events.json", valid);
+        for (int refresh = 0; refresh < 2; refresh++) {
+            JSONObject config = configuration();
+            JSONArray sources = (JSONArray)config.get("startup configuration");
+            sources.add(new JSONObject(Map.of("type", "json_file", "enable", true, "namespace", "missing-a",
+                    "data_model", temporary.resolve("missing-a/yyyy/mm/dd").toString())));
+            sources.add(new JSONObject(Map.of("type", "json_file", "enable", true, "namespace", "missing-b",
+                    "data_model", temporary.resolve("missing-b/yyyy/mm/dd").toString())));
+            sources.add(new JSONObject(Map.of("type", "json_file", "enable", false, "namespace", "disabled",
+                    "data_model", temporary.resolve("disabled").toString())));
+            config.put("search", "missing-b"); // Source numbering must survive search prioritization.
+            JSONObject page = finish(config);
+            assertEquals(false, meta(page).get("complete"));
+            JSONArray details = (JSONArray)meta(page).get("warningDetails");
+            assertEquals(4, details.size(), "Reports each failed source/file once across all pages");
+            Set<String> missing = new HashSet<>(), files = new HashSet<>();
+            for (Object value : details) {
+                JSONObject detail = (JSONObject)value;
+                assertFalse(detail.get("action").toString().isBlank());
+                assertFalse(detail.get("reason").toString().isBlank());
+                if ("source_unavailable".equals(detail.get("code"))) {
+                    missing.add(detail.get("namespace").toString());
+                    assertEquals(detail.get("namespace").equals("missing-a") ? 2 : 3, detail.get("sourceIndex"));
+                    assertFalse(detail.containsKey("path"));
+                } else {
+                    assertEquals("operations", detail.get("namespace")); assertEquals(1, detail.get("sourceIndex"));
+                    files.add(detail.get("path").toString());
+                }
+            }
+            assertEquals(Set.of("missing-a", "missing-b"), missing);
+            assertEquals(Set.of("2026/09/12/metadata.json", "2026/09/12/broken.json"), files);
+            assertFalse(details.toJSONString().contains("privateValue"), "Parser messages must not include record contents");
+            assertFalse(details.toJSONString().contains(temporary.toString().replace('\\', '/')));
+        }
+        Files.writeString(temporary.resolve("2026/09/12/metadata.json"), "{\"events\":[]}");
+        Files.writeString(temporary.resolve("2026/09/12/broken.json"), "{\"events\":[]}");
+        JSONObject repaired = finish(configuration());
+        assertEquals(true, meta(repaired).get("complete"));
+        assertTrue(((JSONArray)meta(repaired).get("warningDetails")).isEmpty());
+    }
+
+    @Test void oversizedRecordsAndInvalidRecordsNameTheirFiles() throws Exception {
+        Files.writeString(temporary.resolve("large.json"), "{\"events\":[{\"start\":\"2026-09-12T12:00:00Z\",\"data\":\"" + "x".repeat(2 * 1024 * 1024) + "\"}]}");
+        JSONArray invalid = new JSONArray(); invalid.add(record("invalid", "not-a-date", null));
+        write("invalid.json", invalid);
+        JSONArray details = (JSONArray)meta(finish(configuration())).get("warningDetails");
+        assertEquals(2, details.size());
+        for (Object value : details) {
+            JSONObject detail = (JSONObject)value;
+            if ("record_too_large".equals(detail.get("code"))) {
+                assertEquals("large.json", detail.get("path")); assertTrue(detail.get("reason").toString().contains("2 Mi"));
+            } else {
+                assertEquals("invalid_record", detail.get("code")); assertEquals("invalid.json", detail.get("path"));
+                assertTrue(detail.get("reason").toString().contains("Record 1"));
+            }
+        }
+    }
+
+    @Test void sharedNamespacesAndFilesKeepTheirConfiguredSourceIdentity() throws Exception {
+        Files.writeString(temporary.resolve("metadata.json"), "{\"title\":\"Unrelated JSON\"}");
+        JSONObject config = configuration(); JSONArray sources = new JSONArray();
+        sources.add(new JSONObject(Map.of("type", "json_file", "enable", false, "namespace", "disabled",
+                "data_model", temporary.resolve("unused").toString())));
+        for (int index = 0; index < 2; index++) sources.add(new JSONObject(Map.of("type", "json_file", "enable", true,
+                "namespace", "shared", "data_model", temporary.resolve("metadata.json").toString())));
+        config.put("startup configuration", sources);
+        JSONArray details = (JSONArray)meta(finish(config)).get("warningDetails");
+        assertEquals(2, details.size());
+        Set<Integer> indexes = new HashSet<>();
+        for (Object value : details) {
+            JSONObject detail = (JSONObject)value; indexes.add((Integer)detail.get("sourceIndex"));
+            assertEquals("shared", detail.get("namespace")); assertEquals("metadata.json", detail.get("path"));
+        }
+        assertEquals(Set.of(2, 3), indexes);
+    }
+
+    @Test void largeArchivesExplainWhichScanLimitWasReached() throws Exception {
+        Files.writeString(temporary.resolve("archive.json"), "{\"events\":[" +
+                String.join(",", Collections.nCopies(100001, "{\"start\":\"2020-01-01T00:00:00Z\"}")) + "]}");
+        JSONObject page = finish(configuration());
+        assertEquals(false, meta(page).get("complete"));
+        JSONObject detail = (JSONObject)((JSONArray)meta(page).get("warningDetails")).get(0);
+        assertEquals("scan_limit", detail.get("code"));
+        assertTrue(detail.get("reason").toString().contains("100,000 top-level records"));
+        assertFalse(detail.containsKey("namespace"), "The interval limit applies across sources");
+    }
+
+    @Test void diagnosticDetailsStayBoundedWhenManyConfiguredSourcesAreMissing() {
+        JSONObject config = configuration(); JSONArray sources = new JSONArray();
+        for (int index = 0; index < 105; index++) sources.add(new JSONObject(Map.of("type", "json_file", "enable", true,
+                "namespace", "missing-" + index, "data_model", temporary.resolve("missing-" + index).toString())));
+        config.put("startup configuration", sources);
+        JSONObject page = finish(config);
+        assertEquals(false, meta(page).get("complete"));
+        assertEquals(100, ((JSONArray)meta(page).get("warningDetails")).size());
+        assertTrue(meta(page).get("warnings").toString().contains("omitted"));
     }
 
     @Test void completedScansDoNotEvictAnActiveContinuation() throws Exception {
