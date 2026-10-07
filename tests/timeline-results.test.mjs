@@ -58,6 +58,30 @@ test('Status buttons explain partial coverage and loading ends on completion, ca
     } finally {h.close();}
 });
 
+test('Status report names each source and file, shows fixes as text, and clears repaired diagnostics',async()=>{
+    const {h,r}=await load();
+    try {
+        const detail={code:'missing_events',message:'A source file has no events array; coverage is partial.',
+            sourceIndex:2,namespace:'operations <img src=x onerror=alert(1)>',path:'2026/09/12/metadata.json',
+            reason:'The JSON document has no top-level events array.',action:'Correct the file, then Refresh.'};
+        r.complete=false;
+        r.remoteMetadata={complete:false,warnings:[detail.message],warningDetails:[detail,detail,
+            {code:'source_unavailable',message:'A configured source is unavailable.',sourceIndex:3,namespace:'backup',
+                reason:'The path does not exist.',action:'Check the configured data_model root.'}]};
+        r.updateUI();r.status.click();
+        assert.equal(r.details.open,true);assert.equal(r.sourceDiagnostics.hidden,false);
+        assert.equal(r.sourceWarnings.children.length,2);
+        assert.match(r.sourceWarnings.textContent,/Source #2 \(operations <img/);
+        assert.match(r.sourceWarnings.textContent,/2026\/09\/12\/metadata.json/);
+        assert.match(r.sourceWarnings.textContent,/Suggested fix: Correct the file, then Refresh/);
+        assert.match(r.sourceWarnings.textContent,/Source #3 \(backup\)/);
+        assert.equal(r.sourceWarnings.querySelector('img'),null,'Diagnostic values must be rendered as text');
+        r.remoteMetadata={complete:true,warnings:[],warningDetails:[],coverage:[]};r.complete=true;r.updateUI();
+        assert.equal(r.status.dataset.state,'ready');assert.equal(r.sourceDiagnostics.hidden,true);
+        assert.equal(r.sourceWarnings.children.length,0,'Refresh must discard warnings from repaired files');
+    } finally {h.close();}
+});
+
 test('Status prioritizes unfinished work, incomplete coverage, failures and cancellation before green Ready',async()=>{
     const {h,r}=await load();
     try {

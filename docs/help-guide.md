@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.6.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.6.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -82,6 +82,10 @@ The report's **Loading items…** indicator disappears when loading ends.
 The Stop control or Escape cancels loading; Escape inside an open status explanation
 closes that explanation. Partial data can concern loaded or prefetched time
 ranges; open **Status** to review the warning and coverage for each range.
+For connected file sources, **Source diagnostics** identifies the configured
+source and affected file or directory, explains the reason and suggests a fix.
+Paths are relative to that source's root. After fixing the issue, use **Refresh**;
+restart the service first if its source configuration changed.
 The plot stays clear. Toolbar messages describe empty intervals after loading settles
 with no records in the visible interval. Partial coverage and source failures have
 distinct messages. **Go to latest data** moves to the latest observed timestamp

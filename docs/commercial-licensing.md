@@ -12,7 +12,7 @@ commercial agreement.
 ## Licensor
 
 Jean-Christophe Arcaz, individual owner, Maryland, United States.
-Contact [arcazj@gmail.com](mailto:arcazj@gmail.com) for licensing inquiries.
+Contact [openbexi@gmail.com](mailto:openbexi@gmail.com) for licensing inquiries.
 
 ## Free use
 

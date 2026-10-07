@@ -611,6 +611,12 @@ export class TimelineResults {
         this.statusExplanation = node('p', '', {class:'ob_status_explanation'});
         this.summary = node('div', undefined, {class:'ob_results_summary'});
         this.details.append(detailsSummary, this.statusExplanation, this.summary);
+        this.sourceDiagnostics = node('section', undefined, {class:'ob_source_diagnostics','aria-label':'Source diagnostics'});
+        this.sourceDiagnostics.append(node('h3', 'Source diagnostics'));
+        this.sourceWarnings = node('ul', undefined, {class:'ob_source_warnings'});
+        this.sourceDiagnostics.append(this.sourceWarnings);
+        this.sourceDiagnostics.hidden=true;
+        this.details.append(this.sourceDiagnostics);
         const syncDetails = () => {
             this.details.hidden=!this.details.open;
             header.classList.toggle('ob_results_expanded', this.details.open);
@@ -868,6 +874,35 @@ export class TimelineResults {
         return {state:'ready',label:'Ready',tone:'success'};
     }
 
+    updateSourceDiagnostics() {
+        const details=Array.isArray(this.remoteMetadata?.warningDetails)?this.remoteMetadata.warningDetails:[];
+        const signature=JSON.stringify(details);
+        if(signature===this.sourceWarningsSignature)return;
+        this.sourceWarningsSignature=signature;
+        this.sourceWarnings.replaceChildren();
+        const seen=new Set();
+        for(const detail of details) {
+            if(!detail || typeof detail.message!=='string')continue;
+            const key=JSON.stringify(detail);
+            if(seen.has(key))continue;
+            seen.add(key);
+            const item=node('li');
+            item.append(node('strong',detail.message));
+            const index=Number.isInteger(detail.sourceIndex) && detail.sourceIndex>0?` #${detail.sourceIndex}`:'';
+            const namespace=typeof detail.namespace==='string' && detail.namespace?` (${detail.namespace})`:'';
+            if(index || namespace)item.append(node('div',`Source${index}${namespace}`));
+            else if(detail.code==='scan_limit')item.append(node('div','Scope: all configured sources in this interval.'));
+            if(typeof detail.path==='string' && detail.path) {
+                const path=node('div','File/directory: ');
+                path.append(node('code',detail.path));item.append(path);
+            }
+            if(typeof detail.reason==='string' && detail.reason)item.append(node('div','Reason: '+detail.reason));
+            if(typeof detail.action==='string' && detail.action)item.append(node('div','Suggested fix: '+detail.action));
+            this.sourceWarnings.append(item);
+        }
+        this.sourceDiagnostics.hidden=!this.sourceWarnings.childElementCount;
+    }
+
     updateUI() {
         if (!this.toolbar) return;
         // Release owned disabled states before applying current availability.
@@ -926,6 +961,7 @@ export class TimelineResults {
         if (this.error) text += ' · ' + this.error;
         if (!this.scaleEngaged && t.bands.some(band => band.focus)) text += ' · Model focus active';
         this.summary.textContent = text;
+        this.updateSourceDiagnostics();
         const noRecords=this.supported && this.snapshot?.counts.eligible.events===0 && this.snapshot?.counts.eligible.sessions===0;
         if (!t.staticData && !this.remoteMetadata && !this.error) this.summary.textContent='Loading timeline data';
         const available=this.latestAvailable();

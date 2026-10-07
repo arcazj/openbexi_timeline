@@ -142,6 +142,7 @@ Progressive responses include these additional fields:
 | `charactersRead` | Decoded source characters read for this page |
 | `elapsedMillis` | Time spent processing this page, excluding HTTP overhead |
 | `warnings` | Reasons that coverage is incomplete |
+| `warningDetails` | Source number and namespace, relative file/directory path when available, reason and suggested fix for each issue; at most 100 entries per scan |
 | `recordsReturned` / `recordsExcluded` | Top-level page records retained/excluded by date, validation and legacy filtering |
 | `uniqueSessions` / `uniqueEvents` | Cumulative unique nested-aware counts for this cursor, not across windows |
 | `cache` | `miss` or `replay`; replay does not increase unique totals |

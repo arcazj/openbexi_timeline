@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.6.0
+ *     OpenBEXI Timeline version 2.6.1
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
  * in LICENSE. Commercial use requires an agreement unless a free-use exemption
- * applies. Licensing contact: arcazj@gmail.com.
+ * applies. Licensing contact: openbexi@gmail.com.
  *
  * Prior GPL grants and third-party licenses remain applicable to the copies
  * and components they cover. See LICENSE for scope and warranty terms.

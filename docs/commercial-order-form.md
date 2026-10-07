@@ -6,7 +6,7 @@ permission. Unfilled fields and this template alone grant no commercial license.
 | Term | Agreed value |
 | --- | --- |
 | Licensor | Jean-Christophe Arcaz, individual owner, Maryland, United States. |
-| Licensing contact | arcazj@gmail.com |
+| Licensing contact | openbexi@gmail.com |
 | Customer legal name, location and contact | [Complete] |
 | Licensed software and version | OpenBEXI Timeline [version or explicit version range] |
 | Attached license | Commercial and Exempt Use License 1.0; attach the exact text agreed by the parties. |

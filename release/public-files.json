@@ -661,6 +661,7 @@
   "tests/browser/current-time.spec.mjs",
   "docs/release-2.5.2.md",
   "docs/release-2.6.0.md",
+  "docs/release-2.6.1.md",
   "tests/browser/filter-panel.spec.mjs",
   "docs/ui/filters/README.md",
   "docs/ui/filters/filters-desktop.png"

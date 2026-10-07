@@ -22,7 +22,7 @@ Open the desired HTML page on the chosen listener, for example
 `https://localhost:8442/openbexi_timeline_earthquake.html` for REST or the same
 page on port 8441 for live updates. HTTPS requires the deployment's configured
 certificate. The page discovers its model and data route through
-`/openbexi_timeline/config`; private source paths remain on the server.
+`/openbexi_timeline/config`; absolute source root paths remain on the server.
 
 No `web_ui` section is required. Older deployments may still use that optional
 section for a context path or a printed launch URL. It does not create listeners.
@@ -183,6 +183,28 @@ or permissions, or set `enable: false` for a source that should not be used, the
 restart the service with that configuration. Displayed records from other sources
 do not prove that every enabled source is available. This warning keeps coverage
 partial even after all accessible files finish loading.
+
+Click **Status: Partial data** to open **Source diagnostics**. Each reported issue
+identifies the source namespace and its one-based position in the startup YAML's
+`data_sources` list, including disabled entries in that numbering. File and
+directory issues also show a path relative to the configured source root, a
+reason and a suggested fix. For a source configured as a single file, the report
+shows its filename. Missing roots are identified by source number and namespace;
+use that entry's `data_model` in the server YAML to check the full path.
+
+The server returns these entries in `timelineMatch.warningDetails` alongside the
+existing summary `warnings`. Reasons distinguish missing paths, access denial,
+invalid JSON (with a character position), oversized records and missing top-level
+`events` arrays. Scan-limit details name the threshold reached and show the
+examined file, record and decoded-character counts for the whole interval.
+Absolute server paths and raw exception messages or record contents are omitted.
+Each scan retains up to 100 distinct details and reports when further details
+are omitted. Repeated details across loaded intervals appear once in the UI.
+Older servers continue to show their summary warnings without source details.
+
+After repairing files, click **Refresh**. Restart the Java service first if you
+changed its startup YAML. The refreshed report drops resolved issues; Ready
+still requires complete coverage without warnings in the visible interval.
 
 **Visible scan limit reached** and **Neighbor loading paused at the scan limit**
 describe page-budget stops. They are distinct from **Loaded-data limit reached**,

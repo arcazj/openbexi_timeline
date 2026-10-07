@@ -359,7 +359,9 @@ export class TimelineLoader {
             availableRange:this.cache.map(item=>item.metadata?.availableRange).find(Boolean),
             latestRange:this.cache.map(item=>item.metadata?.latestRange).filter(Boolean)
                 .sort((a,b)=>Date.parse(b.from)-Date.parse(a.from))[0],
-            warnings:[...new Set(this.cache.flatMap(item=>item.metadata?.warnings || []))]};
+            warnings:[...new Set(this.cache.flatMap(item=>item.metadata?.warnings || []))],
+            warningDetails:[...new Map(this.cache.flatMap(item=>Array.isArray(item.metadata?.warningDetails)?item.metadata.warningDetails:[])
+                .map(detail=>[JSON.stringify(detail),detail])).values()]};
         if (changed || !r.remoteMetadata || r.remoteMetadata.query!==combined.query)
             r.acceptRemote(parseTimelineData(JSON.stringify({events,timelineMatch:combined})),combined);
         else {
