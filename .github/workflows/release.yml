@@ -67,7 +67,10 @@ jobs:
           # intentionally rejects paths whose real path differs from the input.
           $javaTestTemp = Join-Path (Get-Location).Path 'target/java-test-temp'
           New-Item -ItemType Directory -Force -Path $javaTestTemp | Out-Null
-          mvn --batch-mode --no-transfer-progress "-Djava.io.tmpdir=$javaTestTemp" verify
+          # Java caches the temporary directory during VM startup, before
+          # Surefire promotes Maven user properties into test system properties.
+          $env:JAVA_TOOL_OPTIONS = "`"-Djava.io.tmpdir=$javaTestTemp`""
+          mvn --batch-mode --no-transfer-progress verify
       - run: npm run release:source
         working-directory: source
       - run: npm run pages:build
