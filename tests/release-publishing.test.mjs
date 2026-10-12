@@ -45,7 +45,11 @@ async function fixture(t, options = {}) {
             return response(asset);
         }
         if (endpoint === '/releases/1') {
-            if (method === 'PATCH') Object.assign(release, JSON.parse(init.body));
+            if (method === 'PATCH') {
+                const update = JSON.parse(init.body);
+                assert.equal(update.tag_name, 'v2.6.1', 'Every draft update must preserve its intended tag.');
+                Object.assign(release, update);
+            }
             if (method === 'GET' && options.corruptUpload) return response({...release, assets: []});
             return response(release);
         }

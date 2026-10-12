@@ -74,10 +74,12 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
         'Local data is stored in `%LOCALAPPDATA%\\OpenBEXI Timeline\\data` and retained when uninstalling.\n\n' +
         'The installer and source archive each include a SHA-256 checksum. Installation, bundled-Java startup, browser rendering, API access and uninstall were checked on Windows before publication.\n';
     const releases = await list('/releases');
-    let release = releases.find(item => item.tag_name === tag);
+    let release = releases.find(item => item.tag_name === tag) || releases.find(item =>
+        item.draft && item.tag_name.startsWith('untagged-') && item.name === 'OpenBEXI Timeline ' + version);
     if (!release) release = await request('/releases', 'POST', {tag_name: tag, name: 'OpenBEXI Timeline ' + version, body: notes, draft: true, prerelease: false});
     if (release.draft) {
-        release = await request('/releases/' + release.id, 'PATCH', {body: notes, name: 'OpenBEXI Timeline ' + version});
+        release = await request('/releases/' + release.id, 'PATCH', {tag_name: tag, draft: true, prerelease: false,
+            body: notes, name: 'OpenBEXI Timeline ' + version});
         for (const [name, file] of expected) {
             const previous = release.assets.find(asset => asset.name === name);
             if (previous?.digest === 'sha256:' + file.hash && previous.size === file.bytes.length) continue;
@@ -86,7 +88,7 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
         }
         release = await request('/releases/' + release.id);
         verifyRelease(release, tag, expected);
-        release = await request('/releases/' + release.id, 'PATCH', {draft: false, make_latest: 'true'});
+        release = await request('/releases/' + release.id, 'PATCH', {tag_name: tag, draft: false, prerelease: false, make_latest: 'true'});
     }
     verifyRelease(release, tag, expected);
     if (release.draft) throw new Error('Release is still a draft.');
