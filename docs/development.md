@@ -84,6 +84,11 @@ references before publishing.
 6. Commit the reviewed changes to `master` and push without rewriting remote
    history. Confirm the Verify and Publish live demos workflows complete
    successfully for that commit, then tag it as `v<version>` and push the tag.
-7. Publish the release notes and source archive with its checksum on the
-   matching GitHub release. Confirm the deployed `version.json` identifies the
-   release commit, then verify the live demo flows.
+7. The **Release Windows installer** workflow builds and tests the tagged source,
+   then publishes its Windows installer, source archive, checksums and required
+   release notes. Older Git tags are removed only after the complete release is
+   verified; older release records and downloads remain available. Never publish
+   a release without the installer and notes. See [Windows packaging](windows-installation.md).
+   Confirm the deployed `version.json` identifies the release commit, then verify
+   the live demo flows. Synchronize local tags with
+   `git fetch --prune --prune-tags origin`.

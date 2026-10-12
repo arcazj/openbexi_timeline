@@ -10,6 +10,9 @@ table results as CSV. On small screens, **More** keeps secondary controls within
 
 ## Quick start
 
+**Windows:** download the installer from the [latest release](https://github.com/arcazj/openbexi_timeline/releases/latest).
+It includes Java and browser dependencies. See [Windows installation](docs/windows-installation.md).
+
 Install **Node.js 24**, then run:
 
 ```sh

@@ -24,6 +24,7 @@
 ## Development
 
 - [Development, validation and releases](development.md)
+- [Windows installer and release packaging](windows-installation.md)
 - [Browser tests and screenshot review](browser-tests.md)
 - [2.4 design proposal and HBDS model](design/2.4/README.md)
 - [Consolidated 2.4 prompt and requirements](design/2.4/implementation-prompt.md) ·
