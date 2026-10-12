@@ -1,0 +1,88 @@
+name: Release Windows installer
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to package
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-2025
+    timeout-minutes: 35
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: automation
+          persist-credentials: false
+      - name: Validate requested tag
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+$') { throw 'A stable vX.Y.Z tag is required.' }
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Check version and release notes
+        working-directory: source
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ("v$version" -ne $env:RELEASE_TAG) { throw 'Tag and package version differ.' }
+          if (!(Test-Path "docs/release-$version.md") -or (Get-Item "docs/release-$version.md").Length -lt 100) { throw 'Release notes are required.' }
+      - run: node --test automation/tests/release-publishing.test.mjs
+      - run: npm ci
+        working-directory: source
+      - run: npm test
+        working-directory: source
+      - run: mvn --batch-mode --no-transfer-progress verify
+        working-directory: source
+      - run: npm run release:source
+        working-directory: source
+      - run: npm run pages:build
+        working-directory: source
+      - name: Build installer with bundled Java
+        shell: pwsh
+        run: ./automation/tools/package-windows.ps1 -ProjectRoot ./source
+      - run: npx playwright install chromium --only-shell
+        working-directory: source
+      - name: Install, launch, check browser and uninstall
+        shell: pwsh
+        run: ./automation/tools/test-windows-installer.ps1 -ProjectRoot ./source
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ env.RELEASE_TAG }}
+          path: |
+            source/dist/*-windows-x64-setup.exe
+            source/dist/*.sha256
+            source/dist/*-source.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish complete release and retain only its tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node automation/tools/publish-release.mjs source

@@ -1,4 +1,13 @@
 [
+  ".github/workflows/release.yml",
+  "docs/windows-installation.md",
+  "release/windows/installer.iss",
+  "release/windows/Start-OpenBEXI.ps1",
+  "tools/package-windows.ps1",
+  "tools/publish-release.mjs",
+  "tools/test-windows-installer.ps1",
+  "tools/test-windows-browser.mjs",
+  "tests/release-publishing.test.mjs",
   ".dockerignore",
   ".gitattributes",
   ".github/dependabot.yml",

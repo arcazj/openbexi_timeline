@@ -35,6 +35,7 @@ jobs:
       - run: npm run demos:readme -- --check
       - run: npm run api:spec -- --check
       - run: npm test
+      - run: node --test tests/release-publishing.test.mjs
 
   browser-regressions:
     # Match the reviewed baseline OS. Chromium uses deterministic SwiftShader
