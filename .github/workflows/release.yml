@@ -65,7 +65,7 @@ jobs:
         run: |
           # The runner's default TEMP uses a short-name alias. History storage
           # intentionally rejects paths whose real path differs from the input.
-          $javaTestTemp = Join-Path (Get-Location).Path 'target/java-test-temp'
+          $javaTestTemp = Join-Path $env:GITHUB_WORKSPACE 'java-test-temp'
           New-Item -ItemType Directory -Force -Path $javaTestTemp | Out-Null
           # Java caches the temporary directory during VM startup, before
           # Surefire promotes Maven user properties into test system properties.
