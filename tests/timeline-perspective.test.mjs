@@ -12,7 +12,7 @@ async function load(storage={}) {
     for(const [key,value] of Object.entries(storage))h.window.localStorage.setItem(key,value);
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const t=new OB_TIMELINE({autoStart:false});
-    await t.loadModel('models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json',width:1200,height:640});
+    await t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json',width:1200,height:640});
     return {h,t,p:t.ob_perspective,close(){t.ob_perspective.detach();h.close();}};
 }
 async function perspective(t) {

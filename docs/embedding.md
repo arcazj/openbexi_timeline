@@ -4,7 +4,7 @@ Use a small JavaScript host API and an iframe containing the existing renderer.
 Each instance owns its CSS, Three.js version, controls and WebGL context. The host
 supplies JSON data and handles authentication and satellite selection. Timeline,
 Table, Split and the 3D control remain available. Embedded records are read-only;
-the Model and YAML editor is unavailable inside the frame.
+the HBDS Editor is unavailable inside the frame.
 
 Try the [satellite example](../demos/embedded-earth-orbit.html) after `npm run demo`
 at <http://localhost:8780/demos/embedded-earth-orbit.html>. It uses fictional data.

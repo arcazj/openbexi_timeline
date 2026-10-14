@@ -7,7 +7,7 @@
       "title": "Operations sample",
       "description": "Sessions, milestones, source colors, and maintenance and verification windows.",
       "dataset": "json/test-data/default-dataset.json",
-      "model": "models/demos/default-dataset.json",
+      "model": "HBDS/templates/models/demos/default-dataset.json",
       "reference": "docs/ui/overview/default-dataset-desktop.png",
       "recordCount": 1008
     },
@@ -16,7 +16,7 @@
       "title": "Dinosaurs",
       "description": "Dinosaur lifespans on a numeric axis measured in millions of years ago.",
       "dataset": "json/test-data/dinausaurs.json",
-      "model": "models/demos/dinausaurs.json",
+      "model": "HBDS/templates/models/demos/dinausaurs.json",
       "reference": "docs/ui/overview/dinausaurs-desktop.png",
       "recordCount": 224
     },
@@ -25,7 +25,7 @@
       "title": "Satellite ephemeris",
       "description": "Orbital visibility sessions grouped by satellite.",
       "dataset": "json/test-data/ephemeris.json",
-      "model": "models/demos/ephemeris.json",
+      "model": "HBDS/templates/models/demos/ephemeris.json",
       "reference": "docs/ui/overview/ephemeris-desktop.png",
       "recordCount": 127
     },
@@ -34,7 +34,7 @@
       "title": "JFK chronology",
       "description": "A minute-scale historical chronology with highlighted reference windows.",
       "dataset": "json/test-data/jfk.json",
-      "model": "models/demos/jfk.json",
+      "model": "HBDS/templates/models/demos/jfk.json",
       "reference": "docs/ui/overview/jfk-desktop.png",
       "recordCount": 130
     },
@@ -43,7 +43,7 @@
       "title": "Claude Monet",
       "description": "Life events, painting periods, original colors, and a secondary age scale.",
       "dataset": "json/test-data/monet.json",
-      "model": "models/demos/monet.json",
+      "model": "HBDS/templates/models/demos/monet.json",
       "reference": "docs/ui/overview/monet-desktop.png",
       "recordCount": 27
     },
@@ -52,7 +52,7 @@
       "title": "Religious history",
       "description": "BCE/CE dates, duration and event bands, and overview context.",
       "dataset": "json/test-data/religions.json",
-      "model": "models/demos/religions.json",
+      "model": "HBDS/templates/models/demos/religions.json",
       "reference": "docs/ui/overview/religions-desktop.png",
       "recordCount": 730
     },
@@ -61,7 +61,7 @@
       "title": "Space exploration",
       "description": "A month-scale view with a yearly overview of the supplied space-history events.",
       "dataset": "json/test-data/space_exploration.json",
-      "model": "models/demos/space_exploration.json",
+      "model": "HBDS/templates/models/demos/space_exploration.json",
       "reference": "docs/ui/overview/space_exploration-desktop.png",
       "recordCount": 1287
     }

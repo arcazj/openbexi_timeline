@@ -1,0 +1,21 @@
+{
+  "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
+  "jsonSchema": "passed",
+  "hbdsSemantics": "passed",
+  "hbdsServer": "passed",
+  "provenance": "passed",
+  "domainReferencesAndCardinalities": "passed",
+  "sourceRoundTrip": "passed (all 7 entries)",
+  "modelTemplate": "passed",
+  "backgroundImageScopes": "passed (canvas, band, zone)",
+  "accessExamples": "passed",
+  "counts": {
+    "classes": 26,
+    "hyperclasses": 5,
+    "attributes": 187,
+    "links": 30,
+    "objects": 60,
+    "objectLinks": 73
+  },
+  "scope": "These validate the HBDS design and examples; new authorization rules are not installed in the application."
+}

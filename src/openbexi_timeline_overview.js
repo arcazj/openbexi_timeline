@@ -50,7 +50,8 @@ export function projectOverviewSessions(timeline, sceneIndex) {
             const sourceCenter = (extent.top + extent.bottom) / 2;
             const scaleX = timePerPixel(source) / timePerPixel(overview);
             const mapY = y => center + (y - sourceCenter) * scaleY;
-            overview.overviewRegions.push({sourceBand: source.name, color: source.color || '#dfe7e9', y: center, height, scaleX});
+            overview.overviewRegions.push({sourceBand: source.name, color: source.color || '#dfe7e9',
+                backgroundImage: source.backgroundImage, y: center, height, scaleX});
             let sourceSessions = source.sessions || [];
             if (timeline.ob_results?.supported) {
                 const laidOut = new Map(sourceSessions.flatMap(session => session.activities.map(activity => [activity.matchKey, activity])));
@@ -132,12 +133,18 @@ export function renderOverviewSessions(timeline, sceneIndex, regex = null) {
             const background = box(band.width, region.height, 0, region.y, region.color, 1, 'overviewBand');
             background.position.z = 2;
             background.userData.sourceBand = region.sourceBand;
+            timeline.add_background_image?.(sceneIndex, background, band.backgroundImage || region.backgroundImage,
+                band.width, region.height);
         }
         for (const zone of band.zones) {
             const start = timeline.dateToBandPixelOffSet(sceneIndex, band, zone.start);
             const end = timeline.dateToBandPixelOffSet(sceneIndex, band, zone.end);
-            if ([start, end].every(Number.isFinite)) box(end - start, zone.overviewHeight, (start + end) / 2,
-                zone.overviewY, zone.render?.color || '#f5c994', zone.render?.opacity ?? 0.25, 'overviewZone', zone);
+            if ([start, end].every(Number.isFinite)) {
+                const background = box(end - start, zone.overviewHeight, (start + end) / 2,
+                    zone.overviewY, zone.render?.color || '#f5c994', zone.render?.opacity ?? 0.25, 'overviewZone', zone);
+                timeline.add_background_image?.(sceneIndex, background, zone.render?.backgroundImage,
+                    end - start, zone.overviewHeight, 0.01, zone.render?.opacity ?? 0.25);
+            }
         }
         for (const session of band.sessions) {
             const activities = session.activities.filter(activity => regex === null || activity.id !== undefined ||

@@ -74,7 +74,7 @@ test('API model editor links infer only an explicit or same-origin model scope',
     try {
         const api=await harness.importModule('src/openbexi_timeline_model_link.js');
         assert.equal(api.managedModelId({modelPath:'/api/v1/models/private-model'}),'private-model');
-        assert.equal(api.managedModelId({modelPath:'/models/demos/default-dataset.json'}),null);
+        assert.equal(api.managedModelId({modelPath:'/HBDS/templates/models/demos/default-dataset.json'}),null);
         assert.equal(api.managedModelId({modelPath:'https://other.example/api/v1/models/private-model'}),null);
         assert.equal(api.managedModelId({modelId:'../escape'}),null);
         assert.equal(api.managedModelId({modelId:'explicit-model'}),'explicit-model');

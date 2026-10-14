@@ -1,9 +1,20 @@
-# Model and YAML editor
+# HBDS Editor
 
-Open **Settings → Edit models → Model and YAML editor** in any timeline. The editor opens
+Open **Settings → Edit models → HBDS Editor** in any timeline. The editor opens
 `openbexi_timeline_model.html` with that timeline's model and data source.
 You can also open the editor directly and choose any of the seven public demos.
 See the [desktop, narrow and phone views](ui/model-editor/README.md).
+
+For an HBDS deployment, choose **Namespaces and tabs** to manage the canonical
+configuration. Connect with the system administrator token, select a namespace,
+and edit its model, sources, appearance, tabs or access definitions. **Save and
+apply** validates the document and revision, then updates affected open timeline
+tabs. Tab rename/reorder preserves loaded frames; provider and listener changes
+report a pending restart. This workspace uses `/api/v1/hbds` on both Java and
+Python. See [HBDS configuration](../HBDS/README.md) for migration and ownership.
+
+The sections below describe the existing individual model/YAML preview tools;
+exporting or applying a local draft does not replace the canonical HBDS document.
 
 An application using a server-selected model or connected source opens a focused
 editor. The document chooser, create/import/rename/delete controls, document-status

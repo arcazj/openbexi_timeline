@@ -10,6 +10,8 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
 import com.openbexi.timeline.api.PublicAssetServlet;
+import com.openbexi.timeline.api.TimelineHbds;
+import java.nio.file.Path;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.coyote.http2.Http2Protocol;
 
@@ -66,12 +68,14 @@ public class openbexi_timeline implements Runnable {
 
         if (args.length != 2) {
             System.err.println("openBEXI Timeline not started because of bad usage:");
-            System.err.println("Argument " + args[0] + " " + "-data_conf <file> ");
+            System.err.println("Argument -data_conf <file> ");
             System.exit(1);
         }
         if (args[0].equals("-data_conf") || args[0].equals("-data_path")) {
             data_conf = args[1];
             try {
+                data_conf=TimelineHbds.resolve(Path.of(""),data_conf).toString();
+                if(System.getProperty("openbexi.hbds.config",System.getenv("OPENBEXI_HBDS_CONFIG"))!=null)data_conf=TimelineHbds.selected(Path.of(""),data_conf).toString();
                 File file_configuration = new File(data_conf);
                 if (!file_configuration.exists()) {
                     System.err.println("openBEXI Timeline not started because the configuration file does not exist:");
@@ -80,8 +84,9 @@ public class openbexi_timeline implements Runnable {
                 }
                 data_sources source = new data_sources();
                 System.out.println("reading " + file_configuration.getAbsolutePath());
-                source.readYaml(file_configuration.getAbsolutePath());
-                String jsonOutput = source.dataSourcesToJson();
+                String jsonOutput;
+                if(TimelineHbds.canonical(file_configuration.toPath()))jsonOutput=TimelineHbds.open(Path.of(""),file_configuration.toPath()).legacyConfiguration().toString();
+                else {source.readYaml(file_configuration.getAbsolutePath());jsonOutput=source.dataSourcesToJson();}
                 connectors = source.getConnectors(jsonOutput).split("\\|");
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -92,25 +97,21 @@ public class openbexi_timeline implements Runnable {
         // Monitoring is opt-in through JVM launch options; no unauthenticated JMX port is opened here.
 
 
-        for (int i = 0; i < connectors.length; i++) {
-            String port = connectors[i].split(":")[1];
-            if (connectors[i].split(":")[0].equals("secure_ws")) {
-                openbexi_timeline webServer_timeline_wss = new openbexi_timeline(ob_mode.secure_ws, data_conf, port);
-                webServer_timeline_wss.run();
-            }
-            if (connectors[i].split(":")[0].equals("no_secure")) {
-                openbexi_timeline webServer_timeline_no_secure = new openbexi_timeline(ob_mode.no_secure, data_conf, port);
-                webServer_timeline_no_secure.run();
-            }
-            if (connectors[i].split(":")[0].equals("secure")) {
-                openbexi_timeline webServer_timeline_secure = new openbexi_timeline(ob_mode.secure, data_conf, port);
-                webServer_timeline_secure.run();
-            }
-            if (connectors[i].split(":")[0].equals("secure_sse")) {
-                openbexi_timeline webServer_timeline_sse = new openbexi_timeline(ob_mode.secure_sse, data_conf, port);
-                webServer_timeline_sse.run();
-            }
+        for (String connector : connectors) {
+            if(connector.isBlank())continue;
+            String[] parts=connector.split(":",2);
+            if(parts.length!=2)throw new IllegalArgumentException("Connector requires a protocol and port.");
+            new openbexi_timeline(connectorMode(parts[0]),data_conf,parts[1]).run();
         }
+    }
+    static ob_mode connectorMode(String protocol) {
+        return switch(protocol) {
+            case "http","no_secure" -> ob_mode.no_secure;
+            case "https","secure" -> ob_mode.secure;
+            case "wss","secure_ws" -> ob_mode.secure_ws;
+            case "secure_sse" -> ob_mode.secure_sse;
+            default -> throw new IllegalArgumentException("Unsupported Java connector protocol: "+protocol);
+        };
     }
 
     /**

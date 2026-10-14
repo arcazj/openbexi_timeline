@@ -19,7 +19,7 @@ try {
     await page.goto(base+'/demos.html?demo=default-dataset');
     await page.locator('#demo-status[data-state="ready"]').waitFor();
     const fixture = JSON.parse(await readFile(new URL('../../../tests/fixtures/mixed-hazard-matches.json',import.meta.url),'utf8'));
-    const model = JSON.parse(await readFile(new URL('../../../models/regular_timeline_earthquake.json',import.meta.url),'utf8'));
+    const model = JSON.parse(await readFile(new URL('../../../HBDS/templates/models/regular_timeline_earthquake.json',import.meta.url),'utf8'));
     await page.evaluate(async ({fixture,model}) => {
         const t = await (await import('/src/openbexi_demo.js')).demoReady;
         window.timelineUnderTest = t;

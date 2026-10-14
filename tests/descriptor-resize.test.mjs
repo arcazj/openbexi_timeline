@@ -12,7 +12,7 @@ async function setup() {
     const h=await createTimelineHarness();h.window.innerWidth=1400;h.window.innerHeight=900;
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const t=new OB_TIMELINE();
-    await t.loadModel('models/demos/monet.json',{dataset:'json/test-data/monet.json'});
+    await t.loadModel('HBDS/templates/models/demos/monet.json',{dataset:'json/test-data/monet.json'});
     await pause(120);await settled(t);
     t.ob_open_descriptor(0,t.staticData.events.find(record=>!record.zone));
     await pause(120);await settled(t);

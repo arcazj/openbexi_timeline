@@ -11,7 +11,7 @@ const satellites=[{norad_id:'900002',satellite_name:'Example Horizon',decay:{dec
     predicted_decay_window:{start:'2026-10-04T08:00:00Z',end:'2026-10-06T20:00:00Z',confidence:0.65}}}];
 let adapted=earthOrbitTimelineData({launches,decayed,satellites});
 const status=document.getElementById('status');
-const response=await fetch('../models/demos/space_exploration.json');
+const response=await fetch('../HBDS/templates/models/demos/space_exploration.json');
 if(!response.ok)throw new Error('Unable to load the satellite model.');
 const model=await response.json();
 Object.assign(model.params[0],{title:'Satellite history',date:'2026-06-01T00:00:00Z'});

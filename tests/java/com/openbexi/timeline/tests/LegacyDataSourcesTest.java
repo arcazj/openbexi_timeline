@@ -12,14 +12,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * Historical serialization check that backs up and overwrites yaml/sources_default.yml.
+ * Historical serialization check that backs up and overwrites HBDS/templates/yaml/sources_default.yml.
  * Opt in only with disposable fixtures using -Dopenbexi.legacyTests=true.
  */
 @EnabledIfSystemProperty(named = "openbexi.legacyTests", matches = "true")
 public class LegacyDataSourcesTest {
 
     private data_sources dataSourceManager;
-    private static final Path ORIGINAL_FILE_PATH = Path.of("yaml/sources_default.yml");
+    private static final Path ORIGINAL_FILE_PATH = Path.of("HBDS/templates/yaml/sources_default.yml");
     private static final Path BACKUP_FILE_PATH = Path.of("yaml/sources_default_backup.yml");
 
     @BeforeEach

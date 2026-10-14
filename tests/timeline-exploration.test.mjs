@@ -190,7 +190,7 @@ test('A dense empty interval cannot consume the nearby search budget before a fu
 
 async function local(records=[event('older',8),event('latest',10)]) {
     const h=await createTimelineHarness(),{OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8')),t=new OB_TIMELINE();
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8')),t=new OB_TIMELINE();
     t.params=model.params;t.bands=model.bands;Object.assign(t.params[0],{date:iso(base+12*3600000),showCurrentTime:false});
     t.staticData={events:records};t.initializeTimeline();
     return {h,t,r:t.ob_results,close(){t.ob_results.explorer.interrupt();h.close();}};

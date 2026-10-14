@@ -104,7 +104,7 @@ test('Religions uses historical context with tenfold detail and calendar-aligned
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const {bandTicks} = await harness.importModule('src/openbexi_timeline_ticks.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/religions.json', {dataset: 'json/test-data/religions.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/religions.json', {dataset: 'json/test-data/religions.json'});
         const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
         const overview = timeline.ob_scene[0].bands.find(band => band.name.includes('overview_'));
         const year = value => { const date = new Date(0); date.setUTCFullYear(value, 0, 1); return date.getTime(); };
@@ -132,7 +132,7 @@ test('JFK combines a two-hour detail view with month, day and nested half-hour c
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const {bandTicks} = await harness.importModule('src/openbexi_timeline_ticks.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/jfk.json', {dataset: 'json/test-data/jfk.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/jfk.json', {dataset: 'json/test-data/jfk.json'});
         const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
         const overview = timeline.ob_scene[0].bands.find(band => band.name.includes('overview_'));
         const local = (date, hour) => Date.parse(date + 'T' + hour + ':00-06:00');
@@ -155,7 +155,7 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         const {bandTicks} = await harness.importModule('src/openbexi_timeline_ticks.js');
         const {prepareBandScale} = await harness.importModule('src/openbexi_timeline_scale.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/dinausaurs.json', {dataset: 'json/test-data/dinausaurs.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/dinausaurs.json', {dataset: 'json/test-data/dinausaurs.json'});
         const scene = timeline.ob_scene[0];
         const main = (timeline.ob_viewport?.fullBands || scene.bands).find(band => !band.name.includes('overview_'));
         const overview = scene.bands.find(band => band.name.includes('overview_'));
@@ -213,7 +213,7 @@ test('Operations keeps every record while the initial context shows the 48 refer
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 1008);
         assert.equal(timeline.ob_scene[0].sessions.densityRecords.length, 1008);
         const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
@@ -245,7 +245,7 @@ test('Changing the context day exposes surrounding records without another datas
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         timeline.ob_scene.sync_time += day;
         rebuild(timeline);
         const main = timeline.ob_viewport.fullBands.find(band => !band.name.includes('overview_'));
@@ -263,7 +263,7 @@ test('A nonlinear main view projects real dates into the uniform Overview and hi
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         const scene = timeline.ob_scene[0];
         const main = (timeline.ob_viewport?.fullBands || scene.bands).find(band => !band.name.includes('overview_'));
         const overview = scene.bands.find(band => band.name.includes('overview_'));

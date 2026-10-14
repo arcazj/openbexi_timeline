@@ -1,0 +1,3663 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openbexi.org/HBDS/schema/configuration.schema.json",
+  "title": "OpenBEXI Timeline HBDS configuration",
+  "description": "Owned instance projection of openbexi_timeline.json. Entity IDs and relationship ownership are validated before saving.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "defaultNamespaceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+    },
+    "namespaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/namespace"
+      },
+      "minItems": 1
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/model"
+      },
+      "minItems": 1
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/source"
+      },
+      "minItems": 0
+    },
+    "connectors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/connector"
+      },
+      "minItems": 0
+    },
+    "tabs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/tab"
+      },
+      "minItems": 1
+    },
+    "users": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/user"
+      },
+      "minItems": 0
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/group"
+      },
+      "minItems": 0
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/role"
+      },
+      "minItems": 0
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/grant"
+      },
+      "minItems": 0
+    },
+    "deployment": {
+      "$ref": "#/definitions/deployment"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "defaultNamespaceId",
+    "namespaces",
+    "models",
+    "sources",
+    "connectors",
+    "tabs",
+    "users",
+    "groups",
+    "roles",
+    "grants",
+    "deployment"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "render": {
+      "type": "object",
+      "properties": {
+        "textColor": {
+          "type": "string"
+        },
+        "dateColor": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "alternateColor": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "include": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "exclude": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": true
+    },
+    "namespace": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "render": {
+          "$ref": "#/definitions/render"
+        },
+        "filter": {
+          "$ref": "#/definitions/filter"
+        },
+        "connectorIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "namespace",
+        "modelId",
+        "render",
+        "filter",
+        "connectorIds"
+      ],
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "configuration": {
+          "type": "object",
+          "if": {
+            "properties": {
+              "dataSource": {}
+            },
+            "required": [
+              "dataSource"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/demoModel"
+          },
+          "else": {
+            "$ref": "#/definitions/legacyModel"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "sourceConfiguration": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "enable": {
+          "type": "boolean"
+        },
+        "permission": {
+          "type": "string"
+        },
+        "converter2events_class": {
+          "type": "string"
+        },
+        "connector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "data_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "data_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "render": {
+          "$ref": "#/definitions/render"
+        },
+        "filter": {
+          "$ref": "#/definitions/filter"
+        },
+        "format": {
+          "type": "string"
+        },
+        "poll_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "username": {
+          "type": "string"
+        },
+        "key_filename": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "known_hosts": {
+          "type": "string"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "prefix": {
+          "type": "string"
+        },
+        "region_name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "endpoint_url": {
+          "type": "string"
+        },
+        "aws_access_key_id": {
+          "type": "string"
+        },
+        "aws_secret_access_key": {
+          "type": "string"
+        },
+        "aws_session_token": {
+          "type": "string"
+        },
+        "dsn": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "key_column": {
+          "type": "string"
+        },
+        "watermark_column": {
+          "type": "string"
+        },
+        "watermark_type": {
+          "type": "string"
+        },
+        "initial_watermark": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "query": {
+          "type": "string"
+        },
+        "binds": {
+          "type": "object"
+        },
+        "field_mapping": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "namespaceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configuration": {
+          "$ref": "#/definitions/sourceConfiguration"
+        }
+      },
+      "required": [
+        "id",
+        "namespaceId",
+        "order",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "connector": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "protocol": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_+-]*$"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      },
+      "required": [
+        "id",
+        "protocol",
+        "port"
+      ],
+      "additionalProperties": false
+    },
+    "tab": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "namespaceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "namespaceId",
+        "title",
+        "order",
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "user": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        "admin": {
+          "type": "boolean"
+        },
+        "roleId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "admin",
+        "roleId",
+        "groupId"
+      ],
+      "additionalProperties": false
+    },
+    "group": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ceiling": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "rw",
+            "r",
+            "denied"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ceiling"
+      ],
+      "additionalProperties": false
+    },
+    "grant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "namespaceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "permission": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "rw",
+            "r",
+            "denied"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "groupId",
+        "namespaceId",
+        "permission"
+      ],
+      "additionalProperties": false
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "type": "object"
+        },
+        "timeline_server": {
+          "type": "object"
+        },
+        "ai": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "demoModel": {
+      "title": "OpenBEXI file-backed timeline model",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "params",
+        "dataSource",
+        "bands"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/definitions/demoModel/definitions/params"
+          }
+        },
+        "dataSource": {
+          "$ref": "#/definitions/demoModel/definitions/dataSource"
+        },
+        "bands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/demoModel/definitions/band"
+          }
+        },
+        "rendering": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional rendering settings. Omitted properties retain the existing presentation.",
+          "properties": {
+            "theme": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Scene and optional application surface colors.",
+              "properties": {
+                "sceneBackground": {
+                  "type": "string",
+                  "default": "#f7f9fc",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Canvas background."
+                },
+                "sceneBackgroundImage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+                  "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+                },
+                "headerBackground": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Header background; null keeps the stylesheet theme."
+                },
+                "panelBackground": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Timeline panel background; null keeps the stylesheet theme."
+                },
+                "panelText": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Panel text color; null keeps the stylesheet theme."
+                }
+              }
+            },
+            "axis": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Date axes and automatic tick spacing.",
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "default": "#f7f9fc",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date axis and date-label background."
+                },
+                "separatorColor": {
+                  "type": "string",
+                  "default": "#8090a0",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date-axis boundary color."
+                },
+                "textColor": {
+                  "type": "string",
+                  "default": "#233449",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date label color."
+                },
+                "minimumHeight": {
+                  "type": "number",
+                  "default": 28,
+                  "minimum": 16,
+                  "maximum": 160,
+                  "description": "Minimum date-axis height in pixels."
+                },
+                "verticalPadding": {
+                  "type": "number",
+                  "default": 16,
+                  "minimum": 0,
+                  "maximum": 80,
+                  "description": "Additional axis height above the band font size."
+                },
+                "minimumFontSize": {
+                  "type": "number",
+                  "default": 12,
+                  "minimum": 6,
+                  "maximum": 48,
+                  "description": "Minimum canvas date-label font size in pixels."
+                },
+                "targetTickPixels": {
+                  "type": "number",
+                  "default": 100,
+                  "minimum": 30,
+                  "maximum": 400,
+                  "description": "Preferred distance between automatically chosen time labels."
+                },
+                "groupHeaderHeight": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 12,
+                  "maximum": 120,
+                  "description": "Space reserved for a group heading."
+                },
+                "scaleHeaderColor": {
+                  "type": "string",
+                  "default": "#edf0f1",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default scale-header background."
+                },
+                "scaleHeaderText": {
+                  "type": "string",
+                  "default": "#397a9c",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default scale-header text."
+                },
+                "secondaryColor": {
+                  "type": "string",
+                  "default": "#ffd58a",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default secondary-scale background."
+                },
+                "secondaryText": {
+                  "type": "string",
+                  "default": "#704308",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default secondary-scale text."
+                }
+              }
+            },
+            "overview": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Overview SVG labels, markers and visible-range indicators.",
+              "properties": {
+                "borderColor": {
+                  "type": "string",
+                  "default": "#aab8bf",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Top divider."
+                },
+                "headingColor": {
+                  "type": "string",
+                  "default": "#566871",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Heading and record-count text."
+                },
+                "headingFontSize": {
+                  "type": "number",
+                  "default": 11,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Default overview heading size."
+                },
+                "countFontSize": {
+                  "type": "number",
+                  "default": 10,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Record-count size."
+                },
+                "axisFontSize": {
+                  "type": "number",
+                  "default": 10,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Overview date-label size."
+                },
+                "markerStroke": {
+                  "type": "string",
+                  "default": "#253746",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Record marker outline."
+                },
+                "markerStrokeWidth": {
+                  "type": "number",
+                  "default": 0.35,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Record marker outline width."
+                },
+                "dimmedOpacity": {
+                  "type": "number",
+                  "default": 0.25,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Opacity multiplier for nonmatching records during search."
+                },
+                "matchColor": {
+                  "type": "string",
+                  "default": "#ffe04b",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Search-match fill."
+                },
+                "matchOpacity": {
+                  "type": "number",
+                  "default": 0.95,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Search-match opacity."
+                },
+                "matchStroke": {
+                  "type": "string",
+                  "default": "#783800",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Search-match outline and count text."
+                },
+                "matchStrokeWidth": {
+                  "type": "number",
+                  "default": 2,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Search-match outline width."
+                },
+                "viewportColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range fill."
+                },
+                "viewportOpacity": {
+                  "type": "number",
+                  "default": 0.08,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Visible-range fill opacity."
+                },
+                "viewportStroke": {
+                  "type": "string",
+                  "default": "#536872",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range outline."
+                },
+                "viewportStrokeWidth": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Visible-range outline width."
+                },
+                "handleColor": {
+                  "type": "string",
+                  "default": "#eff8ff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range handle fill."
+                },
+                "handleStroke": {
+                  "type": "string",
+                  "default": "#4d89ae",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range handle outline."
+                },
+                "handleWidth": {
+                  "type": "number",
+                  "default": 7,
+                  "minimum": 3,
+                  "maximum": 24,
+                  "description": "Handle width in pixels."
+                },
+                "handleMaxHeight": {
+                  "type": "number",
+                  "default": 48,
+                  "minimum": 12,
+                  "maximum": 120,
+                  "description": "Maximum handle height in pixels."
+                }
+              }
+            },
+            "camera": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "default": "Orthographic",
+                  "enum": [
+                    "Orthographic",
+                    "Perspective"
+                  ],
+                  "description": "Camera mode for model preview. Page startup always uses 2D."
+                },
+                "fieldOfView": {
+                  "type": "number",
+                  "default": 30,
+                  "minimum": 10,
+                  "maximum": 100,
+                  "description": "Perspective field of view in degrees."
+                },
+                "yaw": {
+                  "type": "number",
+                  "default": -0.9948376736367678,
+                  "minimum": -3.141592653589793,
+                  "maximum": 3.141592653589793,
+                  "description": "Initial horizontal orbit angle in radians."
+                },
+                "pitch": {
+                  "type": "number",
+                  "default": 0.2792526803190927,
+                  "minimum": -1.48,
+                  "maximum": 1.48,
+                  "description": "Initial vertical orbit angle in radians."
+                },
+                "roll": {
+                  "type": "number",
+                  "default": 0,
+                  "minimum": -0.5,
+                  "maximum": 0.5,
+                  "description": "Board rotation in radians."
+                },
+                "rotationSensitivity": {
+                  "type": "number",
+                  "default": 0.002,
+                  "minimum": 0.0001,
+                  "maximum": 0.02,
+                  "description": "Orbit rotation sensitivity; 0.002 is the default speed."
+                },
+                "ambientColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Perspective ambient light."
+                },
+                "ambientIntensity": {
+                  "type": "number",
+                  "default": 0.3,
+                  "minimum": 0,
+                  "maximum": 5,
+                  "description": "Perspective ambient light intensity."
+                },
+                "directionalColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Perspective directional light."
+                },
+                "directionalIntensity": {
+                  "type": "number",
+                  "default": 1.8,
+                  "minimum": 0,
+                  "maximum": 5,
+                  "description": "Perspective directional light intensity."
+                }
+              }
+            },
+            "activity": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Activity labels, 3D materials and selection brightness. Selection never enlarges activities.",
+              "properties": {
+                "labelMinWidth": {
+                  "type": "number",
+                  "default": 80,
+                  "minimum": 20,
+                  "maximum": 400,
+                  "description": "Minimum wrapping width in pixels."
+                },
+                "labelMaxWidth": {
+                  "type": "number",
+                  "default": 360,
+                  "minimum": 40,
+                  "maximum": 1600,
+                  "description": "Maximum wrapping width in pixels."
+                },
+                "labelHorizontalPadding": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 0,
+                  "maximum": 200,
+                  "description": "Space reserved around labels."
+                },
+                "lineHeight": {
+                  "type": "number",
+                  "default": 1.25,
+                  "minimum": 1,
+                  "maximum": 3,
+                  "description": "Label line-height multiplier."
+                },
+                "shininess": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "3D activity material shininess."
+                },
+                "shadowColor": {
+                  "type": "string",
+                  "default": "#17363d",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "3D activity shadow."
+                },
+                "shadowOpacity": {
+                  "type": "number",
+                  "default": 0.16,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "3D activity shadow opacity."
+                },
+                "laneOpacity": {
+                  "type": "number",
+                  "default": 0.08,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "3D row lane opacity."
+                },
+                "glowColor": {
+                  "type": "string",
+                  "default": "#ffca28",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected activity glow."
+                },
+                "glowOutline": {
+                  "type": "string",
+                  "default": "#ae5b00",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected activity glow outline."
+                },
+                "glowOpacity": {
+                  "type": "number",
+                  "default": 0.22,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Selected activity resting glow opacity."
+                },
+                "glowPulse": {
+                  "type": "number",
+                  "default": 0.12,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Additional glow opacity during the selection pulse."
+                },
+                "transitionMs": {
+                  "type": "number",
+                  "default": 850,
+                  "minimum": 0,
+                  "maximum": 5000,
+                  "description": "Selection pulse duration; zero disables animation."
+                },
+                "matchBackground": {
+                  "type": "string",
+                  "default": "#fff6bd",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Matching activity label background."
+                },
+                "leaderColor": {
+                  "type": "string",
+                  "default": "#507585",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "3D label connector."
+                },
+                "selectedLeaderColor": {
+                  "type": "string",
+                  "default": "#9c5900",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected label connector."
+                }
+              }
+            },
+            "layout": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Responsive layout preferences; computed positions and page membership are not persisted.",
+              "properties": {
+                "sidebarBreakpoint": {
+                  "type": "number",
+                  "default": 900,
+                  "minimum": 320,
+                  "maximum": 2400,
+                  "description": "Viewport width below which the Data panel overlays the plot."
+                },
+                "sidebarMinimum": {
+                  "type": "number",
+                  "default": 320,
+                  "minimum": 180,
+                  "maximum": 800,
+                  "description": "Minimum docked Data panel width."
+                },
+                "sidebarDefaultMaximum": {
+                  "type": "number",
+                  "default": 480,
+                  "minimum": 180,
+                  "maximum": 1400,
+                  "description": "Maximum initial Data panel width."
+                },
+                "sidebarDefaultRatio": {
+                  "type": "number",
+                  "default": 0.22,
+                  "minimum": 0.1,
+                  "maximum": 0.7,
+                  "description": "Initial Data panel width relative to the viewport."
+                },
+                "sidebarMaximumRatio": {
+                  "type": "number",
+                  "default": 0.6,
+                  "minimum": 0.2,
+                  "maximum": 0.85,
+                  "description": "Maximum docked Data panel width relative to the viewport."
+                },
+                "minimumPlotWidth": {
+                  "type": "number",
+                  "default": 420,
+                  "minimum": 80,
+                  "maximum": 1200,
+                  "description": "Space retained next to a docked Data panel."
+                },
+                "overviewMaxHeight": {
+                  "type": "number",
+                  "default": 180,
+                  "minimum": 40,
+                  "maximum": 800,
+                  "description": "Maximum height per docked overview."
+                },
+                "minimumDetailHeight": {
+                  "type": "number",
+                  "default": 100,
+                  "minimum": 40,
+                  "maximum": 800,
+                  "description": "Space retained above the overview."
+                },
+                "splitRatio": {
+                  "type": "number",
+                  "default": 0.5,
+                  "minimum": 0.2,
+                  "maximum": 0.8,
+                  "description": "Timeline share of the split view width."
+                }
+              }
+            },
+            "interaction": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Initial search preferences and user navigation increments. Saved/URL state still takes precedence.",
+              "properties": {
+                "searchMode": {
+                  "type": "string",
+                  "default": "highlight",
+                  "enum": [
+                    "highlight",
+                    "only"
+                  ],
+                  "description": "Initial search presentation."
+                },
+                "highlight": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Highlight matching activities."
+                },
+                "autoScale": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Enable density-based scaling initially."
+                },
+                "adaptiveRatio": {
+                  "type": "number",
+                  "default": 8,
+                  "minimum": 1,
+                  "maximum": 16,
+                  "description": "Maximum initial adaptive scaling ratio."
+                },
+                "zoomInFactor": {
+                  "type": "number",
+                  "default": 0.8,
+                  "minimum": 0.1,
+                  "maximum": 0.99,
+                  "description": "Zoom-in span multiplier."
+                },
+                "zoomOutFactor": {
+                  "type": "number",
+                  "default": 1.25,
+                  "minimum": 1.01,
+                  "maximum": 10,
+                  "description": "Zoom-out span multiplier."
+                },
+                "overviewPanFraction": {
+                  "type": "number",
+                  "default": 0.5,
+                  "minimum": 0.05,
+                  "maximum": 1,
+                  "description": "Overview button navigation fraction."
+                },
+                "overviewKeyboardFraction": {
+                  "type": "number",
+                  "default": 0.1,
+                  "minimum": 0.01,
+                  "maximum": 1,
+                  "description": "Overview arrow-key navigation fraction."
+                },
+                "resizeStep": {
+                  "type": "number",
+                  "default": 20,
+                  "minimum": 1,
+                  "maximum": 100,
+                  "description": "Data panel keyboard resize step in pixels."
+                },
+                "resizeLargeStep": {
+                  "type": "number",
+                  "default": 50,
+                  "minimum": 1,
+                  "maximum": 300,
+                  "description": "Shift-arrow resize step in pixels."
+                }
+              }
+            },
+            "controls": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Labels for existing, approved view and overview actions.",
+              "properties": {
+                "timelineLabel": {
+                  "type": "string",
+                  "default": "Timeline",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Timeline view button label."
+                },
+                "tableLabel": {
+                  "type": "string",
+                  "default": "Table",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Table view button label."
+                },
+                "splitLabel": {
+                  "type": "string",
+                  "default": "Split",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Split view button label."
+                },
+                "previousOverviewLabel": {
+                  "type": "string",
+                  "default": "←",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview previous button label."
+                },
+                "previousOverviewTitle": {
+                  "type": "string",
+                  "default": "Navigate earlier",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview previous button tooltip."
+                },
+                "nextOverviewLabel": {
+                  "type": "string",
+                  "default": "→",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview next button label."
+                },
+                "nextOverviewTitle": {
+                  "type": "string",
+                  "default": "Navigate later",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview next button tooltip."
+                },
+                "fitOverviewLabel": {
+                  "type": "string",
+                  "default": "Fit context",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Fit overview button label."
+                },
+                "fitOverviewTitle": {
+                  "type": "string",
+                  "default": "Fit loaded context in Overview",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Fit overview button tooltip."
+                }
+              }
+            },
+            "table": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Table columns and details links.",
+              "properties": {
+                "emptyText": {
+                  "type": "string",
+                  "default": "No events to display.",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Empty table message."
+                },
+                "columns": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "description": "Columns in display order; field is a supported record value.",
+                  "default": [
+                    {
+                      "field": "title",
+                      "label": "Title"
+                    },
+                    {
+                      "field": "start",
+                      "label": "Start"
+                    },
+                    {
+                      "field": "end",
+                      "label": "End"
+                    },
+                    {
+                      "field": "source",
+                      "label": "Source"
+                    },
+                    {
+                      "field": "status",
+                      "label": "Status"
+                    }
+                  ],
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "field",
+                      "label"
+                    ],
+                    "properties": {
+                      "field": {
+                        "type": "string",
+                        "enum": [
+                          "title",
+                          "start",
+                          "end",
+                          "source",
+                          "status",
+                          "description",
+                          "id"
+                        ]
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      "width": {
+                        "type": "number",
+                        "minimum": 40,
+                        "maximum": 1200
+                      },
+                      "visible": {
+                        "type": "boolean",
+                        "default": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "definitions": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "positive": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "timeValue": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "minLength": 1
+        },
+        "unit": {
+          "enum": [
+            "MILLISECOND",
+            "SECOND",
+            "MINUTE",
+            "HOUR",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "YEAR",
+            "DECADE",
+            "CENTURY"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/demoModel/definitions/path"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/demoModel/definitions/path"
+              }
+            }
+          ]
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "to": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            }
+          }
+        },
+        "ticks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "step"
+          ],
+          "properties": {
+            "unit": {
+              "enum": [
+                "MILLISECOND",
+                "SECOND",
+                "MINUTE",
+                "HOUR",
+                "DAY",
+                "WEEK",
+                "MONTH",
+                "YEAR",
+                "DECADE",
+                "CENTURY",
+                "NUMERIC"
+              ]
+            },
+            "step": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "format": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            }
+          }
+        },
+        "focus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to",
+            "magnification"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "to": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "magnification": {
+              "type": "number",
+              "minimum": 1
+            },
+            "ticks": {
+              "$ref": "#/definitions/demoModel/definitions/ticks"
+            },
+            "tickMinutes": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            }
+          }
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "date",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "title": {
+              "type": "string"
+            },
+            "date": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "timeZone": {
+              "type": "string"
+            },
+            "timeZoneLabel": {
+              "type": "string"
+            },
+            "displayOffsetMinutes": {
+              "type": "number",
+              "minimum": -1440,
+              "maximum": 1440
+            },
+            "top": {
+              "type": "number"
+            },
+            "left": {
+              "type": "number"
+            },
+            "width": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "height": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "fontSize": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "fontFamily": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "data": {
+              "type": "string"
+            },
+            "overview": {
+              "type": "boolean"
+            },
+            "dockOverview": {
+              "type": "boolean"
+            },
+            "overviewHeightRatio": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "showCurrentTime": {
+              "type": "boolean"
+            },
+            "dateAxisMode": {
+              "enum": [
+                "shared",
+                "per-band"
+              ],
+              "default": "shared",
+              "description": "shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."
+            },
+            "fullWindow": {
+              "type": "boolean",
+              "default": true,
+              "description": "Fill available browser space; false uses custom geometry bounded by the viewport."
+            },
+            "camera": {
+              "enum": [
+                "Orthographic",
+                "Perspective"
+              ]
+            },
+            "fontStyle": {
+              "enum": [
+                "normal",
+                "italic",
+                "oblique"
+              ]
+            },
+            "fontWeight": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "dataSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": {
+              "enum": [
+                "json",
+                "simile-xml"
+              ]
+            },
+            "url": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "recordsPath": {
+              "$ref": "#/definitions/demoModel/definitions/path"
+            },
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/demoModel/definitions/field"
+                },
+                "title": {
+                  "$ref": "#/definitions/demoModel/definitions/field"
+                },
+                "description": {
+                  "$ref": "#/definitions/demoModel/definitions/field"
+                },
+                "namespace": {
+                  "$ref": "#/definitions/demoModel/definitions/field"
+                },
+                "color": {
+                  "$ref": "#/definitions/demoModel/definitions/field"
+                }
+              }
+            },
+            "iconColors": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/demoModel/definitions/text"
+              }
+            },
+            "zones": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/demoModel/definitions/zone"
+              }
+            },
+            "time": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "unit",
+                "millisecondsPerUnit"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "numeric"
+                },
+                "unit": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                },
+                "millisecondsPerUnit": {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                "direction": {
+                  "enum": [
+                    -1,
+                    1
+                  ]
+                },
+                "approximatePrefixes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/definitions/demoModel/definitions/text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "zone": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start",
+            "end",
+            "title"
+          ],
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "start": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "end": {
+              "$ref": "#/definitions/demoModel/definitions/timeValue"
+            },
+            "title": {
+              "type": "string"
+            },
+            "color": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "render": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "height": {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                "verticalAlign": {
+                  "enum": [
+                    "top",
+                    "center"
+                  ]
+                },
+                "labelPosition": {
+                  "enum": [
+                    "top",
+                    "bottom"
+                  ]
+                },
+                "backgroundImage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+                  "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+                }
+              }
+            }
+          }
+        },
+        "band": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "height",
+            "intervalUnit",
+            "intervalPixels"
+          ],
+          "dependencies": {
+            "context": [
+              "range"
+            ],
+            "focus": [
+              "range"
+            ]
+          },
+          "properties": {
+            "name": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "height": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"
+                }
+              ]
+            },
+            "intervalUnit": {
+              "$ref": "#/definitions/demoModel/definitions/unit"
+            },
+            "intervalPixels": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "color": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "SessionColor": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "eventColor": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "dateColor": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "textColor": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "dateFormat": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "fontSize": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "intervalUnitPos": {
+              "enum": [
+                "TOP",
+                "BOTTOM"
+              ]
+            },
+            "model": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sortBy"
+                ],
+                "properties": {
+                  "sortBy": {
+                    "const": "NONE"
+                  }
+                }
+              }
+            },
+            "range": {
+              "$ref": "#/definitions/demoModel/definitions/range"
+            },
+            "context": {
+              "$ref": "#/definitions/demoModel/definitions/range"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/demoModel/definitions/focus"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/definitions/demoModel/definitions/focus"
+                  }
+                }
+              ]
+            },
+            "ticks": {
+              "$ref": "#/definitions/demoModel/definitions/ticks"
+            },
+            "tickMinutes": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "labelPosition": {
+              "enum": [
+                "above",
+                "inside"
+              ]
+            },
+            "topPadding": {
+              "type": "number",
+              "minimum": 0
+            },
+            "trackIncrement": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "sessionHeight": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "defaultEventSize": {
+              "$ref": "#/definitions/demoModel/definitions/positive"
+            },
+            "groupBy": {
+              "$ref": "#/definitions/demoModel/definitions/path"
+            },
+            "eventKind": {
+              "enum": [
+                "event",
+                "duration"
+              ]
+            },
+            "filter": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "equals"
+              ],
+              "properties": {
+                "field": {
+                  "$ref": "#/definitions/demoModel/definitions/path"
+                },
+                "equals": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "sourceBands": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/demoModel/definitions/text"
+              }
+            },
+            "fitRows": {
+              "type": "boolean"
+            },
+            "showContextLabel": {
+              "type": "boolean"
+            },
+            "viewportHandles": {
+              "type": "boolean"
+            },
+            "overviewContextRatio": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "overviewMarkerSize": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "overviewLabel": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "const": false
+                }
+              ]
+            },
+            "uncertaintyOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "scaleHeader": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "height": {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                "color": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                },
+                "textColor": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                }
+              }
+            },
+            "secondaryScale": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "format",
+                "origin",
+                "step"
+              ],
+              "properties": {
+                "format": {
+                  "const": "elapsedYears"
+                },
+                "origin": {
+                  "$ref": "#/definitions/demoModel/definitions/timeValue"
+                },
+                "step": {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                "position": {
+                  "enum": [
+                    "top",
+                    "bottom"
+                  ]
+                },
+                "height": {
+                  "$ref": "#/definitions/demoModel/definitions/positive"
+                },
+                "color": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                },
+                "textColor": {
+                  "$ref": "#/definitions/demoModel/definitions/text"
+                },
+                "suffix": {
+                  "type": "string"
+                },
+                "min": {
+                  "type": "number"
+                }
+              }
+            },
+            "fontFamily": {
+              "$ref": "#/definitions/demoModel/definitions/text"
+            },
+            "fontStyle": {
+              "enum": [
+                "normal",
+                "italic",
+                "oblique"
+              ]
+            },
+            "fontWeight": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "backgroundImage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+            }
+          }
+        }
+      }
+    },
+    "legacyModel": {
+      "title": "OpenBEXI provider and legacy timeline model",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "params",
+        "bands"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/definitions/legacyModel/definitions/params"
+          }
+        },
+        "dataSource": {
+          "$ref": "#/definitions/legacyModel/definitions/dataSource"
+        },
+        "bands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/legacyModel/definitions/band"
+          }
+        },
+        "rendering": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional rendering settings. Omitted properties retain the existing presentation.",
+          "properties": {
+            "theme": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Scene and optional application surface colors.",
+              "properties": {
+                "sceneBackground": {
+                  "type": "string",
+                  "default": "#f7f9fc",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Canvas background."
+                },
+                "sceneBackgroundImage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+                  "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+                },
+                "headerBackground": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Header background; null keeps the stylesheet theme."
+                },
+                "panelBackground": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Timeline panel background; null keeps the stylesheet theme."
+                },
+                "panelText": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Panel text color; null keeps the stylesheet theme."
+                }
+              }
+            },
+            "axis": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Date axes and automatic tick spacing.",
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "default": "#f7f9fc",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date axis and date-label background."
+                },
+                "separatorColor": {
+                  "type": "string",
+                  "default": "#8090a0",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date-axis boundary color."
+                },
+                "textColor": {
+                  "type": "string",
+                  "default": "#233449",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Date label color."
+                },
+                "minimumHeight": {
+                  "type": "number",
+                  "default": 28,
+                  "minimum": 16,
+                  "maximum": 160,
+                  "description": "Minimum date-axis height in pixels."
+                },
+                "verticalPadding": {
+                  "type": "number",
+                  "default": 16,
+                  "minimum": 0,
+                  "maximum": 80,
+                  "description": "Additional axis height above the band font size."
+                },
+                "minimumFontSize": {
+                  "type": "number",
+                  "default": 12,
+                  "minimum": 6,
+                  "maximum": 48,
+                  "description": "Minimum canvas date-label font size in pixels."
+                },
+                "targetTickPixels": {
+                  "type": "number",
+                  "default": 100,
+                  "minimum": 30,
+                  "maximum": 400,
+                  "description": "Preferred distance between automatically chosen time labels."
+                },
+                "groupHeaderHeight": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 12,
+                  "maximum": 120,
+                  "description": "Space reserved for a group heading."
+                },
+                "scaleHeaderColor": {
+                  "type": "string",
+                  "default": "#edf0f1",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default scale-header background."
+                },
+                "scaleHeaderText": {
+                  "type": "string",
+                  "default": "#397a9c",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default scale-header text."
+                },
+                "secondaryColor": {
+                  "type": "string",
+                  "default": "#ffd58a",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default secondary-scale background."
+                },
+                "secondaryText": {
+                  "type": "string",
+                  "default": "#704308",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Default secondary-scale text."
+                }
+              }
+            },
+            "overview": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Overview SVG labels, markers and visible-range indicators.",
+              "properties": {
+                "borderColor": {
+                  "type": "string",
+                  "default": "#aab8bf",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Top divider."
+                },
+                "headingColor": {
+                  "type": "string",
+                  "default": "#566871",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Heading and record-count text."
+                },
+                "headingFontSize": {
+                  "type": "number",
+                  "default": 11,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Default overview heading size."
+                },
+                "countFontSize": {
+                  "type": "number",
+                  "default": 10,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Record-count size."
+                },
+                "axisFontSize": {
+                  "type": "number",
+                  "default": 10,
+                  "minimum": 6,
+                  "maximum": 32,
+                  "description": "Overview date-label size."
+                },
+                "markerStroke": {
+                  "type": "string",
+                  "default": "#253746",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Record marker outline."
+                },
+                "markerStrokeWidth": {
+                  "type": "number",
+                  "default": 0.35,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Record marker outline width."
+                },
+                "dimmedOpacity": {
+                  "type": "number",
+                  "default": 0.25,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Opacity multiplier for nonmatching records during search."
+                },
+                "matchColor": {
+                  "type": "string",
+                  "default": "#ffe04b",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Search-match fill."
+                },
+                "matchOpacity": {
+                  "type": "number",
+                  "default": 0.95,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Search-match opacity."
+                },
+                "matchStroke": {
+                  "type": "string",
+                  "default": "#783800",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Search-match outline and count text."
+                },
+                "matchStrokeWidth": {
+                  "type": "number",
+                  "default": 2,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Search-match outline width."
+                },
+                "viewportColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range fill."
+                },
+                "viewportOpacity": {
+                  "type": "number",
+                  "default": 0.08,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Visible-range fill opacity."
+                },
+                "viewportStroke": {
+                  "type": "string",
+                  "default": "#536872",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range outline."
+                },
+                "viewportStrokeWidth": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Visible-range outline width."
+                },
+                "handleColor": {
+                  "type": "string",
+                  "default": "#eff8ff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range handle fill."
+                },
+                "handleStroke": {
+                  "type": "string",
+                  "default": "#4d89ae",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Visible-range handle outline."
+                },
+                "handleWidth": {
+                  "type": "number",
+                  "default": 7,
+                  "minimum": 3,
+                  "maximum": 24,
+                  "description": "Handle width in pixels."
+                },
+                "handleMaxHeight": {
+                  "type": "number",
+                  "default": 48,
+                  "minimum": 12,
+                  "maximum": 120,
+                  "description": "Maximum handle height in pixels."
+                }
+              }
+            },
+            "camera": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "default": "Orthographic",
+                  "enum": [
+                    "Orthographic",
+                    "Perspective"
+                  ],
+                  "description": "Camera mode for model preview. Page startup always uses 2D."
+                },
+                "fieldOfView": {
+                  "type": "number",
+                  "default": 30,
+                  "minimum": 10,
+                  "maximum": 100,
+                  "description": "Perspective field of view in degrees."
+                },
+                "yaw": {
+                  "type": "number",
+                  "default": -0.9948376736367678,
+                  "minimum": -3.141592653589793,
+                  "maximum": 3.141592653589793,
+                  "description": "Initial horizontal orbit angle in radians."
+                },
+                "pitch": {
+                  "type": "number",
+                  "default": 0.2792526803190927,
+                  "minimum": -1.48,
+                  "maximum": 1.48,
+                  "description": "Initial vertical orbit angle in radians."
+                },
+                "roll": {
+                  "type": "number",
+                  "default": 0,
+                  "minimum": -0.5,
+                  "maximum": 0.5,
+                  "description": "Board rotation in radians."
+                },
+                "rotationSensitivity": {
+                  "type": "number",
+                  "default": 0.002,
+                  "minimum": 0.0001,
+                  "maximum": 0.02,
+                  "description": "Orbit rotation sensitivity; 0.002 is the default speed."
+                },
+                "ambientColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Perspective ambient light."
+                },
+                "ambientIntensity": {
+                  "type": "number",
+                  "default": 0.3,
+                  "minimum": 0,
+                  "maximum": 5,
+                  "description": "Perspective ambient light intensity."
+                },
+                "directionalColor": {
+                  "type": "string",
+                  "default": "#ffffff",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Perspective directional light."
+                },
+                "directionalIntensity": {
+                  "type": "number",
+                  "default": 1.8,
+                  "minimum": 0,
+                  "maximum": 5,
+                  "description": "Perspective directional light intensity."
+                }
+              }
+            },
+            "activity": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Activity labels, 3D materials and selection brightness. Selection never enlarges activities.",
+              "properties": {
+                "labelMinWidth": {
+                  "type": "number",
+                  "default": 80,
+                  "minimum": 20,
+                  "maximum": 400,
+                  "description": "Minimum wrapping width in pixels."
+                },
+                "labelMaxWidth": {
+                  "type": "number",
+                  "default": 360,
+                  "minimum": 40,
+                  "maximum": 1600,
+                  "description": "Maximum wrapping width in pixels."
+                },
+                "labelHorizontalPadding": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 0,
+                  "maximum": 200,
+                  "description": "Space reserved around labels."
+                },
+                "lineHeight": {
+                  "type": "number",
+                  "default": 1.25,
+                  "minimum": 1,
+                  "maximum": 3,
+                  "description": "Label line-height multiplier."
+                },
+                "shininess": {
+                  "type": "number",
+                  "default": 24,
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "3D activity material shininess."
+                },
+                "shadowColor": {
+                  "type": "string",
+                  "default": "#17363d",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "3D activity shadow."
+                },
+                "shadowOpacity": {
+                  "type": "number",
+                  "default": 0.16,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "3D activity shadow opacity."
+                },
+                "laneOpacity": {
+                  "type": "number",
+                  "default": 0.08,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "3D row lane opacity."
+                },
+                "glowColor": {
+                  "type": "string",
+                  "default": "#ffca28",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected activity glow."
+                },
+                "glowOutline": {
+                  "type": "string",
+                  "default": "#ae5b00",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected activity glow outline."
+                },
+                "glowOpacity": {
+                  "type": "number",
+                  "default": 0.22,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Selected activity resting glow opacity."
+                },
+                "glowPulse": {
+                  "type": "number",
+                  "default": 0.12,
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Additional glow opacity during the selection pulse."
+                },
+                "transitionMs": {
+                  "type": "number",
+                  "default": 850,
+                  "minimum": 0,
+                  "maximum": 5000,
+                  "description": "Selection pulse duration; zero disables animation."
+                },
+                "matchBackground": {
+                  "type": "string",
+                  "default": "#fff6bd",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Matching activity label background."
+                },
+                "leaderColor": {
+                  "type": "string",
+                  "default": "#507585",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "3D label connector."
+                },
+                "selectedLeaderColor": {
+                  "type": "string",
+                  "default": "#9c5900",
+                  "minLength": 1,
+                  "maxLength": 80,
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
+                  "description": "Selected label connector."
+                }
+              }
+            },
+            "layout": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Responsive layout preferences; computed positions and page membership are not persisted.",
+              "properties": {
+                "sidebarBreakpoint": {
+                  "type": "number",
+                  "default": 900,
+                  "minimum": 320,
+                  "maximum": 2400,
+                  "description": "Viewport width below which the Data panel overlays the plot."
+                },
+                "sidebarMinimum": {
+                  "type": "number",
+                  "default": 320,
+                  "minimum": 180,
+                  "maximum": 800,
+                  "description": "Minimum docked Data panel width."
+                },
+                "sidebarDefaultMaximum": {
+                  "type": "number",
+                  "default": 480,
+                  "minimum": 180,
+                  "maximum": 1400,
+                  "description": "Maximum initial Data panel width."
+                },
+                "sidebarDefaultRatio": {
+                  "type": "number",
+                  "default": 0.22,
+                  "minimum": 0.1,
+                  "maximum": 0.7,
+                  "description": "Initial Data panel width relative to the viewport."
+                },
+                "sidebarMaximumRatio": {
+                  "type": "number",
+                  "default": 0.6,
+                  "minimum": 0.2,
+                  "maximum": 0.85,
+                  "description": "Maximum docked Data panel width relative to the viewport."
+                },
+                "minimumPlotWidth": {
+                  "type": "number",
+                  "default": 420,
+                  "minimum": 80,
+                  "maximum": 1200,
+                  "description": "Space retained next to a docked Data panel."
+                },
+                "overviewMaxHeight": {
+                  "type": "number",
+                  "default": 180,
+                  "minimum": 40,
+                  "maximum": 800,
+                  "description": "Maximum height per docked overview."
+                },
+                "minimumDetailHeight": {
+                  "type": "number",
+                  "default": 100,
+                  "minimum": 40,
+                  "maximum": 800,
+                  "description": "Space retained above the overview."
+                },
+                "splitRatio": {
+                  "type": "number",
+                  "default": 0.5,
+                  "minimum": 0.2,
+                  "maximum": 0.8,
+                  "description": "Timeline share of the split view width."
+                }
+              }
+            },
+            "interaction": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Initial search preferences and user navigation increments. Saved/URL state still takes precedence.",
+              "properties": {
+                "searchMode": {
+                  "type": "string",
+                  "default": "highlight",
+                  "enum": [
+                    "highlight",
+                    "only"
+                  ],
+                  "description": "Initial search presentation."
+                },
+                "highlight": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Highlight matching activities."
+                },
+                "autoScale": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Enable density-based scaling initially."
+                },
+                "adaptiveRatio": {
+                  "type": "number",
+                  "default": 8,
+                  "minimum": 1,
+                  "maximum": 16,
+                  "description": "Maximum initial adaptive scaling ratio."
+                },
+                "zoomInFactor": {
+                  "type": "number",
+                  "default": 0.8,
+                  "minimum": 0.1,
+                  "maximum": 0.99,
+                  "description": "Zoom-in span multiplier."
+                },
+                "zoomOutFactor": {
+                  "type": "number",
+                  "default": 1.25,
+                  "minimum": 1.01,
+                  "maximum": 10,
+                  "description": "Zoom-out span multiplier."
+                },
+                "overviewPanFraction": {
+                  "type": "number",
+                  "default": 0.5,
+                  "minimum": 0.05,
+                  "maximum": 1,
+                  "description": "Overview button navigation fraction."
+                },
+                "overviewKeyboardFraction": {
+                  "type": "number",
+                  "default": 0.1,
+                  "minimum": 0.01,
+                  "maximum": 1,
+                  "description": "Overview arrow-key navigation fraction."
+                },
+                "resizeStep": {
+                  "type": "number",
+                  "default": 20,
+                  "minimum": 1,
+                  "maximum": 100,
+                  "description": "Data panel keyboard resize step in pixels."
+                },
+                "resizeLargeStep": {
+                  "type": "number",
+                  "default": 50,
+                  "minimum": 1,
+                  "maximum": 300,
+                  "description": "Shift-arrow resize step in pixels."
+                }
+              }
+            },
+            "controls": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Labels for existing, approved view and overview actions.",
+              "properties": {
+                "timelineLabel": {
+                  "type": "string",
+                  "default": "Timeline",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Timeline view button label."
+                },
+                "tableLabel": {
+                  "type": "string",
+                  "default": "Table",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Table view button label."
+                },
+                "splitLabel": {
+                  "type": "string",
+                  "default": "Split",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Split view button label."
+                },
+                "previousOverviewLabel": {
+                  "type": "string",
+                  "default": "←",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview previous button label."
+                },
+                "previousOverviewTitle": {
+                  "type": "string",
+                  "default": "Navigate earlier",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview previous button tooltip."
+                },
+                "nextOverviewLabel": {
+                  "type": "string",
+                  "default": "→",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview next button label."
+                },
+                "nextOverviewTitle": {
+                  "type": "string",
+                  "default": "Navigate later",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Overview next button tooltip."
+                },
+                "fitOverviewLabel": {
+                  "type": "string",
+                  "default": "Fit context",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Fit overview button label."
+                },
+                "fitOverviewTitle": {
+                  "type": "string",
+                  "default": "Fit loaded context in Overview",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Fit overview button tooltip."
+                }
+              }
+            },
+            "table": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Table columns and details links.",
+              "properties": {
+                "emptyText": {
+                  "type": "string",
+                  "default": "No events to display.",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "description": "Empty table message."
+                },
+                "columns": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "description": "Columns in display order; field is a supported record value.",
+                  "default": [
+                    {
+                      "field": "title",
+                      "label": "Title"
+                    },
+                    {
+                      "field": "start",
+                      "label": "Start"
+                    },
+                    {
+                      "field": "end",
+                      "label": "End"
+                    },
+                    {
+                      "field": "source",
+                      "label": "Source"
+                    },
+                    {
+                      "field": "status",
+                      "label": "Status"
+                    }
+                  ],
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "field",
+                      "label"
+                    ],
+                    "properties": {
+                      "field": {
+                        "type": "string",
+                        "enum": [
+                          "title",
+                          "start",
+                          "end",
+                          "source",
+                          "status",
+                          "description",
+                          "id"
+                        ]
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                      },
+                      "width": {
+                        "type": "number",
+                        "minimum": 40,
+                        "maximum": 1200
+                      },
+                      "visible": {
+                        "type": "boolean",
+                        "default": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "definitions": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "positive": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "timeValue": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "minLength": 1
+        },
+        "unit": {
+          "enum": [
+            "MILLISECOND",
+            "SECOND",
+            "MINUTE",
+            "HOUR",
+            "DAY",
+            "WEEK",
+            "MONTH",
+            "YEAR",
+            "DECADE",
+            "CENTURY"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/legacyModel/definitions/path"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/legacyModel/definitions/path"
+              }
+            }
+          ]
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "to": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            }
+          }
+        },
+        "ticks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "step"
+          ],
+          "properties": {
+            "unit": {
+              "enum": [
+                "MILLISECOND",
+                "SECOND",
+                "MINUTE",
+                "HOUR",
+                "DAY",
+                "WEEK",
+                "MONTH",
+                "YEAR",
+                "DECADE",
+                "CENTURY",
+                "NUMERIC"
+              ]
+            },
+            "step": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "format": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            }
+          }
+        },
+        "focus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "to",
+            "magnification"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "to": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "magnification": {
+              "type": "number",
+              "minimum": 1
+            },
+            "ticks": {
+              "$ref": "#/definitions/legacyModel/definitions/ticks"
+            },
+            "tickMinutes": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            }
+          }
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "title": {
+              "type": "string"
+            },
+            "date": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "timeZone": {
+              "type": "string"
+            },
+            "timeZoneLabel": {
+              "type": "string"
+            },
+            "displayOffsetMinutes": {
+              "type": "number",
+              "minimum": -1440,
+              "maximum": 1440
+            },
+            "top": {
+              "type": "number"
+            },
+            "left": {
+              "type": "number"
+            },
+            "width": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "height": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "fontSize": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "fontFamily": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "data": {
+              "type": "string"
+            },
+            "overview": {
+              "type": "boolean"
+            },
+            "dockOverview": {
+              "type": "boolean"
+            },
+            "overviewHeightRatio": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "showCurrentTime": {
+              "type": "boolean"
+            },
+            "dateAxisMode": {
+              "enum": [
+                "shared",
+                "per-band"
+              ],
+              "default": "shared",
+              "description": "shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."
+            },
+            "fullWindow": {
+              "type": "boolean",
+              "default": true,
+              "description": "Fill available browser space; false uses custom geometry bounded by the viewport."
+            },
+            "camera": {
+              "enum": [
+                "Orthographic",
+                "Perspective"
+              ]
+            },
+            "fontStyle": {
+              "enum": [
+                "normal",
+                "italic",
+                "oblique"
+              ]
+            },
+            "fontWeight": {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          }
+        },
+        "dataSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": {
+              "enum": [
+                "json",
+                "simile-xml"
+              ]
+            },
+            "url": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "recordsPath": {
+              "$ref": "#/definitions/legacyModel/definitions/path"
+            },
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/legacyModel/definitions/field"
+                },
+                "title": {
+                  "$ref": "#/definitions/legacyModel/definitions/field"
+                },
+                "description": {
+                  "$ref": "#/definitions/legacyModel/definitions/field"
+                },
+                "namespace": {
+                  "$ref": "#/definitions/legacyModel/definitions/field"
+                },
+                "color": {
+                  "$ref": "#/definitions/legacyModel/definitions/field"
+                }
+              }
+            },
+            "iconColors": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/legacyModel/definitions/text"
+              }
+            },
+            "zones": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/legacyModel/definitions/zone"
+              }
+            },
+            "time": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "unit",
+                "millisecondsPerUnit"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "numeric"
+                },
+                "unit": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                },
+                "millisecondsPerUnit": {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                "direction": {
+                  "enum": [
+                    -1,
+                    1
+                  ]
+                },
+                "approximatePrefixes": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/definitions/legacyModel/definitions/text"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "zone": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start",
+            "end",
+            "title"
+          ],
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "start": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "end": {
+              "$ref": "#/definitions/legacyModel/definitions/timeValue"
+            },
+            "title": {
+              "type": "string"
+            },
+            "color": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "render": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "height": {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                "verticalAlign": {
+                  "enum": [
+                    "top",
+                    "center"
+                  ]
+                },
+                "labelPosition": {
+                  "enum": [
+                    "top",
+                    "bottom"
+                  ]
+                },
+                "backgroundImage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "default": null,
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+                  "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+                }
+              }
+            }
+          }
+        },
+        "band": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "name"
+          ],
+          "dependencies": {
+            "context": [
+              "range"
+            ],
+            "focus": [
+              "range"
+            ]
+          },
+          "properties": {
+            "name": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "height": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"
+                }
+              ]
+            },
+            "intervalUnit": {
+              "$ref": "#/definitions/legacyModel/definitions/unit"
+            },
+            "intervalPixels": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[0-9]+(?:\\.[0-9]+)?$"
+                }
+              ]
+            },
+            "color": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "SessionColor": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "eventColor": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "dateColor": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "textColor": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "dateFormat": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "fontSize": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "intervalUnitPos": {
+              "enum": [
+                "TOP",
+                "BOTTOM"
+              ]
+            },
+            "model": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "sortBy": {
+                    "type": "string"
+                  },
+                  "alternateColor": {
+                    "$ref": "#/definitions/legacyModel/definitions/text"
+                  }
+                }
+              }
+            },
+            "range": {
+              "$ref": "#/definitions/legacyModel/definitions/range"
+            },
+            "context": {
+              "$ref": "#/definitions/legacyModel/definitions/range"
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/legacyModel/definitions/focus"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/definitions/legacyModel/definitions/focus"
+                  }
+                }
+              ]
+            },
+            "ticks": {
+              "$ref": "#/definitions/legacyModel/definitions/ticks"
+            },
+            "tickMinutes": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "labelPosition": {
+              "enum": [
+                "above",
+                "inside"
+              ]
+            },
+            "topPadding": {
+              "type": "number",
+              "minimum": 0
+            },
+            "trackIncrement": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "sessionHeight": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "defaultEventSize": {
+              "$ref": "#/definitions/legacyModel/definitions/positive"
+            },
+            "groupBy": {
+              "$ref": "#/definitions/legacyModel/definitions/path"
+            },
+            "eventKind": {
+              "enum": [
+                "event",
+                "duration"
+              ]
+            },
+            "filter": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "equals"
+              ],
+              "properties": {
+                "field": {
+                  "$ref": "#/definitions/legacyModel/definitions/path"
+                },
+                "equals": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "sourceBands": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/legacyModel/definitions/text"
+              }
+            },
+            "fitRows": {
+              "type": "boolean"
+            },
+            "showContextLabel": {
+              "type": "boolean"
+            },
+            "viewportHandles": {
+              "type": "boolean"
+            },
+            "overviewContextRatio": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "overviewMarkerSize": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "overviewLabel": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "const": false
+                }
+              ]
+            },
+            "uncertaintyOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "scaleHeader": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "height": {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                "color": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                },
+                "textColor": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                }
+              }
+            },
+            "secondaryScale": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "format",
+                "origin",
+                "step"
+              ],
+              "properties": {
+                "format": {
+                  "const": "elapsedYears"
+                },
+                "origin": {
+                  "$ref": "#/definitions/legacyModel/definitions/timeValue"
+                },
+                "step": {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                "position": {
+                  "enum": [
+                    "top",
+                    "bottom"
+                  ]
+                },
+                "height": {
+                  "$ref": "#/definitions/legacyModel/definitions/positive"
+                },
+                "color": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                },
+                "textColor": {
+                  "$ref": "#/definitions/legacyModel/definitions/text"
+                },
+                "suffix": {
+                  "type": "string"
+                },
+                "min": {
+                  "type": "number"
+                }
+              }
+            },
+            "fontFamily": {
+              "$ref": "#/definitions/legacyModel/definitions/text"
+            },
+            "fontStyle": {
+              "enum": [
+                "normal",
+                "italic",
+                "oblique"
+              ]
+            },
+            "fontWeight": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "subIntervalPixels": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "texture": {
+              "type": "string"
+            },
+            "defaultSessionTexture": {
+              "type": "string"
+            },
+            "backgroundImage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+            }
+          }
+        }
+      }
+    }
+  }
+}

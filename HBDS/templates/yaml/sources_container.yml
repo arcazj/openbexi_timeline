@@ -1,0 +1,18 @@
+# HTTP is private to the container network; terminate external TLS at the reverse proxy.
+data_sources:
+  - namespace: "SOURCE2"
+    type: "json_file"
+    enable: true
+    permission: ""
+    converter2events_class: "build_in"
+    data_path: "/data/legacy/"
+    data_model: "/data/legacy/SOURCES2/yyyy/mm/dd"
+    filter:
+      include: ""
+      exclude: ""
+    connector: "no_secure:8442"
+    render:
+      color: "#000000"
+      textColor: "#ffffff"
+      dateColor: "#ffffff"
+      alternateColor: "#e6e6e6"

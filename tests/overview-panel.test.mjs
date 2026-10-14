@@ -9,7 +9,7 @@ async function load(demo = 'default-dataset') {
     const {syncOverviewPanel} = await harness.importModule('src/openbexi_timeline_overview_panel.js');
     harness.window.innerWidth=1200;harness.window.innerHeight=768;
     const timeline = new OB_TIMELINE();
-    await timeline.loadModel('models/demos/' + demo + '.json', {dataset: 'json/test-data/' + demo + '.json', width: 1200, height: 640});
+    await timeline.loadModel('HBDS/templates/models/demos/' + demo + '.json', {dataset: 'json/test-data/' + demo + '.json', width: 1200, height: 640});
     return {...harness, timeline, sync: () => syncOverviewPanel(timeline, 0)};
 }
 

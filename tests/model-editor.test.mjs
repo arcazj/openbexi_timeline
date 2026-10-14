@@ -63,7 +63,7 @@ test('YAML configuration validation accepts supported documents and preserves al
             {rules:[{pattern:'Catalina',labels:{port:'$2'},value:1}],lowercaseOutputName:true}
         ];
         for(const value of cases){const before=JSON.stringify(value);assert.equal(api.validateYamlConfiguration(value).supported,true);assert.equal(JSON.stringify(value),before);}
-        const quake=new api.EditorDocument(await fs.readFile('yaml/sources_earthquake.yml','utf8'),'yaml');assert.equal(api.validateYamlConfiguration(quake.value).type,'sources');
+        const quake=new api.EditorDocument(await fs.readFile('HBDS/templates/yaml/sources_earthquake.yml','utf8'),'yaml');assert.equal(api.validateYamlConfiguration(quake.value).type,'sources');
         const unknown={custom:{keep:true}};const result=api.validateYamlConfiguration(unknown);assert.equal(result.supported,false);assert.match(result.diagnostic,/edit and export.*cannot save/);assert.deepEqual(unknown,{custom:{keep:true}});
     }finally{harness.close();}
 });
@@ -91,7 +91,7 @@ test('YAML known-field errors identify the path before a configuration can be sa
     }finally{harness.close();}
 });
 test('Invalid YAML fields disable Save and Export until corrected in the actual editor',async()=>{
-    const harness=await createTimelineHarness({html:await fs.readFile('openbexi_timeline_model.html','utf8'),url:'http://localhost/openbexi_timeline_model.html?model=yaml/test-data/default-dataset.yml'});
+    const harness=await createTimelineHarness({html:await fs.readFile('openbexi_timeline_model.html','utf8'),url:'http://localhost/openbexi_timeline_model.html?model=HBDS/templates/yaml/test-data/default-dataset.yml'});
     try{
         harness.window.CSS={supports:()=>false};
         await harness.importModule('src/openbexi_timeline_model_editor.js');

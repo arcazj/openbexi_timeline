@@ -145,7 +145,7 @@ test('SSE revisions refresh changes once, reconcile deletions and ignore closed 
 async function connected({abortRequests=true,data='http://localhost/sessions'}={}) {
     const h=await createTimelineHarness({calendar:true});
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-    const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     t.params=model.params; t.bands=model.bands;
     Object.assign(t.params[0],{data,date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
     const requests=[];
@@ -165,6 +165,46 @@ function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:url.searchParams.get('search')||'',
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
+
+for(const draft of [false,true])test(`Late server filters populate the open panel${draft?' without replacing a new-filter draft':''}`,async()=>{
+    const f=await connected(),{h,t,requests,settings}=f;
+    try {
+        assert.equal(requests.length,1);
+        assert.equal(new URL(requests[0].url).searchParams.get('ob_request'),'readFilters');
+        t.ob_create_filters(0,undefined,draft?'add_filter':'select_filter');
+        const panel=t.ob_timeline_right_panel.querySelector('.ob_filter_panel');
+        assert.equal(panel.querySelectorAll('.ob_saved_filter').length,0);
+        const name=panel.querySelector('[aria-label="New filter name"]');
+        const expression=panel.querySelector('[aria-label="New filter expression"]');
+        const sorting=panel.querySelector('[aria-label="Group by (sort_by)"]');
+        if(draft) {
+            name.value='Unsaved draft';expression.value='expr: title CONTAINS "25% + planned"\nAND EXISTS(status)';
+            if(![...sorting.options].some(option=>option.value==='namespace'))sorting.add(new h.window.Option('namespace','namespace'));
+            sorting.value='namespace';sorting.dispatchEvent(new h.window.Event('change',{bubbles:true}));
+        }
+        assert.equal(requests.length,1,'Opening the panel does not duplicate the pending settings request');
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['loaded']));
+        assert.equal(t.ob_timeline_right_panel.querySelector('.ob_filter_panel'),panel,'The open panel stays mounted');
+        assert.deepEqual([...panel.querySelectorAll('.ob_saved_filter input[type="radio"]')].map(input=>input.getAttribute('aria-label')),['ALL']);
+        assert.equal(panel.querySelector('input[aria-label="ALL"]').disabled,false);
+        assert.equal(panel.querySelector('input[aria-label="ALL"]').checked,true);
+        if(draft) {
+            assert.equal(panel.querySelector('[aria-label="New filter name"]'),name);
+            assert.equal(panel.querySelector('[aria-label="New filter expression"]'),expression);
+            assert.equal(panel.querySelector('[aria-label="Group by (sort_by)"]'),sorting);
+            assert.equal(name.value,'Unsaved draft');
+            assert.equal(expression.value,'expr: title CONTAINS "25% + planned"\nAND EXISTS(status)');
+            assert.equal(sorting.value,'namespace');
+            assert.equal(panel.querySelector('.ob_filter_build_section').open,true);
+        } else assert.equal(panel.querySelector('.ob_filter_build_section').open,false);
+        assert.equal(requests.filter(request=>new URL(request.url).searchParams.has('ob_request')).length,1);
+        assert.deepEqual(requests.slice(1).map(request=>new URL(request.url).searchParams.get('purpose')).sort(),['future-prefetch','initial','past-prefetch']);
+        const count=requests.length;await new Promise(resolve=>setTimeout(resolve,80));
+        assert.equal(requests.length,count,'Publishing saved filters does not trigger a second loading cycle');
+    } finally {f.close();}
+});
 
 test('A trace change takes effect on the next cursor page without restarting or invalidating cached data',async()=>{
     const f=await connected(),{h,t,r,requests,settings}=f;
@@ -196,13 +236,39 @@ test('A failed connected filter save retains the draft and shows the error besid
         requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
         await finishCycle(f,1,request=>batch(request,['current']));
         t.ob_create_filters(0,0,'edit_filter');
-        const input=t.ob_timeline_right_panel.querySelector('textarea:not([readonly])');input.value='expr: EXISTS(title)';
+        const input=t.ob_timeline_right_panel.querySelector('.ob_filter_editing textarea');input.value='expr: EXISTS(title)';
         t.ob_save_filter(0,0);
         const save=requests.at(-1);assert.equal(new URL(save.url).searchParams.get('ob_request'),'saveFilter');
         save.reject(new Error('Server could not save the filter'));await waitFor(()=>!!r.error);
         assert.equal(input.value,'expr: EXISTS(title)');assert.equal(input.readOnly,false);
         assert.match(input.closest('.ob_saved_filter').querySelector('[data-filter-error]').textContent,/Server could not save/);
         assert.equal(t.ob_filters[0].filter_value,'');
+    } finally {f.close();}
+});
+
+test('A successful connected draft save refreshes saved rows even when progressive rendering reuses the scene',async()=>{
+    const f=await connected(),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['current']));
+        t.ob_create_filters(0,undefined,'add_filter');
+        const panel=t.ob_timeline_right_panel;
+        panel.querySelector('[aria-label="New filter name"]').value='Generated';
+        panel.querySelector('[aria-label="New filter expression"]').value='expr: EXISTS(title)';
+        panel.querySelector('[data-filter-builder-sort]').value='title';
+        t.ob_load_filters('addFilter',0,undefined,true);
+        const save=requests.at(-1),url=new URL(save.url);
+        assert.equal(url.searchParams.get('ob_request'),'addFilter');assert.equal(url.searchParams.get('sortBy'),'title');
+        const filters=[...settings.filters.map(filter=>({...filter,current:'no'})),{name:'Generated',filter_value:url.searchParams.get('filter'),sortBy:'title',current:'yes'}];
+        const offset=requests.length;
+        save.resolve({ok:true,json:async()=>({openbexi_timeline:[{...settings,filters}]})});
+        await waitFor(()=>!!panel.querySelector('input[aria-label="Generated"]'));
+        assert.equal(panel.querySelector('.ob_filter_build_section').open,false);
+        assert.equal(panel.querySelector('[aria-label="New filter name"]').value,'');
+        assert.equal(panel.querySelector('input[aria-label="Generated"]').checked,true);
+        assert.equal(panel.querySelector('#ob_sort_by').value,'title');
+        await finishCycle(f,offset,request=>batch(request,['current']));
+        assert.equal(r.error,'');
     } finally {f.close();}
 });
 
@@ -646,7 +712,7 @@ test('Creating a server filter saves the selected Sort by together with its expr
         t.ob_create_filters(0,undefined,'add_filter');
         h.window.document.querySelector('[aria-label="New filter name"]').value='Grouped warnings';
         h.window.document.querySelector('[aria-label="New filter expression"]').value='expr: status = "warning"';
-        h.window.document.querySelector('[aria-label="Sort by"]').value='series';
+        h.window.document.querySelector('[aria-label="Group by (sort_by)"]').value='series';
         t.ob_load_filters('addFilter',0,undefined,true);
         const request=requests.find(req=>new URL(req.url).searchParams.get('ob_request')==='addFilter');assert.ok(request);
         const url=new URL(request.url);assert.equal(url.searchParams.get('sortBy'),'series');
@@ -777,7 +843,7 @@ test('Configured local JSON loads without a server and local saved exclusions co
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');const t=new OB_TIMELINE({autoStart:false});
         const catalog=JSON.parse(await fs.readFile('demos/catalog.json','utf8'));
-        await t.loadModel('models/demos/default-dataset.json',{dataset:catalog.demos.find(d=>d.id==='default-dataset').dataset});
+        await t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:catalog.demos.find(d=>d.id==='default-dataset').dataset});
         assert.ok(t.staticData.events.length);assert.ok(!h.requests.some(path=>path.includes('/sessions')));
         t.ob_filters=[{name:'Exclude routine',filter_value:'|namespace:routine',sortBy:'namespace',current:'yes'}];
         t.staticData.events=[{id:'a',namespace:'routine',start:'2026-09-12T12:00:00Z',render:{},data:{title:'Routine',series:'alpha'}},
@@ -799,7 +865,7 @@ test('Local dataset startup paints the frame before fetch finishes, cancels stal
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');const t=new OB_TIMELINE();
         const fetch=h.window.fetch,requests=[];
         h.window.fetch=(url,options)=>String(url).includes('delayed.json') ? new Promise(resolve=>requests.push({options,resolve})) : fetch(url,options);
-        const started=t.loadModel('models/demos/default-dataset.json',{dataset:'delayed.json'});
+        const started=t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'delayed.json'});
         await waitFor(()=>requests.length===1);
         assert.ok(h.window.document.querySelector('canvas'));assert.equal(t.ob_search_input.disabled,false);
         assert.equal(t.staticData.events.length,0);
@@ -817,14 +883,14 @@ test('Saved local filters and grouping restore on startup without a server reque
     const h=await createTimelineHarness();
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-        const model=JSON.parse(await fs.readFile('models/demos/default-dataset.json','utf8'));
+        const model=JSON.parse(await fs.readFile('HBDS/templates/models/demos/default-dataset.json','utf8'));
         h.window.localStorage.setItem(`openbexi:filters:/:${model.params[0].name}`,JSON.stringify([
             {name:'Saved warnings',filter_value:'|status:nominal',sortBy:'series',current:'yes'}]));
         const fetch=h.window.fetch;
         h.window.fetch=(url,options)=>String(url)==='local-fixture.json' ? Promise.resolve(new Response(JSON.stringify({records:[
             {id:'nominal',start:'2026-09-12T12:00:00Z',status:'nominal',series:'one'},
             {id:'warning',start:'2026-09-12T12:00:00Z',status:'warning',series:'two'}]}))) : fetch(url,options);
-        const t=new OB_TIMELINE();await t.loadModel('models/demos/default-dataset.json',{dataset:'local-fixture.json'});
+        const t=new OB_TIMELINE();await t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'local-fixture.json'});
         assert.deepEqual([...t.ob_results.snapshot.entries].map(e=>e.record.id),['warning']);
         assert.ok(t.ob_viewport.fullBands.some(b=>b.groupValue==='two'));assert.equal(t.ob_sortBy,'series');
     } finally {h.close();}

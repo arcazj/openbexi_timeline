@@ -28,7 +28,7 @@ async function load() {
     const h=await createTimelineHarness();
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const t=new OB_TIMELINE({autoStart:false});
-    const model=JSON.parse(await fs.readFile(new URL('../models/regular_timeline_earthquake.json',import.meta.url),'utf8'));
+    const model=JSON.parse(await fs.readFile(new URL('../HBDS/templates/models/regular_timeline_earthquake.json',import.meta.url),'utf8'));
     t.params=model.params;Object.assign(t.params[0],{date:'2026-09-12T16:00:00Z',width:1000,height:650,showCurrentTime:false});
     t.bands=model.bands;t.staticData=structuredClone(data);t.initializeTimeline();
     return {h,t,r:t.ob_results,c:t.ob_results.controls};
@@ -94,5 +94,61 @@ test('Back cancels selection centering even before its first animation frame',as
         assert.equal(r.focusAnimation,null);
         assert.ok(Math.abs(c.currentRange().from-before.from)<2);
         assert.ok(Math.abs(c.currentRange().to-before.to)<2);
+    } finally {h.close();}
+});
+
+test('Sorting and filtering has three sections with namespaces visible and the builder collapsed on each open',async()=>{
+    const {h,t}=await load();
+    try {
+        t.namespaceNavigation={getState:()=>({items:[{id:'tab-main',title:'Main namespace',namespaceId:'main'}],activeId:'tab-main'}),select(){}};
+        t.ob_create_filters(0,undefined,'select_filter');
+        const panel=()=>t.ob_timeline_right_panel.querySelector('.ob_filter_panel');
+        const namespaces=panel().querySelector('.ob_filter_namespaces');
+        const build=panel().querySelector('details.ob_filter_build_section');
+        const saved=panel().querySelector('.ob_saved_filters');
+        assert.ok(namespaces && build && saved);
+        assert.ok(namespaces.compareDocumentPosition(build)&h.window.Node.DOCUMENT_POSITION_FOLLOWING);
+        assert.ok(build.compareDocumentPosition(saved)&h.window.Node.DOCUMENT_POSITION_FOLLOWING);
+        assert.equal(namespaces.closest('details'),null,'Namespaces remain available without expanding another section');
+        assert.equal(namespaces.hidden,false);
+        assert.equal(namespaces.querySelector('[role="tab"]').textContent,'Main namespace');
+        assert.equal(build.querySelector('summary').textContent,'Build a new filter');
+        assert.equal(build.open,false);
+        assert.equal(saved.querySelector('legend').textContent,'List of saved filters');
+        assert.ok(![...panel().querySelectorAll('button')].some(button=>/^(Retry filters|Filter syntax)$/.test(button.textContent)));
+        build.open=true;
+        t.ob_remove_setting();t.ob_create_filters(0,undefined,'select_filter');
+        assert.equal(panel().querySelector('.ob_filter_build_section').open,false,'Reopening the panel starts compact');
+        panel().querySelector('.ob_filter_build_section').open=true;
+        assert.equal(panel().querySelector('.ob_filter_build_section').open,true,'Explicitly adding a preset reveals its editor');
+        const name=panel().querySelector('[aria-label="New filter name"]');
+        assert.ok(name);assert.equal(panel().querySelector('[aria-label="Add a new filter"]'),null);
+        [...panel().querySelectorAll('.ob_new_filter button')].find(button=>button.textContent==='Cancel').click();
+        assert.equal(panel().querySelector('.ob_filter_build_section').open,false);
+    } finally {h.close();}
+});
+
+test('Namespace controls select immediately and reflect renamed or reordered tabs without discarding a filter draft',async()=>{
+    const {h,t}=await load();
+    try {
+        let state={items:[{id:'tab-main',title:'Main',namespaceId:'main'},{id:'tab-other',title:'Other',namespaceId:'other'}],activeId:'tab-main'};
+        const selections=[];
+        t.namespaceNavigation={getState:()=>state,select:id=>{selections.push(id);state={...state,activeId:id};h.window.dispatchEvent(new h.window.CustomEvent('ob-hbds-navigation-change'));}};
+        t.ob_create_filters(0,undefined,'select_filter');
+        const tabs=()=>[...t.ob_timeline_right_panel.querySelectorAll('.ob_filter_namespaces [role="tab"]')];
+        assert.equal(tabs()[0].getAttribute('aria-selected'),'true');
+        assert.equal(tabs()[1].getAttribute('aria-selected'),'false');
+        tabs()[1].click();
+        assert.deepEqual(selections,['tab-other']);
+        assert.equal(tabs()[1].getAttribute('aria-selected'),'true');
+        t.ob_timeline_right_panel.querySelector('.ob_filter_build_section').open=true;
+        const input=t.ob_timeline_right_panel.querySelector('[aria-label="New filter expression"]');
+        input.value='expr: title CONTAINS "draft + 25%"';
+        state={items:[{id:'tab-other',title:'Renamed other',namespaceId:'other'},{id:'tab-main',title:'Main',namespaceId:'main'}],activeId:'tab-other'};
+        h.window.dispatchEvent(new h.window.CustomEvent('ob-hbds-navigation-change'));
+        assert.deepEqual(tabs().map(tab=>tab.textContent),['Renamed other','Main']);
+        assert.equal(tabs()[0].getAttribute('aria-selected'),'true');
+        assert.equal(t.ob_timeline_right_panel.querySelector('[aria-label="New filter expression"]'),input);
+        assert.equal(input.value,'expr: title CONTAINS "draft + 25%"');
     } finally {h.close();}
 });

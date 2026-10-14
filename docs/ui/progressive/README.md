@@ -14,7 +14,7 @@ Playwright 1.63.0 and installed Chromium 149.0.7827.55.
 | First batch visible, grouped by series while the next batch waits | [Desktop](progressive-series-desktop.png) | [Narrow](progressive-series-narrow.png) |
 | Standalone UI with the data endpoint unavailable | [Desktop](standalone-offline-desktop.png) | [Narrow](standalone-offline-narrow.png) |
 
-The panel captures use `models/demos/default-dataset.json` and
+The panel captures use `HBDS/templates/models/demos/default-dataset.json` and
 `json/test-data/default-dataset.json`, centered on 2026-09-12 12:30 UTC with the
 model's 08:00–17:00 detail range. The connected fixture creates records inside the
 actual requested interval. It returns 30 records, holds the continuation request,

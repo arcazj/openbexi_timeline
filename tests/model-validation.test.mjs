@@ -8,9 +8,9 @@ import {validateDemoFiles} from '../tools/validate-demo-models.mjs';
 import {createTimelineHarness, root} from './helpers/timeline-dom.mjs';
 
 const read = async file => JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
-const operations = await read('models/demos/default-dataset.json');
-const dinosaurs = await read('models/demos/dinausaurs.json');
-const religions = await read('models/demos/religions.json');
+const operations = await read('HBDS/templates/models/demos/default-dataset.json');
+const dinosaurs = await read('HBDS/templates/models/demos/dinausaurs.json');
+const religions = await read('HBDS/templates/models/demos/religions.json');
 const catalog = await read('demos/catalog.json');
 
 function rejectsAt(model, mutate, expectedPath, expectedMessage) {
@@ -106,7 +106,7 @@ test('The browser loader validates a demo before fetching data or replacing an e
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         const originalParams = timeline.params;
         const originalData = timeline.staticData;
         const renders = harness.renderCount;

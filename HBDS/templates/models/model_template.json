@@ -1,0 +1,318 @@
+{
+  "$schema": "../../../schemas/demo-model.schema.json",
+  "params": [
+    {
+      "name": "ob_model_template",
+      "title": "Timeline report",
+      "date": "2026-09-12T12:30:00Z",
+      "timeZone": "UTC",
+      "timeZoneLabel": "UTC",
+      "displayOffsetMinutes": 0,
+      "fullWindow": true,
+      "top": 0,
+      "left": 0,
+      "width": 1400,
+      "height": 700,
+      "fontSize": 13,
+      "fontFamily": "Arial",
+      "fontStyle": "normal",
+      "fontWeight": "normal",
+      "data": "",
+      "overview": true,
+      "dockOverview": true,
+      "overviewHeightRatio": 0.2,
+      "showCurrentTime": false,
+      "dateAxisMode": "shared",
+      "camera": "Orthographic"
+    }
+  ],
+  "dataSource": {
+    "format": "json",
+    "url": "json/test-data/default-dataset.json",
+    "recordsPath": "records",
+    "fields": {
+      "id": [
+        "id",
+        "ID"
+      ],
+      "title": [
+        "data.title",
+        "title"
+      ],
+      "description": [
+        "data.description",
+        "data.text",
+        "description"
+      ],
+      "namespace": [
+        "namespace",
+        "data.namespace",
+        "sourceId"
+      ],
+      "color": [
+        "render.color",
+        "color"
+      ]
+    },
+    "iconColors": {},
+    "zones": [
+      {
+        "id": "template-reference-window",
+        "start": "2026-09-12T12:00:00Z",
+        "end": "2026-09-12T12:30:00Z",
+        "title": "Example reference window",
+        "color": "#f5bd76",
+        "opacity": 0.2,
+        "render": {
+          "color": "#f5bd76",
+          "opacity": 0.2,
+          "height": 24,
+          "verticalAlign": "top",
+          "labelPosition": "bottom",
+          "backgroundImage": null
+        }
+      }
+    ]
+  },
+  "bands": [
+    {
+      "name": "ob_band_main",
+      "height": "80%",
+      "intervalUnit": "MINUTE",
+      "intervalPixels": 30,
+      "intervalUnitPos": "BOTTOM",
+      "dateFormat": "HH:mm",
+      "color": "#eef1f2",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "textColor": "#263238",
+      "dateColor": "#8090a0",
+      "fontSize": 13,
+      "fontFamily": "Arial",
+      "fontStyle": "normal",
+      "fontWeight": "normal",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "range": {
+        "from": "2026-09-12T08:00:00Z",
+        "to": "2026-09-12T17:00:00Z"
+      },
+      "context": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "focus": {
+        "from": "2026-09-12T12:10:00Z",
+        "to": "2026-09-12T13:20:00Z",
+        "magnification": 3,
+        "ticks": {
+          "unit": "MINUTE",
+          "step": 10,
+          "format": "HH:mm"
+        }
+      },
+      "ticks": {
+        "unit": "MINUTE",
+        "step": 30,
+        "format": "HH:mm"
+      },
+      "scaleHeader": {
+        "label": "Timeline detail",
+        "unit": "UTC",
+        "height": 38,
+        "color": "#edf0f1",
+        "textColor": "#397a9c"
+      },
+      "labelPosition": "above",
+      "topPadding": 60,
+      "trackIncrement": 32,
+      "sessionHeight": 8,
+      "defaultEventSize": 4,
+      "uncertaintyOpacity": 0.35,
+      "backgroundImage": null
+    },
+    {
+      "name": "ob_overview_band",
+      "height": "20%",
+      "intervalUnit": "HOUR",
+      "intervalPixels": 55,
+      "intervalUnitPos": "BOTTOM",
+      "dateFormat": "HH:mm",
+      "color": "#dfe7e9",
+      "SessionColor": "#5c9ddb",
+      "eventColor": "#7675c8",
+      "textColor": "#263238",
+      "dateColor": "#8090a0",
+      "fontSize": 11,
+      "fontFamily": "Arial",
+      "fontStyle": "normal",
+      "fontWeight": "normal",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "sourceBands": [
+        "ob_band_main"
+      ],
+      "fitRows": true,
+      "showContextLabel": true,
+      "viewportHandles": true,
+      "overviewContextRatio": 2,
+      "overviewMarkerSize": 2,
+      "overviewLabel": "Overview",
+      "range": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "context": {
+        "from": "2026-09-12T00:00:00Z",
+        "to": "2026-09-13T00:00:00Z"
+      },
+      "tickMinutes": 60,
+      "labelPosition": "inside",
+      "topPadding": 8,
+      "trackIncrement": 4,
+      "sessionHeight": 3,
+      "defaultEventSize": 1,
+      "backgroundImage": null
+    }
+  ],
+  "rendering": {
+    "theme": {
+      "sceneBackground": "#f7f9fc",
+      "headerBackground": null,
+      "panelBackground": null,
+      "panelText": null,
+      "sceneBackgroundImage": null
+    },
+    "axis": {
+      "background": "#f7f9fc",
+      "separatorColor": "#8090a0",
+      "textColor": "#233449",
+      "minimumHeight": 28,
+      "verticalPadding": 16,
+      "minimumFontSize": 12,
+      "targetTickPixels": 100,
+      "groupHeaderHeight": 24,
+      "scaleHeaderColor": "#edf0f1",
+      "scaleHeaderText": "#397a9c",
+      "secondaryColor": "#ffd58a",
+      "secondaryText": "#704308"
+    },
+    "overview": {
+      "borderColor": "#aab8bf",
+      "headingColor": "#566871",
+      "headingFontSize": 11,
+      "countFontSize": 10,
+      "axisFontSize": 10,
+      "markerStroke": "#253746",
+      "markerStrokeWidth": 0.35,
+      "dimmedOpacity": 0.25,
+      "matchColor": "#ffe04b",
+      "matchOpacity": 0.95,
+      "matchStroke": "#783800",
+      "matchStrokeWidth": 2,
+      "viewportColor": "#ffffff",
+      "viewportOpacity": 0.08,
+      "viewportStroke": "#536872",
+      "viewportStrokeWidth": 1,
+      "handleColor": "#eff8ff",
+      "handleStroke": "#4d89ae",
+      "handleWidth": 7,
+      "handleMaxHeight": 48
+    },
+    "camera": {
+      "mode": "Orthographic",
+      "fieldOfView": 30,
+      "yaw": -0.9948376736367678,
+      "pitch": 0.2792526803190927,
+      "roll": 0,
+      "rotationSensitivity": 0.002,
+      "ambientColor": "#ffffff",
+      "ambientIntensity": 0.3,
+      "directionalColor": "#ffffff",
+      "directionalIntensity": 1.8
+    },
+    "activity": {
+      "labelMinWidth": 80,
+      "labelMaxWidth": 360,
+      "labelHorizontalPadding": 24,
+      "lineHeight": 1.25,
+      "shininess": 24,
+      "shadowColor": "#17363d",
+      "shadowOpacity": 0.16,
+      "laneOpacity": 0.08,
+      "glowColor": "#ffca28",
+      "glowOutline": "#ae5b00",
+      "glowOpacity": 0.22,
+      "glowPulse": 0.12,
+      "transitionMs": 850,
+      "matchBackground": "#fff6bd",
+      "leaderColor": "#507585",
+      "selectedLeaderColor": "#9c5900"
+    },
+    "layout": {
+      "sidebarBreakpoint": 900,
+      "sidebarMinimum": 320,
+      "sidebarDefaultMaximum": 480,
+      "sidebarDefaultRatio": 0.22,
+      "sidebarMaximumRatio": 0.6,
+      "minimumPlotWidth": 420,
+      "overviewMaxHeight": 180,
+      "minimumDetailHeight": 100,
+      "splitRatio": 0.5
+    },
+    "interaction": {
+      "searchMode": "highlight",
+      "highlight": true,
+      "autoScale": false,
+      "adaptiveRatio": 8,
+      "zoomInFactor": 0.8,
+      "zoomOutFactor": 1.25,
+      "overviewPanFraction": 0.5,
+      "overviewKeyboardFraction": 0.1,
+      "resizeStep": 20,
+      "resizeLargeStep": 50
+    },
+    "controls": {
+      "timelineLabel": "Timeline",
+      "tableLabel": "Table",
+      "splitLabel": "Split",
+      "previousOverviewLabel": "←",
+      "previousOverviewTitle": "Navigate earlier",
+      "nextOverviewLabel": "→",
+      "nextOverviewTitle": "Navigate later",
+      "fitOverviewLabel": "Fit context",
+      "fitOverviewTitle": "Fit loaded context in Overview"
+    },
+    "table": {
+      "emptyText": "No events to display.",
+      "columns": [
+        {
+          "field": "title",
+          "label": "Title"
+        },
+        {
+          "field": "start",
+          "label": "Start"
+        },
+        {
+          "field": "end",
+          "label": "End"
+        },
+        {
+          "field": "source",
+          "label": "Source"
+        },
+        {
+          "field": "status",
+          "label": "Status"
+        }
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@ async function settings(page) {
     const more=page.getByRole('button',{name:'More',exact:true});
     if(await more.isVisible())await more.click();
     await page.getByAltText('Settings',{exact:true}).click();
-    await expect(page.getByRole('button',{name:'Model and YAML editor',exact:true})).toBeVisible();
+    await expect(page.getByRole('button',{name:'HBDS Editor',exact:true})).toBeVisible();
 }
 const ratio=(a,b)=>{
     const luminance=color=>color.match(/[\d.]+/g).slice(0,3).map(Number).map(v=>v/255)
@@ -18,9 +18,9 @@ const ratio=(a,b)=>{
     const x=luminance(a),y=luminance(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);
 };
 
-test('Model and YAML editor stays prominent and readable in every theme',async({page})=>{
+test('HBDS Editor stays prominent and readable in every theme',async({page})=>{
     await page.goto('/demos.html?demo=default-dataset');await ready(page);await settings(page);
-    const launch=page.getByRole('button',{name:'Model and YAML editor',exact:true});
+    const launch=page.getByRole('button',{name:'HBDS Editor',exact:true});
     for(const name of ['Default','Apple style','Windows style','Minimal','High contrast']) {
         await page.getByRole('radio',{name,exact:true}).check();await page.mouse.move(0,0);
         const colors=await launch.evaluate(node=>{

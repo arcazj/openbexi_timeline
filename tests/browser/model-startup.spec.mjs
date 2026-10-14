@@ -2,18 +2,18 @@ import {test,expect} from '@playwright/test';
 import fs from 'node:fs/promises';
 
 const html=await fs.readFile('openbexi_timeline_earthquake.html','utf8');
-const earthquake=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+const earthquake=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
 const pagePath='/openbexi_timeline_earthquake.html',config='**/openbexi_timeline/config';
 async function fixture(page,{explicit=false,configure,timeout=1500}={}) {
     const errors=[],requests=[];page.on('pageerror',error=>errors.push(error.message));
     page.on('request',request=>requests.push(new URL(request.url()).pathname));
     const model=structuredClone(earthquake);model.params[0].data='/__model-events.json';
     const document=html.replace('const ob_timeline = new OB_TIMELINE();',`const ob_timeline = window.timeline = new OB_TIMELINE({configTimeoutMs:${timeout}});`)
-        .replace('ob_timeline.loadModel("models/regular_timeline_earthquake.json");',explicit?'ob_timeline.loadModel("models/regular_timeline_earthquake.json");':'');
+        .replace('ob_timeline.loadModel("HBDS/templates/models/regular_timeline_earthquake.json");',explicit?'ob_timeline.loadModel("HBDS/templates/models/regular_timeline_earthquake.json");':'');
     await page.route('**'+pagePath,route=>route.fulfill({contentType:'text/html',body:document}));
-    await page.route('**/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
     await page.route('**/__model-events.json',route=>route.fulfill({json:{events:[{id:'local',start:new Date().toISOString(),data:{title:'Local volcano event'}}]}}));
-    await page.route(config,configure || (route=>route.fulfill({json:{model:'models/regular_timeline_earthquake.json',data:'/openbexi_timeline/sessions'}})));
+    await page.route(config,configure || (route=>route.fulfill({json:{model:'HBDS/templates/models/regular_timeline_earthquake.json',data:'/openbexi_timeline/sessions'}})));
     await page.goto(pagePath);
     return {errors,requests};
 }
@@ -42,7 +42,7 @@ test('Removing loadModel from HTML loads the server-selected YAML model',async({
 for(const reason of ['missing','offline','slow'])test(`A ${reason} configuration displays the built-in default without a model file`,async({page},info)=>{
     let release;
     const f=await fixture(page,{timeout:200,configure:route=>{
-        if(reason==='slow'){release=()=>route.fulfill({json:{model:'models/regular_timeline_earthquake.json'}}).catch(()=>{});return;}
+        if(reason==='slow'){release=()=>route.fulfill({json:{model:'HBDS/templates/models/regular_timeline_earthquake.json'}}).catch(()=>{});return;}
         return reason==='missing'?route.fulfill({json:{model:null}}):route.abort();
     }});
     await ready(page);
@@ -58,7 +58,7 @@ test('An explicit model wins while the server configuration request is pending',
     let reply,notify;const requested=new Promise(resolve=>notify=resolve);
     const f=await fixture(page,{configure:route=>{reply=()=>route.fulfill({json:{model:'models/wrong.json'}}).catch(()=>{});notify();}});
     await requested;
-    await page.evaluate(()=>timeline.loadModel('models/regular_timeline_earthquake.json'));
+    await page.evaluate(()=>timeline.loadModel('HBDS/templates/models/regular_timeline_earthquake.json'));
     await reply();await ready(page);
     expect(await page.evaluate(()=>timeline.modelSource)).toBe('html');
     expect(f.requests).not.toContain('/models/wrong.json');

@@ -19,7 +19,7 @@ function rebuild(timeline, payload = timeline.ob_scene[0].sessions) {
 
 async function serverTimeline(harness, events, configure = () => {}) {
     const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
-    const model = JSON.parse(await fs.readFile(path.join(root, 'models/regular_timeline.json'), 'utf8'));
+    const model = JSON.parse(await fs.readFile(path.join(root, 'HBDS/templates/models/regular_timeline.json'), 'utf8'));
     configure(model);
     const timeline = new OB_TIMELINE();
     timeline.params = model.params;
@@ -189,7 +189,7 @@ test('Religious-history Overviews retain their configured source chronology and 
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/religions.json', {dataset: 'json/test-data/religions.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/religions.json', {dataset: 'json/test-data/religions.json'});
         const {mainBands, overviewBands} = assertProjection(timeline);
         assert.equal(mainBands.length, 2);
         assert.equal(overviewBands.length, 2);
@@ -213,7 +213,7 @@ test('Static search and repeated Overview toggles keep the miniature synchronize
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const {parseTimelineData} = await harness.importModule('src/openbexi_timeline_data.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/default-dataset.json', {dataset: 'json/test-data/default-dataset.json'});
         timeline.staticData = parseTimelineData(JSON.stringify({events: [
             {id: 'a', start: '2026-09-12T13:00:00Z', end: '2026-09-12T14:00:00Z', data: {title: 'Match alpha'}},
             {id: 'b', start: '2026-09-12T13:15:00Z', data: {title: 'Match beta'}},
@@ -244,7 +244,7 @@ test('The visible-range highlight follows band panning and the actual Split view
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/jfk.json', {dataset: 'json/test-data/jfk.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/jfk.json', {dataset: 'json/test-data/jfk.json'});
         const scene = timeline.ob_scene[0];
         const main = scene.bands.find(band => !isOverview(band));
         const overview = scene.bands.find(isOverview);

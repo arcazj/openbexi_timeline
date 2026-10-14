@@ -26,7 +26,7 @@ class FilterExpressionTest {
 
     @Test void quotedPresetsRoundTripWithSortingAndInvalidSavesKeepPreviousSettings() throws Exception {
         String user="filter_test_"+UUID.randomUUID().toString().replace("-","");
-        Path file=Path.of("filters",user+"_sample_filter_setting.json");
+        Path file=Path.of("HBDS/private/filters",user+"_sample_filter_setting.json");
         JSONObject query=new JSONObject(Map.of("userName",user,"timelineName","sample","request","saveFilter",
                 "filterName","Advanced","filter","expr: title CONTAINS \"A+B | ready\"","sortBy","namespace","startup configuration",new JSONArray()));
         try {
@@ -38,5 +38,16 @@ class FilterExpressionTest {
             assertEquals(before,Files.readString(file));
             next.put("filterProvided",true);next.put("filter","");SavedFilters.resolve(next);assertEquals("",next.get("filter"));
         } finally {Files.deleteIfExists(file);}
+    }
+    @Test void filenameListsFilterInventorySeparatelyFromRecordExpressions() {
+        Path root=Path.of("archive");JSONObject source=new JSONObject(Map.of("filter",new JSONObject(Map.of(
+                "include",List.of("events-*.json","nested/[ab]?.json"),"exclude",List.of("events-secret*")))));
+        var files=SourceFileFilters.compile(source,root);
+        assertTrue(files.test(root.resolve("events-public.json")));assertTrue(files.test(root.resolve("nested/a1.json")));
+        assertFalse(files.test(root.resolve("events-secret.json")));assertFalse(files.test(root.resolve("unrelated.json")));
+        assertTrue(FilterExpression.source(source).test(new JSONObject(Map.of("data",new JSONObject(Map.of("title","Any record"))))));
+        ((JSONObject)source.get("filter")).put("include","expr: title = \"Wanted\"");
+        assertTrue(FilterExpression.source(source).test(new JSONObject(Map.of("data",new JSONObject(Map.of("title","Wanted"))))));
+        assertFalse(FilterExpression.source(source).test(new JSONObject(Map.of("data",new JSONObject(Map.of("title","Other"))))));
     }
 }

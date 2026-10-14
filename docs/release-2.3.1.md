@@ -30,7 +30,7 @@ See the actual application captures for [wide](ui/toolbar-layout/wide.png) and
 
 Settings contains four sections, in order:
 
-1. **Edit models** opens the Model and YAML editor.
+1. **Edit models** opens the HBDS Editor.
 2. **Timeline info** starts collapsed and contains geometry and adaptive-ratio controls.
 3. **Update perspective** starts collapsed and contains the existing camera,
    lighting and surface controls.

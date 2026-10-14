@@ -11,12 +11,16 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.nio.file.Path;
+import com.openbexi.timeline.api.TimelineHbds;
 
 /**
  * A class that provides a framework for reading a data configuration file in JSON format and accessing its properties.
  */
 public class data_configuration {
     JSONObject configuration;
+    private TimelineHbds hbds;
+    private String hbdsRevision;
     public com.openbexi.timeline.servlets.TimelineRequestLog diagnostics;
 
     public data_configuration(JSONObject configuration) {
@@ -31,8 +35,15 @@ public class data_configuration {
      * @throws ParseException if there is an error parsing the configuration file
      */
     public data_configuration(String configFilePath) throws IOException, ParseException {
+        Path root=Path.of("").toAbsolutePath();
+        Path selected=TimelineHbds.resolve(root,configFilePath);
+        if(System.getProperty("openbexi.hbds.config",System.getenv("OPENBEXI_HBDS_CONFIG"))!=null)selected=TimelineHbds.selected(root,configFilePath);
+        if(TimelineHbds.canonical(selected)) {
+            hbds=TimelineHbds.open(TimelineHbds.projectRoot(selected),selected);
+            refreshHbds();return;
+        }
         data_sources sources = new data_sources();
-        sources.readYaml(configFilePath);
+        sources.readYaml(selected.toString());
         String json_sources = sources.dataSourcesToJson("\"startup configuration\":");
         JSONParser parser = new JSONParser();
         try {
@@ -49,12 +60,23 @@ public class data_configuration {
     /** Each HTTP request or SSE stream owns its query and filters. */
     public data_configuration forRequest(HttpServletRequest request) {
         try {
-            data_configuration copy = new data_configuration((JSONObject) new JSONParser().parse(configuration.toJSONString()));
+            JSONObject snapshot;
+            synchronized(this) {refreshHbds();snapshot=(JSONObject)new JSONParser().parse(configuration.toJSONString());}
+            String namespace=request.getParameter("namespace");
+            if(hbds!=null&&namespace!=null&&!namespace.isBlank())
+                ((JSONArray)snapshot.get("startup configuration")).removeIf(item->!namespace.equals(((JSONObject)item).get("namespace")));
+            data_configuration copy = new data_configuration(snapshot);
             copy.setConfiguration(request);
             return copy;
         } catch (ParseException error) {
             throw new IllegalStateException("Cannot copy server configuration", error);
         }
+    }
+    private synchronized void refreshHbds() throws ParseException {
+        if(hbds==null||Objects.equals(hbdsRevision,hbds.etag()))return;
+        org.json.JSONObject snapshot=hbds.providerSnapshot(),next=snapshot.getJSONObject("configuration");
+        next.put("startup configuration",next.remove("data_sources"));
+        configuration=(JSONObject)new JSONParser().parse(next.toString());hbdsRevision="\""+snapshot.getString("revision")+"\"";
     }
 
     public void setConfiguration(HttpServletRequest req) {
@@ -111,7 +133,9 @@ public class data_configuration {
     }
 
     public String getType(int index) {
-        JSONObject configNode = (JSONObject) ((JSONArray) configuration.get("startup configuration")).get(index);
+        JSONArray sources=(JSONArray)configuration.get("startup configuration");
+        if(sources.isEmpty())return "json_file";
+        JSONObject configNode = (JSONObject) sources.get(index);
         return (String) configNode.get("type");
     }
 
@@ -270,7 +294,7 @@ public class data_configuration {
         // create a new instance of DataConfig
         data_configuration configuration;
         try {
-            configuration = new data_configuration("yaml/sources_default_test.yml");
+            configuration = new data_configuration("HBDS/templates/yaml/sources_default_test.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseException e) {

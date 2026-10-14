@@ -1,5 +1,5 @@
 import {parseTimelineData} from './openbexi_timeline_data.js';
-import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
+import {cleanTimelineURL, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
 import {TimelineLive} from './openbexi_timeline_live.js';
 import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
@@ -328,7 +328,7 @@ export class TimelineLoader {
                 if (entry.cursor) {request.searchParams.set('cursor',entry.cursor);this.cursorURLs.set(entry,request.href);}
                 else this.cursorURLs.delete(entry);
                 this.publish(generation,count,json.events.length>0 || replaces);
-                await new Promise(resolve=>setTimeout(resolve,0));
+                await waitForTimelinePage(metadata,controller.signal);
             }
             if (current()) {
                 const revision=this.cache[0]?.revision;

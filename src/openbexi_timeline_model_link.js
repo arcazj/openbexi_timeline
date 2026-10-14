@@ -116,6 +116,7 @@ export function openModelEditor(timeline) {
     const modelId = managedModelId(timeline);
     const launchMode=editorLaunchMode(timeline);
     url.searchParams.set('launch',launchMode);
+    if(timeline.hbdsNamespaceId){url.searchParams.set('hbds','1');url.searchParams.set('namespaceId',timeline.hbdsNamespaceId);}
     if (modelId) url.searchParams.set('modelId', modelId);
     if (modelPath) url.searchParams.set('model', new URL(modelPath, document.baseURI).href);
     const value = {model:timeline.modelDocument, modelPath, source:timeline.modelSource, launchMode,
@@ -125,7 +126,7 @@ export function openModelEditor(timeline) {
             camera:timeline.ob_scene?.[0]?.ob_camera_type,view:timeline.ob_views?.mode,
             modelDate:timeline.modelDocument?.params?.[0]?.date,modelCamera:timeline.modelDocument?.params?.[0]?.camera,
             renderingCamera:timeline.modelDocument?.rendering?.camera},
-        demoId:timeline.demoContext?.id, title:timeline.title || timeline.name};
+        demoId:timeline.demoContext?.id, title:timeline.title || timeline.name,hbdsNamespaceId:timeline.hbdsNamespaceId};
     try { sessionStorage.setItem(context, JSON.stringify(value)); url.searchParams.set('context', context); }
     catch { /* Public model URL remains usable if browser storage is disabled. */ }
     const editor = window.open(url.href, '_blank');

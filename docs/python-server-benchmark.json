@@ -1,0 +1,115 @@
+{
+  "platform": "Windows-10-10.0.19045-SP0",
+  "python": "3.12.0",
+  "files": 1000,
+  "recordsPerFile": 100,
+  "warmRepeats": 20,
+  "concurrentClients": 4,
+  "note": "Cold means a new server/cache/index; OS file cache is not flushed. Decoded bytes exclude HTTP compression.",
+  "java": {
+    "cold": {
+      "firstRecordsMs": 706.4428001176566,
+      "completeMs": 3738.518700003624,
+      "requests": 14,
+      "decodedBytes": 33796,
+      "complete": false,
+      "records": 100,
+      "warningCount": 1,
+      "warningCodes": [
+        "scan_limit"
+      ]
+    },
+    "warm": {
+      "p50Ms": 253.51879990193993,
+      "p95Ms": 582.1976999286562,
+      "requestsPerLoad": 2.15,
+      "decodedBytesPerLoad": 23901.05,
+      "firstRecordsP50Ms": 65.07799995597452,
+      "completeLoads": 20,
+      "cpuSeconds": 9.421875,
+      "rssMiB": 431.6171875,
+      "concurrent8LoadsMs": 2091.1427000537515,
+      "concurrentP95Ms": 1216.2071999628097
+    }
+  },
+  "pythonBackend": {
+    "cold": {
+      "firstRecordsMs": 1598.8566998858005,
+      "completeMs": 38015.36919991486,
+      "requests": 23,
+      "decodedBytes": 36167,
+      "complete": true,
+      "records": 100,
+      "warningCount": 0,
+      "warningCodes": []
+    },
+    "warm": {
+      "p50Ms": 25.96220001578331,
+      "p95Ms": 121.55379983596504,
+      "requestsPerLoad": 1,
+      "decodedBytesPerLoad": 22855.75,
+      "firstRecordsP50Ms": 25.959999999031425,
+      "completeLoads": 20,
+      "cpuSeconds": 0.546875,
+      "rssMiB": 59.81640625,
+      "concurrent8LoadsMs": 247.78579990379512,
+      "concurrentP95Ms": 240.40080001577735
+    },
+    "persistentRestart": {
+      "firstRecordsMs": 30.39530012756586,
+      "completeMs": 30.39640001952648,
+      "requests": 1,
+      "decodedBytes": 22856,
+      "complete": true,
+      "records": 100,
+      "warningCount": 0,
+      "warningCodes": []
+    }
+  },
+  "parityCasesPassed": 11,
+  "version": "2.8.0",
+  "measuredAt": "2026-10-14",
+  "javaVersion": "Microsoft OpenJDK 21.0.11",
+  "browser": [
+    {
+      "records": 1000,
+      "usableMs": 5888.5,
+      "searchMs": 1089.5999999046326,
+      "groupingMs": 601.7999999523163,
+      "filterPanelMs": 789.2000000476837,
+      "builderOpenMs": 248.10000014305115,
+      "cachedMetadata100Ms": 0.5,
+      "datasetRequests": 1,
+      "workerCount": 0,
+      "dragFrameP95Ms": 66.69999999999891,
+      "longTaskCount": 11,
+      "maxLongTaskMs": 2623,
+      "maxObservedInteractionMs": 1008,
+      "gpuResources": {
+        "geometries": 93,
+        "textures": 69
+      },
+      "note": "Synthetic lab measurements on this machine; interaction samples are not field INP. Compare runs on the same hardware."
+    },
+    {
+      "records": 10000,
+      "usableMs": 4029.2000000476837,
+      "searchMs": 1518.3999998569489,
+      "groupingMs": 6907.099999904633,
+      "filterPanelMs": 1580.7999999523163,
+      "builderOpenMs": 231.29999995231628,
+      "cachedMetadata100Ms": 0.5,
+      "datasetRequests": 1,
+      "workerCount": 1,
+      "dragFrameP95Ms": 100,
+      "longTaskCount": 29,
+      "maxLongTaskMs": 6145,
+      "maxObservedInteractionMs": 160,
+      "gpuResources": {
+        "geometries": 221,
+        "textures": 220
+      },
+      "note": "Synthetic lab measurements on this machine; interaction samples are not field INP. Compare runs on the same hardware."
+    }
+  ]
+}

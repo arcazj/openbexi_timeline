@@ -100,7 +100,7 @@ npx playwright show-report
   resize isolation, forged-message rejection, cleanup and the satellite example.
 - Every catalog entry loads its expected number of records without uncaught errors
   and renders actual WebGL geometry.
-- The Model and YAML editor covers all public examples, five editing areas,
+- The HBDS Editor covers all public examples, five editing areas,
   keyboard and phone layouts, YAML preservation, scoped access and filters,
   conditional model saves, version history, and AI preview/accept/undo/cancel.
   Connected application launches hide document management while retaining compact
@@ -169,7 +169,7 @@ npx playwright show-report
   Separate explorer checks mock only health, dataset discovery, and event responses
   to verify query encoding, response status, and safe text rendering. The Java API
   integration tests exercise the actual server and persistence.
-- The Model and YAML editor previews every demo with the actual renderer. Checks
+- The HBDS Editor previews every demo with the actual renderer. Checks
   cover live property edits, invalid drafts, import/export, undo/redo, YAML
   preservation, delayed loads, preview cleanup, camera settings and applying
   changes to the originating timeline. Java tests cover authenticated server-file

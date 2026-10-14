@@ -60,9 +60,9 @@ test('A toolbar change within one render updates the plot even without a ResizeO
 test('Connected details retain full history, survive empty responses and reject stale selections',async({page},info)=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{data:'http://127.0.0.1:8782/__details',date:'2026-09-12T12:30:00Z',showCurrentTime:false,title:'Synthetic activity timeline'});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     const records=['first','second'].map((id,i)=>({id,namespace:'operations',start:'2026-09-12T12:30:00Z',
         data:{title:'Sample activity '+(i+1),status:'warning'},searchMatch:false}));
     let earlier,detailsCalls=0;

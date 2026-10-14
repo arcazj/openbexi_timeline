@@ -10,7 +10,10 @@ $app = Join-Path $payload 'app'
 Copy-Item -LiteralPath (Join-Path $dist 'pages') -Destination $app -Recurse
 # Restore the API-aware help file after the static Pages build.
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'help/resources.json') -Destination (Join-Path $app 'help/resources.json')
-foreach ($file in @('package.json', 'favicon.ico')) {
+New-Item -ItemType Directory -Force -Path (Join-Path $app 'release') | Out-Null
+Copy-Item -LiteralPath (Join-Path $ProjectRoot 'release/public-files.json') -Destination (Join-Path $app 'release/public-files.json')
+Copy-Item -LiteralPath (Join-Path $ProjectRoot 'HBDS/aliases.json') -Destination (Join-Path $app 'HBDS/aliases.json')
+foreach ($file in @('package.json', 'favicon.ico', 'openbexi_timeline.html', 'openbexi_timeline_earthquake.html')) {
     Copy-Item -LiteralPath (Join-Path $ProjectRoot $file) -Destination $app
 }
 New-Item -ItemType Directory -Path (Join-Path $app 'lib') | Out-Null

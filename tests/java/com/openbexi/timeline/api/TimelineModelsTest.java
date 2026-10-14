@@ -12,7 +12,7 @@ class TimelineModelsTest {
     private final Path root = Path.of("").toAbsolutePath();
 
     private JSONObject model(String id) throws IOException {
-        return new JSONObject(Files.readString(root.resolve("models/demos/" + id + ".json")));
+        return new JSONObject(Files.readString(root.resolve("HBDS/templates/models/demos/" + id + ".json")));
     }
 
     private JSONObject band(JSONObject model, int index) { return model.getJSONArray("bands").getJSONObject(index); }

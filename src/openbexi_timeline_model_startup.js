@@ -49,15 +49,27 @@ export class TimelineModelStartup {
         if(this.initializedModel)return;
         const generation=this.generation,controller=this.controller=new AbortController();
         const timeout=window.setTimeout(()=>controller.abort(),this.options.configTimeoutMs ?? 1500);
-        let configuration=null;
+        let configuration=this.options.configuration??null;
         try {
-            const response=await fetch(new URL('openbexi_timeline/config',applicationRoot),
-                {signal:controller.signal,headers:{Accept:'application/json'}});
-            if(response.ok)configuration=await response.json();
+            if(!Object.hasOwn(this.options,'configuration')){
+                const configURL=new URL('openbexi_timeline/config',applicationRoot);if(this.options.namespaceId)configURL.searchParams.set('namespaceId',this.options.namespaceId);
+                const response=await fetch(configURL,{signal:controller.signal,headers:{Accept:'application/json'}});
+                if(response.ok)configuration=await response.json();
+            }
         } catch { /* Static hosting and an unavailable backend use the local default. */ }
         finally {window.clearTimeout(timeout);}
         if(generation!==this.generation || this.initializedModel)return;
         try {
+            if(configuration?.hbds?.modelConfiguration){
+                const hbds=configuration.hbds,model=takeEditorModel('hbds:'+hbds.namespaceId,hbds.modelConfiguration,this.timeline.modelInstanceId);
+                this.timeline.validateModel(model,'HBDS namespace '+hbds.namespaceId);
+                this.timeline.modelSource='hbds';this.timeline.modelPath='hbds:'+hbds.namespaceId;
+                this.timeline.hbdsNamespaceId=hbds.namespaceId;this.timeline.hbdsRevision=hbds.revision;
+                this.timeline.setHbdsNamespace?.(hbds.namespace||'');
+                const providerUrl=typeof configuration.data==='string'?new URL(configuration.data,applicationRoot).href:undefined;
+                await this.timeline.applyModel(model,{providerUrl,offline:!providerUrl&&!model.dataSource&&!model.params?.[0]?.data});
+                this.complete();return;
+            }
             if(configuration?.model!=null && typeof configuration.model!=='string')throw new Error('The server model configuration must be a path string.');
             const model=configuration?.model?.trim();
             const providerUrl=typeof configuration?.data==='string'?new URL(configuration.data,applicationRoot).href:undefined;

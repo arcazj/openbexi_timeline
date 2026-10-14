@@ -1,0 +1,33 @@
+data_sources:
+  - namespace: SOURCE1
+    type: json_file
+    enable: true
+    permission: ''
+    converter2events_class: build_in
+    data_path: tests/data/
+    data_model: tests/data/SOURCES1/yyyy/mm/dd
+    filter:
+      include: ''
+      exclude: ''
+    connector: secure_sse:8441|secure:8442
+    render:
+      color: '#404040'
+      textColor: '#ffffff'
+      dateColor: '#ffffff'
+      alternateColor: '#e6e6e6'
+  - namespace: SOURCE2
+    type: json_file
+    enable: false
+    permission: ''
+    converter2events_class: build_in
+    data_path: tests/data/
+    data_model: tests/data/SOURCES2/yyyy/mm/dd
+    filter:
+      include: ''
+      exclude: ''
+    connector: secure_sse:8441|secure:8442
+    render:
+      color: '#D3D3D3'
+      textColor: '#000000'
+      dateColor: '#000000'
+      alternateColor: '#e6e6e6'

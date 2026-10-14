@@ -49,6 +49,17 @@
               "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$",
               "description": "Canvas background."
             },
+            "sceneBackgroundImage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
+            },
             "headerBackground": {
               "type": [
                 "string",
@@ -1207,6 +1218,17 @@
                 "top",
                 "bottom"
               ]
+            },
+            "backgroundImage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
             }
           }
         }
@@ -1489,6 +1511,17 @@
             "string",
             "number"
           ]
+        },
+        "backgroundImage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+          "description": "Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."
         }
       }
     }

@@ -64,12 +64,11 @@ async function fixture(t, options = {}) {
     return {root, mutations, run: () => publishRelease(root, {RELEASE_TAG: 'v2.6.1', GH_TOKEN: 'test', GITHUB_REPOSITORY: 'test/repo'}, fetcher), tags: () => tags};
 }
 
-test('publishes verified installer and notes before pruning only old tags', async t => {
+test('publishes verified installer and notes while preserving historical tags', async t => {
     const f = await fixture(t);
     await f.run();
-    assert.deepEqual(f.tags(), ['v2.6.1']);
-    assert.deepEqual(f.mutations.filter(call => call.method === 'DELETE').map(call => call.endpoint),
-        ['/git/refs/tags/v2.6.0', '/git/refs/tags/v2.5.2']);
+    assert.deepEqual(f.tags(), ['v2.6.1', 'v2.6.0', 'v2.5.2']);
+    assert.deepEqual(f.mutations.filter(call => call.method === 'DELETE'), []);
 });
 for (const option of ['uploadFailure', 'corruptUpload', 'newer']) test(option + ' preserves all older tags', async t => {
     const f = await fixture(t, {[option]: true});

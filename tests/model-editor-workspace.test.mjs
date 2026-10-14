@@ -7,7 +7,7 @@ async function setup(){const harness=await createTimelineHarness();return {harne
 const plain=value=>JSON.parse(JSON.stringify(value));
 test('AI review validates and waits for acceptance, supports undo, and rejects intervening edits',async()=>{
     const {harness,api,documents}=await setup();try{
-        const text=await fs.readFile('models/demos/monet.json','utf8'),doc=new documents.EditorDocument(text),candidate=JSON.parse(text);candidate.params[0].title='Reviewed title';
+        const text=await fs.readFile('HBDS/templates/models/demos/monet.json','utf8'),doc=new documents.EditorDocument(text),candidate=JSON.parse(text);candidate.params[0].title='Reviewed title';
         const review=new api.ConfigurationReview(doc,{text:JSON.stringify(candidate)});assert.equal(doc.text,text);assert.ok(review.changes.some(change=>change.path==='params.0.title'));
         review.accept(doc);assert.equal(doc.value.params[0].title,'Reviewed title');assert.equal(doc.savedText,text);doc.undo();assert.equal(doc.text,text);
         const stale=new api.ConfigurationReview(doc,{text:JSON.stringify(candidate)});doc.mutate(['params',0,'title'],'Manual change');assert.throws(()=>stale.accept(doc),/draft changed/);assert.equal(doc.value.params[0].title,'Manual change');

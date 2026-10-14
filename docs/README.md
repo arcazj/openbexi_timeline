@@ -1,5 +1,7 @@
 # Documentation
 
+- [HBDS configuration, migration and editor](../HBDS/README.md)
+
 ## Using the timeline
 
 - [User guide](help-guide.md) · [HTML guide](help-guide.html)
@@ -7,14 +9,16 @@
 - [Search and filter syntax](filter-syntax.md)
 - [Progressive loading and historical search](progressive-loading.md)
 - [Settings and 3D perspective](perspective.md)
-- [Model and YAML editor](model-editor.md)
+- [HBDS Editor](model-editor.md)
 - [Model rendering settings](model-rendering-inventory.md)
+- [Generic model template and configuration variants](model-template.md)
 - [Event and session JSON compatibility](event-session-contract.md)
 - [Model access and commercial eligibility](model-access.md)
 - [Optional AI assistance](ai-assistance.md)
 
 ## Setup and integration
 
+- [Python backend, Java fallback and performance](python-server.md)
 - [Embedding API and Earth Orbit example](embedding.md)
 - [Connected setup and diagnostics](connected-diagnostics.md)
 - [REST API guide](rest-api.md) · [API reference](api.html) · [OpenAPI contract](../swagger/openapi-v1.json)
@@ -27,6 +31,7 @@
 - [Windows installer and release packaging](windows-installation.md)
 - [Browser tests and screenshot review](browser-tests.md)
 - [2.4 design proposal and HBDS model](design/2.4/README.md)
+- [2.8 HBDS design: namespace access, sources and UI models](design/2.8/README.md)
 - [Consolidated 2.4 prompt and requirements](design/2.4/implementation-prompt.md) ·
   [Delivery and validation record](design/2.4/delivery-checklist.md)
 - [Release history](https://github.com/arcazj/openbexi_timeline/releases)

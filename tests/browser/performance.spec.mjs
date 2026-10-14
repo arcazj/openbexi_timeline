@@ -8,11 +8,13 @@ const settle=page=>page.waitForFunction(async()=>{
 const afterPaint=page=>page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(performance.now())))));
 
 for(const count of [1000,10000])test(`${count} records: load, search, grouping and drag measurements`,async({page},info)=>{
-    const model=JSON.parse(await fs.readFile('models/demos/default-dataset.json','utf8'));
+    const datasetRequests=[];
+    page.on('request',request=>{if(new URL(request.url()).pathname==='/json/test-data/default-dataset.json')datasetRequests.push(request.url());});
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/demos/default-dataset.json','utf8'));
     const origin=Date.parse('2026-09-12T08:00:00Z');
     const records=Array.from({length:count},(_,i)=>({id:'synthetic-'+i,start:new Date(origin+i*3000).toISOString(),
         namespace:'source-'+i%8,data:{title:i%100===0?'Find this event '+i:'Activity '+i,status:i%25===0?'warning':'ready'}}));
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     await page.route('**/json/test-data/default-dataset.json',route=>route.fulfill({json:{records}}));
     await page.addInitScript(()=>{
         window.uxMeasurements={longTasks:[],interactions:[],frameGaps:[],workers:0};
@@ -41,7 +43,20 @@ for(const count of [1000,10000])test(`${count} records: load, search, grouping a
     const searchStart=await page.evaluate(()=>performance.now());await search.press('Enter');await settle(page);
     const searchMs=await afterPaint(page)-searchStart;
     expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_results.snapshot.matchingKeys.length)).toBe(count/100);
+    const panelStart=await page.evaluate(()=>performance.now());
     await page.getByRole('button',{name:'Filters',exact:true}).click();
+    const filterPanelMs=await afterPaint(page)-panelStart;
+    const builderStart=await page.evaluate(()=>performance.now());
+    await page.locator('.ob_filter_build_section > summary').click();
+    await expect(page.getByLabel('New filter name',{exact:true})).toBeVisible();
+    const builderOpenMs=await afterPaint(page)-builderStart;
+    const cachedMetadata100Ms=await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady;
+        const {filterDataOptions}=await import('/src/openbexi_timeline_filters.js'),started=performance.now();
+        for(let i=0;i<100;i++)filterDataOptions(t,0);
+        return performance.now()-started;
+    });
+    await page.getByRole('button',{name:'Cancel',exact:true}).click();
     await page.getByLabel('Sort by',{exact:true}).selectOption('namespace');
     const groupStart=await page.evaluate(()=>performance.now());
     await page.getByRole('button',{name:'Apply',exact:true}).click();await settle(page);
@@ -61,7 +76,8 @@ for(const count of [1000,10000])test(`${count} records: load, search, grouping a
     if(count===10000)expect(measurements.workers,'Large JSON parsing starts a worker').toBeGreaterThan(0);
     expect(measurements.frameGaps.length).toBeGreaterThan(0);
     const percentile=(values,p)=>values.length?[...values].sort((a,b)=>a-b)[Math.min(values.length-1,Math.ceil(values.length*p)-1)]:null;
-    const report={records:count,usableMs,searchMs,groupingMs,workerCount:measurements.workers,
+    expect(datasetRequests).toHaveLength(1);
+    const report={records:count,usableMs,searchMs,groupingMs,filterPanelMs,builderOpenMs,cachedMetadata100Ms,datasetRequests:datasetRequests.length,workerCount:measurements.workers,
         dragFrameP95Ms:percentile(measurements.frameGaps,.95),longTaskCount:measurements.longTasks.length,
         maxLongTaskMs:Math.max(0,...measurements.longTasks.map(entry=>entry.duration)),
         maxObservedInteractionMs:Math.max(0,...measurements.interactions.map(entry=>entry.duration)),

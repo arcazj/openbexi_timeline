@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "repository": "https://github.com/arcazj/openbexi_timeline",
   "sections": [
     {
@@ -52,6 +52,11 @@
           "href": "swagger/openapi-v1.json",
           "icon": "download",
           "download": "openapi-v1.json"
+        },
+        {
+          "label": "Python server",
+          "href": "docs/python-server.md",
+          "icon": "code"
         }
       ]
     },

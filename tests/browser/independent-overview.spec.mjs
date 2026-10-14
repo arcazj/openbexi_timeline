@@ -76,9 +76,9 @@ test('Dense marks aggregate with counts and Overview controls retain linear real
 
 test('Cold connected frame, first records and cached past remain usable before archive completion',async({page},info)=>{
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{data:'http://127.0.0.1:8782/__connected',date:'2026-09-12T12:30:00Z',showCurrentTime:false});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     const requests=[];let pendingCurrent;
     const reply=(route,continuation=false)=>{
         const u=new URL(route.request().url()),from=Date.parse(u.searchParams.get('startDate')),to=Date.parse(u.searchParams.get('endDate'));
@@ -119,10 +119,10 @@ test('Cold connected frame, first records and cached past remain usable before a
 test('Cold file scans finish beyond the old page caps and populate past Overview before a drag',async({page})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{data:new URL('/__startup-scan',test.info().project.use.baseURL).href,
         date:'2026-09-12T12:30:00Z',showCurrentTime:false});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     const requests=[];
     await page.route('**/__startup-scan**',async route=>{
         const url=new URL(route.request().url());

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.7.0
+ *     OpenBEXI Timeline version 2.8.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -19,7 +19,7 @@ import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
 import {readLocalTimelineData, describeLocalProgress} from './openbexi_timeline_local_data.js';
-import {TimelineTextureCache} from './openbexi_timeline_textures.js';
+import {TimelineTextureCache, TimelineBackgroundTextureCache, backgroundImageURL} from './openbexi_timeline_textures.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
 import {createTimelineSettings} from './openbexi_timeline_settings.js';
 import {fetchTimeline,traceURL,timelineTrace} from './openbexi_timeline_trace.js';
@@ -28,7 +28,7 @@ import {bindEventTextHitTarget, TimelineEventInteraction} from './openbexi_timel
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {compileFilter,decodeFilter} from './openbexi_timeline_filter_expression.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
-import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability, showFilterSyntax, showFilterError} from './openbexi_timeline_filters.js';
+import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability, refreshPendingFilters, filterDataOptions, filterSortBy, validateNewFilter, showFilterSyntax, showFilterError} from './openbexi_timeline_filters.js';
 import {TimelineViewport} from './openbexi_timeline_viewport.js';
 import {TimelinePerspective} from './openbexi_timeline_perspective.js';
 import {createTimelineHelp} from './openbexi_timeline_help.js';
@@ -94,8 +94,9 @@ class ResourceTracker {
 
 function OB_TIMELINE(options = {}) {
 
-    const namespace = "";
-    this.iconTextures = new TimelineTextureCache(new THREE.TextureLoader(), () => {
+    let namespace = "";
+    this.setHbdsNamespace=value=>{this.hbdsNamespace=String(value||'');namespace=encodeURIComponent(this.hbdsNamespace);};
+    const repaintTextures = () => {
         if (this.textureRenderFrame !== undefined) return;
         this.textureRenderFrame = requestPanFrame(() => {
             delete this.textureRenderFrame;
@@ -104,7 +105,9 @@ function OB_TIMELINE(options = {}) {
                 if (scene?.ob_renderer && scene.ob_camera) this.ob_render(index);
             }
         });
-    });
+    };
+    this.iconTextures = new TimelineTextureCache(new THREE.TextureLoader(), repaintTextures);
+    this.backgroundTextures = new TimelineBackgroundTextureCache(new THREE.TextureLoader(), repaintTextures);
 
     OB_TIMELINE.prototype.get_synced_time = function () {
         if (this.staticData) return parseTimelineDate(this.date);
@@ -456,16 +459,7 @@ function OB_TIMELINE(options = {}) {
 
     OB_TIMELINE.prototype.ob_get_all_sorting_options = function (ob_scene_index) {
         if (this.ob_results?.supported) {
-            const fields = new Set(['namespace']);
-            const visit = (data, prefix = '') => {
-                for (const [key, value] of Object.entries(data || {})) {
-                    if (['title', 'description', 'text', 'sortByValue', 'analyze'].includes(key)) continue;
-                    const name = prefix + key;
-                    if (value && typeof value === 'object' && !Array.isArray(value)) visit(value, name + '.');
-                    else if (['string', 'number', 'boolean'].includes(typeof value)) fields.add(name);
-                }
-            };
-            for (const entry of this.ob_results.snapshot?.entries || []) visit(entry.record.data);
+            const fields = new Set(filterDataOptions(this, ob_scene_index).fields);
             if (this.ob_sortBy) fields.add(this.ob_sortBy);
             return ['NONE', ...[...fields].filter(field => field !== 'NONE').sort()].map(field => {
                 const option = document.createElement('option'); option.value = field; option.textContent = field;
@@ -541,6 +535,7 @@ function OB_TIMELINE(options = {}) {
 
     OB_TIMELINE.prototype.ob_load_filters = function (ob_request, ob_scene_index, ob_filter_index, ob_show) {
         try {
+            if(ob_request==='addFilter')validateNewFilter(this,ob_scene_index);
             if (['saveFilter','addFilter','updateFilter'].includes(ob_request))
                 compileFilter(this.ob_get_filter_value(ob_scene_index,ob_filter_index));
             showFilterError(this,null);
@@ -556,7 +551,7 @@ function OB_TIMELINE(options = {}) {
         let ob_sortBy;
         try {
             if (ob_request === "saveFilter" || ob_request === "addFilter") {
-                ob_sortBy = document.getElementById("ob_sort_by").value;
+                ob_sortBy = filterSortBy(this,ob_request);
                 if (ob_sortBy === "") ob_sortBy = "NONE";
                 document.getElementById("ob_sort_by").value = ob_sortBy;
             } else
@@ -2408,6 +2403,9 @@ function OB_TIMELINE(options = {}) {
         ob_zone.band_number = band_number;
         ob_zone.zone_number = zone_number;
         ob_zone.position.set(x, y, z);
+        const zone = this.ob_scene[ob_scene_index].bands[band_number].zones[zone_number];
+        this.add_background_image(ob_scene_index, ob_zone, zone.render?.backgroundImage,
+            width, height, depth / 2 + 0.01, zone.render?.opacity ?? 1);
 
         this.ob_scene[ob_scene_index].objects.push(ob_zone);
 
@@ -2536,6 +2534,8 @@ function OB_TIMELINE(options = {}) {
                     this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: zone.render.color || "#f5c994",
                         transparent: true, opacity: zone.render.opacity ?? 0.25, depthWrite: false}))));
                 mesh.position.set(start + width / 2, zone.render.verticalAlign === "top" ? (band.height - height) / 2 : 0, 1);
+                this.add_background_image(ob_scene_index, mesh, zone.render.backgroundImage,
+                    width, height, 0.51, zone.render.opacity ?? 0.25);
                 this.ob_scene[ob_scene_index].getObjectByName(band.name).add(mesh);
                 if (!band.name.includes("overview_")) {
                     const fontSize = zone.render.labelFontSize || 12;
@@ -2687,11 +2687,33 @@ function OB_TIMELINE(options = {}) {
         ob_band.pos_y = this.get_band(ob_scene_index, band_name).pos_y;
         ob_band.pos_z = z;
         ob_band.position.set(x, y, z);
+        this.add_background_image(ob_scene_index, ob_band, this.get_band(ob_scene_index, band_name).backgroundImage,
+            width, height, depth / 2 + 0.01);
 
         //this.ob_scene[ob_scene_index].group.add(ob_band);
         this.ob_scene[ob_scene_index].add(ob_band);
         this.ob_scene[ob_scene_index].objects.push(ob_band);
 
+    };
+
+    OB_TIMELINE.prototype.add_background_image = function (index, parent, image, width, height, z = 0.01, opacity = 1) {
+        if (!backgroundImageURL(image) || !Number.isFinite(width) || !Number.isFinite(height) || !width || !height) return;
+        const track = this.track[index];
+        const material = track(new THREE.MeshBasicMaterial({color: '#ffffff', transparent: true, opacity,
+            depthWrite: false}));
+        const mesh = track(new THREE.Mesh(track(new THREE.PlaneGeometry(Math.abs(width), Math.abs(height))), material));
+        mesh.position.z = z;
+        mesh.visible = false;
+        mesh.raycast = () => {};
+        mesh.userData.backgroundImage = image;
+        parent.add(mesh);
+        const unsubscribe = this.backgroundTextures.subscribe(image, texture => {
+            material.map = texture;
+            material.needsUpdate = true;
+            mesh.visible = true;
+        });
+        material.addEventListener('dispose', unsubscribe);
+        return mesh;
     };
 
     OB_TIMELINE.prototype.destroy_scene = function (ob_scene_index) {
@@ -2791,7 +2813,12 @@ function OB_TIMELINE(options = {}) {
             this.ob_sortBy = active?.sortBy || setting_and_filters.openbexi_timeline[0].sortBy || 'NONE';
             scene.bands[0].model[0].sortBy = this.ob_sortBy;
             const sorting = document.getElementById("ob_sort_by");
-            if (sorting) sorting.value = this.ob_sortBy;
+            if (sorting && !sorting.dataset.filterDraft) sorting.value = this.ob_sortBy;
+            refreshPendingFilters(this);
+            // Progressive rendering can reuse the scene. Refresh acknowledged
+            // mutations here instead of waiting for a full scene rebuild.
+            if (this.show_filters && this.ob_timeline_right_panel?.querySelector('.ob_filter_panel'))
+                this.ob_create_filters(ob_scene_index, undefined, 'select_filter');
         }
     };
 
@@ -4088,6 +4115,7 @@ function OB_TIMELINE(options = {}) {
         cancelPanFrame(this.textureRenderFrame);
         delete this.textureRenderFrame;
         this.iconTextures.dispose();
+        this.backgroundTextures.dispose();
     };
 
     OB_TIMELINE.prototype.add_event = function (
@@ -4778,6 +4806,14 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.ob_set_renderer = function (ob_scene_index) {
+        const scene = this.ob_scene[ob_scene_index], theme = renderingFor(this).theme;
+        const background = {color: new THREE.Color(theme.sceneBackground), texture: null};
+        scene.userData.timelineBackground = background;
+        const unsubscribe = this.backgroundTextures.subscribe(theme.sceneBackgroundImage, texture => {
+            background.texture = texture;
+            if (scene.userData.timelineBackground === background) applyRenderingTheme(this);
+        });
+        this.track[ob_scene_index]({dispose: unsubscribe});
         if (this.ob_scene[ob_scene_index].ob_renderer === undefined) {
             this.ob_scene[ob_scene_index].ob_renderer = this.track[ob_scene_index](new THREE.WebGLRenderer({antialias: true}));
             this.ob_scene[ob_scene_index].ob_renderer.setClearColor(0xffffff, 1);

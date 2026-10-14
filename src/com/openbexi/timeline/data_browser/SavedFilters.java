@@ -16,12 +16,14 @@ public final class SavedFilters {
         return result;
     }
     private static Path path(JSONObject configuration) {
-        return Path.of("filters",identity((String)configuration.get("userName"),"guest")+"_"+
+        return Path.of("HBDS/private/filters",identity((String)configuration.get("userName"),"guest")+"_"+
                 identity((String)configuration.get("timelineName"),"timeline")+"_filter_setting.json");
     }
     private static JSONObject read(JSONObject configuration) throws IOException {
         Path path=path(configuration);
-        if(!Files.exists(path) && "guest".equals(Objects.toString(configuration.get("userName"),"guest")))path=Path.of("filters/default_filter_setting.json");
+        if(!Files.exists(path))path=Path.of("filters").resolve(path.getFileName());
+        if(!Files.exists(path) && "guest".equals(Objects.toString(configuration.get("userName"),"guest")))
+            path=com.openbexi.timeline.api.TimelineHbds.resolve(Path.of(""),"filters/default_filter_setting.json");
         if(!Files.exists(path))return null;
         try(Reader reader=Files.newBufferedReader(path)) {return (JSONObject)new JSONParser().parse(reader);}
         catch(org.json.simple.parser.ParseException | ClassCastException error) {throw new IOException("Saved filter settings are invalid.",error);}

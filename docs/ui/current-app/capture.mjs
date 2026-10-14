@@ -37,7 +37,7 @@ try {
         return {title: document.title, records: timeline.staticData.events.filter(event => !event.zone).length,
             webgl2: renderer.getContext() instanceof WebGL2RenderingContext,
             drawCalls: renderer.info.render.calls, dataset: 'json/test-data/space_exploration.json',
-            model: 'models/demos/space_exploration.json'};
+            model: 'HBDS/templates/models/demos/space_exploration.json'};
     });
     if (!evidence.webgl2 || evidence.drawCalls <= 0) throw new Error('Expected actual WebGL rendering.');
     await page.screenshot({path: fileURLToPath(new URL('timeline-desktop.png', output)), animations: 'disabled'});

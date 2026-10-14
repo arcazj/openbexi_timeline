@@ -12,10 +12,17 @@ try { $probe.Start() } catch { throw "Port $Port is already in use. Close the ot
 finally { $probe.Stop() }
 New-Item -ItemType Directory -Force -Path $DataDirectory | Out-Null
 $DataDirectory = (Resolve-Path -LiteralPath $DataDirectory).Path
+$hbdsDirectory = Join-Path $DataDirectory 'HBDS'
+New-Item -ItemType Directory -Force -Path $hbdsDirectory | Out-Null
+$hbdsConfiguration = Join-Path $hbdsDirectory 'openbexi_timeline.hbds.json'
+if (!(Test-Path -LiteralPath $hbdsConfiguration)) {
+    Copy-Item -LiteralPath (Join-Path $appRoot 'HBDS/templates/default.hbds.json') -Destination $hbdsConfiguration
+}
 $javaArgs = @(
     "-Dopenbexi.api.port=$Port",
     "`"-Dopenbexi.api.root=$appRoot`"",
     "`"-Dopenbexi.api.dataDir=$DataDirectory`"",
+    "`"-Dopenbexi.hbds.config=$hbdsConfiguration`"",
     '-cp', "`"$appRoot\lib\*`"", 'com.openbexi.timeline.api.ApiServer'
 )
 $server = Start-Process -FilePath $runtime -ArgumentList $javaArgs -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $DataDirectory 'server.log') -RedirectStandardError (Join-Path $DataDirectory 'server-error.log')

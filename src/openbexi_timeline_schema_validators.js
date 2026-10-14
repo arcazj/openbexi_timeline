@@ -24,7 +24,7 @@ SOFTWARE.
 */
 "use strict";
 export const modelSchema = validate21;
-const schema6 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/demo-model.schema.json","title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}}}};
+const schema6 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/demo-model.schema.json","title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
 const schema7 = {"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}};
 const func2 = Object.prototype.hasOwnProperty;
 const schema8 = {"type":"string","minLength":1};
@@ -655,7 +655,8 @@ validate37.errors = vErrors;
 return errors === 0;
 }
 
-const schema14 = {"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}};
+const schema14 = {"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
+const pattern1 = new RegExp("^[^\\u0000-\\u001f\\u007f]+$", "");
 
 function validate46(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -785,7 +786,7 @@ if(data.render !== undefined){
 let data6 = data.render;
 if(data6 && typeof data6 == "object" && !Array.isArray(data6)){
 for(const key1 in data6){
-if(!(((((key1 === "color") || (key1 === "opacity")) || (key1 === "height")) || (key1 === "verticalAlign")) || (key1 === "labelPosition"))){
+if(!((((((key1 === "color") || (key1 === "opacity")) || (key1 === "height")) || (key1 === "verticalAlign")) || (key1 === "labelPosition")) || (key1 === "backgroundImage"))){
 const err9 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key1},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err9];
@@ -869,9 +870,10 @@ vErrors.push(err14);
 errors++;
 }
 }
-}
-else {
-const err15 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data6.backgroundImage !== undefined){
+let data12 = data6.backgroundImage;
+if((typeof data12 !== "string") && (data12 !== null)){
+const err15 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/type",keyword:"type",params:{type: schema14.properties.render.properties.backgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -880,15 +882,59 @@ vErrors.push(err15);
 }
 errors++;
 }
-}
-}
-else {
-const err16 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(typeof data12 === "string"){
+if(func3(data12) > 2048){
+const err16 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err16];
 }
 else {
 vErrors.push(err16);
+}
+errors++;
+}
+if(func3(data12) < 1){
+const err17 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err17];
+}
+else {
+vErrors.push(err17);
+}
+errors++;
+}
+if(!pattern1.test(data12)){
+const err18 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
+if(vErrors === null){
+vErrors = [err18];
+}
+else {
+vErrors.push(err18);
+}
+errors++;
+}
+}
+}
+}
+else {
+const err19 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err19];
+}
+else {
+vErrors.push(err19);
+}
+errors++;
+}
+}
+}
+else {
+const err20 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err20];
+}
+else {
+vErrors.push(err20);
 }
 errors++;
 }
@@ -1199,7 +1245,7 @@ validate33.errors = vErrors;
 return errors === 0;
 }
 
-const schema15 = {"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}};
+const schema15 = {"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"$ref":"#/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}};
 const schema16 = {"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]};
 
 function validate60(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
@@ -1474,7 +1520,7 @@ validate75.errors = vErrors;
 return errors === 0;
 }
 
-const pattern1 = new RegExp("^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$", "");
+const pattern2 = new RegExp("^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$", "");
 
 function validate57(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -1582,7 +1628,7 @@ valid2 = valid2 || _valid0;
 if(!valid2){
 const _errs6 = errors;
 if(typeof data1 === "string"){
-if(!pattern1.test(data1)){
+if(!pattern2.test(data1)){
 const err7 = {instancePath:instancePath+"/height",schemaPath:"#/properties/height/anyOf/1/pattern",keyword:"pattern",params:{pattern: "^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"},message:"must match pattern \""+"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -2487,9 +2533,10 @@ vErrors.push(err61);
 errors++;
 }
 }
-}
-else {
-const err62 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data.backgroundImage !== undefined){
+let data59 = data.backgroundImage;
+if((typeof data59 !== "string") && (data59 !== null)){
+const err62 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/type",keyword:"type",params:{type: schema15.properties.backgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err62];
 }
@@ -2498,11 +2545,55 @@ vErrors.push(err62);
 }
 errors++;
 }
+if(typeof data59 === "string"){
+if(func3(data59) > 2048){
+const err63 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
+if(vErrors === null){
+vErrors = [err63];
+}
+else {
+vErrors.push(err63);
+}
+errors++;
+}
+if(func3(data59) < 1){
+const err64 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err64];
+}
+else {
+vErrors.push(err64);
+}
+errors++;
+}
+if(!pattern1.test(data59)){
+const err65 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
+if(vErrors === null){
+vErrors = [err65];
+}
+else {
+vErrors.push(err65);
+}
+errors++;
+}
+}
+}
+}
+else {
+const err66 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err66];
+}
+else {
+vErrors.push(err66);
+}
+errors++;
+}
 validate57.errors = vErrors;
 return errors === 0;
 }
 
-const pattern2 = new RegExp("^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$", "");
+const pattern4 = new RegExp("^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$", "");
 
 function validate21(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 /*# sourceURL="https://openbexi.org/schemas/demo-model.schema.json" */;
@@ -2662,7 +2753,7 @@ if(data6.theme !== undefined){
 let data7 = data6.theme;
 if(data7 && typeof data7 == "object" && !Array.isArray(data7)){
 for(const key2 in data7){
-if(!((((key2 === "sceneBackground") || (key2 === "headerBackground")) || (key2 === "panelBackground")) || (key2 === "panelText"))){
+if(!(((((key2 === "sceneBackground") || (key2 === "sceneBackgroundImage")) || (key2 === "headerBackground")) || (key2 === "panelBackground")) || (key2 === "panelText"))){
 const err11 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key2},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err11];
@@ -2696,7 +2787,7 @@ vErrors.push(err13);
 }
 errors++;
 }
-if(!pattern2.test(data8)){
+if(!pattern4.test(data8)){
 const err14 = {instancePath:instancePath+"/rendering/theme/sceneBackground",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err14];
@@ -2718,10 +2809,10 @@ vErrors.push(err15);
 errors++;
 }
 }
-if(data7.headerBackground !== undefined){
-let data9 = data7.headerBackground;
+if(data7.sceneBackgroundImage !== undefined){
+let data9 = data7.sceneBackgroundImage;
 if((typeof data9 !== "string") && (data9 !== null)){
-const err16 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.headerBackground.type},message:"must be string,null"};
+const err16 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.sceneBackgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -2731,8 +2822,8 @@ vErrors.push(err16);
 errors++;
 }
 if(typeof data9 === "string"){
-if(func3(data9) > 80){
-const err17 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(func3(data9) > 2048){
+const err17 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err17];
 }
@@ -2742,7 +2833,7 @@ vErrors.push(err17);
 errors++;
 }
 if(func3(data9) < 1){
-const err18 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err18 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err18];
 }
@@ -2751,8 +2842,8 @@ vErrors.push(err18);
 }
 errors++;
 }
-if(!pattern2.test(data9)){
-const err19 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern1.test(data9)){
+const err19 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err19];
 }
@@ -2763,10 +2854,10 @@ errors++;
 }
 }
 }
-if(data7.panelBackground !== undefined){
-let data10 = data7.panelBackground;
+if(data7.headerBackground !== undefined){
+let data10 = data7.headerBackground;
 if((typeof data10 !== "string") && (data10 !== null)){
-const err20 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.panelBackground.type},message:"must be string,null"};
+const err20 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.headerBackground.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err20];
 }
@@ -2777,7 +2868,7 @@ errors++;
 }
 if(typeof data10 === "string"){
 if(func3(data10) > 80){
-const err21 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err21 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err21];
 }
@@ -2787,7 +2878,7 @@ vErrors.push(err21);
 errors++;
 }
 if(func3(data10) < 1){
-const err22 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err22 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err22];
 }
@@ -2796,8 +2887,8 @@ vErrors.push(err22);
 }
 errors++;
 }
-if(!pattern2.test(data10)){
-const err23 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data10)){
+const err23 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err23];
 }
@@ -2808,10 +2899,10 @@ errors++;
 }
 }
 }
-if(data7.panelText !== undefined){
-let data11 = data7.panelText;
+if(data7.panelBackground !== undefined){
+let data11 = data7.panelBackground;
 if((typeof data11 !== "string") && (data11 !== null)){
-const err24 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.panelText.type},message:"must be string,null"};
+const err24 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.panelBackground.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -2822,7 +2913,7 @@ errors++;
 }
 if(typeof data11 === "string"){
 if(func3(data11) > 80){
-const err25 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err25 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err25];
 }
@@ -2832,7 +2923,7 @@ vErrors.push(err25);
 errors++;
 }
 if(func3(data11) < 1){
-const err26 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err26 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err26];
 }
@@ -2841,8 +2932,8 @@ vErrors.push(err26);
 }
 errors++;
 }
-if(!pattern2.test(data11)){
-const err27 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data11)){
+const err27 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err27];
 }
@@ -2853,9 +2944,10 @@ errors++;
 }
 }
 }
-}
-else {
-const err28 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data7.panelText !== undefined){
+let data12 = data7.panelText;
+if((typeof data12 !== "string") && (data12 !== null)){
+const err28 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/type",keyword:"type",params:{type: schema6.properties.rendering.properties.theme.properties.panelText.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err28];
 }
@@ -2864,13 +2956,9 @@ vErrors.push(err28);
 }
 errors++;
 }
-}
-if(data6.axis !== undefined){
-let data12 = data6.axis;
-if(data12 && typeof data12 == "object" && !Array.isArray(data12)){
-for(const key3 in data12){
-if(!(func2.call(schema6.properties.rendering.properties.axis.properties, key3))){
-const err29 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
+if(typeof data12 === "string"){
+if(func3(data12) > 80){
+const err29 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err29];
 }
@@ -2879,12 +2967,8 @@ vErrors.push(err29);
 }
 errors++;
 }
-}
-if(data12.background !== undefined){
-let data13 = data12.background;
-if(typeof data13 === "string"){
-if(func3(data13) > 80){
-const err30 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(func3(data12) < 1){
+const err30 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err30];
 }
@@ -2893,8 +2977,8 @@ vErrors.push(err30);
 }
 errors++;
 }
-if(func3(data13) < 1){
-const err31 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(!pattern4.test(data12)){
+const err31 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err31];
 }
@@ -2903,8 +2987,11 @@ vErrors.push(err31);
 }
 errors++;
 }
-if(!pattern2.test(data13)){
-const err32 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+}
+}
+}
+else {
+const err32 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err32];
 }
@@ -2914,8 +3001,12 @@ vErrors.push(err32);
 errors++;
 }
 }
-else {
-const err33 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data6.axis !== undefined){
+let data13 = data6.axis;
+if(data13 && typeof data13 == "object" && !Array.isArray(data13)){
+for(const key3 in data13){
+if(!(func2.call(schema6.properties.rendering.properties.axis.properties, key3))){
+const err33 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err33];
 }
@@ -2925,11 +3016,11 @@ vErrors.push(err33);
 errors++;
 }
 }
-if(data12.separatorColor !== undefined){
-let data14 = data12.separatorColor;
+if(data13.background !== undefined){
+let data14 = data13.background;
 if(typeof data14 === "string"){
 if(func3(data14) > 80){
-const err34 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err34 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err34];
 }
@@ -2939,7 +3030,7 @@ vErrors.push(err34);
 errors++;
 }
 if(func3(data14) < 1){
-const err35 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err35 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err35];
 }
@@ -2948,8 +3039,8 @@ vErrors.push(err35);
 }
 errors++;
 }
-if(!pattern2.test(data14)){
-const err36 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data14)){
+const err36 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err36];
 }
@@ -2960,7 +3051,7 @@ errors++;
 }
 }
 else {
-const err37 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err37 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err37];
 }
@@ -2970,11 +3061,11 @@ vErrors.push(err37);
 errors++;
 }
 }
-if(data12.textColor !== undefined){
-let data15 = data12.textColor;
+if(data13.separatorColor !== undefined){
+let data15 = data13.separatorColor;
 if(typeof data15 === "string"){
 if(func3(data15) > 80){
-const err38 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err38 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err38];
 }
@@ -2984,7 +3075,7 @@ vErrors.push(err38);
 errors++;
 }
 if(func3(data15) < 1){
-const err39 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err39 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err39];
 }
@@ -2993,8 +3084,8 @@ vErrors.push(err39);
 }
 errors++;
 }
-if(!pattern2.test(data15)){
-const err40 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data15)){
+const err40 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err40];
 }
@@ -3005,7 +3096,7 @@ errors++;
 }
 }
 else {
-const err41 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err41 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err41];
 }
@@ -3015,11 +3106,11 @@ vErrors.push(err41);
 errors++;
 }
 }
-if(data12.minimumHeight !== undefined){
-let data16 = data12.minimumHeight;
-if((typeof data16 == "number") && (isFinite(data16))){
-if(data16 > 160 || isNaN(data16)){
-const err42 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 160},message:"must be <= 160"};
+if(data13.textColor !== undefined){
+let data16 = data13.textColor;
+if(typeof data16 === "string"){
+if(func3(data16) > 80){
+const err42 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err42];
 }
@@ -3028,8 +3119,8 @@ vErrors.push(err42);
 }
 errors++;
 }
-if(data16 < 16 || isNaN(data16)){
-const err43 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 16},message:"must be >= 16"};
+if(func3(data16) < 1){
+const err43 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -3038,9 +3129,8 @@ vErrors.push(err43);
 }
 errors++;
 }
-}
-else {
-const err44 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data16)){
+const err44 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err44];
 }
@@ -3050,11 +3140,8 @@ vErrors.push(err44);
 errors++;
 }
 }
-if(data12.verticalPadding !== undefined){
-let data17 = data12.verticalPadding;
-if((typeof data17 == "number") && (isFinite(data17))){
-if(data17 > 80 || isNaN(data17)){
-const err45 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 80},message:"must be <= 80"};
+else {
+const err45 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err45];
 }
@@ -3063,8 +3150,12 @@ vErrors.push(err45);
 }
 errors++;
 }
-if(data17 < 0 || isNaN(data17)){
-const err46 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data13.minimumHeight !== undefined){
+let data17 = data13.minimumHeight;
+if((typeof data17 == "number") && (isFinite(data17))){
+if(data17 > 160 || isNaN(data17)){
+const err46 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 160},message:"must be <= 160"};
 if(vErrors === null){
 vErrors = [err46];
 }
@@ -3073,9 +3164,8 @@ vErrors.push(err46);
 }
 errors++;
 }
-}
-else {
-const err47 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data17 < 16 || isNaN(data17)){
+const err47 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 16},message:"must be >= 16"};
 if(vErrors === null){
 vErrors = [err47];
 }
@@ -3085,11 +3175,8 @@ vErrors.push(err47);
 errors++;
 }
 }
-if(data12.minimumFontSize !== undefined){
-let data18 = data12.minimumFontSize;
-if((typeof data18 == "number") && (isFinite(data18))){
-if(data18 > 48 || isNaN(data18)){
-const err48 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 48},message:"must be <= 48"};
+else {
+const err48 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err48];
 }
@@ -3098,8 +3185,12 @@ vErrors.push(err48);
 }
 errors++;
 }
-if(data18 < 6 || isNaN(data18)){
-const err49 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data13.verticalPadding !== undefined){
+let data18 = data13.verticalPadding;
+if((typeof data18 == "number") && (isFinite(data18))){
+if(data18 > 80 || isNaN(data18)){
+const err49 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 80},message:"must be <= 80"};
 if(vErrors === null){
 vErrors = [err49];
 }
@@ -3108,9 +3199,8 @@ vErrors.push(err49);
 }
 errors++;
 }
-}
-else {
-const err50 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data18 < 0 || isNaN(data18)){
+const err50 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err50];
 }
@@ -3120,11 +3210,8 @@ vErrors.push(err50);
 errors++;
 }
 }
-if(data12.targetTickPixels !== undefined){
-let data19 = data12.targetTickPixels;
-if((typeof data19 == "number") && (isFinite(data19))){
-if(data19 > 400 || isNaN(data19)){
-const err51 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
+else {
+const err51 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err51];
 }
@@ -3133,8 +3220,12 @@ vErrors.push(err51);
 }
 errors++;
 }
-if(data19 < 30 || isNaN(data19)){
-const err52 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 30},message:"must be >= 30"};
+}
+if(data13.minimumFontSize !== undefined){
+let data19 = data13.minimumFontSize;
+if((typeof data19 == "number") && (isFinite(data19))){
+if(data19 > 48 || isNaN(data19)){
+const err52 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 48},message:"must be <= 48"};
 if(vErrors === null){
 vErrors = [err52];
 }
@@ -3143,9 +3234,8 @@ vErrors.push(err52);
 }
 errors++;
 }
-}
-else {
-const err53 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data19 < 6 || isNaN(data19)){
+const err53 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err53];
 }
@@ -3155,11 +3245,8 @@ vErrors.push(err53);
 errors++;
 }
 }
-if(data12.groupHeaderHeight !== undefined){
-let data20 = data12.groupHeaderHeight;
-if((typeof data20 == "number") && (isFinite(data20))){
-if(data20 > 120 || isNaN(data20)){
-const err54 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
+else {
+const err54 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err54];
 }
@@ -3168,8 +3255,12 @@ vErrors.push(err54);
 }
 errors++;
 }
-if(data20 < 12 || isNaN(data20)){
-const err55 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
+}
+if(data13.targetTickPixels !== undefined){
+let data20 = data13.targetTickPixels;
+if((typeof data20 == "number") && (isFinite(data20))){
+if(data20 > 400 || isNaN(data20)){
+const err55 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err55];
 }
@@ -3178,9 +3269,8 @@ vErrors.push(err55);
 }
 errors++;
 }
-}
-else {
-const err56 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data20 < 30 || isNaN(data20)){
+const err56 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 30},message:"must be >= 30"};
 if(vErrors === null){
 vErrors = [err56];
 }
@@ -3190,11 +3280,8 @@ vErrors.push(err56);
 errors++;
 }
 }
-if(data12.scaleHeaderColor !== undefined){
-let data21 = data12.scaleHeaderColor;
-if(typeof data21 === "string"){
-if(func3(data21) > 80){
-const err57 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err57 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err57];
 }
@@ -3203,8 +3290,12 @@ vErrors.push(err57);
 }
 errors++;
 }
-if(func3(data21) < 1){
-const err58 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data13.groupHeaderHeight !== undefined){
+let data21 = data13.groupHeaderHeight;
+if((typeof data21 == "number") && (isFinite(data21))){
+if(data21 > 120 || isNaN(data21)){
+const err58 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err58];
 }
@@ -3213,8 +3304,8 @@ vErrors.push(err58);
 }
 errors++;
 }
-if(!pattern2.test(data21)){
-const err59 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data21 < 12 || isNaN(data21)){
+const err59 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
 if(vErrors === null){
 vErrors = [err59];
 }
@@ -3225,7 +3316,7 @@ errors++;
 }
 }
 else {
-const err60 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err60 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err60];
 }
@@ -3235,11 +3326,11 @@ vErrors.push(err60);
 errors++;
 }
 }
-if(data12.scaleHeaderText !== undefined){
-let data22 = data12.scaleHeaderText;
+if(data13.scaleHeaderColor !== undefined){
+let data22 = data13.scaleHeaderColor;
 if(typeof data22 === "string"){
 if(func3(data22) > 80){
-const err61 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err61 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err61];
 }
@@ -3249,7 +3340,7 @@ vErrors.push(err61);
 errors++;
 }
 if(func3(data22) < 1){
-const err62 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err62 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err62];
 }
@@ -3258,8 +3349,8 @@ vErrors.push(err62);
 }
 errors++;
 }
-if(!pattern2.test(data22)){
-const err63 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data22)){
+const err63 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err63];
 }
@@ -3270,7 +3361,7 @@ errors++;
 }
 }
 else {
-const err64 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err64 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err64];
 }
@@ -3280,11 +3371,11 @@ vErrors.push(err64);
 errors++;
 }
 }
-if(data12.secondaryColor !== undefined){
-let data23 = data12.secondaryColor;
+if(data13.scaleHeaderText !== undefined){
+let data23 = data13.scaleHeaderText;
 if(typeof data23 === "string"){
 if(func3(data23) > 80){
-const err65 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err65 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err65];
 }
@@ -3294,7 +3385,7 @@ vErrors.push(err65);
 errors++;
 }
 if(func3(data23) < 1){
-const err66 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err66 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err66];
 }
@@ -3303,8 +3394,8 @@ vErrors.push(err66);
 }
 errors++;
 }
-if(!pattern2.test(data23)){
-const err67 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data23)){
+const err67 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err67];
 }
@@ -3315,7 +3406,7 @@ errors++;
 }
 }
 else {
-const err68 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err68 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err68];
 }
@@ -3325,11 +3416,11 @@ vErrors.push(err68);
 errors++;
 }
 }
-if(data12.secondaryText !== undefined){
-let data24 = data12.secondaryText;
+if(data13.secondaryColor !== undefined){
+let data24 = data13.secondaryColor;
 if(typeof data24 === "string"){
 if(func3(data24) > 80){
-const err69 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err69 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err69];
 }
@@ -3339,7 +3430,7 @@ vErrors.push(err69);
 errors++;
 }
 if(func3(data24) < 1){
-const err70 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err70 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err70];
 }
@@ -3348,8 +3439,8 @@ vErrors.push(err70);
 }
 errors++;
 }
-if(!pattern2.test(data24)){
-const err71 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data24)){
+const err71 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err71];
 }
@@ -3360,7 +3451,7 @@ errors++;
 }
 }
 else {
-const err72 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err72 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err72];
 }
@@ -3370,9 +3461,11 @@ vErrors.push(err72);
 errors++;
 }
 }
-}
-else {
-const err73 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data13.secondaryText !== undefined){
+let data25 = data13.secondaryText;
+if(typeof data25 === "string"){
+if(func3(data25) > 80){
+const err73 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err73];
 }
@@ -3381,13 +3474,8 @@ vErrors.push(err73);
 }
 errors++;
 }
-}
-if(data6.overview !== undefined){
-let data25 = data6.overview;
-if(data25 && typeof data25 == "object" && !Array.isArray(data25)){
-for(const key4 in data25){
-if(!(func2.call(schema6.properties.rendering.properties.overview.properties, key4))){
-const err74 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
+if(func3(data25) < 1){
+const err74 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err74];
 }
@@ -3396,12 +3484,8 @@ vErrors.push(err74);
 }
 errors++;
 }
-}
-if(data25.borderColor !== undefined){
-let data26 = data25.borderColor;
-if(typeof data26 === "string"){
-if(func3(data26) > 80){
-const err75 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(!pattern4.test(data25)){
+const err75 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err75];
 }
@@ -3410,8 +3494,9 @@ vErrors.push(err75);
 }
 errors++;
 }
-if(func3(data26) < 1){
-const err76 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err76 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err76];
 }
@@ -3420,8 +3505,10 @@ vErrors.push(err76);
 }
 errors++;
 }
-if(!pattern2.test(data26)){
-const err77 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+}
+}
+else {
+const err77 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err77];
 }
@@ -3431,8 +3518,12 @@ vErrors.push(err77);
 errors++;
 }
 }
-else {
-const err78 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data6.overview !== undefined){
+let data26 = data6.overview;
+if(data26 && typeof data26 == "object" && !Array.isArray(data26)){
+for(const key4 in data26){
+if(!(func2.call(schema6.properties.rendering.properties.overview.properties, key4))){
+const err78 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err78];
 }
@@ -3442,11 +3533,11 @@ vErrors.push(err78);
 errors++;
 }
 }
-if(data25.headingColor !== undefined){
-let data27 = data25.headingColor;
+if(data26.borderColor !== undefined){
+let data27 = data26.borderColor;
 if(typeof data27 === "string"){
 if(func3(data27) > 80){
-const err79 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err79 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err79];
 }
@@ -3456,7 +3547,7 @@ vErrors.push(err79);
 errors++;
 }
 if(func3(data27) < 1){
-const err80 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err80 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err80];
 }
@@ -3465,8 +3556,8 @@ vErrors.push(err80);
 }
 errors++;
 }
-if(!pattern2.test(data27)){
-const err81 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data27)){
+const err81 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err81];
 }
@@ -3477,7 +3568,7 @@ errors++;
 }
 }
 else {
-const err82 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err82 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err82];
 }
@@ -3487,11 +3578,11 @@ vErrors.push(err82);
 errors++;
 }
 }
-if(data25.headingFontSize !== undefined){
-let data28 = data25.headingFontSize;
-if((typeof data28 == "number") && (isFinite(data28))){
-if(data28 > 32 || isNaN(data28)){
-const err83 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+if(data26.headingColor !== undefined){
+let data28 = data26.headingColor;
+if(typeof data28 === "string"){
+if(func3(data28) > 80){
+const err83 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err83];
 }
@@ -3500,8 +3591,8 @@ vErrors.push(err83);
 }
 errors++;
 }
-if(data28 < 6 || isNaN(data28)){
-const err84 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+if(func3(data28) < 1){
+const err84 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err84];
 }
@@ -3510,9 +3601,8 @@ vErrors.push(err84);
 }
 errors++;
 }
-}
-else {
-const err85 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data28)){
+const err85 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err85];
 }
@@ -3522,11 +3612,8 @@ vErrors.push(err85);
 errors++;
 }
 }
-if(data25.countFontSize !== undefined){
-let data29 = data25.countFontSize;
-if((typeof data29 == "number") && (isFinite(data29))){
-if(data29 > 32 || isNaN(data29)){
-const err86 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+else {
+const err86 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err86];
 }
@@ -3535,8 +3622,12 @@ vErrors.push(err86);
 }
 errors++;
 }
-if(data29 < 6 || isNaN(data29)){
-const err87 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data26.headingFontSize !== undefined){
+let data29 = data26.headingFontSize;
+if((typeof data29 == "number") && (isFinite(data29))){
+if(data29 > 32 || isNaN(data29)){
+const err87 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err87];
 }
@@ -3545,9 +3636,8 @@ vErrors.push(err87);
 }
 errors++;
 }
-}
-else {
-const err88 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data29 < 6 || isNaN(data29)){
+const err88 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err88];
 }
@@ -3557,11 +3647,8 @@ vErrors.push(err88);
 errors++;
 }
 }
-if(data25.axisFontSize !== undefined){
-let data30 = data25.axisFontSize;
-if((typeof data30 == "number") && (isFinite(data30))){
-if(data30 > 32 || isNaN(data30)){
-const err89 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+else {
+const err89 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err89];
 }
@@ -3570,8 +3657,12 @@ vErrors.push(err89);
 }
 errors++;
 }
-if(data30 < 6 || isNaN(data30)){
-const err90 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data26.countFontSize !== undefined){
+let data30 = data26.countFontSize;
+if((typeof data30 == "number") && (isFinite(data30))){
+if(data30 > 32 || isNaN(data30)){
+const err90 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err90];
 }
@@ -3580,9 +3671,8 @@ vErrors.push(err90);
 }
 errors++;
 }
-}
-else {
-const err91 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data30 < 6 || isNaN(data30)){
+const err91 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err91];
 }
@@ -3592,11 +3682,8 @@ vErrors.push(err91);
 errors++;
 }
 }
-if(data25.markerStroke !== undefined){
-let data31 = data25.markerStroke;
-if(typeof data31 === "string"){
-if(func3(data31) > 80){
-const err92 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err92 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err92];
 }
@@ -3605,8 +3692,12 @@ vErrors.push(err92);
 }
 errors++;
 }
-if(func3(data31) < 1){
-const err93 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.axisFontSize !== undefined){
+let data31 = data26.axisFontSize;
+if((typeof data31 == "number") && (isFinite(data31))){
+if(data31 > 32 || isNaN(data31)){
+const err93 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err93];
 }
@@ -3615,8 +3706,8 @@ vErrors.push(err93);
 }
 errors++;
 }
-if(!pattern2.test(data31)){
-const err94 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data31 < 6 || isNaN(data31)){
+const err94 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err94];
 }
@@ -3627,7 +3718,7 @@ errors++;
 }
 }
 else {
-const err95 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err95 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err95];
 }
@@ -3637,11 +3728,11 @@ vErrors.push(err95);
 errors++;
 }
 }
-if(data25.markerStrokeWidth !== undefined){
-let data32 = data25.markerStrokeWidth;
-if((typeof data32 == "number") && (isFinite(data32))){
-if(data32 > 8 || isNaN(data32)){
-const err96 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.markerStroke !== undefined){
+let data32 = data26.markerStroke;
+if(typeof data32 === "string"){
+if(func3(data32) > 80){
+const err96 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err96];
 }
@@ -3650,8 +3741,8 @@ vErrors.push(err96);
 }
 errors++;
 }
-if(data32 < 0 || isNaN(data32)){
-const err97 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data32) < 1){
+const err97 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err97];
 }
@@ -3660,9 +3751,8 @@ vErrors.push(err97);
 }
 errors++;
 }
-}
-else {
-const err98 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data32)){
+const err98 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err98];
 }
@@ -3672,11 +3762,8 @@ vErrors.push(err98);
 errors++;
 }
 }
-if(data25.dimmedOpacity !== undefined){
-let data33 = data25.dimmedOpacity;
-if((typeof data33 == "number") && (isFinite(data33))){
-if(data33 > 1 || isNaN(data33)){
-const err99 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err99 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err99];
 }
@@ -3685,8 +3772,12 @@ vErrors.push(err99);
 }
 errors++;
 }
-if(data33 < 0 || isNaN(data33)){
-const err100 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data26.markerStrokeWidth !== undefined){
+let data33 = data26.markerStrokeWidth;
+if((typeof data33 == "number") && (isFinite(data33))){
+if(data33 > 8 || isNaN(data33)){
+const err100 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err100];
 }
@@ -3695,9 +3786,8 @@ vErrors.push(err100);
 }
 errors++;
 }
-}
-else {
-const err101 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data33 < 0 || isNaN(data33)){
+const err101 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err101];
 }
@@ -3707,11 +3797,8 @@ vErrors.push(err101);
 errors++;
 }
 }
-if(data25.matchColor !== undefined){
-let data34 = data25.matchColor;
-if(typeof data34 === "string"){
-if(func3(data34) > 80){
-const err102 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err102 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err102];
 }
@@ -3720,8 +3807,12 @@ vErrors.push(err102);
 }
 errors++;
 }
-if(func3(data34) < 1){
-const err103 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.dimmedOpacity !== undefined){
+let data34 = data26.dimmedOpacity;
+if((typeof data34 == "number") && (isFinite(data34))){
+if(data34 > 1 || isNaN(data34)){
+const err103 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err103];
 }
@@ -3730,8 +3821,8 @@ vErrors.push(err103);
 }
 errors++;
 }
-if(!pattern2.test(data34)){
-const err104 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data34 < 0 || isNaN(data34)){
+const err104 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err104];
 }
@@ -3742,7 +3833,7 @@ errors++;
 }
 }
 else {
-const err105 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err105 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err105];
 }
@@ -3752,11 +3843,11 @@ vErrors.push(err105);
 errors++;
 }
 }
-if(data25.matchOpacity !== undefined){
-let data35 = data25.matchOpacity;
-if((typeof data35 == "number") && (isFinite(data35))){
-if(data35 > 1 || isNaN(data35)){
-const err106 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data26.matchColor !== undefined){
+let data35 = data26.matchColor;
+if(typeof data35 === "string"){
+if(func3(data35) > 80){
+const err106 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err106];
 }
@@ -3765,8 +3856,8 @@ vErrors.push(err106);
 }
 errors++;
 }
-if(data35 < 0 || isNaN(data35)){
-const err107 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data35) < 1){
+const err107 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err107];
 }
@@ -3775,9 +3866,8 @@ vErrors.push(err107);
 }
 errors++;
 }
-}
-else {
-const err108 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data35)){
+const err108 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err108];
 }
@@ -3787,11 +3877,8 @@ vErrors.push(err108);
 errors++;
 }
 }
-if(data25.matchStroke !== undefined){
-let data36 = data25.matchStroke;
-if(typeof data36 === "string"){
-if(func3(data36) > 80){
-const err109 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err109 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err109];
 }
@@ -3800,8 +3887,12 @@ vErrors.push(err109);
 }
 errors++;
 }
-if(func3(data36) < 1){
-const err110 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.matchOpacity !== undefined){
+let data36 = data26.matchOpacity;
+if((typeof data36 == "number") && (isFinite(data36))){
+if(data36 > 1 || isNaN(data36)){
+const err110 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err110];
 }
@@ -3810,8 +3901,8 @@ vErrors.push(err110);
 }
 errors++;
 }
-if(!pattern2.test(data36)){
-const err111 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data36 < 0 || isNaN(data36)){
+const err111 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err111];
 }
@@ -3822,7 +3913,7 @@ errors++;
 }
 }
 else {
-const err112 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err112 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err112];
 }
@@ -3832,11 +3923,11 @@ vErrors.push(err112);
 errors++;
 }
 }
-if(data25.matchStrokeWidth !== undefined){
-let data37 = data25.matchStrokeWidth;
-if((typeof data37 == "number") && (isFinite(data37))){
-if(data37 > 8 || isNaN(data37)){
-const err113 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.matchStroke !== undefined){
+let data37 = data26.matchStroke;
+if(typeof data37 === "string"){
+if(func3(data37) > 80){
+const err113 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err113];
 }
@@ -3845,8 +3936,8 @@ vErrors.push(err113);
 }
 errors++;
 }
-if(data37 < 0 || isNaN(data37)){
-const err114 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data37) < 1){
+const err114 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err114];
 }
@@ -3855,9 +3946,8 @@ vErrors.push(err114);
 }
 errors++;
 }
-}
-else {
-const err115 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data37)){
+const err115 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err115];
 }
@@ -3867,11 +3957,8 @@ vErrors.push(err115);
 errors++;
 }
 }
-if(data25.viewportColor !== undefined){
-let data38 = data25.viewportColor;
-if(typeof data38 === "string"){
-if(func3(data38) > 80){
-const err116 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err116 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err116];
 }
@@ -3880,8 +3967,12 @@ vErrors.push(err116);
 }
 errors++;
 }
-if(func3(data38) < 1){
-const err117 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.matchStrokeWidth !== undefined){
+let data38 = data26.matchStrokeWidth;
+if((typeof data38 == "number") && (isFinite(data38))){
+if(data38 > 8 || isNaN(data38)){
+const err117 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err117];
 }
@@ -3890,8 +3981,8 @@ vErrors.push(err117);
 }
 errors++;
 }
-if(!pattern2.test(data38)){
-const err118 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data38 < 0 || isNaN(data38)){
+const err118 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err118];
 }
@@ -3902,7 +3993,7 @@ errors++;
 }
 }
 else {
-const err119 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err119 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err119];
 }
@@ -3912,11 +4003,11 @@ vErrors.push(err119);
 errors++;
 }
 }
-if(data25.viewportOpacity !== undefined){
-let data39 = data25.viewportOpacity;
-if((typeof data39 == "number") && (isFinite(data39))){
-if(data39 > 1 || isNaN(data39)){
-const err120 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data26.viewportColor !== undefined){
+let data39 = data26.viewportColor;
+if(typeof data39 === "string"){
+if(func3(data39) > 80){
+const err120 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err120];
 }
@@ -3925,8 +4016,8 @@ vErrors.push(err120);
 }
 errors++;
 }
-if(data39 < 0 || isNaN(data39)){
-const err121 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data39) < 1){
+const err121 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err121];
 }
@@ -3935,9 +4026,8 @@ vErrors.push(err121);
 }
 errors++;
 }
-}
-else {
-const err122 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data39)){
+const err122 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err122];
 }
@@ -3947,11 +4037,8 @@ vErrors.push(err122);
 errors++;
 }
 }
-if(data25.viewportStroke !== undefined){
-let data40 = data25.viewportStroke;
-if(typeof data40 === "string"){
-if(func3(data40) > 80){
-const err123 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err123 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err123];
 }
@@ -3960,8 +4047,12 @@ vErrors.push(err123);
 }
 errors++;
 }
-if(func3(data40) < 1){
-const err124 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.viewportOpacity !== undefined){
+let data40 = data26.viewportOpacity;
+if((typeof data40 == "number") && (isFinite(data40))){
+if(data40 > 1 || isNaN(data40)){
+const err124 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err124];
 }
@@ -3970,8 +4061,8 @@ vErrors.push(err124);
 }
 errors++;
 }
-if(!pattern2.test(data40)){
-const err125 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data40 < 0 || isNaN(data40)){
+const err125 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err125];
 }
@@ -3982,7 +4073,7 @@ errors++;
 }
 }
 else {
-const err126 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err126 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err126];
 }
@@ -3992,11 +4083,11 @@ vErrors.push(err126);
 errors++;
 }
 }
-if(data25.viewportStrokeWidth !== undefined){
-let data41 = data25.viewportStrokeWidth;
-if((typeof data41 == "number") && (isFinite(data41))){
-if(data41 > 8 || isNaN(data41)){
-const err127 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.viewportStroke !== undefined){
+let data41 = data26.viewportStroke;
+if(typeof data41 === "string"){
+if(func3(data41) > 80){
+const err127 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err127];
 }
@@ -4005,8 +4096,8 @@ vErrors.push(err127);
 }
 errors++;
 }
-if(data41 < 0 || isNaN(data41)){
-const err128 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data41) < 1){
+const err128 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err128];
 }
@@ -4015,9 +4106,8 @@ vErrors.push(err128);
 }
 errors++;
 }
-}
-else {
-const err129 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data41)){
+const err129 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err129];
 }
@@ -4027,11 +4117,8 @@ vErrors.push(err129);
 errors++;
 }
 }
-if(data25.handleColor !== undefined){
-let data42 = data25.handleColor;
-if(typeof data42 === "string"){
-if(func3(data42) > 80){
-const err130 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err130 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err130];
 }
@@ -4040,8 +4127,12 @@ vErrors.push(err130);
 }
 errors++;
 }
-if(func3(data42) < 1){
-const err131 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.viewportStrokeWidth !== undefined){
+let data42 = data26.viewportStrokeWidth;
+if((typeof data42 == "number") && (isFinite(data42))){
+if(data42 > 8 || isNaN(data42)){
+const err131 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err131];
 }
@@ -4050,8 +4141,8 @@ vErrors.push(err131);
 }
 errors++;
 }
-if(!pattern2.test(data42)){
-const err132 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data42 < 0 || isNaN(data42)){
+const err132 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err132];
 }
@@ -4062,7 +4153,7 @@ errors++;
 }
 }
 else {
-const err133 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err133 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err133];
 }
@@ -4072,11 +4163,11 @@ vErrors.push(err133);
 errors++;
 }
 }
-if(data25.handleStroke !== undefined){
-let data43 = data25.handleStroke;
+if(data26.handleColor !== undefined){
+let data43 = data26.handleColor;
 if(typeof data43 === "string"){
 if(func3(data43) > 80){
-const err134 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err134 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err134];
 }
@@ -4086,7 +4177,7 @@ vErrors.push(err134);
 errors++;
 }
 if(func3(data43) < 1){
-const err135 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err135 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err135];
 }
@@ -4095,8 +4186,8 @@ vErrors.push(err135);
 }
 errors++;
 }
-if(!pattern2.test(data43)){
-const err136 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data43)){
+const err136 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err136];
 }
@@ -4107,7 +4198,7 @@ errors++;
 }
 }
 else {
-const err137 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err137 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err137];
 }
@@ -4117,11 +4208,11 @@ vErrors.push(err137);
 errors++;
 }
 }
-if(data25.handleWidth !== undefined){
-let data44 = data25.handleWidth;
-if((typeof data44 == "number") && (isFinite(data44))){
-if(data44 > 24 || isNaN(data44)){
-const err138 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 24},message:"must be <= 24"};
+if(data26.handleStroke !== undefined){
+let data44 = data26.handleStroke;
+if(typeof data44 === "string"){
+if(func3(data44) > 80){
+const err138 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err138];
 }
@@ -4130,8 +4221,8 @@ vErrors.push(err138);
 }
 errors++;
 }
-if(data44 < 3 || isNaN(data44)){
-const err139 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 3},message:"must be >= 3"};
+if(func3(data44) < 1){
+const err139 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err139];
 }
@@ -4140,9 +4231,8 @@ vErrors.push(err139);
 }
 errors++;
 }
-}
-else {
-const err140 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data44)){
+const err140 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err140];
 }
@@ -4152,11 +4242,8 @@ vErrors.push(err140);
 errors++;
 }
 }
-if(data25.handleMaxHeight !== undefined){
-let data45 = data25.handleMaxHeight;
-if((typeof data45 == "number") && (isFinite(data45))){
-if(data45 > 120 || isNaN(data45)){
-const err141 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
+else {
+const err141 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err141];
 }
@@ -4165,8 +4252,12 @@ vErrors.push(err141);
 }
 errors++;
 }
-if(data45 < 12 || isNaN(data45)){
-const err142 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
+}
+if(data26.handleWidth !== undefined){
+let data45 = data26.handleWidth;
+if((typeof data45 == "number") && (isFinite(data45))){
+if(data45 > 24 || isNaN(data45)){
+const err142 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 24},message:"must be <= 24"};
 if(vErrors === null){
 vErrors = [err142];
 }
@@ -4175,9 +4266,8 @@ vErrors.push(err142);
 }
 errors++;
 }
-}
-else {
-const err143 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data45 < 3 || isNaN(data45)){
+const err143 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 3},message:"must be >= 3"};
 if(vErrors === null){
 vErrors = [err143];
 }
@@ -4187,9 +4277,8 @@ vErrors.push(err143);
 errors++;
 }
 }
-}
 else {
-const err144 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err144 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err144];
 }
@@ -4199,12 +4288,11 @@ vErrors.push(err144);
 errors++;
 }
 }
-if(data6.camera !== undefined){
-let data46 = data6.camera;
-if(data46 && typeof data46 == "object" && !Array.isArray(data46)){
-for(const key5 in data46){
-if(!(func2.call(schema6.properties.rendering.properties.camera.properties, key5))){
-const err145 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
+if(data26.handleMaxHeight !== undefined){
+let data46 = data26.handleMaxHeight;
+if((typeof data46 == "number") && (isFinite(data46))){
+if(data46 > 120 || isNaN(data46)){
+const err145 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err145];
 }
@@ -4213,11 +4301,8 @@ vErrors.push(err145);
 }
 errors++;
 }
-}
-if(data46.mode !== undefined){
-let data47 = data46.mode;
-if(typeof data47 !== "string"){
-const err146 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data46 < 12 || isNaN(data46)){
+const err146 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
 if(vErrors === null){
 vErrors = [err146];
 }
@@ -4226,8 +4311,9 @@ vErrors.push(err146);
 }
 errors++;
 }
-if(!((data47 === "Orthographic") || (data47 === "Perspective"))){
-const err147 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.camera.properties.mode.enum},message:"must be equal to one of the allowed values"};
+}
+else {
+const err147 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err147];
 }
@@ -4237,11 +4323,9 @@ vErrors.push(err147);
 errors++;
 }
 }
-if(data46.fieldOfView !== undefined){
-let data48 = data46.fieldOfView;
-if((typeof data48 == "number") && (isFinite(data48))){
-if(data48 > 100 || isNaN(data48)){
-const err148 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+}
+else {
+const err148 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err148];
 }
@@ -4250,8 +4334,13 @@ vErrors.push(err148);
 }
 errors++;
 }
-if(data48 < 10 || isNaN(data48)){
-const err149 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/minimum",keyword:"minimum",params:{comparison: ">=", limit: 10},message:"must be >= 10"};
+}
+if(data6.camera !== undefined){
+let data47 = data6.camera;
+if(data47 && typeof data47 == "object" && !Array.isArray(data47)){
+for(const key5 in data47){
+if(!(func2.call(schema6.properties.rendering.properties.camera.properties, key5))){
+const err149 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err149];
 }
@@ -4261,8 +4350,10 @@ vErrors.push(err149);
 errors++;
 }
 }
-else {
-const err150 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data47.mode !== undefined){
+let data48 = data47.mode;
+if(typeof data48 !== "string"){
+const err150 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err150];
 }
@@ -4271,12 +4362,8 @@ vErrors.push(err150);
 }
 errors++;
 }
-}
-if(data46.yaw !== undefined){
-let data49 = data46.yaw;
-if((typeof data49 == "number") && (isFinite(data49))){
-if(data49 > 3.141592653589793 || isNaN(data49)){
-const err151 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3.141592653589793},message:"must be <= 3.141592653589793"};
+if(!((data48 === "Orthographic") || (data48 === "Perspective"))){
+const err151 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.camera.properties.mode.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err151];
 }
@@ -4285,8 +4372,12 @@ vErrors.push(err151);
 }
 errors++;
 }
-if(data49 < -3.141592653589793 || isNaN(data49)){
-const err152 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/minimum",keyword:"minimum",params:{comparison: ">=", limit: -3.141592653589793},message:"must be >= -3.141592653589793"};
+}
+if(data47.fieldOfView !== undefined){
+let data49 = data47.fieldOfView;
+if((typeof data49 == "number") && (isFinite(data49))){
+if(data49 > 100 || isNaN(data49)){
+const err152 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err152];
 }
@@ -4295,9 +4386,8 @@ vErrors.push(err152);
 }
 errors++;
 }
-}
-else {
-const err153 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data49 < 10 || isNaN(data49)){
+const err153 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/minimum",keyword:"minimum",params:{comparison: ">=", limit: 10},message:"must be >= 10"};
 if(vErrors === null){
 vErrors = [err153];
 }
@@ -4307,11 +4397,8 @@ vErrors.push(err153);
 errors++;
 }
 }
-if(data46.pitch !== undefined){
-let data50 = data46.pitch;
-if((typeof data50 == "number") && (isFinite(data50))){
-if(data50 > 1.48 || isNaN(data50)){
-const err154 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1.48},message:"must be <= 1.48"};
+else {
+const err154 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err154];
 }
@@ -4320,8 +4407,12 @@ vErrors.push(err154);
 }
 errors++;
 }
-if(data50 < -1.48 || isNaN(data50)){
-const err155 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/minimum",keyword:"minimum",params:{comparison: ">=", limit: -1.48},message:"must be >= -1.48"};
+}
+if(data47.yaw !== undefined){
+let data50 = data47.yaw;
+if((typeof data50 == "number") && (isFinite(data50))){
+if(data50 > 3.141592653589793 || isNaN(data50)){
+const err155 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3.141592653589793},message:"must be <= 3.141592653589793"};
 if(vErrors === null){
 vErrors = [err155];
 }
@@ -4330,9 +4421,8 @@ vErrors.push(err155);
 }
 errors++;
 }
-}
-else {
-const err156 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data50 < -3.141592653589793 || isNaN(data50)){
+const err156 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/minimum",keyword:"minimum",params:{comparison: ">=", limit: -3.141592653589793},message:"must be >= -3.141592653589793"};
 if(vErrors === null){
 vErrors = [err156];
 }
@@ -4342,11 +4432,8 @@ vErrors.push(err156);
 errors++;
 }
 }
-if(data46.roll !== undefined){
-let data51 = data46.roll;
-if((typeof data51 == "number") && (isFinite(data51))){
-if(data51 > 0.5 || isNaN(data51)){
-const err157 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.5},message:"must be <= 0.5"};
+else {
+const err157 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err157];
 }
@@ -4355,8 +4442,12 @@ vErrors.push(err157);
 }
 errors++;
 }
-if(data51 < -0.5 || isNaN(data51)){
-const err158 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/minimum",keyword:"minimum",params:{comparison: ">=", limit: -0.5},message:"must be >= -0.5"};
+}
+if(data47.pitch !== undefined){
+let data51 = data47.pitch;
+if((typeof data51 == "number") && (isFinite(data51))){
+if(data51 > 1.48 || isNaN(data51)){
+const err158 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1.48},message:"must be <= 1.48"};
 if(vErrors === null){
 vErrors = [err158];
 }
@@ -4365,9 +4456,8 @@ vErrors.push(err158);
 }
 errors++;
 }
-}
-else {
-const err159 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data51 < -1.48 || isNaN(data51)){
+const err159 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/minimum",keyword:"minimum",params:{comparison: ">=", limit: -1.48},message:"must be >= -1.48"};
 if(vErrors === null){
 vErrors = [err159];
 }
@@ -4377,11 +4467,8 @@ vErrors.push(err159);
 errors++;
 }
 }
-if(data46.rotationSensitivity !== undefined){
-let data52 = data46.rotationSensitivity;
-if((typeof data52 == "number") && (isFinite(data52))){
-if(data52 > 0.02 || isNaN(data52)){
-const err160 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.02},message:"must be <= 0.02"};
+else {
+const err160 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err160];
 }
@@ -4390,8 +4477,12 @@ vErrors.push(err160);
 }
 errors++;
 }
-if(data52 < 0.0001 || isNaN(data52)){
-const err161 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.0001},message:"must be >= 0.0001"};
+}
+if(data47.roll !== undefined){
+let data52 = data47.roll;
+if((typeof data52 == "number") && (isFinite(data52))){
+if(data52 > 0.5 || isNaN(data52)){
+const err161 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.5},message:"must be <= 0.5"};
 if(vErrors === null){
 vErrors = [err161];
 }
@@ -4400,9 +4491,8 @@ vErrors.push(err161);
 }
 errors++;
 }
-}
-else {
-const err162 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data52 < -0.5 || isNaN(data52)){
+const err162 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/minimum",keyword:"minimum",params:{comparison: ">=", limit: -0.5},message:"must be >= -0.5"};
 if(vErrors === null){
 vErrors = [err162];
 }
@@ -4412,11 +4502,8 @@ vErrors.push(err162);
 errors++;
 }
 }
-if(data46.ambientColor !== undefined){
-let data53 = data46.ambientColor;
-if(typeof data53 === "string"){
-if(func3(data53) > 80){
-const err163 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err163 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err163];
 }
@@ -4425,8 +4512,12 @@ vErrors.push(err163);
 }
 errors++;
 }
-if(func3(data53) < 1){
-const err164 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data47.rotationSensitivity !== undefined){
+let data53 = data47.rotationSensitivity;
+if((typeof data53 == "number") && (isFinite(data53))){
+if(data53 > 0.02 || isNaN(data53)){
+const err164 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.02},message:"must be <= 0.02"};
 if(vErrors === null){
 vErrors = [err164];
 }
@@ -4435,8 +4526,8 @@ vErrors.push(err164);
 }
 errors++;
 }
-if(!pattern2.test(data53)){
-const err165 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data53 < 0.0001 || isNaN(data53)){
+const err165 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.0001},message:"must be >= 0.0001"};
 if(vErrors === null){
 vErrors = [err165];
 }
@@ -4447,7 +4538,7 @@ errors++;
 }
 }
 else {
-const err166 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err166 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err166];
 }
@@ -4457,11 +4548,11 @@ vErrors.push(err166);
 errors++;
 }
 }
-if(data46.ambientIntensity !== undefined){
-let data54 = data46.ambientIntensity;
-if((typeof data54 == "number") && (isFinite(data54))){
-if(data54 > 5 || isNaN(data54)){
-const err167 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
+if(data47.ambientColor !== undefined){
+let data54 = data47.ambientColor;
+if(typeof data54 === "string"){
+if(func3(data54) > 80){
+const err167 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err167];
 }
@@ -4470,8 +4561,8 @@ vErrors.push(err167);
 }
 errors++;
 }
-if(data54 < 0 || isNaN(data54)){
-const err168 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data54) < 1){
+const err168 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err168];
 }
@@ -4480,9 +4571,8 @@ vErrors.push(err168);
 }
 errors++;
 }
-}
-else {
-const err169 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data54)){
+const err169 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err169];
 }
@@ -4492,11 +4582,8 @@ vErrors.push(err169);
 errors++;
 }
 }
-if(data46.directionalColor !== undefined){
-let data55 = data46.directionalColor;
-if(typeof data55 === "string"){
-if(func3(data55) > 80){
-const err170 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err170 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err170];
 }
@@ -4505,8 +4592,12 @@ vErrors.push(err170);
 }
 errors++;
 }
-if(func3(data55) < 1){
-const err171 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data47.ambientIntensity !== undefined){
+let data55 = data47.ambientIntensity;
+if((typeof data55 == "number") && (isFinite(data55))){
+if(data55 > 5 || isNaN(data55)){
+const err171 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
 if(vErrors === null){
 vErrors = [err171];
 }
@@ -4515,8 +4606,8 @@ vErrors.push(err171);
 }
 errors++;
 }
-if(!pattern2.test(data55)){
-const err172 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data55 < 0 || isNaN(data55)){
+const err172 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err172];
 }
@@ -4527,7 +4618,7 @@ errors++;
 }
 }
 else {
-const err173 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err173 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err173];
 }
@@ -4537,11 +4628,11 @@ vErrors.push(err173);
 errors++;
 }
 }
-if(data46.directionalIntensity !== undefined){
-let data56 = data46.directionalIntensity;
-if((typeof data56 == "number") && (isFinite(data56))){
-if(data56 > 5 || isNaN(data56)){
-const err174 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
+if(data47.directionalColor !== undefined){
+let data56 = data47.directionalColor;
+if(typeof data56 === "string"){
+if(func3(data56) > 80){
+const err174 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err174];
 }
@@ -4550,8 +4641,8 @@ vErrors.push(err174);
 }
 errors++;
 }
-if(data56 < 0 || isNaN(data56)){
-const err175 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data56) < 1){
+const err175 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err175];
 }
@@ -4560,9 +4651,8 @@ vErrors.push(err175);
 }
 errors++;
 }
-}
-else {
-const err176 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data56)){
+const err176 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err176];
 }
@@ -4572,9 +4662,8 @@ vErrors.push(err176);
 errors++;
 }
 }
-}
 else {
-const err177 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err177 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err177];
 }
@@ -4584,12 +4673,11 @@ vErrors.push(err177);
 errors++;
 }
 }
-if(data6.activity !== undefined){
-let data57 = data6.activity;
-if(data57 && typeof data57 == "object" && !Array.isArray(data57)){
-for(const key6 in data57){
-if(!(func2.call(schema6.properties.rendering.properties.activity.properties, key6))){
-const err178 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
+if(data47.directionalIntensity !== undefined){
+let data57 = data47.directionalIntensity;
+if((typeof data57 == "number") && (isFinite(data57))){
+if(data57 > 5 || isNaN(data57)){
+const err178 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
 if(vErrors === null){
 vErrors = [err178];
 }
@@ -4598,12 +4686,8 @@ vErrors.push(err178);
 }
 errors++;
 }
-}
-if(data57.labelMinWidth !== undefined){
-let data58 = data57.labelMinWidth;
-if((typeof data58 == "number") && (isFinite(data58))){
-if(data58 > 400 || isNaN(data58)){
-const err179 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
+if(data57 < 0 || isNaN(data57)){
+const err179 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err179];
 }
@@ -4612,8 +4696,9 @@ vErrors.push(err179);
 }
 errors++;
 }
-if(data58 < 20 || isNaN(data58)){
-const err180 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
+}
+else {
+const err180 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err180];
 }
@@ -4623,8 +4708,9 @@ vErrors.push(err180);
 errors++;
 }
 }
+}
 else {
-const err181 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err181 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err181];
 }
@@ -4634,11 +4720,12 @@ vErrors.push(err181);
 errors++;
 }
 }
-if(data57.labelMaxWidth !== undefined){
-let data59 = data57.labelMaxWidth;
-if((typeof data59 == "number") && (isFinite(data59))){
-if(data59 > 1600 || isNaN(data59)){
-const err182 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1600},message:"must be <= 1600"};
+if(data6.activity !== undefined){
+let data58 = data6.activity;
+if(data58 && typeof data58 == "object" && !Array.isArray(data58)){
+for(const key6 in data58){
+if(!(func2.call(schema6.properties.rendering.properties.activity.properties, key6))){
+const err182 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err182];
 }
@@ -4647,8 +4734,12 @@ vErrors.push(err182);
 }
 errors++;
 }
-if(data59 < 40 || isNaN(data59)){
-const err183 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data58.labelMinWidth !== undefined){
+let data59 = data58.labelMinWidth;
+if((typeof data59 == "number") && (isFinite(data59))){
+if(data59 > 400 || isNaN(data59)){
+const err183 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err183];
 }
@@ -4657,9 +4748,8 @@ vErrors.push(err183);
 }
 errors++;
 }
-}
-else {
-const err184 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data59 < 20 || isNaN(data59)){
+const err184 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
 if(vErrors === null){
 vErrors = [err184];
 }
@@ -4669,11 +4759,8 @@ vErrors.push(err184);
 errors++;
 }
 }
-if(data57.labelHorizontalPadding !== undefined){
-let data60 = data57.labelHorizontalPadding;
-if((typeof data60 == "number") && (isFinite(data60))){
-if(data60 > 200 || isNaN(data60)){
-const err185 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 200},message:"must be <= 200"};
+else {
+const err185 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err185];
 }
@@ -4682,8 +4769,12 @@ vErrors.push(err185);
 }
 errors++;
 }
-if(data60 < 0 || isNaN(data60)){
-const err186 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.labelMaxWidth !== undefined){
+let data60 = data58.labelMaxWidth;
+if((typeof data60 == "number") && (isFinite(data60))){
+if(data60 > 1600 || isNaN(data60)){
+const err186 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1600},message:"must be <= 1600"};
 if(vErrors === null){
 vErrors = [err186];
 }
@@ -4692,9 +4783,8 @@ vErrors.push(err186);
 }
 errors++;
 }
-}
-else {
-const err187 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data60 < 40 || isNaN(data60)){
+const err187 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err187];
 }
@@ -4704,11 +4794,8 @@ vErrors.push(err187);
 errors++;
 }
 }
-if(data57.lineHeight !== undefined){
-let data61 = data57.lineHeight;
-if((typeof data61 == "number") && (isFinite(data61))){
-if(data61 > 3 || isNaN(data61)){
-const err188 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
+else {
+const err188 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err188];
 }
@@ -4717,8 +4804,12 @@ vErrors.push(err188);
 }
 errors++;
 }
-if(data61 < 1 || isNaN(data61)){
-const err189 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data58.labelHorizontalPadding !== undefined){
+let data61 = data58.labelHorizontalPadding;
+if((typeof data61 == "number") && (isFinite(data61))){
+if(data61 > 200 || isNaN(data61)){
+const err189 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 200},message:"must be <= 200"};
 if(vErrors === null){
 vErrors = [err189];
 }
@@ -4727,9 +4818,8 @@ vErrors.push(err189);
 }
 errors++;
 }
-}
-else {
-const err190 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data61 < 0 || isNaN(data61)){
+const err190 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err190];
 }
@@ -4739,11 +4829,8 @@ vErrors.push(err190);
 errors++;
 }
 }
-if(data57.shininess !== undefined){
-let data62 = data57.shininess;
-if((typeof data62 == "number") && (isFinite(data62))){
-if(data62 > 100 || isNaN(data62)){
-const err191 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err191 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err191];
 }
@@ -4752,8 +4839,12 @@ vErrors.push(err191);
 }
 errors++;
 }
-if(data62 < 0 || isNaN(data62)){
-const err192 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.lineHeight !== undefined){
+let data62 = data58.lineHeight;
+if((typeof data62 == "number") && (isFinite(data62))){
+if(data62 > 3 || isNaN(data62)){
+const err192 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err192];
 }
@@ -4762,9 +4853,8 @@ vErrors.push(err192);
 }
 errors++;
 }
-}
-else {
-const err193 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data62 < 1 || isNaN(data62)){
+const err193 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err193];
 }
@@ -4774,11 +4864,8 @@ vErrors.push(err193);
 errors++;
 }
 }
-if(data57.shadowColor !== undefined){
-let data63 = data57.shadowColor;
-if(typeof data63 === "string"){
-if(func3(data63) > 80){
-const err194 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err194 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err194];
 }
@@ -4787,8 +4874,12 @@ vErrors.push(err194);
 }
 errors++;
 }
-if(func3(data63) < 1){
-const err195 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.shininess !== undefined){
+let data63 = data58.shininess;
+if((typeof data63 == "number") && (isFinite(data63))){
+if(data63 > 100 || isNaN(data63)){
+const err195 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err195];
 }
@@ -4797,8 +4888,8 @@ vErrors.push(err195);
 }
 errors++;
 }
-if(!pattern2.test(data63)){
-const err196 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data63 < 0 || isNaN(data63)){
+const err196 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err196];
 }
@@ -4809,7 +4900,7 @@ errors++;
 }
 }
 else {
-const err197 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err197 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err197];
 }
@@ -4819,11 +4910,11 @@ vErrors.push(err197);
 errors++;
 }
 }
-if(data57.shadowOpacity !== undefined){
-let data64 = data57.shadowOpacity;
-if((typeof data64 == "number") && (isFinite(data64))){
-if(data64 > 1 || isNaN(data64)){
-const err198 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data58.shadowColor !== undefined){
+let data64 = data58.shadowColor;
+if(typeof data64 === "string"){
+if(func3(data64) > 80){
+const err198 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err198];
 }
@@ -4832,8 +4923,8 @@ vErrors.push(err198);
 }
 errors++;
 }
-if(data64 < 0 || isNaN(data64)){
-const err199 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data64) < 1){
+const err199 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err199];
 }
@@ -4842,9 +4933,8 @@ vErrors.push(err199);
 }
 errors++;
 }
-}
-else {
-const err200 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data64)){
+const err200 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err200];
 }
@@ -4854,11 +4944,8 @@ vErrors.push(err200);
 errors++;
 }
 }
-if(data57.laneOpacity !== undefined){
-let data65 = data57.laneOpacity;
-if((typeof data65 == "number") && (isFinite(data65))){
-if(data65 > 1 || isNaN(data65)){
-const err201 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err201 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err201];
 }
@@ -4867,8 +4954,12 @@ vErrors.push(err201);
 }
 errors++;
 }
-if(data65 < 0 || isNaN(data65)){
-const err202 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.shadowOpacity !== undefined){
+let data65 = data58.shadowOpacity;
+if((typeof data65 == "number") && (isFinite(data65))){
+if(data65 > 1 || isNaN(data65)){
+const err202 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err202];
 }
@@ -4877,9 +4968,8 @@ vErrors.push(err202);
 }
 errors++;
 }
-}
-else {
-const err203 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data65 < 0 || isNaN(data65)){
+const err203 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err203];
 }
@@ -4889,11 +4979,8 @@ vErrors.push(err203);
 errors++;
 }
 }
-if(data57.glowColor !== undefined){
-let data66 = data57.glowColor;
-if(typeof data66 === "string"){
-if(func3(data66) > 80){
-const err204 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err204 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err204];
 }
@@ -4902,8 +4989,12 @@ vErrors.push(err204);
 }
 errors++;
 }
-if(func3(data66) < 1){
-const err205 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.laneOpacity !== undefined){
+let data66 = data58.laneOpacity;
+if((typeof data66 == "number") && (isFinite(data66))){
+if(data66 > 1 || isNaN(data66)){
+const err205 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err205];
 }
@@ -4912,8 +5003,8 @@ vErrors.push(err205);
 }
 errors++;
 }
-if(!pattern2.test(data66)){
-const err206 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data66 < 0 || isNaN(data66)){
+const err206 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err206];
 }
@@ -4924,7 +5015,7 @@ errors++;
 }
 }
 else {
-const err207 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err207 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err207];
 }
@@ -4934,11 +5025,11 @@ vErrors.push(err207);
 errors++;
 }
 }
-if(data57.glowOutline !== undefined){
-let data67 = data57.glowOutline;
+if(data58.glowColor !== undefined){
+let data67 = data58.glowColor;
 if(typeof data67 === "string"){
 if(func3(data67) > 80){
-const err208 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err208 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err208];
 }
@@ -4948,7 +5039,7 @@ vErrors.push(err208);
 errors++;
 }
 if(func3(data67) < 1){
-const err209 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err209 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err209];
 }
@@ -4957,8 +5048,8 @@ vErrors.push(err209);
 }
 errors++;
 }
-if(!pattern2.test(data67)){
-const err210 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data67)){
+const err210 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err210];
 }
@@ -4969,7 +5060,7 @@ errors++;
 }
 }
 else {
-const err211 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err211 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err211];
 }
@@ -4979,11 +5070,11 @@ vErrors.push(err211);
 errors++;
 }
 }
-if(data57.glowOpacity !== undefined){
-let data68 = data57.glowOpacity;
-if((typeof data68 == "number") && (isFinite(data68))){
-if(data68 > 1 || isNaN(data68)){
-const err212 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data58.glowOutline !== undefined){
+let data68 = data58.glowOutline;
+if(typeof data68 === "string"){
+if(func3(data68) > 80){
+const err212 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err212];
 }
@@ -4992,8 +5083,8 @@ vErrors.push(err212);
 }
 errors++;
 }
-if(data68 < 0 || isNaN(data68)){
-const err213 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data68) < 1){
+const err213 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err213];
 }
@@ -5002,9 +5093,8 @@ vErrors.push(err213);
 }
 errors++;
 }
-}
-else {
-const err214 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data68)){
+const err214 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err214];
 }
@@ -5014,11 +5104,8 @@ vErrors.push(err214);
 errors++;
 }
 }
-if(data57.glowPulse !== undefined){
-let data69 = data57.glowPulse;
-if((typeof data69 == "number") && (isFinite(data69))){
-if(data69 > 1 || isNaN(data69)){
-const err215 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err215 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err215];
 }
@@ -5027,8 +5114,12 @@ vErrors.push(err215);
 }
 errors++;
 }
-if(data69 < 0 || isNaN(data69)){
-const err216 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.glowOpacity !== undefined){
+let data69 = data58.glowOpacity;
+if((typeof data69 == "number") && (isFinite(data69))){
+if(data69 > 1 || isNaN(data69)){
+const err216 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err216];
 }
@@ -5037,9 +5128,8 @@ vErrors.push(err216);
 }
 errors++;
 }
-}
-else {
-const err217 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data69 < 0 || isNaN(data69)){
+const err217 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err217];
 }
@@ -5049,11 +5139,8 @@ vErrors.push(err217);
 errors++;
 }
 }
-if(data57.transitionMs !== undefined){
-let data70 = data57.transitionMs;
-if((typeof data70 == "number") && (isFinite(data70))){
-if(data70 > 5000 || isNaN(data70)){
-const err218 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5000},message:"must be <= 5000"};
+else {
+const err218 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err218];
 }
@@ -5062,8 +5149,12 @@ vErrors.push(err218);
 }
 errors++;
 }
-if(data70 < 0 || isNaN(data70)){
-const err219 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.glowPulse !== undefined){
+let data70 = data58.glowPulse;
+if((typeof data70 == "number") && (isFinite(data70))){
+if(data70 > 1 || isNaN(data70)){
+const err219 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err219];
 }
@@ -5072,9 +5163,8 @@ vErrors.push(err219);
 }
 errors++;
 }
-}
-else {
-const err220 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data70 < 0 || isNaN(data70)){
+const err220 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err220];
 }
@@ -5084,11 +5174,8 @@ vErrors.push(err220);
 errors++;
 }
 }
-if(data57.matchBackground !== undefined){
-let data71 = data57.matchBackground;
-if(typeof data71 === "string"){
-if(func3(data71) > 80){
-const err221 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err221 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err221];
 }
@@ -5097,8 +5184,12 @@ vErrors.push(err221);
 }
 errors++;
 }
-if(func3(data71) < 1){
-const err222 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.transitionMs !== undefined){
+let data71 = data58.transitionMs;
+if((typeof data71 == "number") && (isFinite(data71))){
+if(data71 > 5000 || isNaN(data71)){
+const err222 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5000},message:"must be <= 5000"};
 if(vErrors === null){
 vErrors = [err222];
 }
@@ -5107,8 +5198,8 @@ vErrors.push(err222);
 }
 errors++;
 }
-if(!pattern2.test(data71)){
-const err223 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data71 < 0 || isNaN(data71)){
+const err223 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err223];
 }
@@ -5119,7 +5210,7 @@ errors++;
 }
 }
 else {
-const err224 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err224 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err224];
 }
@@ -5129,11 +5220,11 @@ vErrors.push(err224);
 errors++;
 }
 }
-if(data57.leaderColor !== undefined){
-let data72 = data57.leaderColor;
+if(data58.matchBackground !== undefined){
+let data72 = data58.matchBackground;
 if(typeof data72 === "string"){
 if(func3(data72) > 80){
-const err225 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err225 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err225];
 }
@@ -5143,7 +5234,7 @@ vErrors.push(err225);
 errors++;
 }
 if(func3(data72) < 1){
-const err226 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err226 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err226];
 }
@@ -5152,8 +5243,8 @@ vErrors.push(err226);
 }
 errors++;
 }
-if(!pattern2.test(data72)){
-const err227 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data72)){
+const err227 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err227];
 }
@@ -5164,7 +5255,7 @@ errors++;
 }
 }
 else {
-const err228 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err228 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err228];
 }
@@ -5174,11 +5265,11 @@ vErrors.push(err228);
 errors++;
 }
 }
-if(data57.selectedLeaderColor !== undefined){
-let data73 = data57.selectedLeaderColor;
+if(data58.leaderColor !== undefined){
+let data73 = data58.leaderColor;
 if(typeof data73 === "string"){
 if(func3(data73) > 80){
-const err229 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err229 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err229];
 }
@@ -5188,7 +5279,7 @@ vErrors.push(err229);
 errors++;
 }
 if(func3(data73) < 1){
-const err230 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err230 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err230];
 }
@@ -5197,8 +5288,8 @@ vErrors.push(err230);
 }
 errors++;
 }
-if(!pattern2.test(data73)){
-const err231 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data73)){
+const err231 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err231];
 }
@@ -5209,7 +5300,7 @@ errors++;
 }
 }
 else {
-const err232 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err232 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err232];
 }
@@ -5219,9 +5310,11 @@ vErrors.push(err232);
 errors++;
 }
 }
-}
-else {
-const err233 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data58.selectedLeaderColor !== undefined){
+let data74 = data58.selectedLeaderColor;
+if(typeof data74 === "string"){
+if(func3(data74) > 80){
+const err233 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err233];
 }
@@ -5230,13 +5323,8 @@ vErrors.push(err233);
 }
 errors++;
 }
-}
-if(data6.layout !== undefined){
-let data74 = data6.layout;
-if(data74 && typeof data74 == "object" && !Array.isArray(data74)){
-for(const key7 in data74){
-if(!(func2.call(schema6.properties.rendering.properties.layout.properties, key7))){
-const err234 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
+if(func3(data74) < 1){
+const err234 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err234];
 }
@@ -5245,12 +5333,8 @@ vErrors.push(err234);
 }
 errors++;
 }
-}
-if(data74.sidebarBreakpoint !== undefined){
-let data75 = data74.sidebarBreakpoint;
-if((typeof data75 == "number") && (isFinite(data75))){
-if(data75 > 2400 || isNaN(data75)){
-const err235 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
+if(!pattern4.test(data74)){
+const err235 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err235];
 }
@@ -5259,8 +5343,9 @@ vErrors.push(err235);
 }
 errors++;
 }
-if(data75 < 320 || isNaN(data75)){
-const err236 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
+}
+else {
+const err236 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err236];
 }
@@ -5270,8 +5355,9 @@ vErrors.push(err236);
 errors++;
 }
 }
+}
 else {
-const err237 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err237 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err237];
 }
@@ -5281,11 +5367,12 @@ vErrors.push(err237);
 errors++;
 }
 }
-if(data74.sidebarMinimum !== undefined){
-let data76 = data74.sidebarMinimum;
-if((typeof data76 == "number") && (isFinite(data76))){
-if(data76 > 800 || isNaN(data76)){
-const err238 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(data6.layout !== undefined){
+let data75 = data6.layout;
+if(data75 && typeof data75 == "object" && !Array.isArray(data75)){
+for(const key7 in data75){
+if(!(func2.call(schema6.properties.rendering.properties.layout.properties, key7))){
+const err238 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err238];
 }
@@ -5294,8 +5381,12 @@ vErrors.push(err238);
 }
 errors++;
 }
-if(data76 < 180 || isNaN(data76)){
-const err239 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+}
+if(data75.sidebarBreakpoint !== undefined){
+let data76 = data75.sidebarBreakpoint;
+if((typeof data76 == "number") && (isFinite(data76))){
+if(data76 > 2400 || isNaN(data76)){
+const err239 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
 if(vErrors === null){
 vErrors = [err239];
 }
@@ -5304,9 +5395,8 @@ vErrors.push(err239);
 }
 errors++;
 }
-}
-else {
-const err240 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data76 < 320 || isNaN(data76)){
+const err240 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
 if(vErrors === null){
 vErrors = [err240];
 }
@@ -5316,11 +5406,8 @@ vErrors.push(err240);
 errors++;
 }
 }
-if(data74.sidebarDefaultMaximum !== undefined){
-let data77 = data74.sidebarDefaultMaximum;
-if((typeof data77 == "number") && (isFinite(data77))){
-if(data77 > 1400 || isNaN(data77)){
-const err241 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
+else {
+const err241 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err241];
 }
@@ -5329,8 +5416,12 @@ vErrors.push(err241);
 }
 errors++;
 }
-if(data77 < 180 || isNaN(data77)){
-const err242 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+}
+if(data75.sidebarMinimum !== undefined){
+let data77 = data75.sidebarMinimum;
+if((typeof data77 == "number") && (isFinite(data77))){
+if(data77 > 800 || isNaN(data77)){
+const err242 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err242];
 }
@@ -5339,9 +5430,8 @@ vErrors.push(err242);
 }
 errors++;
 }
-}
-else {
-const err243 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data77 < 180 || isNaN(data77)){
+const err243 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err243];
 }
@@ -5351,11 +5441,8 @@ vErrors.push(err243);
 errors++;
 }
 }
-if(data74.sidebarDefaultRatio !== undefined){
-let data78 = data74.sidebarDefaultRatio;
-if((typeof data78 == "number") && (isFinite(data78))){
-if(data78 > 0.7 || isNaN(data78)){
-const err244 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
+else {
+const err244 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err244];
 }
@@ -5364,8 +5451,12 @@ vErrors.push(err244);
 }
 errors++;
 }
-if(data78 < 0.1 || isNaN(data78)){
-const err245 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data75.sidebarDefaultMaximum !== undefined){
+let data78 = data75.sidebarDefaultMaximum;
+if((typeof data78 == "number") && (isFinite(data78))){
+if(data78 > 1400 || isNaN(data78)){
+const err245 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
 if(vErrors === null){
 vErrors = [err245];
 }
@@ -5374,9 +5465,8 @@ vErrors.push(err245);
 }
 errors++;
 }
-}
-else {
-const err246 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data78 < 180 || isNaN(data78)){
+const err246 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err246];
 }
@@ -5386,11 +5476,8 @@ vErrors.push(err246);
 errors++;
 }
 }
-if(data74.sidebarMaximumRatio !== undefined){
-let data79 = data74.sidebarMaximumRatio;
-if((typeof data79 == "number") && (isFinite(data79))){
-if(data79 > 0.85 || isNaN(data79)){
-const err247 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
+else {
+const err247 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err247];
 }
@@ -5399,8 +5486,12 @@ vErrors.push(err247);
 }
 errors++;
 }
-if(data79 < 0.2 || isNaN(data79)){
-const err248 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+}
+if(data75.sidebarDefaultRatio !== undefined){
+let data79 = data75.sidebarDefaultRatio;
+if((typeof data79 == "number") && (isFinite(data79))){
+if(data79 > 0.7 || isNaN(data79)){
+const err248 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
 if(vErrors === null){
 vErrors = [err248];
 }
@@ -5409,9 +5500,8 @@ vErrors.push(err248);
 }
 errors++;
 }
-}
-else {
-const err249 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data79 < 0.1 || isNaN(data79)){
+const err249 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err249];
 }
@@ -5421,11 +5511,8 @@ vErrors.push(err249);
 errors++;
 }
 }
-if(data74.minimumPlotWidth !== undefined){
-let data80 = data74.minimumPlotWidth;
-if((typeof data80 == "number") && (isFinite(data80))){
-if(data80 > 1200 || isNaN(data80)){
-const err250 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+else {
+const err250 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err250];
 }
@@ -5434,8 +5521,12 @@ vErrors.push(err250);
 }
 errors++;
 }
-if(data80 < 80 || isNaN(data80)){
-const err251 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
+}
+if(data75.sidebarMaximumRatio !== undefined){
+let data80 = data75.sidebarMaximumRatio;
+if((typeof data80 == "number") && (isFinite(data80))){
+if(data80 > 0.85 || isNaN(data80)){
+const err251 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
 if(vErrors === null){
 vErrors = [err251];
 }
@@ -5444,9 +5535,8 @@ vErrors.push(err251);
 }
 errors++;
 }
-}
-else {
-const err252 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data80 < 0.2 || isNaN(data80)){
+const err252 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err252];
 }
@@ -5456,11 +5546,8 @@ vErrors.push(err252);
 errors++;
 }
 }
-if(data74.overviewMaxHeight !== undefined){
-let data81 = data74.overviewMaxHeight;
-if((typeof data81 == "number") && (isFinite(data81))){
-if(data81 > 800 || isNaN(data81)){
-const err253 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err253 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err253];
 }
@@ -5469,8 +5556,12 @@ vErrors.push(err253);
 }
 errors++;
 }
-if(data81 < 40 || isNaN(data81)){
-const err254 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.minimumPlotWidth !== undefined){
+let data81 = data75.minimumPlotWidth;
+if((typeof data81 == "number") && (isFinite(data81))){
+if(data81 > 1200 || isNaN(data81)){
+const err254 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err254];
 }
@@ -5479,9 +5570,8 @@ vErrors.push(err254);
 }
 errors++;
 }
-}
-else {
-const err255 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data81 < 80 || isNaN(data81)){
+const err255 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
 if(vErrors === null){
 vErrors = [err255];
 }
@@ -5491,11 +5581,8 @@ vErrors.push(err255);
 errors++;
 }
 }
-if(data74.minimumDetailHeight !== undefined){
-let data82 = data74.minimumDetailHeight;
-if((typeof data82 == "number") && (isFinite(data82))){
-if(data82 > 800 || isNaN(data82)){
-const err256 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err256 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err256];
 }
@@ -5504,8 +5591,12 @@ vErrors.push(err256);
 }
 errors++;
 }
-if(data82 < 40 || isNaN(data82)){
-const err257 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.overviewMaxHeight !== undefined){
+let data82 = data75.overviewMaxHeight;
+if((typeof data82 == "number") && (isFinite(data82))){
+if(data82 > 800 || isNaN(data82)){
+const err257 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err257];
 }
@@ -5514,9 +5605,8 @@ vErrors.push(err257);
 }
 errors++;
 }
-}
-else {
-const err258 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data82 < 40 || isNaN(data82)){
+const err258 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err258];
 }
@@ -5526,11 +5616,8 @@ vErrors.push(err258);
 errors++;
 }
 }
-if(data74.splitRatio !== undefined){
-let data83 = data74.splitRatio;
-if((typeof data83 == "number") && (isFinite(data83))){
-if(data83 > 0.8 || isNaN(data83)){
-const err259 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
+else {
+const err259 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err259];
 }
@@ -5539,8 +5626,12 @@ vErrors.push(err259);
 }
 errors++;
 }
-if(data83 < 0.2 || isNaN(data83)){
-const err260 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+}
+if(data75.minimumDetailHeight !== undefined){
+let data83 = data75.minimumDetailHeight;
+if((typeof data83 == "number") && (isFinite(data83))){
+if(data83 > 800 || isNaN(data83)){
+const err260 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err260];
 }
@@ -5549,9 +5640,8 @@ vErrors.push(err260);
 }
 errors++;
 }
-}
-else {
-const err261 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data83 < 40 || isNaN(data83)){
+const err261 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err261];
 }
@@ -5561,9 +5651,8 @@ vErrors.push(err261);
 errors++;
 }
 }
-}
 else {
-const err262 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err262 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err262];
 }
@@ -5573,12 +5662,11 @@ vErrors.push(err262);
 errors++;
 }
 }
-if(data6.interaction !== undefined){
-let data84 = data6.interaction;
-if(data84 && typeof data84 == "object" && !Array.isArray(data84)){
-for(const key8 in data84){
-if(!(func2.call(schema6.properties.rendering.properties.interaction.properties, key8))){
-const err263 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(data75.splitRatio !== undefined){
+let data84 = data75.splitRatio;
+if((typeof data84 == "number") && (isFinite(data84))){
+if(data84 > 0.8 || isNaN(data84)){
+const err263 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
 if(vErrors === null){
 vErrors = [err263];
 }
@@ -5587,11 +5675,8 @@ vErrors.push(err263);
 }
 errors++;
 }
-}
-if(data84.searchMode !== undefined){
-let data85 = data84.searchMode;
-if(typeof data85 !== "string"){
-const err264 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data84 < 0.2 || isNaN(data84)){
+const err264 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err264];
 }
@@ -5600,8 +5685,9 @@ vErrors.push(err264);
 }
 errors++;
 }
-if(!((data85 === "highlight") || (data85 === "only"))){
-const err265 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+}
+else {
+const err265 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err265];
 }
@@ -5611,9 +5697,9 @@ vErrors.push(err265);
 errors++;
 }
 }
-if(data84.highlight !== undefined){
-if(typeof data84.highlight !== "boolean"){
-const err266 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+}
+else {
+const err266 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err266];
 }
@@ -5623,9 +5709,12 @@ vErrors.push(err266);
 errors++;
 }
 }
-if(data84.autoScale !== undefined){
-if(typeof data84.autoScale !== "boolean"){
-const err267 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(data6.interaction !== undefined){
+let data85 = data6.interaction;
+if(data85 && typeof data85 == "object" && !Array.isArray(data85)){
+for(const key8 in data85){
+if(!(func2.call(schema6.properties.rendering.properties.interaction.properties, key8))){
+const err267 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err267];
 }
@@ -5635,11 +5724,10 @@ vErrors.push(err267);
 errors++;
 }
 }
-if(data84.adaptiveRatio !== undefined){
-let data88 = data84.adaptiveRatio;
-if((typeof data88 == "number") && (isFinite(data88))){
-if(data88 > 16 || isNaN(data88)){
-const err268 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+if(data85.searchMode !== undefined){
+let data86 = data85.searchMode;
+if(typeof data86 !== "string"){
+const err268 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err268];
 }
@@ -5648,8 +5736,8 @@ vErrors.push(err268);
 }
 errors++;
 }
-if(data88 < 1 || isNaN(data88)){
-const err269 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(!((data86 === "highlight") || (data86 === "only"))){
+const err269 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err269];
 }
@@ -5659,8 +5747,9 @@ vErrors.push(err269);
 errors++;
 }
 }
-else {
-const err270 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data85.highlight !== undefined){
+if(typeof data85.highlight !== "boolean"){
+const err270 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err270];
 }
@@ -5670,11 +5759,9 @@ vErrors.push(err270);
 errors++;
 }
 }
-if(data84.zoomInFactor !== undefined){
-let data89 = data84.zoomInFactor;
-if((typeof data89 == "number") && (isFinite(data89))){
-if(data89 > 0.99 || isNaN(data89)){
-const err271 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+if(data85.autoScale !== undefined){
+if(typeof data85.autoScale !== "boolean"){
+const err271 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err271];
 }
@@ -5683,8 +5770,12 @@ vErrors.push(err271);
 }
 errors++;
 }
-if(data89 < 0.1 || isNaN(data89)){
-const err272 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data85.adaptiveRatio !== undefined){
+let data89 = data85.adaptiveRatio;
+if((typeof data89 == "number") && (isFinite(data89))){
+if(data89 > 16 || isNaN(data89)){
+const err272 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
 if(vErrors === null){
 vErrors = [err272];
 }
@@ -5693,9 +5784,8 @@ vErrors.push(err272);
 }
 errors++;
 }
-}
-else {
-const err273 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data89 < 1 || isNaN(data89)){
+const err273 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err273];
 }
@@ -5705,11 +5795,8 @@ vErrors.push(err273);
 errors++;
 }
 }
-if(data84.zoomOutFactor !== undefined){
-let data90 = data84.zoomOutFactor;
-if((typeof data90 == "number") && (isFinite(data90))){
-if(data90 > 10 || isNaN(data90)){
-const err274 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+else {
+const err274 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err274];
 }
@@ -5718,8 +5805,12 @@ vErrors.push(err274);
 }
 errors++;
 }
-if(data90 < 1.01 || isNaN(data90)){
-const err275 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+}
+if(data85.zoomInFactor !== undefined){
+let data90 = data85.zoomInFactor;
+if((typeof data90 == "number") && (isFinite(data90))){
+if(data90 > 0.99 || isNaN(data90)){
+const err275 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
 if(vErrors === null){
 vErrors = [err275];
 }
@@ -5728,9 +5819,8 @@ vErrors.push(err275);
 }
 errors++;
 }
-}
-else {
-const err276 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data90 < 0.1 || isNaN(data90)){
+const err276 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err276];
 }
@@ -5740,11 +5830,8 @@ vErrors.push(err276);
 errors++;
 }
 }
-if(data84.overviewPanFraction !== undefined){
-let data91 = data84.overviewPanFraction;
-if((typeof data91 == "number") && (isFinite(data91))){
-if(data91 > 1 || isNaN(data91)){
-const err277 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err277 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err277];
 }
@@ -5753,8 +5840,12 @@ vErrors.push(err277);
 }
 errors++;
 }
-if(data91 < 0.05 || isNaN(data91)){
-const err278 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+}
+if(data85.zoomOutFactor !== undefined){
+let data91 = data85.zoomOutFactor;
+if((typeof data91 == "number") && (isFinite(data91))){
+if(data91 > 10 || isNaN(data91)){
+const err278 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
 if(vErrors === null){
 vErrors = [err278];
 }
@@ -5763,9 +5854,8 @@ vErrors.push(err278);
 }
 errors++;
 }
-}
-else {
-const err279 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data91 < 1.01 || isNaN(data91)){
+const err279 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
 if(vErrors === null){
 vErrors = [err279];
 }
@@ -5775,11 +5865,8 @@ vErrors.push(err279);
 errors++;
 }
 }
-if(data84.overviewKeyboardFraction !== undefined){
-let data92 = data84.overviewKeyboardFraction;
-if((typeof data92 == "number") && (isFinite(data92))){
-if(data92 > 1 || isNaN(data92)){
-const err280 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err280 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err280];
 }
@@ -5788,8 +5875,12 @@ vErrors.push(err280);
 }
 errors++;
 }
-if(data92 < 0.01 || isNaN(data92)){
-const err281 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+}
+if(data85.overviewPanFraction !== undefined){
+let data92 = data85.overviewPanFraction;
+if((typeof data92 == "number") && (isFinite(data92))){
+if(data92 > 1 || isNaN(data92)){
+const err281 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err281];
 }
@@ -5798,9 +5889,8 @@ vErrors.push(err281);
 }
 errors++;
 }
-}
-else {
-const err282 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data92 < 0.05 || isNaN(data92)){
+const err282 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
 if(vErrors === null){
 vErrors = [err282];
 }
@@ -5810,11 +5900,8 @@ vErrors.push(err282);
 errors++;
 }
 }
-if(data84.resizeStep !== undefined){
-let data93 = data84.resizeStep;
-if((typeof data93 == "number") && (isFinite(data93))){
-if(data93 > 100 || isNaN(data93)){
-const err283 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err283 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err283];
 }
@@ -5823,8 +5910,12 @@ vErrors.push(err283);
 }
 errors++;
 }
-if(data93 < 1 || isNaN(data93)){
-const err284 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data85.overviewKeyboardFraction !== undefined){
+let data93 = data85.overviewKeyboardFraction;
+if((typeof data93 == "number") && (isFinite(data93))){
+if(data93 > 1 || isNaN(data93)){
+const err284 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err284];
 }
@@ -5833,9 +5924,8 @@ vErrors.push(err284);
 }
 errors++;
 }
-}
-else {
-const err285 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data93 < 0.01 || isNaN(data93)){
+const err285 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
 if(vErrors === null){
 vErrors = [err285];
 }
@@ -5845,11 +5935,8 @@ vErrors.push(err285);
 errors++;
 }
 }
-if(data84.resizeLargeStep !== undefined){
-let data94 = data84.resizeLargeStep;
-if((typeof data94 == "number") && (isFinite(data94))){
-if(data94 > 300 || isNaN(data94)){
-const err286 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+else {
+const err286 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err286];
 }
@@ -5858,8 +5945,12 @@ vErrors.push(err286);
 }
 errors++;
 }
-if(data94 < 1 || isNaN(data94)){
-const err287 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data85.resizeStep !== undefined){
+let data94 = data85.resizeStep;
+if((typeof data94 == "number") && (isFinite(data94))){
+if(data94 > 100 || isNaN(data94)){
+const err287 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err287];
 }
@@ -5868,9 +5959,8 @@ vErrors.push(err287);
 }
 errors++;
 }
-}
-else {
-const err288 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data94 < 1 || isNaN(data94)){
+const err288 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err288];
 }
@@ -5880,9 +5970,8 @@ vErrors.push(err288);
 errors++;
 }
 }
-}
 else {
-const err289 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err289 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err289];
 }
@@ -5892,12 +5981,11 @@ vErrors.push(err289);
 errors++;
 }
 }
-if(data6.controls !== undefined){
-let data95 = data6.controls;
-if(data95 && typeof data95 == "object" && !Array.isArray(data95)){
-for(const key9 in data95){
-if(!(func2.call(schema6.properties.rendering.properties.controls.properties, key9))){
-const err290 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
+if(data85.resizeLargeStep !== undefined){
+let data95 = data85.resizeLargeStep;
+if((typeof data95 == "number") && (isFinite(data95))){
+if(data95 > 300 || isNaN(data95)){
+const err290 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
 if(vErrors === null){
 vErrors = [err290];
 }
@@ -5906,12 +5994,8 @@ vErrors.push(err290);
 }
 errors++;
 }
-}
-if(data95.timelineLabel !== undefined){
-let data96 = data95.timelineLabel;
-if(typeof data96 === "string"){
-if(func3(data96) > 160){
-const err291 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data95 < 1 || isNaN(data95)){
+const err291 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err291];
 }
@@ -5920,8 +6004,9 @@ vErrors.push(err291);
 }
 errors++;
 }
-if(func3(data96) < 1){
-const err292 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err292 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err292];
 }
@@ -5931,8 +6016,9 @@ vErrors.push(err292);
 errors++;
 }
 }
+}
 else {
-const err293 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err293 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err293];
 }
@@ -5942,11 +6028,12 @@ vErrors.push(err293);
 errors++;
 }
 }
-if(data95.tableLabel !== undefined){
-let data97 = data95.tableLabel;
-if(typeof data97 === "string"){
-if(func3(data97) > 160){
-const err294 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data6.controls !== undefined){
+let data96 = data6.controls;
+if(data96 && typeof data96 == "object" && !Array.isArray(data96)){
+for(const key9 in data96){
+if(!(func2.call(schema6.properties.rendering.properties.controls.properties, key9))){
+const err294 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err294];
 }
@@ -5955,8 +6042,12 @@ vErrors.push(err294);
 }
 errors++;
 }
-if(func3(data97) < 1){
-const err295 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.timelineLabel !== undefined){
+let data97 = data96.timelineLabel;
+if(typeof data97 === "string"){
+if(func3(data97) > 160){
+const err295 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err295];
 }
@@ -5965,9 +6056,8 @@ vErrors.push(err295);
 }
 errors++;
 }
-}
-else {
-const err296 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data97) < 1){
+const err296 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err296];
 }
@@ -5977,11 +6067,8 @@ vErrors.push(err296);
 errors++;
 }
 }
-if(data95.splitLabel !== undefined){
-let data98 = data95.splitLabel;
-if(typeof data98 === "string"){
-if(func3(data98) > 160){
-const err297 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err297 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err297];
 }
@@ -5990,8 +6077,12 @@ vErrors.push(err297);
 }
 errors++;
 }
-if(func3(data98) < 1){
-const err298 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.tableLabel !== undefined){
+let data98 = data96.tableLabel;
+if(typeof data98 === "string"){
+if(func3(data98) > 160){
+const err298 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err298];
 }
@@ -6000,9 +6091,8 @@ vErrors.push(err298);
 }
 errors++;
 }
-}
-else {
-const err299 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data98) < 1){
+const err299 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err299];
 }
@@ -6012,11 +6102,8 @@ vErrors.push(err299);
 errors++;
 }
 }
-if(data95.previousOverviewLabel !== undefined){
-let data99 = data95.previousOverviewLabel;
-if(typeof data99 === "string"){
-if(func3(data99) > 160){
-const err300 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err300 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err300];
 }
@@ -6025,8 +6112,12 @@ vErrors.push(err300);
 }
 errors++;
 }
-if(func3(data99) < 1){
-const err301 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.splitLabel !== undefined){
+let data99 = data96.splitLabel;
+if(typeof data99 === "string"){
+if(func3(data99) > 160){
+const err301 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err301];
 }
@@ -6035,9 +6126,8 @@ vErrors.push(err301);
 }
 errors++;
 }
-}
-else {
-const err302 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data99) < 1){
+const err302 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err302];
 }
@@ -6047,11 +6137,8 @@ vErrors.push(err302);
 errors++;
 }
 }
-if(data95.previousOverviewTitle !== undefined){
-let data100 = data95.previousOverviewTitle;
-if(typeof data100 === "string"){
-if(func3(data100) > 160){
-const err303 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err303 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err303];
 }
@@ -6060,8 +6147,12 @@ vErrors.push(err303);
 }
 errors++;
 }
-if(func3(data100) < 1){
-const err304 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.previousOverviewLabel !== undefined){
+let data100 = data96.previousOverviewLabel;
+if(typeof data100 === "string"){
+if(func3(data100) > 160){
+const err304 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err304];
 }
@@ -6070,9 +6161,8 @@ vErrors.push(err304);
 }
 errors++;
 }
-}
-else {
-const err305 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data100) < 1){
+const err305 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err305];
 }
@@ -6082,11 +6172,8 @@ vErrors.push(err305);
 errors++;
 }
 }
-if(data95.nextOverviewLabel !== undefined){
-let data101 = data95.nextOverviewLabel;
-if(typeof data101 === "string"){
-if(func3(data101) > 160){
-const err306 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err306 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err306];
 }
@@ -6095,8 +6182,12 @@ vErrors.push(err306);
 }
 errors++;
 }
-if(func3(data101) < 1){
-const err307 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.previousOverviewTitle !== undefined){
+let data101 = data96.previousOverviewTitle;
+if(typeof data101 === "string"){
+if(func3(data101) > 160){
+const err307 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err307];
 }
@@ -6105,9 +6196,8 @@ vErrors.push(err307);
 }
 errors++;
 }
-}
-else {
-const err308 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data101) < 1){
+const err308 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err308];
 }
@@ -6117,11 +6207,8 @@ vErrors.push(err308);
 errors++;
 }
 }
-if(data95.nextOverviewTitle !== undefined){
-let data102 = data95.nextOverviewTitle;
-if(typeof data102 === "string"){
-if(func3(data102) > 160){
-const err309 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err309 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err309];
 }
@@ -6130,8 +6217,12 @@ vErrors.push(err309);
 }
 errors++;
 }
-if(func3(data102) < 1){
-const err310 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.nextOverviewLabel !== undefined){
+let data102 = data96.nextOverviewLabel;
+if(typeof data102 === "string"){
+if(func3(data102) > 160){
+const err310 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err310];
 }
@@ -6140,9 +6231,8 @@ vErrors.push(err310);
 }
 errors++;
 }
-}
-else {
-const err311 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data102) < 1){
+const err311 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err311];
 }
@@ -6152,11 +6242,8 @@ vErrors.push(err311);
 errors++;
 }
 }
-if(data95.fitOverviewLabel !== undefined){
-let data103 = data95.fitOverviewLabel;
-if(typeof data103 === "string"){
-if(func3(data103) > 160){
-const err312 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err312 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err312];
 }
@@ -6165,8 +6252,12 @@ vErrors.push(err312);
 }
 errors++;
 }
-if(func3(data103) < 1){
-const err313 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.nextOverviewTitle !== undefined){
+let data103 = data96.nextOverviewTitle;
+if(typeof data103 === "string"){
+if(func3(data103) > 160){
+const err313 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err313];
 }
@@ -6175,9 +6266,8 @@ vErrors.push(err313);
 }
 errors++;
 }
-}
-else {
-const err314 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data103) < 1){
+const err314 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err314];
 }
@@ -6187,11 +6277,8 @@ vErrors.push(err314);
 errors++;
 }
 }
-if(data95.fitOverviewTitle !== undefined){
-let data104 = data95.fitOverviewTitle;
-if(typeof data104 === "string"){
-if(func3(data104) > 160){
-const err315 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err315 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err315];
 }
@@ -6200,8 +6287,12 @@ vErrors.push(err315);
 }
 errors++;
 }
-if(func3(data104) < 1){
-const err316 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.fitOverviewLabel !== undefined){
+let data104 = data96.fitOverviewLabel;
+if(typeof data104 === "string"){
+if(func3(data104) > 160){
+const err316 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err316];
 }
@@ -6210,9 +6301,8 @@ vErrors.push(err316);
 }
 errors++;
 }
-}
-else {
-const err317 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data104) < 1){
+const err317 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err317];
 }
@@ -6222,9 +6312,8 @@ vErrors.push(err317);
 errors++;
 }
 }
-}
 else {
-const err318 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err318 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err318];
 }
@@ -6234,12 +6323,11 @@ vErrors.push(err318);
 errors++;
 }
 }
-if(data6.table !== undefined){
-let data105 = data6.table;
-if(data105 && typeof data105 == "object" && !Array.isArray(data105)){
-for(const key10 in data105){
-if(!((key10 === "emptyText") || (key10 === "columns"))){
-const err319 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+if(data96.fitOverviewTitle !== undefined){
+let data105 = data96.fitOverviewTitle;
+if(typeof data105 === "string"){
+if(func3(data105) > 160){
+const err319 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err319];
 }
@@ -6248,12 +6336,8 @@ vErrors.push(err319);
 }
 errors++;
 }
-}
-if(data105.emptyText !== undefined){
-let data106 = data105.emptyText;
-if(typeof data106 === "string"){
-if(func3(data106) > 160){
-const err320 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data105) < 1){
+const err320 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err320];
 }
@@ -6262,8 +6346,9 @@ vErrors.push(err320);
 }
 errors++;
 }
-if(func3(data106) < 1){
-const err321 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err321 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err321];
 }
@@ -6273,8 +6358,9 @@ vErrors.push(err321);
 errors++;
 }
 }
+}
 else {
-const err322 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err322 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err322];
 }
@@ -6284,11 +6370,12 @@ vErrors.push(err322);
 errors++;
 }
 }
-if(data105.columns !== undefined){
-let data107 = data105.columns;
-if(Array.isArray(data107)){
-if(data107.length > 20){
-const err323 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(data6.table !== undefined){
+let data106 = data6.table;
+if(data106 && typeof data106 == "object" && !Array.isArray(data106)){
+for(const key10 in data106){
+if(!((key10 === "emptyText") || (key10 === "columns"))){
+const err323 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err323];
 }
@@ -6297,8 +6384,12 @@ vErrors.push(err323);
 }
 errors++;
 }
-if(data107.length < 1){
-const err324 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+}
+if(data106.emptyText !== undefined){
+let data107 = data106.emptyText;
+if(typeof data107 === "string"){
+if(func3(data107) > 160){
+const err324 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err324];
 }
@@ -6307,12 +6398,8 @@ vErrors.push(err324);
 }
 errors++;
 }
-const len2 = data107.length;
-for(let i2=0; i2<len2; i2++){
-let data108 = data107[i2];
-if(data108 && typeof data108 == "object" && !Array.isArray(data108)){
-if(data108.field === undefined){
-const err325 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+if(func3(data107) < 1){
+const err325 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err325];
 }
@@ -6321,8 +6408,9 @@ vErrors.push(err325);
 }
 errors++;
 }
-if(data108.label === undefined){
-const err326 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+}
+else {
+const err326 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err326];
 }
@@ -6331,9 +6419,12 @@ vErrors.push(err326);
 }
 errors++;
 }
-for(const key11 in data108){
-if(!((((key11 === "field") || (key11 === "label")) || (key11 === "width")) || (key11 === "visible"))){
-const err327 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key11},message:"must NOT have additional properties"};
+}
+if(data106.columns !== undefined){
+let data108 = data106.columns;
+if(Array.isArray(data108)){
+if(data108.length > 20){
+const err327 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
 if(vErrors === null){
 vErrors = [err327];
 }
@@ -6342,11 +6433,8 @@ vErrors.push(err327);
 }
 errors++;
 }
-}
-if(data108.field !== undefined){
-let data109 = data108.field;
-if(typeof data109 !== "string"){
-const err328 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data108.length < 1){
+const err328 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
 if(vErrors === null){
 vErrors = [err328];
 }
@@ -6355,8 +6443,12 @@ vErrors.push(err328);
 }
 errors++;
 }
-if(!(((((((data109 === "title") || (data109 === "start")) || (data109 === "end")) || (data109 === "source")) || (data109 === "status")) || (data109 === "description")) || (data109 === "id"))){
-const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+const len2 = data108.length;
+for(let i2=0; i2<len2; i2++){
+let data109 = data108[i2];
+if(data109 && typeof data109 == "object" && !Array.isArray(data109)){
+if(data109.field === undefined){
+const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
 if(vErrors === null){
 vErrors = [err329];
 }
@@ -6365,12 +6457,8 @@ vErrors.push(err329);
 }
 errors++;
 }
-}
-if(data108.label !== undefined){
-let data110 = data108.label;
-if(typeof data110 === "string"){
-if(func3(data110) > 80){
-const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(data109.label === undefined){
+const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
 if(vErrors === null){
 vErrors = [err330];
 }
@@ -6379,8 +6467,9 @@ vErrors.push(err330);
 }
 errors++;
 }
-if(func3(data110) < 1){
-const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+for(const key11 in data109){
+if(!((((key11 === "field") || (key11 === "label")) || (key11 === "width")) || (key11 === "visible"))){
+const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key11},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err331];
 }
@@ -6390,8 +6479,10 @@ vErrors.push(err331);
 errors++;
 }
 }
-else {
-const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data109.field !== undefined){
+let data110 = data109.field;
+if(typeof data110 !== "string"){
+const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err332];
 }
@@ -6400,12 +6491,8 @@ vErrors.push(err332);
 }
 errors++;
 }
-}
-if(data108.width !== undefined){
-let data111 = data108.width;
-if((typeof data111 == "number") && (isFinite(data111))){
-if(data111 > 1200 || isNaN(data111)){
-const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(!(((((((data110 === "title") || (data110 === "start")) || (data110 === "end")) || (data110 === "source")) || (data110 === "status")) || (data110 === "description")) || (data110 === "id"))){
+const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema6.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err333];
 }
@@ -6414,8 +6501,12 @@ vErrors.push(err333);
 }
 errors++;
 }
-if(data111 < 40 || isNaN(data111)){
-const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data109.label !== undefined){
+let data111 = data109.label;
+if(typeof data111 === "string"){
+if(func3(data111) > 80){
+const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err334];
 }
@@ -6424,9 +6515,8 @@ vErrors.push(err334);
 }
 errors++;
 }
-}
-else {
-const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data111) < 1){
+const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err335];
 }
@@ -6436,9 +6526,8 @@ vErrors.push(err335);
 errors++;
 }
 }
-if(data108.visible !== undefined){
-if(typeof data108.visible !== "boolean"){
-const err336 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+else {
+const err336 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err336];
 }
@@ -6448,9 +6537,11 @@ vErrors.push(err336);
 errors++;
 }
 }
-}
-else {
-const err337 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data109.width !== undefined){
+let data112 = data109.width;
+if((typeof data112 == "number") && (isFinite(data112))){
+if(data112 > 1200 || isNaN(data112)){
+const err337 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err337];
 }
@@ -6459,10 +6550,8 @@ vErrors.push(err337);
 }
 errors++;
 }
-}
-}
-else {
-const err338 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(data112 < 40 || isNaN(data112)){
+const err338 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err338];
 }
@@ -6472,9 +6561,8 @@ vErrors.push(err338);
 errors++;
 }
 }
-}
 else {
-const err339 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err339 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err339];
 }
@@ -6484,9 +6572,9 @@ vErrors.push(err339);
 errors++;
 }
 }
-}
-else {
-const err340 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data109.visible !== undefined){
+if(typeof data109.visible !== "boolean"){
+const err340 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err340];
 }
@@ -6498,7 +6586,7 @@ errors++;
 }
 }
 else {
-const err341 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err341 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err341];
 }
@@ -6507,12 +6595,60 @@ vErrors.push(err341);
 }
 errors++;
 }
+}
+}
+else {
+const err342 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err342];
+}
+else {
+vErrors.push(err342);
+}
+errors++;
+}
+}
+}
+else {
+const err343 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err343];
+}
+else {
+vErrors.push(err343);
+}
+errors++;
+}
+}
+}
+else {
+const err344 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err344];
+}
+else {
+vErrors.push(err344);
+}
+errors++;
+}
+}
+}
+else {
+const err345 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err345];
+}
+else {
+vErrors.push(err345);
+}
+errors++;
+}
 validate21.errors = vErrors;
 return errors === 0;
 }
 
 export const legacySchema = validate103;
-const schema20 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/legacy-model.schema.json","title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/text"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"}}}}};
+const schema20 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/legacy-model.schema.json","title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/params"}},"dataSource":{"$ref":"#/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/positive"},"format":{"$ref":"#/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/timeValue"},"to":{"$ref":"#/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/text"},"recordsPath":{"$ref":"#/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/field"},"title":{"$ref":"#/definitions/field"},"description":{"$ref":"#/definitions/field"},"namespace":{"$ref":"#/definitions/field"},"color":{"$ref":"#/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/text"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
 const schema21 = {"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/positive"},"height":{"$ref":"#/definitions/positive"},"fontSize":{"$ref":"#/definitions/positive"},"fontFamily":{"$ref":"#/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}};
 const schema22 = {"type":"string","minLength":1};
 
@@ -7042,7 +7178,7 @@ validate119.errors = vErrors;
 return errors === 0;
 }
 
-const schema28 = {"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]}}}}};
+const schema28 = {"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/timeValue"},"end":{"$ref":"#/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
 
 function validate128(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -7172,7 +7308,7 @@ if(data.render !== undefined){
 let data6 = data.render;
 if(data6 && typeof data6 == "object" && !Array.isArray(data6)){
 for(const key1 in data6){
-if(!(((((key1 === "color") || (key1 === "opacity")) || (key1 === "height")) || (key1 === "verticalAlign")) || (key1 === "labelPosition"))){
+if(!((((((key1 === "color") || (key1 === "opacity")) || (key1 === "height")) || (key1 === "verticalAlign")) || (key1 === "labelPosition")) || (key1 === "backgroundImage"))){
 const err9 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key1},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err9];
@@ -7256,9 +7392,10 @@ vErrors.push(err14);
 errors++;
 }
 }
-}
-else {
-const err15 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data6.backgroundImage !== undefined){
+let data12 = data6.backgroundImage;
+if((typeof data12 !== "string") && (data12 !== null)){
+const err15 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/type",keyword:"type",params:{type: schema28.properties.render.properties.backgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -7267,15 +7404,59 @@ vErrors.push(err15);
 }
 errors++;
 }
-}
-}
-else {
-const err16 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(typeof data12 === "string"){
+if(func3(data12) > 2048){
+const err16 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err16];
 }
 else {
 vErrors.push(err16);
+}
+errors++;
+}
+if(func3(data12) < 1){
+const err17 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err17];
+}
+else {
+vErrors.push(err17);
+}
+errors++;
+}
+if(!pattern1.test(data12)){
+const err18 = {instancePath:instancePath+"/render/backgroundImage",schemaPath:"#/properties/render/properties/backgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
+if(vErrors === null){
+vErrors = [err18];
+}
+else {
+vErrors.push(err18);
+}
+errors++;
+}
+}
+}
+}
+else {
+const err19 = {instancePath:instancePath+"/render",schemaPath:"#/properties/render/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err19];
+}
+else {
+vErrors.push(err19);
+}
+errors++;
+}
+}
+}
+else {
+const err20 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err20];
+}
+else {
+vErrors.push(err20);
 }
 errors++;
 }
@@ -7586,7 +7767,7 @@ validate115.errors = vErrors;
 return errors === 0;
 }
 
-const schema29 = {"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/text"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"}}};
+const schema29 = {"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/text"},"SessionColor":{"$ref":"#/definitions/text"},"eventColor":{"$ref":"#/definitions/text"},"dateColor":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"dateFormat":{"$ref":"#/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/text"}}}},"range":{"$ref":"#/definitions/range"},"context":{"$ref":"#/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/positive"},"groupBy":{"$ref":"#/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/timeValue"},"step":{"$ref":"#/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/positive"},"color":{"$ref":"#/definitions/text"},"textColor":{"$ref":"#/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}};
 const schema30 = {"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]};
 
 function validate142(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
@@ -7861,7 +8042,7 @@ validate157.errors = vErrors;
 return errors === 0;
 }
 
-const pattern32 = new RegExp("^[0-9]+(?:\\.[0-9]+)?$", "");
+const pattern36 = new RegExp("^[0-9]+(?:\\.[0-9]+)?$", "");
 
 function validate139(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -7927,7 +8108,7 @@ valid2 = valid2 || _valid0;
 if(!valid2){
 const _errs6 = errors;
 if(typeof data1 === "string"){
-if(!pattern1.test(data1)){
+if(!pattern2.test(data1)){
 const err3 = {instancePath:instancePath+"/height",schemaPath:"#/properties/height/anyOf/1/pattern",keyword:"pattern",params:{pattern: "^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"},message:"must match pattern \""+"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"+"\""};
 if(vErrors === null){
 vErrors = [err3];
@@ -7993,7 +8174,7 @@ valid3 = valid3 || _valid1;
 if(!valid3){
 const _errs12 = errors;
 if(typeof data3 === "string"){
-if(!pattern32.test(data3)){
+if(!pattern36.test(data3)){
 const err6 = {instancePath:instancePath+"/intervalPixels",schemaPath:"#/properties/intervalPixels/anyOf/1/pattern",keyword:"pattern",params:{pattern: "^[0-9]+(?:\\.[0-9]+)?$"},message:"must match pattern \""+"^[0-9]+(?:\\.[0-9]+)?$"+"\""};
 if(vErrors === null){
 vErrors = [err6];
@@ -8914,14 +9095,59 @@ vErrors.push(err62);
 errors++;
 }
 }
-}
-else {
-const err63 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data.backgroundImage !== undefined){
+let data63 = data.backgroundImage;
+if((typeof data63 !== "string") && (data63 !== null)){
+const err63 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/type",keyword:"type",params:{type: schema29.properties.backgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err63];
 }
 else {
 vErrors.push(err63);
+}
+errors++;
+}
+if(typeof data63 === "string"){
+if(func3(data63) > 2048){
+const err64 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
+if(vErrors === null){
+vErrors = [err64];
+}
+else {
+vErrors.push(err64);
+}
+errors++;
+}
+if(func3(data63) < 1){
+const err65 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err65];
+}
+else {
+vErrors.push(err65);
+}
+errors++;
+}
+if(!pattern1.test(data63)){
+const err66 = {instancePath:instancePath+"/backgroundImage",schemaPath:"#/properties/backgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
+if(vErrors === null){
+vErrors = [err66];
+}
+else {
+vErrors.push(err66);
+}
+errors++;
+}
+}
+}
+}
+else {
+const err67 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err67];
+}
+else {
+vErrors.push(err67);
 }
 errors++;
 }
@@ -9066,7 +9292,7 @@ if(data6.theme !== undefined){
 let data7 = data6.theme;
 if(data7 && typeof data7 == "object" && !Array.isArray(data7)){
 for(const key1 in data7){
-if(!((((key1 === "sceneBackground") || (key1 === "headerBackground")) || (key1 === "panelBackground")) || (key1 === "panelText"))){
+if(!(((((key1 === "sceneBackground") || (key1 === "sceneBackgroundImage")) || (key1 === "headerBackground")) || (key1 === "panelBackground")) || (key1 === "panelText"))){
 const err9 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key1},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err9];
@@ -9100,7 +9326,7 @@ vErrors.push(err11);
 }
 errors++;
 }
-if(!pattern2.test(data8)){
+if(!pattern4.test(data8)){
 const err12 = {instancePath:instancePath+"/rendering/theme/sceneBackground",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err12];
@@ -9122,10 +9348,10 @@ vErrors.push(err13);
 errors++;
 }
 }
-if(data7.headerBackground !== undefined){
-let data9 = data7.headerBackground;
+if(data7.sceneBackgroundImage !== undefined){
+let data9 = data7.sceneBackgroundImage;
 if((typeof data9 !== "string") && (data9 !== null)){
-const err14 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.headerBackground.type},message:"must be string,null"};
+const err14 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.sceneBackgroundImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err14];
 }
@@ -9135,8 +9361,8 @@ vErrors.push(err14);
 errors++;
 }
 if(typeof data9 === "string"){
-if(func3(data9) > 80){
-const err15 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(func3(data9) > 2048){
+const err15 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -9146,7 +9372,7 @@ vErrors.push(err15);
 errors++;
 }
 if(func3(data9) < 1){
-const err16 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err16 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -9155,8 +9381,8 @@ vErrors.push(err16);
 }
 errors++;
 }
-if(!pattern2.test(data9)){
-const err17 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern1.test(data9)){
+const err17 = {instancePath:instancePath+"/rendering/theme/sceneBackgroundImage",schemaPath:"#/properties/rendering/properties/theme/properties/sceneBackgroundImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err17];
 }
@@ -9167,10 +9393,10 @@ errors++;
 }
 }
 }
-if(data7.panelBackground !== undefined){
-let data10 = data7.panelBackground;
+if(data7.headerBackground !== undefined){
+let data10 = data7.headerBackground;
 if((typeof data10 !== "string") && (data10 !== null)){
-const err18 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.panelBackground.type},message:"must be string,null"};
+const err18 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.headerBackground.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err18];
 }
@@ -9181,7 +9407,7 @@ errors++;
 }
 if(typeof data10 === "string"){
 if(func3(data10) > 80){
-const err19 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err19 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err19];
 }
@@ -9191,7 +9417,7 @@ vErrors.push(err19);
 errors++;
 }
 if(func3(data10) < 1){
-const err20 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err20 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err20];
 }
@@ -9200,8 +9426,8 @@ vErrors.push(err20);
 }
 errors++;
 }
-if(!pattern2.test(data10)){
-const err21 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data10)){
+const err21 = {instancePath:instancePath+"/rendering/theme/headerBackground",schemaPath:"#/properties/rendering/properties/theme/properties/headerBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err21];
 }
@@ -9212,10 +9438,10 @@ errors++;
 }
 }
 }
-if(data7.panelText !== undefined){
-let data11 = data7.panelText;
+if(data7.panelBackground !== undefined){
+let data11 = data7.panelBackground;
 if((typeof data11 !== "string") && (data11 !== null)){
-const err22 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.panelText.type},message:"must be string,null"};
+const err22 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.panelBackground.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err22];
 }
@@ -9226,7 +9452,7 @@ errors++;
 }
 if(typeof data11 === "string"){
 if(func3(data11) > 80){
-const err23 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err23 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err23];
 }
@@ -9236,7 +9462,7 @@ vErrors.push(err23);
 errors++;
 }
 if(func3(data11) < 1){
-const err24 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err24 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -9245,8 +9471,8 @@ vErrors.push(err24);
 }
 errors++;
 }
-if(!pattern2.test(data11)){
-const err25 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data11)){
+const err25 = {instancePath:instancePath+"/rendering/theme/panelBackground",schemaPath:"#/properties/rendering/properties/theme/properties/panelBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err25];
 }
@@ -9257,9 +9483,10 @@ errors++;
 }
 }
 }
-}
-else {
-const err26 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data7.panelText !== undefined){
+let data12 = data7.panelText;
+if((typeof data12 !== "string") && (data12 !== null)){
+const err26 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/type",keyword:"type",params:{type: schema20.properties.rendering.properties.theme.properties.panelText.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err26];
 }
@@ -9268,13 +9495,9 @@ vErrors.push(err26);
 }
 errors++;
 }
-}
-if(data6.axis !== undefined){
-let data12 = data6.axis;
-if(data12 && typeof data12 == "object" && !Array.isArray(data12)){
-for(const key2 in data12){
-if(!(func2.call(schema20.properties.rendering.properties.axis.properties, key2))){
-const err27 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key2},message:"must NOT have additional properties"};
+if(typeof data12 === "string"){
+if(func3(data12) > 80){
+const err27 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err27];
 }
@@ -9283,12 +9506,8 @@ vErrors.push(err27);
 }
 errors++;
 }
-}
-if(data12.background !== undefined){
-let data13 = data12.background;
-if(typeof data13 === "string"){
-if(func3(data13) > 80){
-const err28 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(func3(data12) < 1){
+const err28 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err28];
 }
@@ -9297,8 +9516,8 @@ vErrors.push(err28);
 }
 errors++;
 }
-if(func3(data13) < 1){
-const err29 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(!pattern4.test(data12)){
+const err29 = {instancePath:instancePath+"/rendering/theme/panelText",schemaPath:"#/properties/rendering/properties/theme/properties/panelText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err29];
 }
@@ -9307,8 +9526,11 @@ vErrors.push(err29);
 }
 errors++;
 }
-if(!pattern2.test(data13)){
-const err30 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+}
+}
+}
+else {
+const err30 = {instancePath:instancePath+"/rendering/theme",schemaPath:"#/properties/rendering/properties/theme/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err30];
 }
@@ -9318,8 +9540,12 @@ vErrors.push(err30);
 errors++;
 }
 }
-else {
-const err31 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data6.axis !== undefined){
+let data13 = data6.axis;
+if(data13 && typeof data13 == "object" && !Array.isArray(data13)){
+for(const key2 in data13){
+if(!(func2.call(schema20.properties.rendering.properties.axis.properties, key2))){
+const err31 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key2},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err31];
 }
@@ -9329,11 +9555,11 @@ vErrors.push(err31);
 errors++;
 }
 }
-if(data12.separatorColor !== undefined){
-let data14 = data12.separatorColor;
+if(data13.background !== undefined){
+let data14 = data13.background;
 if(typeof data14 === "string"){
 if(func3(data14) > 80){
-const err32 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err32 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err32];
 }
@@ -9343,7 +9569,7 @@ vErrors.push(err32);
 errors++;
 }
 if(func3(data14) < 1){
-const err33 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err33 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err33];
 }
@@ -9352,8 +9578,8 @@ vErrors.push(err33);
 }
 errors++;
 }
-if(!pattern2.test(data14)){
-const err34 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data14)){
+const err34 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err34];
 }
@@ -9364,7 +9590,7 @@ errors++;
 }
 }
 else {
-const err35 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err35 = {instancePath:instancePath+"/rendering/axis/background",schemaPath:"#/properties/rendering/properties/axis/properties/background/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err35];
 }
@@ -9374,11 +9600,11 @@ vErrors.push(err35);
 errors++;
 }
 }
-if(data12.textColor !== undefined){
-let data15 = data12.textColor;
+if(data13.separatorColor !== undefined){
+let data15 = data13.separatorColor;
 if(typeof data15 === "string"){
 if(func3(data15) > 80){
-const err36 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err36 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err36];
 }
@@ -9388,7 +9614,7 @@ vErrors.push(err36);
 errors++;
 }
 if(func3(data15) < 1){
-const err37 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err37 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err37];
 }
@@ -9397,8 +9623,8 @@ vErrors.push(err37);
 }
 errors++;
 }
-if(!pattern2.test(data15)){
-const err38 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data15)){
+const err38 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err38];
 }
@@ -9409,7 +9635,7 @@ errors++;
 }
 }
 else {
-const err39 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err39 = {instancePath:instancePath+"/rendering/axis/separatorColor",schemaPath:"#/properties/rendering/properties/axis/properties/separatorColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err39];
 }
@@ -9419,11 +9645,11 @@ vErrors.push(err39);
 errors++;
 }
 }
-if(data12.minimumHeight !== undefined){
-let data16 = data12.minimumHeight;
-if((typeof data16 == "number") && (isFinite(data16))){
-if(data16 > 160 || isNaN(data16)){
-const err40 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 160},message:"must be <= 160"};
+if(data13.textColor !== undefined){
+let data16 = data13.textColor;
+if(typeof data16 === "string"){
+if(func3(data16) > 80){
+const err40 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err40];
 }
@@ -9432,8 +9658,8 @@ vErrors.push(err40);
 }
 errors++;
 }
-if(data16 < 16 || isNaN(data16)){
-const err41 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 16},message:"must be >= 16"};
+if(func3(data16) < 1){
+const err41 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err41];
 }
@@ -9442,9 +9668,8 @@ vErrors.push(err41);
 }
 errors++;
 }
-}
-else {
-const err42 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data16)){
+const err42 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err42];
 }
@@ -9454,11 +9679,8 @@ vErrors.push(err42);
 errors++;
 }
 }
-if(data12.verticalPadding !== undefined){
-let data17 = data12.verticalPadding;
-if((typeof data17 == "number") && (isFinite(data17))){
-if(data17 > 80 || isNaN(data17)){
-const err43 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 80},message:"must be <= 80"};
+else {
+const err43 = {instancePath:instancePath+"/rendering/axis/textColor",schemaPath:"#/properties/rendering/properties/axis/properties/textColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -9467,8 +9689,12 @@ vErrors.push(err43);
 }
 errors++;
 }
-if(data17 < 0 || isNaN(data17)){
-const err44 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data13.minimumHeight !== undefined){
+let data17 = data13.minimumHeight;
+if((typeof data17 == "number") && (isFinite(data17))){
+if(data17 > 160 || isNaN(data17)){
+const err44 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 160},message:"must be <= 160"};
 if(vErrors === null){
 vErrors = [err44];
 }
@@ -9477,9 +9703,8 @@ vErrors.push(err44);
 }
 errors++;
 }
-}
-else {
-const err45 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data17 < 16 || isNaN(data17)){
+const err45 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 16},message:"must be >= 16"};
 if(vErrors === null){
 vErrors = [err45];
 }
@@ -9489,11 +9714,8 @@ vErrors.push(err45);
 errors++;
 }
 }
-if(data12.minimumFontSize !== undefined){
-let data18 = data12.minimumFontSize;
-if((typeof data18 == "number") && (isFinite(data18))){
-if(data18 > 48 || isNaN(data18)){
-const err46 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 48},message:"must be <= 48"};
+else {
+const err46 = {instancePath:instancePath+"/rendering/axis/minimumHeight",schemaPath:"#/properties/rendering/properties/axis/properties/minimumHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err46];
 }
@@ -9502,8 +9724,12 @@ vErrors.push(err46);
 }
 errors++;
 }
-if(data18 < 6 || isNaN(data18)){
-const err47 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data13.verticalPadding !== undefined){
+let data18 = data13.verticalPadding;
+if((typeof data18 == "number") && (isFinite(data18))){
+if(data18 > 80 || isNaN(data18)){
+const err47 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 80},message:"must be <= 80"};
 if(vErrors === null){
 vErrors = [err47];
 }
@@ -9512,9 +9738,8 @@ vErrors.push(err47);
 }
 errors++;
 }
-}
-else {
-const err48 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data18 < 0 || isNaN(data18)){
+const err48 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err48];
 }
@@ -9524,11 +9749,8 @@ vErrors.push(err48);
 errors++;
 }
 }
-if(data12.targetTickPixels !== undefined){
-let data19 = data12.targetTickPixels;
-if((typeof data19 == "number") && (isFinite(data19))){
-if(data19 > 400 || isNaN(data19)){
-const err49 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
+else {
+const err49 = {instancePath:instancePath+"/rendering/axis/verticalPadding",schemaPath:"#/properties/rendering/properties/axis/properties/verticalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err49];
 }
@@ -9537,8 +9759,12 @@ vErrors.push(err49);
 }
 errors++;
 }
-if(data19 < 30 || isNaN(data19)){
-const err50 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 30},message:"must be >= 30"};
+}
+if(data13.minimumFontSize !== undefined){
+let data19 = data13.minimumFontSize;
+if((typeof data19 == "number") && (isFinite(data19))){
+if(data19 > 48 || isNaN(data19)){
+const err50 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 48},message:"must be <= 48"};
 if(vErrors === null){
 vErrors = [err50];
 }
@@ -9547,9 +9773,8 @@ vErrors.push(err50);
 }
 errors++;
 }
-}
-else {
-const err51 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data19 < 6 || isNaN(data19)){
+const err51 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err51];
 }
@@ -9559,11 +9784,8 @@ vErrors.push(err51);
 errors++;
 }
 }
-if(data12.groupHeaderHeight !== undefined){
-let data20 = data12.groupHeaderHeight;
-if((typeof data20 == "number") && (isFinite(data20))){
-if(data20 > 120 || isNaN(data20)){
-const err52 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
+else {
+const err52 = {instancePath:instancePath+"/rendering/axis/minimumFontSize",schemaPath:"#/properties/rendering/properties/axis/properties/minimumFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err52];
 }
@@ -9572,8 +9794,12 @@ vErrors.push(err52);
 }
 errors++;
 }
-if(data20 < 12 || isNaN(data20)){
-const err53 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
+}
+if(data13.targetTickPixels !== undefined){
+let data20 = data13.targetTickPixels;
+if((typeof data20 == "number") && (isFinite(data20))){
+if(data20 > 400 || isNaN(data20)){
+const err53 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err53];
 }
@@ -9582,9 +9808,8 @@ vErrors.push(err53);
 }
 errors++;
 }
-}
-else {
-const err54 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data20 < 30 || isNaN(data20)){
+const err54 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 30},message:"must be >= 30"};
 if(vErrors === null){
 vErrors = [err54];
 }
@@ -9594,11 +9819,8 @@ vErrors.push(err54);
 errors++;
 }
 }
-if(data12.scaleHeaderColor !== undefined){
-let data21 = data12.scaleHeaderColor;
-if(typeof data21 === "string"){
-if(func3(data21) > 80){
-const err55 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err55 = {instancePath:instancePath+"/rendering/axis/targetTickPixels",schemaPath:"#/properties/rendering/properties/axis/properties/targetTickPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err55];
 }
@@ -9607,8 +9829,12 @@ vErrors.push(err55);
 }
 errors++;
 }
-if(func3(data21) < 1){
-const err56 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data13.groupHeaderHeight !== undefined){
+let data21 = data13.groupHeaderHeight;
+if((typeof data21 == "number") && (isFinite(data21))){
+if(data21 > 120 || isNaN(data21)){
+const err56 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err56];
 }
@@ -9617,8 +9843,8 @@ vErrors.push(err56);
 }
 errors++;
 }
-if(!pattern2.test(data21)){
-const err57 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data21 < 12 || isNaN(data21)){
+const err57 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
 if(vErrors === null){
 vErrors = [err57];
 }
@@ -9629,7 +9855,7 @@ errors++;
 }
 }
 else {
-const err58 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err58 = {instancePath:instancePath+"/rendering/axis/groupHeaderHeight",schemaPath:"#/properties/rendering/properties/axis/properties/groupHeaderHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err58];
 }
@@ -9639,11 +9865,11 @@ vErrors.push(err58);
 errors++;
 }
 }
-if(data12.scaleHeaderText !== undefined){
-let data22 = data12.scaleHeaderText;
+if(data13.scaleHeaderColor !== undefined){
+let data22 = data13.scaleHeaderColor;
 if(typeof data22 === "string"){
 if(func3(data22) > 80){
-const err59 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err59 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err59];
 }
@@ -9653,7 +9879,7 @@ vErrors.push(err59);
 errors++;
 }
 if(func3(data22) < 1){
-const err60 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err60 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err60];
 }
@@ -9662,8 +9888,8 @@ vErrors.push(err60);
 }
 errors++;
 }
-if(!pattern2.test(data22)){
-const err61 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data22)){
+const err61 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err61];
 }
@@ -9674,7 +9900,7 @@ errors++;
 }
 }
 else {
-const err62 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err62 = {instancePath:instancePath+"/rendering/axis/scaleHeaderColor",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err62];
 }
@@ -9684,11 +9910,11 @@ vErrors.push(err62);
 errors++;
 }
 }
-if(data12.secondaryColor !== undefined){
-let data23 = data12.secondaryColor;
+if(data13.scaleHeaderText !== undefined){
+let data23 = data13.scaleHeaderText;
 if(typeof data23 === "string"){
 if(func3(data23) > 80){
-const err63 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err63 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err63];
 }
@@ -9698,7 +9924,7 @@ vErrors.push(err63);
 errors++;
 }
 if(func3(data23) < 1){
-const err64 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err64 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err64];
 }
@@ -9707,8 +9933,8 @@ vErrors.push(err64);
 }
 errors++;
 }
-if(!pattern2.test(data23)){
-const err65 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data23)){
+const err65 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err65];
 }
@@ -9719,7 +9945,7 @@ errors++;
 }
 }
 else {
-const err66 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err66 = {instancePath:instancePath+"/rendering/axis/scaleHeaderText",schemaPath:"#/properties/rendering/properties/axis/properties/scaleHeaderText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err66];
 }
@@ -9729,11 +9955,11 @@ vErrors.push(err66);
 errors++;
 }
 }
-if(data12.secondaryText !== undefined){
-let data24 = data12.secondaryText;
+if(data13.secondaryColor !== undefined){
+let data24 = data13.secondaryColor;
 if(typeof data24 === "string"){
 if(func3(data24) > 80){
-const err67 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err67 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err67];
 }
@@ -9743,7 +9969,7 @@ vErrors.push(err67);
 errors++;
 }
 if(func3(data24) < 1){
-const err68 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err68 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err68];
 }
@@ -9752,8 +9978,8 @@ vErrors.push(err68);
 }
 errors++;
 }
-if(!pattern2.test(data24)){
-const err69 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data24)){
+const err69 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err69];
 }
@@ -9764,7 +9990,7 @@ errors++;
 }
 }
 else {
-const err70 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err70 = {instancePath:instancePath+"/rendering/axis/secondaryColor",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err70];
 }
@@ -9774,9 +10000,11 @@ vErrors.push(err70);
 errors++;
 }
 }
-}
-else {
-const err71 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data13.secondaryText !== undefined){
+let data25 = data13.secondaryText;
+if(typeof data25 === "string"){
+if(func3(data25) > 80){
+const err71 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err71];
 }
@@ -9785,13 +10013,8 @@ vErrors.push(err71);
 }
 errors++;
 }
-}
-if(data6.overview !== undefined){
-let data25 = data6.overview;
-if(data25 && typeof data25 == "object" && !Array.isArray(data25)){
-for(const key3 in data25){
-if(!(func2.call(schema20.properties.rendering.properties.overview.properties, key3))){
-const err72 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
+if(func3(data25) < 1){
+const err72 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err72];
 }
@@ -9800,12 +10023,8 @@ vErrors.push(err72);
 }
 errors++;
 }
-}
-if(data25.borderColor !== undefined){
-let data26 = data25.borderColor;
-if(typeof data26 === "string"){
-if(func3(data26) > 80){
-const err73 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(!pattern4.test(data25)){
+const err73 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err73];
 }
@@ -9814,8 +10033,9 @@ vErrors.push(err73);
 }
 errors++;
 }
-if(func3(data26) < 1){
-const err74 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err74 = {instancePath:instancePath+"/rendering/axis/secondaryText",schemaPath:"#/properties/rendering/properties/axis/properties/secondaryText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err74];
 }
@@ -9824,8 +10044,10 @@ vErrors.push(err74);
 }
 errors++;
 }
-if(!pattern2.test(data26)){
-const err75 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+}
+}
+else {
+const err75 = {instancePath:instancePath+"/rendering/axis",schemaPath:"#/properties/rendering/properties/axis/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err75];
 }
@@ -9835,8 +10057,12 @@ vErrors.push(err75);
 errors++;
 }
 }
-else {
-const err76 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data6.overview !== undefined){
+let data26 = data6.overview;
+if(data26 && typeof data26 == "object" && !Array.isArray(data26)){
+for(const key3 in data26){
+if(!(func2.call(schema20.properties.rendering.properties.overview.properties, key3))){
+const err76 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err76];
 }
@@ -9846,11 +10072,11 @@ vErrors.push(err76);
 errors++;
 }
 }
-if(data25.headingColor !== undefined){
-let data27 = data25.headingColor;
+if(data26.borderColor !== undefined){
+let data27 = data26.borderColor;
 if(typeof data27 === "string"){
 if(func3(data27) > 80){
-const err77 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err77 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err77];
 }
@@ -9860,7 +10086,7 @@ vErrors.push(err77);
 errors++;
 }
 if(func3(data27) < 1){
-const err78 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err78 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err78];
 }
@@ -9869,8 +10095,8 @@ vErrors.push(err78);
 }
 errors++;
 }
-if(!pattern2.test(data27)){
-const err79 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data27)){
+const err79 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err79];
 }
@@ -9881,7 +10107,7 @@ errors++;
 }
 }
 else {
-const err80 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err80 = {instancePath:instancePath+"/rendering/overview/borderColor",schemaPath:"#/properties/rendering/properties/overview/properties/borderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err80];
 }
@@ -9891,11 +10117,11 @@ vErrors.push(err80);
 errors++;
 }
 }
-if(data25.headingFontSize !== undefined){
-let data28 = data25.headingFontSize;
-if((typeof data28 == "number") && (isFinite(data28))){
-if(data28 > 32 || isNaN(data28)){
-const err81 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+if(data26.headingColor !== undefined){
+let data28 = data26.headingColor;
+if(typeof data28 === "string"){
+if(func3(data28) > 80){
+const err81 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err81];
 }
@@ -9904,8 +10130,8 @@ vErrors.push(err81);
 }
 errors++;
 }
-if(data28 < 6 || isNaN(data28)){
-const err82 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+if(func3(data28) < 1){
+const err82 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err82];
 }
@@ -9914,9 +10140,8 @@ vErrors.push(err82);
 }
 errors++;
 }
-}
-else {
-const err83 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data28)){
+const err83 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err83];
 }
@@ -9926,11 +10151,8 @@ vErrors.push(err83);
 errors++;
 }
 }
-if(data25.countFontSize !== undefined){
-let data29 = data25.countFontSize;
-if((typeof data29 == "number") && (isFinite(data29))){
-if(data29 > 32 || isNaN(data29)){
-const err84 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+else {
+const err84 = {instancePath:instancePath+"/rendering/overview/headingColor",schemaPath:"#/properties/rendering/properties/overview/properties/headingColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err84];
 }
@@ -9939,8 +10161,12 @@ vErrors.push(err84);
 }
 errors++;
 }
-if(data29 < 6 || isNaN(data29)){
-const err85 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data26.headingFontSize !== undefined){
+let data29 = data26.headingFontSize;
+if((typeof data29 == "number") && (isFinite(data29))){
+if(data29 > 32 || isNaN(data29)){
+const err85 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err85];
 }
@@ -9949,9 +10175,8 @@ vErrors.push(err85);
 }
 errors++;
 }
-}
-else {
-const err86 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data29 < 6 || isNaN(data29)){
+const err86 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err86];
 }
@@ -9961,11 +10186,8 @@ vErrors.push(err86);
 errors++;
 }
 }
-if(data25.axisFontSize !== undefined){
-let data30 = data25.axisFontSize;
-if((typeof data30 == "number") && (isFinite(data30))){
-if(data30 > 32 || isNaN(data30)){
-const err87 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
+else {
+const err87 = {instancePath:instancePath+"/rendering/overview/headingFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/headingFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err87];
 }
@@ -9974,8 +10196,12 @@ vErrors.push(err87);
 }
 errors++;
 }
-if(data30 < 6 || isNaN(data30)){
-const err88 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
+}
+if(data26.countFontSize !== undefined){
+let data30 = data26.countFontSize;
+if((typeof data30 == "number") && (isFinite(data30))){
+if(data30 > 32 || isNaN(data30)){
+const err88 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err88];
 }
@@ -9984,9 +10210,8 @@ vErrors.push(err88);
 }
 errors++;
 }
-}
-else {
-const err89 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data30 < 6 || isNaN(data30)){
+const err89 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err89];
 }
@@ -9996,11 +10221,8 @@ vErrors.push(err89);
 errors++;
 }
 }
-if(data25.markerStroke !== undefined){
-let data31 = data25.markerStroke;
-if(typeof data31 === "string"){
-if(func3(data31) > 80){
-const err90 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err90 = {instancePath:instancePath+"/rendering/overview/countFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/countFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err90];
 }
@@ -10009,8 +10231,12 @@ vErrors.push(err90);
 }
 errors++;
 }
-if(func3(data31) < 1){
-const err91 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.axisFontSize !== undefined){
+let data31 = data26.axisFontSize;
+if((typeof data31 == "number") && (isFinite(data31))){
+if(data31 > 32 || isNaN(data31)){
+const err91 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/maximum",keyword:"maximum",params:{comparison: "<=", limit: 32},message:"must be <= 32"};
 if(vErrors === null){
 vErrors = [err91];
 }
@@ -10019,8 +10245,8 @@ vErrors.push(err91);
 }
 errors++;
 }
-if(!pattern2.test(data31)){
-const err92 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data31 < 6 || isNaN(data31)){
+const err92 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/minimum",keyword:"minimum",params:{comparison: ">=", limit: 6},message:"must be >= 6"};
 if(vErrors === null){
 vErrors = [err92];
 }
@@ -10031,7 +10257,7 @@ errors++;
 }
 }
 else {
-const err93 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err93 = {instancePath:instancePath+"/rendering/overview/axisFontSize",schemaPath:"#/properties/rendering/properties/overview/properties/axisFontSize/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err93];
 }
@@ -10041,11 +10267,11 @@ vErrors.push(err93);
 errors++;
 }
 }
-if(data25.markerStrokeWidth !== undefined){
-let data32 = data25.markerStrokeWidth;
-if((typeof data32 == "number") && (isFinite(data32))){
-if(data32 > 8 || isNaN(data32)){
-const err94 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.markerStroke !== undefined){
+let data32 = data26.markerStroke;
+if(typeof data32 === "string"){
+if(func3(data32) > 80){
+const err94 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err94];
 }
@@ -10054,8 +10280,8 @@ vErrors.push(err94);
 }
 errors++;
 }
-if(data32 < 0 || isNaN(data32)){
-const err95 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data32) < 1){
+const err95 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err95];
 }
@@ -10064,9 +10290,8 @@ vErrors.push(err95);
 }
 errors++;
 }
-}
-else {
-const err96 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data32)){
+const err96 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err96];
 }
@@ -10076,11 +10301,8 @@ vErrors.push(err96);
 errors++;
 }
 }
-if(data25.dimmedOpacity !== undefined){
-let data33 = data25.dimmedOpacity;
-if((typeof data33 == "number") && (isFinite(data33))){
-if(data33 > 1 || isNaN(data33)){
-const err97 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err97 = {instancePath:instancePath+"/rendering/overview/markerStroke",schemaPath:"#/properties/rendering/properties/overview/properties/markerStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err97];
 }
@@ -10089,8 +10311,12 @@ vErrors.push(err97);
 }
 errors++;
 }
-if(data33 < 0 || isNaN(data33)){
-const err98 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data26.markerStrokeWidth !== undefined){
+let data33 = data26.markerStrokeWidth;
+if((typeof data33 == "number") && (isFinite(data33))){
+if(data33 > 8 || isNaN(data33)){
+const err98 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err98];
 }
@@ -10099,9 +10325,8 @@ vErrors.push(err98);
 }
 errors++;
 }
-}
-else {
-const err99 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data33 < 0 || isNaN(data33)){
+const err99 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err99];
 }
@@ -10111,11 +10336,8 @@ vErrors.push(err99);
 errors++;
 }
 }
-if(data25.matchColor !== undefined){
-let data34 = data25.matchColor;
-if(typeof data34 === "string"){
-if(func3(data34) > 80){
-const err100 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err100 = {instancePath:instancePath+"/rendering/overview/markerStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/markerStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err100];
 }
@@ -10124,8 +10346,12 @@ vErrors.push(err100);
 }
 errors++;
 }
-if(func3(data34) < 1){
-const err101 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.dimmedOpacity !== undefined){
+let data34 = data26.dimmedOpacity;
+if((typeof data34 == "number") && (isFinite(data34))){
+if(data34 > 1 || isNaN(data34)){
+const err101 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err101];
 }
@@ -10134,8 +10360,8 @@ vErrors.push(err101);
 }
 errors++;
 }
-if(!pattern2.test(data34)){
-const err102 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data34 < 0 || isNaN(data34)){
+const err102 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err102];
 }
@@ -10146,7 +10372,7 @@ errors++;
 }
 }
 else {
-const err103 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err103 = {instancePath:instancePath+"/rendering/overview/dimmedOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/dimmedOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err103];
 }
@@ -10156,11 +10382,11 @@ vErrors.push(err103);
 errors++;
 }
 }
-if(data25.matchOpacity !== undefined){
-let data35 = data25.matchOpacity;
-if((typeof data35 == "number") && (isFinite(data35))){
-if(data35 > 1 || isNaN(data35)){
-const err104 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data26.matchColor !== undefined){
+let data35 = data26.matchColor;
+if(typeof data35 === "string"){
+if(func3(data35) > 80){
+const err104 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err104];
 }
@@ -10169,8 +10395,8 @@ vErrors.push(err104);
 }
 errors++;
 }
-if(data35 < 0 || isNaN(data35)){
-const err105 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data35) < 1){
+const err105 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err105];
 }
@@ -10179,9 +10405,8 @@ vErrors.push(err105);
 }
 errors++;
 }
-}
-else {
-const err106 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data35)){
+const err106 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err106];
 }
@@ -10191,11 +10416,8 @@ vErrors.push(err106);
 errors++;
 }
 }
-if(data25.matchStroke !== undefined){
-let data36 = data25.matchStroke;
-if(typeof data36 === "string"){
-if(func3(data36) > 80){
-const err107 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err107 = {instancePath:instancePath+"/rendering/overview/matchColor",schemaPath:"#/properties/rendering/properties/overview/properties/matchColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err107];
 }
@@ -10204,8 +10426,12 @@ vErrors.push(err107);
 }
 errors++;
 }
-if(func3(data36) < 1){
-const err108 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.matchOpacity !== undefined){
+let data36 = data26.matchOpacity;
+if((typeof data36 == "number") && (isFinite(data36))){
+if(data36 > 1 || isNaN(data36)){
+const err108 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err108];
 }
@@ -10214,8 +10440,8 @@ vErrors.push(err108);
 }
 errors++;
 }
-if(!pattern2.test(data36)){
-const err109 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data36 < 0 || isNaN(data36)){
+const err109 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err109];
 }
@@ -10226,7 +10452,7 @@ errors++;
 }
 }
 else {
-const err110 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err110 = {instancePath:instancePath+"/rendering/overview/matchOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/matchOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err110];
 }
@@ -10236,11 +10462,11 @@ vErrors.push(err110);
 errors++;
 }
 }
-if(data25.matchStrokeWidth !== undefined){
-let data37 = data25.matchStrokeWidth;
-if((typeof data37 == "number") && (isFinite(data37))){
-if(data37 > 8 || isNaN(data37)){
-const err111 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.matchStroke !== undefined){
+let data37 = data26.matchStroke;
+if(typeof data37 === "string"){
+if(func3(data37) > 80){
+const err111 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err111];
 }
@@ -10249,8 +10475,8 @@ vErrors.push(err111);
 }
 errors++;
 }
-if(data37 < 0 || isNaN(data37)){
-const err112 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data37) < 1){
+const err112 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err112];
 }
@@ -10259,9 +10485,8 @@ vErrors.push(err112);
 }
 errors++;
 }
-}
-else {
-const err113 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data37)){
+const err113 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err113];
 }
@@ -10271,11 +10496,8 @@ vErrors.push(err113);
 errors++;
 }
 }
-if(data25.viewportColor !== undefined){
-let data38 = data25.viewportColor;
-if(typeof data38 === "string"){
-if(func3(data38) > 80){
-const err114 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err114 = {instancePath:instancePath+"/rendering/overview/matchStroke",schemaPath:"#/properties/rendering/properties/overview/properties/matchStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err114];
 }
@@ -10284,8 +10506,12 @@ vErrors.push(err114);
 }
 errors++;
 }
-if(func3(data38) < 1){
-const err115 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.matchStrokeWidth !== undefined){
+let data38 = data26.matchStrokeWidth;
+if((typeof data38 == "number") && (isFinite(data38))){
+if(data38 > 8 || isNaN(data38)){
+const err115 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err115];
 }
@@ -10294,8 +10520,8 @@ vErrors.push(err115);
 }
 errors++;
 }
-if(!pattern2.test(data38)){
-const err116 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data38 < 0 || isNaN(data38)){
+const err116 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err116];
 }
@@ -10306,7 +10532,7 @@ errors++;
 }
 }
 else {
-const err117 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err117 = {instancePath:instancePath+"/rendering/overview/matchStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/matchStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err117];
 }
@@ -10316,11 +10542,11 @@ vErrors.push(err117);
 errors++;
 }
 }
-if(data25.viewportOpacity !== undefined){
-let data39 = data25.viewportOpacity;
-if((typeof data39 == "number") && (isFinite(data39))){
-if(data39 > 1 || isNaN(data39)){
-const err118 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data26.viewportColor !== undefined){
+let data39 = data26.viewportColor;
+if(typeof data39 === "string"){
+if(func3(data39) > 80){
+const err118 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err118];
 }
@@ -10329,8 +10555,8 @@ vErrors.push(err118);
 }
 errors++;
 }
-if(data39 < 0 || isNaN(data39)){
-const err119 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data39) < 1){
+const err119 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err119];
 }
@@ -10339,9 +10565,8 @@ vErrors.push(err119);
 }
 errors++;
 }
-}
-else {
-const err120 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data39)){
+const err120 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err120];
 }
@@ -10351,11 +10576,8 @@ vErrors.push(err120);
 errors++;
 }
 }
-if(data25.viewportStroke !== undefined){
-let data40 = data25.viewportStroke;
-if(typeof data40 === "string"){
-if(func3(data40) > 80){
-const err121 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err121 = {instancePath:instancePath+"/rendering/overview/viewportColor",schemaPath:"#/properties/rendering/properties/overview/properties/viewportColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err121];
 }
@@ -10364,8 +10586,12 @@ vErrors.push(err121);
 }
 errors++;
 }
-if(func3(data40) < 1){
-const err122 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.viewportOpacity !== undefined){
+let data40 = data26.viewportOpacity;
+if((typeof data40 == "number") && (isFinite(data40))){
+if(data40 > 1 || isNaN(data40)){
+const err122 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err122];
 }
@@ -10374,8 +10600,8 @@ vErrors.push(err122);
 }
 errors++;
 }
-if(!pattern2.test(data40)){
-const err123 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data40 < 0 || isNaN(data40)){
+const err123 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err123];
 }
@@ -10386,7 +10612,7 @@ errors++;
 }
 }
 else {
-const err124 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err124 = {instancePath:instancePath+"/rendering/overview/viewportOpacity",schemaPath:"#/properties/rendering/properties/overview/properties/viewportOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err124];
 }
@@ -10396,11 +10622,11 @@ vErrors.push(err124);
 errors++;
 }
 }
-if(data25.viewportStrokeWidth !== undefined){
-let data41 = data25.viewportStrokeWidth;
-if((typeof data41 == "number") && (isFinite(data41))){
-if(data41 > 8 || isNaN(data41)){
-const err125 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
+if(data26.viewportStroke !== undefined){
+let data41 = data26.viewportStroke;
+if(typeof data41 === "string"){
+if(func3(data41) > 80){
+const err125 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err125];
 }
@@ -10409,8 +10635,8 @@ vErrors.push(err125);
 }
 errors++;
 }
-if(data41 < 0 || isNaN(data41)){
-const err126 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data41) < 1){
+const err126 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err126];
 }
@@ -10419,9 +10645,8 @@ vErrors.push(err126);
 }
 errors++;
 }
-}
-else {
-const err127 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data41)){
+const err127 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err127];
 }
@@ -10431,11 +10656,8 @@ vErrors.push(err127);
 errors++;
 }
 }
-if(data25.handleColor !== undefined){
-let data42 = data25.handleColor;
-if(typeof data42 === "string"){
-if(func3(data42) > 80){
-const err128 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err128 = {instancePath:instancePath+"/rendering/overview/viewportStroke",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err128];
 }
@@ -10444,8 +10666,12 @@ vErrors.push(err128);
 }
 errors++;
 }
-if(func3(data42) < 1){
-const err129 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data26.viewportStrokeWidth !== undefined){
+let data42 = data26.viewportStrokeWidth;
+if((typeof data42 == "number") && (isFinite(data42))){
+if(data42 > 8 || isNaN(data42)){
+const err129 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err129];
 }
@@ -10454,8 +10680,8 @@ vErrors.push(err129);
 }
 errors++;
 }
-if(!pattern2.test(data42)){
-const err130 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data42 < 0 || isNaN(data42)){
+const err130 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err130];
 }
@@ -10466,7 +10692,7 @@ errors++;
 }
 }
 else {
-const err131 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err131 = {instancePath:instancePath+"/rendering/overview/viewportStrokeWidth",schemaPath:"#/properties/rendering/properties/overview/properties/viewportStrokeWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err131];
 }
@@ -10476,11 +10702,11 @@ vErrors.push(err131);
 errors++;
 }
 }
-if(data25.handleStroke !== undefined){
-let data43 = data25.handleStroke;
+if(data26.handleColor !== undefined){
+let data43 = data26.handleColor;
 if(typeof data43 === "string"){
 if(func3(data43) > 80){
-const err132 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err132 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err132];
 }
@@ -10490,7 +10716,7 @@ vErrors.push(err132);
 errors++;
 }
 if(func3(data43) < 1){
-const err133 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err133 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err133];
 }
@@ -10499,8 +10725,8 @@ vErrors.push(err133);
 }
 errors++;
 }
-if(!pattern2.test(data43)){
-const err134 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data43)){
+const err134 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err134];
 }
@@ -10511,7 +10737,7 @@ errors++;
 }
 }
 else {
-const err135 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err135 = {instancePath:instancePath+"/rendering/overview/handleColor",schemaPath:"#/properties/rendering/properties/overview/properties/handleColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err135];
 }
@@ -10521,11 +10747,11 @@ vErrors.push(err135);
 errors++;
 }
 }
-if(data25.handleWidth !== undefined){
-let data44 = data25.handleWidth;
-if((typeof data44 == "number") && (isFinite(data44))){
-if(data44 > 24 || isNaN(data44)){
-const err136 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 24},message:"must be <= 24"};
+if(data26.handleStroke !== undefined){
+let data44 = data26.handleStroke;
+if(typeof data44 === "string"){
+if(func3(data44) > 80){
+const err136 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err136];
 }
@@ -10534,8 +10760,8 @@ vErrors.push(err136);
 }
 errors++;
 }
-if(data44 < 3 || isNaN(data44)){
-const err137 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 3},message:"must be >= 3"};
+if(func3(data44) < 1){
+const err137 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err137];
 }
@@ -10544,9 +10770,8 @@ vErrors.push(err137);
 }
 errors++;
 }
-}
-else {
-const err138 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data44)){
+const err138 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err138];
 }
@@ -10556,11 +10781,8 @@ vErrors.push(err138);
 errors++;
 }
 }
-if(data25.handleMaxHeight !== undefined){
-let data45 = data25.handleMaxHeight;
-if((typeof data45 == "number") && (isFinite(data45))){
-if(data45 > 120 || isNaN(data45)){
-const err139 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
+else {
+const err139 = {instancePath:instancePath+"/rendering/overview/handleStroke",schemaPath:"#/properties/rendering/properties/overview/properties/handleStroke/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err139];
 }
@@ -10569,8 +10791,12 @@ vErrors.push(err139);
 }
 errors++;
 }
-if(data45 < 12 || isNaN(data45)){
-const err140 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
+}
+if(data26.handleWidth !== undefined){
+let data45 = data26.handleWidth;
+if((typeof data45 == "number") && (isFinite(data45))){
+if(data45 > 24 || isNaN(data45)){
+const err140 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 24},message:"must be <= 24"};
 if(vErrors === null){
 vErrors = [err140];
 }
@@ -10579,9 +10805,8 @@ vErrors.push(err140);
 }
 errors++;
 }
-}
-else {
-const err141 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data45 < 3 || isNaN(data45)){
+const err141 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 3},message:"must be >= 3"};
 if(vErrors === null){
 vErrors = [err141];
 }
@@ -10591,9 +10816,8 @@ vErrors.push(err141);
 errors++;
 }
 }
-}
 else {
-const err142 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err142 = {instancePath:instancePath+"/rendering/overview/handleWidth",schemaPath:"#/properties/rendering/properties/overview/properties/handleWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err142];
 }
@@ -10603,12 +10827,11 @@ vErrors.push(err142);
 errors++;
 }
 }
-if(data6.camera !== undefined){
-let data46 = data6.camera;
-if(data46 && typeof data46 == "object" && !Array.isArray(data46)){
-for(const key4 in data46){
-if(!(func2.call(schema20.properties.rendering.properties.camera.properties, key4))){
-const err143 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
+if(data26.handleMaxHeight !== undefined){
+let data46 = data26.handleMaxHeight;
+if((typeof data46 == "number") && (isFinite(data46))){
+if(data46 > 120 || isNaN(data46)){
+const err143 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err143];
 }
@@ -10617,11 +10840,8 @@ vErrors.push(err143);
 }
 errors++;
 }
-}
-if(data46.mode !== undefined){
-let data47 = data46.mode;
-if(typeof data47 !== "string"){
-const err144 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data46 < 12 || isNaN(data46)){
+const err144 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 12},message:"must be >= 12"};
 if(vErrors === null){
 vErrors = [err144];
 }
@@ -10630,8 +10850,9 @@ vErrors.push(err144);
 }
 errors++;
 }
-if(!((data47 === "Orthographic") || (data47 === "Perspective"))){
-const err145 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.camera.properties.mode.enum},message:"must be equal to one of the allowed values"};
+}
+else {
+const err145 = {instancePath:instancePath+"/rendering/overview/handleMaxHeight",schemaPath:"#/properties/rendering/properties/overview/properties/handleMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err145];
 }
@@ -10641,11 +10862,9 @@ vErrors.push(err145);
 errors++;
 }
 }
-if(data46.fieldOfView !== undefined){
-let data48 = data46.fieldOfView;
-if((typeof data48 == "number") && (isFinite(data48))){
-if(data48 > 100 || isNaN(data48)){
-const err146 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+}
+else {
+const err146 = {instancePath:instancePath+"/rendering/overview",schemaPath:"#/properties/rendering/properties/overview/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err146];
 }
@@ -10654,8 +10873,13 @@ vErrors.push(err146);
 }
 errors++;
 }
-if(data48 < 10 || isNaN(data48)){
-const err147 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/minimum",keyword:"minimum",params:{comparison: ">=", limit: 10},message:"must be >= 10"};
+}
+if(data6.camera !== undefined){
+let data47 = data6.camera;
+if(data47 && typeof data47 == "object" && !Array.isArray(data47)){
+for(const key4 in data47){
+if(!(func2.call(schema20.properties.rendering.properties.camera.properties, key4))){
+const err147 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err147];
 }
@@ -10665,8 +10889,10 @@ vErrors.push(err147);
 errors++;
 }
 }
-else {
-const err148 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data47.mode !== undefined){
+let data48 = data47.mode;
+if(typeof data48 !== "string"){
+const err148 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err148];
 }
@@ -10675,12 +10901,8 @@ vErrors.push(err148);
 }
 errors++;
 }
-}
-if(data46.yaw !== undefined){
-let data49 = data46.yaw;
-if((typeof data49 == "number") && (isFinite(data49))){
-if(data49 > 3.141592653589793 || isNaN(data49)){
-const err149 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3.141592653589793},message:"must be <= 3.141592653589793"};
+if(!((data48 === "Orthographic") || (data48 === "Perspective"))){
+const err149 = {instancePath:instancePath+"/rendering/camera/mode",schemaPath:"#/properties/rendering/properties/camera/properties/mode/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.camera.properties.mode.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err149];
 }
@@ -10689,8 +10911,12 @@ vErrors.push(err149);
 }
 errors++;
 }
-if(data49 < -3.141592653589793 || isNaN(data49)){
-const err150 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/minimum",keyword:"minimum",params:{comparison: ">=", limit: -3.141592653589793},message:"must be >= -3.141592653589793"};
+}
+if(data47.fieldOfView !== undefined){
+let data49 = data47.fieldOfView;
+if((typeof data49 == "number") && (isFinite(data49))){
+if(data49 > 100 || isNaN(data49)){
+const err150 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err150];
 }
@@ -10699,9 +10925,8 @@ vErrors.push(err150);
 }
 errors++;
 }
-}
-else {
-const err151 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data49 < 10 || isNaN(data49)){
+const err151 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/minimum",keyword:"minimum",params:{comparison: ">=", limit: 10},message:"must be >= 10"};
 if(vErrors === null){
 vErrors = [err151];
 }
@@ -10711,11 +10936,8 @@ vErrors.push(err151);
 errors++;
 }
 }
-if(data46.pitch !== undefined){
-let data50 = data46.pitch;
-if((typeof data50 == "number") && (isFinite(data50))){
-if(data50 > 1.48 || isNaN(data50)){
-const err152 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1.48},message:"must be <= 1.48"};
+else {
+const err152 = {instancePath:instancePath+"/rendering/camera/fieldOfView",schemaPath:"#/properties/rendering/properties/camera/properties/fieldOfView/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err152];
 }
@@ -10724,8 +10946,12 @@ vErrors.push(err152);
 }
 errors++;
 }
-if(data50 < -1.48 || isNaN(data50)){
-const err153 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/minimum",keyword:"minimum",params:{comparison: ">=", limit: -1.48},message:"must be >= -1.48"};
+}
+if(data47.yaw !== undefined){
+let data50 = data47.yaw;
+if((typeof data50 == "number") && (isFinite(data50))){
+if(data50 > 3.141592653589793 || isNaN(data50)){
+const err153 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3.141592653589793},message:"must be <= 3.141592653589793"};
 if(vErrors === null){
 vErrors = [err153];
 }
@@ -10734,9 +10960,8 @@ vErrors.push(err153);
 }
 errors++;
 }
-}
-else {
-const err154 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data50 < -3.141592653589793 || isNaN(data50)){
+const err154 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/minimum",keyword:"minimum",params:{comparison: ">=", limit: -3.141592653589793},message:"must be >= -3.141592653589793"};
 if(vErrors === null){
 vErrors = [err154];
 }
@@ -10746,11 +10971,8 @@ vErrors.push(err154);
 errors++;
 }
 }
-if(data46.roll !== undefined){
-let data51 = data46.roll;
-if((typeof data51 == "number") && (isFinite(data51))){
-if(data51 > 0.5 || isNaN(data51)){
-const err155 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.5},message:"must be <= 0.5"};
+else {
+const err155 = {instancePath:instancePath+"/rendering/camera/yaw",schemaPath:"#/properties/rendering/properties/camera/properties/yaw/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err155];
 }
@@ -10759,8 +10981,12 @@ vErrors.push(err155);
 }
 errors++;
 }
-if(data51 < -0.5 || isNaN(data51)){
-const err156 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/minimum",keyword:"minimum",params:{comparison: ">=", limit: -0.5},message:"must be >= -0.5"};
+}
+if(data47.pitch !== undefined){
+let data51 = data47.pitch;
+if((typeof data51 == "number") && (isFinite(data51))){
+if(data51 > 1.48 || isNaN(data51)){
+const err156 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1.48},message:"must be <= 1.48"};
 if(vErrors === null){
 vErrors = [err156];
 }
@@ -10769,9 +10995,8 @@ vErrors.push(err156);
 }
 errors++;
 }
-}
-else {
-const err157 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data51 < -1.48 || isNaN(data51)){
+const err157 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/minimum",keyword:"minimum",params:{comparison: ">=", limit: -1.48},message:"must be >= -1.48"};
 if(vErrors === null){
 vErrors = [err157];
 }
@@ -10781,11 +11006,8 @@ vErrors.push(err157);
 errors++;
 }
 }
-if(data46.rotationSensitivity !== undefined){
-let data52 = data46.rotationSensitivity;
-if((typeof data52 == "number") && (isFinite(data52))){
-if(data52 > 0.02 || isNaN(data52)){
-const err158 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.02},message:"must be <= 0.02"};
+else {
+const err158 = {instancePath:instancePath+"/rendering/camera/pitch",schemaPath:"#/properties/rendering/properties/camera/properties/pitch/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err158];
 }
@@ -10794,8 +11016,12 @@ vErrors.push(err158);
 }
 errors++;
 }
-if(data52 < 0.0001 || isNaN(data52)){
-const err159 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.0001},message:"must be >= 0.0001"};
+}
+if(data47.roll !== undefined){
+let data52 = data47.roll;
+if((typeof data52 == "number") && (isFinite(data52))){
+if(data52 > 0.5 || isNaN(data52)){
+const err159 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.5},message:"must be <= 0.5"};
 if(vErrors === null){
 vErrors = [err159];
 }
@@ -10804,9 +11030,8 @@ vErrors.push(err159);
 }
 errors++;
 }
-}
-else {
-const err160 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data52 < -0.5 || isNaN(data52)){
+const err160 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/minimum",keyword:"minimum",params:{comparison: ">=", limit: -0.5},message:"must be >= -0.5"};
 if(vErrors === null){
 vErrors = [err160];
 }
@@ -10816,11 +11041,8 @@ vErrors.push(err160);
 errors++;
 }
 }
-if(data46.ambientColor !== undefined){
-let data53 = data46.ambientColor;
-if(typeof data53 === "string"){
-if(func3(data53) > 80){
-const err161 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err161 = {instancePath:instancePath+"/rendering/camera/roll",schemaPath:"#/properties/rendering/properties/camera/properties/roll/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err161];
 }
@@ -10829,8 +11051,12 @@ vErrors.push(err161);
 }
 errors++;
 }
-if(func3(data53) < 1){
-const err162 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data47.rotationSensitivity !== undefined){
+let data53 = data47.rotationSensitivity;
+if((typeof data53 == "number") && (isFinite(data53))){
+if(data53 > 0.02 || isNaN(data53)){
+const err162 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.02},message:"must be <= 0.02"};
 if(vErrors === null){
 vErrors = [err162];
 }
@@ -10839,8 +11065,8 @@ vErrors.push(err162);
 }
 errors++;
 }
-if(!pattern2.test(data53)){
-const err163 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data53 < 0.0001 || isNaN(data53)){
+const err163 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.0001},message:"must be >= 0.0001"};
 if(vErrors === null){
 vErrors = [err163];
 }
@@ -10851,7 +11077,7 @@ errors++;
 }
 }
 else {
-const err164 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err164 = {instancePath:instancePath+"/rendering/camera/rotationSensitivity",schemaPath:"#/properties/rendering/properties/camera/properties/rotationSensitivity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err164];
 }
@@ -10861,11 +11087,11 @@ vErrors.push(err164);
 errors++;
 }
 }
-if(data46.ambientIntensity !== undefined){
-let data54 = data46.ambientIntensity;
-if((typeof data54 == "number") && (isFinite(data54))){
-if(data54 > 5 || isNaN(data54)){
-const err165 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
+if(data47.ambientColor !== undefined){
+let data54 = data47.ambientColor;
+if(typeof data54 === "string"){
+if(func3(data54) > 80){
+const err165 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err165];
 }
@@ -10874,8 +11100,8 @@ vErrors.push(err165);
 }
 errors++;
 }
-if(data54 < 0 || isNaN(data54)){
-const err166 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data54) < 1){
+const err166 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err166];
 }
@@ -10884,9 +11110,8 @@ vErrors.push(err166);
 }
 errors++;
 }
-}
-else {
-const err167 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data54)){
+const err167 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err167];
 }
@@ -10896,11 +11121,8 @@ vErrors.push(err167);
 errors++;
 }
 }
-if(data46.directionalColor !== undefined){
-let data55 = data46.directionalColor;
-if(typeof data55 === "string"){
-if(func3(data55) > 80){
-const err168 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err168 = {instancePath:instancePath+"/rendering/camera/ambientColor",schemaPath:"#/properties/rendering/properties/camera/properties/ambientColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err168];
 }
@@ -10909,8 +11131,12 @@ vErrors.push(err168);
 }
 errors++;
 }
-if(func3(data55) < 1){
-const err169 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data47.ambientIntensity !== undefined){
+let data55 = data47.ambientIntensity;
+if((typeof data55 == "number") && (isFinite(data55))){
+if(data55 > 5 || isNaN(data55)){
+const err169 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
 if(vErrors === null){
 vErrors = [err169];
 }
@@ -10919,8 +11145,8 @@ vErrors.push(err169);
 }
 errors++;
 }
-if(!pattern2.test(data55)){
-const err170 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data55 < 0 || isNaN(data55)){
+const err170 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err170];
 }
@@ -10931,7 +11157,7 @@ errors++;
 }
 }
 else {
-const err171 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err171 = {instancePath:instancePath+"/rendering/camera/ambientIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/ambientIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err171];
 }
@@ -10941,11 +11167,11 @@ vErrors.push(err171);
 errors++;
 }
 }
-if(data46.directionalIntensity !== undefined){
-let data56 = data46.directionalIntensity;
-if((typeof data56 == "number") && (isFinite(data56))){
-if(data56 > 5 || isNaN(data56)){
-const err172 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
+if(data47.directionalColor !== undefined){
+let data56 = data47.directionalColor;
+if(typeof data56 === "string"){
+if(func3(data56) > 80){
+const err172 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err172];
 }
@@ -10954,8 +11180,8 @@ vErrors.push(err172);
 }
 errors++;
 }
-if(data56 < 0 || isNaN(data56)){
-const err173 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data56) < 1){
+const err173 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err173];
 }
@@ -10964,9 +11190,8 @@ vErrors.push(err173);
 }
 errors++;
 }
-}
-else {
-const err174 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data56)){
+const err174 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err174];
 }
@@ -10976,9 +11201,8 @@ vErrors.push(err174);
 errors++;
 }
 }
-}
 else {
-const err175 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err175 = {instancePath:instancePath+"/rendering/camera/directionalColor",schemaPath:"#/properties/rendering/properties/camera/properties/directionalColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err175];
 }
@@ -10988,12 +11212,11 @@ vErrors.push(err175);
 errors++;
 }
 }
-if(data6.activity !== undefined){
-let data57 = data6.activity;
-if(data57 && typeof data57 == "object" && !Array.isArray(data57)){
-for(const key5 in data57){
-if(!(func2.call(schema20.properties.rendering.properties.activity.properties, key5))){
-const err176 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
+if(data47.directionalIntensity !== undefined){
+let data57 = data47.directionalIntensity;
+if((typeof data57 == "number") && (isFinite(data57))){
+if(data57 > 5 || isNaN(data57)){
+const err176 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5},message:"must be <= 5"};
 if(vErrors === null){
 vErrors = [err176];
 }
@@ -11002,12 +11225,8 @@ vErrors.push(err176);
 }
 errors++;
 }
-}
-if(data57.labelMinWidth !== undefined){
-let data58 = data57.labelMinWidth;
-if((typeof data58 == "number") && (isFinite(data58))){
-if(data58 > 400 || isNaN(data58)){
-const err177 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
+if(data57 < 0 || isNaN(data57)){
+const err177 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err177];
 }
@@ -11016,8 +11235,9 @@ vErrors.push(err177);
 }
 errors++;
 }
-if(data58 < 20 || isNaN(data58)){
-const err178 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
+}
+else {
+const err178 = {instancePath:instancePath+"/rendering/camera/directionalIntensity",schemaPath:"#/properties/rendering/properties/camera/properties/directionalIntensity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err178];
 }
@@ -11027,8 +11247,9 @@ vErrors.push(err178);
 errors++;
 }
 }
+}
 else {
-const err179 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err179 = {instancePath:instancePath+"/rendering/camera",schemaPath:"#/properties/rendering/properties/camera/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err179];
 }
@@ -11038,11 +11259,12 @@ vErrors.push(err179);
 errors++;
 }
 }
-if(data57.labelMaxWidth !== undefined){
-let data59 = data57.labelMaxWidth;
-if((typeof data59 == "number") && (isFinite(data59))){
-if(data59 > 1600 || isNaN(data59)){
-const err180 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1600},message:"must be <= 1600"};
+if(data6.activity !== undefined){
+let data58 = data6.activity;
+if(data58 && typeof data58 == "object" && !Array.isArray(data58)){
+for(const key5 in data58){
+if(!(func2.call(schema20.properties.rendering.properties.activity.properties, key5))){
+const err180 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err180];
 }
@@ -11051,8 +11273,12 @@ vErrors.push(err180);
 }
 errors++;
 }
-if(data59 < 40 || isNaN(data59)){
-const err181 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data58.labelMinWidth !== undefined){
+let data59 = data58.labelMinWidth;
+if((typeof data59 == "number") && (isFinite(data59))){
+if(data59 > 400 || isNaN(data59)){
+const err181 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err181];
 }
@@ -11061,9 +11287,8 @@ vErrors.push(err181);
 }
 errors++;
 }
-}
-else {
-const err182 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data59 < 20 || isNaN(data59)){
+const err182 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
 if(vErrors === null){
 vErrors = [err182];
 }
@@ -11073,11 +11298,8 @@ vErrors.push(err182);
 errors++;
 }
 }
-if(data57.labelHorizontalPadding !== undefined){
-let data60 = data57.labelHorizontalPadding;
-if((typeof data60 == "number") && (isFinite(data60))){
-if(data60 > 200 || isNaN(data60)){
-const err183 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 200},message:"must be <= 200"};
+else {
+const err183 = {instancePath:instancePath+"/rendering/activity/labelMinWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMinWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err183];
 }
@@ -11086,8 +11308,12 @@ vErrors.push(err183);
 }
 errors++;
 }
-if(data60 < 0 || isNaN(data60)){
-const err184 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.labelMaxWidth !== undefined){
+let data60 = data58.labelMaxWidth;
+if((typeof data60 == "number") && (isFinite(data60))){
+if(data60 > 1600 || isNaN(data60)){
+const err184 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1600},message:"must be <= 1600"};
 if(vErrors === null){
 vErrors = [err184];
 }
@@ -11096,9 +11322,8 @@ vErrors.push(err184);
 }
 errors++;
 }
-}
-else {
-const err185 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data60 < 40 || isNaN(data60)){
+const err185 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err185];
 }
@@ -11108,11 +11333,8 @@ vErrors.push(err185);
 errors++;
 }
 }
-if(data57.lineHeight !== undefined){
-let data61 = data57.lineHeight;
-if((typeof data61 == "number") && (isFinite(data61))){
-if(data61 > 3 || isNaN(data61)){
-const err186 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
+else {
+const err186 = {instancePath:instancePath+"/rendering/activity/labelMaxWidth",schemaPath:"#/properties/rendering/properties/activity/properties/labelMaxWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err186];
 }
@@ -11121,8 +11343,12 @@ vErrors.push(err186);
 }
 errors++;
 }
-if(data61 < 1 || isNaN(data61)){
-const err187 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data58.labelHorizontalPadding !== undefined){
+let data61 = data58.labelHorizontalPadding;
+if((typeof data61 == "number") && (isFinite(data61))){
+if(data61 > 200 || isNaN(data61)){
+const err187 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/maximum",keyword:"maximum",params:{comparison: "<=", limit: 200},message:"must be <= 200"};
 if(vErrors === null){
 vErrors = [err187];
 }
@@ -11131,9 +11357,8 @@ vErrors.push(err187);
 }
 errors++;
 }
-}
-else {
-const err188 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data61 < 0 || isNaN(data61)){
+const err188 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err188];
 }
@@ -11143,11 +11368,8 @@ vErrors.push(err188);
 errors++;
 }
 }
-if(data57.shininess !== undefined){
-let data62 = data57.shininess;
-if((typeof data62 == "number") && (isFinite(data62))){
-if(data62 > 100 || isNaN(data62)){
-const err189 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err189 = {instancePath:instancePath+"/rendering/activity/labelHorizontalPadding",schemaPath:"#/properties/rendering/properties/activity/properties/labelHorizontalPadding/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err189];
 }
@@ -11156,8 +11378,12 @@ vErrors.push(err189);
 }
 errors++;
 }
-if(data62 < 0 || isNaN(data62)){
-const err190 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.lineHeight !== undefined){
+let data62 = data58.lineHeight;
+if((typeof data62 == "number") && (isFinite(data62))){
+if(data62 > 3 || isNaN(data62)){
+const err190 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err190];
 }
@@ -11166,9 +11392,8 @@ vErrors.push(err190);
 }
 errors++;
 }
-}
-else {
-const err191 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data62 < 1 || isNaN(data62)){
+const err191 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err191];
 }
@@ -11178,11 +11403,8 @@ vErrors.push(err191);
 errors++;
 }
 }
-if(data57.shadowColor !== undefined){
-let data63 = data57.shadowColor;
-if(typeof data63 === "string"){
-if(func3(data63) > 80){
-const err192 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err192 = {instancePath:instancePath+"/rendering/activity/lineHeight",schemaPath:"#/properties/rendering/properties/activity/properties/lineHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err192];
 }
@@ -11191,8 +11413,12 @@ vErrors.push(err192);
 }
 errors++;
 }
-if(func3(data63) < 1){
-const err193 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.shininess !== undefined){
+let data63 = data58.shininess;
+if((typeof data63 == "number") && (isFinite(data63))){
+if(data63 > 100 || isNaN(data63)){
+const err193 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err193];
 }
@@ -11201,8 +11427,8 @@ vErrors.push(err193);
 }
 errors++;
 }
-if(!pattern2.test(data63)){
-const err194 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data63 < 0 || isNaN(data63)){
+const err194 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err194];
 }
@@ -11213,7 +11439,7 @@ errors++;
 }
 }
 else {
-const err195 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err195 = {instancePath:instancePath+"/rendering/activity/shininess",schemaPath:"#/properties/rendering/properties/activity/properties/shininess/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err195];
 }
@@ -11223,11 +11449,11 @@ vErrors.push(err195);
 errors++;
 }
 }
-if(data57.shadowOpacity !== undefined){
-let data64 = data57.shadowOpacity;
-if((typeof data64 == "number") && (isFinite(data64))){
-if(data64 > 1 || isNaN(data64)){
-const err196 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data58.shadowColor !== undefined){
+let data64 = data58.shadowColor;
+if(typeof data64 === "string"){
+if(func3(data64) > 80){
+const err196 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err196];
 }
@@ -11236,8 +11462,8 @@ vErrors.push(err196);
 }
 errors++;
 }
-if(data64 < 0 || isNaN(data64)){
-const err197 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data64) < 1){
+const err197 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err197];
 }
@@ -11246,9 +11472,8 @@ vErrors.push(err197);
 }
 errors++;
 }
-}
-else {
-const err198 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data64)){
+const err198 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err198];
 }
@@ -11258,11 +11483,8 @@ vErrors.push(err198);
 errors++;
 }
 }
-if(data57.laneOpacity !== undefined){
-let data65 = data57.laneOpacity;
-if((typeof data65 == "number") && (isFinite(data65))){
-if(data65 > 1 || isNaN(data65)){
-const err199 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err199 = {instancePath:instancePath+"/rendering/activity/shadowColor",schemaPath:"#/properties/rendering/properties/activity/properties/shadowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err199];
 }
@@ -11271,8 +11493,12 @@ vErrors.push(err199);
 }
 errors++;
 }
-if(data65 < 0 || isNaN(data65)){
-const err200 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.shadowOpacity !== undefined){
+let data65 = data58.shadowOpacity;
+if((typeof data65 == "number") && (isFinite(data65))){
+if(data65 > 1 || isNaN(data65)){
+const err200 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err200];
 }
@@ -11281,9 +11507,8 @@ vErrors.push(err200);
 }
 errors++;
 }
-}
-else {
-const err201 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data65 < 0 || isNaN(data65)){
+const err201 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err201];
 }
@@ -11293,11 +11518,8 @@ vErrors.push(err201);
 errors++;
 }
 }
-if(data57.glowColor !== undefined){
-let data66 = data57.glowColor;
-if(typeof data66 === "string"){
-if(func3(data66) > 80){
-const err202 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err202 = {instancePath:instancePath+"/rendering/activity/shadowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/shadowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err202];
 }
@@ -11306,8 +11528,12 @@ vErrors.push(err202);
 }
 errors++;
 }
-if(func3(data66) < 1){
-const err203 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.laneOpacity !== undefined){
+let data66 = data58.laneOpacity;
+if((typeof data66 == "number") && (isFinite(data66))){
+if(data66 > 1 || isNaN(data66)){
+const err203 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err203];
 }
@@ -11316,8 +11542,8 @@ vErrors.push(err203);
 }
 errors++;
 }
-if(!pattern2.test(data66)){
-const err204 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data66 < 0 || isNaN(data66)){
+const err204 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err204];
 }
@@ -11328,7 +11554,7 @@ errors++;
 }
 }
 else {
-const err205 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err205 = {instancePath:instancePath+"/rendering/activity/laneOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/laneOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err205];
 }
@@ -11338,11 +11564,11 @@ vErrors.push(err205);
 errors++;
 }
 }
-if(data57.glowOutline !== undefined){
-let data67 = data57.glowOutline;
+if(data58.glowColor !== undefined){
+let data67 = data58.glowColor;
 if(typeof data67 === "string"){
 if(func3(data67) > 80){
-const err206 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err206 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err206];
 }
@@ -11352,7 +11578,7 @@ vErrors.push(err206);
 errors++;
 }
 if(func3(data67) < 1){
-const err207 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err207 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err207];
 }
@@ -11361,8 +11587,8 @@ vErrors.push(err207);
 }
 errors++;
 }
-if(!pattern2.test(data67)){
-const err208 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data67)){
+const err208 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err208];
 }
@@ -11373,7 +11599,7 @@ errors++;
 }
 }
 else {
-const err209 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err209 = {instancePath:instancePath+"/rendering/activity/glowColor",schemaPath:"#/properties/rendering/properties/activity/properties/glowColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err209];
 }
@@ -11383,11 +11609,11 @@ vErrors.push(err209);
 errors++;
 }
 }
-if(data57.glowOpacity !== undefined){
-let data68 = data57.glowOpacity;
-if((typeof data68 == "number") && (isFinite(data68))){
-if(data68 > 1 || isNaN(data68)){
-const err210 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(data58.glowOutline !== undefined){
+let data68 = data58.glowOutline;
+if(typeof data68 === "string"){
+if(func3(data68) > 80){
+const err210 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err210];
 }
@@ -11396,8 +11622,8 @@ vErrors.push(err210);
 }
 errors++;
 }
-if(data68 < 0 || isNaN(data68)){
-const err211 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(func3(data68) < 1){
+const err211 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err211];
 }
@@ -11406,9 +11632,8 @@ vErrors.push(err211);
 }
 errors++;
 }
-}
-else {
-const err212 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern4.test(data68)){
+const err212 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err212];
 }
@@ -11418,11 +11643,8 @@ vErrors.push(err212);
 errors++;
 }
 }
-if(data57.glowPulse !== undefined){
-let data69 = data57.glowPulse;
-if((typeof data69 == "number") && (isFinite(data69))){
-if(data69 > 1 || isNaN(data69)){
-const err213 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err213 = {instancePath:instancePath+"/rendering/activity/glowOutline",schemaPath:"#/properties/rendering/properties/activity/properties/glowOutline/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err213];
 }
@@ -11431,8 +11653,12 @@ vErrors.push(err213);
 }
 errors++;
 }
-if(data69 < 0 || isNaN(data69)){
-const err214 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.glowOpacity !== undefined){
+let data69 = data58.glowOpacity;
+if((typeof data69 == "number") && (isFinite(data69))){
+if(data69 > 1 || isNaN(data69)){
+const err214 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err214];
 }
@@ -11441,9 +11667,8 @@ vErrors.push(err214);
 }
 errors++;
 }
-}
-else {
-const err215 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data69 < 0 || isNaN(data69)){
+const err215 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err215];
 }
@@ -11453,11 +11678,8 @@ vErrors.push(err215);
 errors++;
 }
 }
-if(data57.transitionMs !== undefined){
-let data70 = data57.transitionMs;
-if((typeof data70 == "number") && (isFinite(data70))){
-if(data70 > 5000 || isNaN(data70)){
-const err216 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5000},message:"must be <= 5000"};
+else {
+const err216 = {instancePath:instancePath+"/rendering/activity/glowOpacity",schemaPath:"#/properties/rendering/properties/activity/properties/glowOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err216];
 }
@@ -11466,8 +11688,12 @@ vErrors.push(err216);
 }
 errors++;
 }
-if(data70 < 0 || isNaN(data70)){
-const err217 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+}
+if(data58.glowPulse !== undefined){
+let data70 = data58.glowPulse;
+if((typeof data70 == "number") && (isFinite(data70))){
+if(data70 > 1 || isNaN(data70)){
+const err217 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err217];
 }
@@ -11476,9 +11702,8 @@ vErrors.push(err217);
 }
 errors++;
 }
-}
-else {
-const err218 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data70 < 0 || isNaN(data70)){
+const err218 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err218];
 }
@@ -11488,11 +11713,8 @@ vErrors.push(err218);
 errors++;
 }
 }
-if(data57.matchBackground !== undefined){
-let data71 = data57.matchBackground;
-if(typeof data71 === "string"){
-if(func3(data71) > 80){
-const err219 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err219 = {instancePath:instancePath+"/rendering/activity/glowPulse",schemaPath:"#/properties/rendering/properties/activity/properties/glowPulse/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err219];
 }
@@ -11501,8 +11723,12 @@ vErrors.push(err219);
 }
 errors++;
 }
-if(func3(data71) < 1){
-const err220 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data58.transitionMs !== undefined){
+let data71 = data58.transitionMs;
+if((typeof data71 == "number") && (isFinite(data71))){
+if(data71 > 5000 || isNaN(data71)){
+const err220 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 5000},message:"must be <= 5000"};
 if(vErrors === null){
 vErrors = [err220];
 }
@@ -11511,8 +11737,8 @@ vErrors.push(err220);
 }
 errors++;
 }
-if(!pattern2.test(data71)){
-const err221 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(data71 < 0 || isNaN(data71)){
+const err221 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err221];
 }
@@ -11523,7 +11749,7 @@ errors++;
 }
 }
 else {
-const err222 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err222 = {instancePath:instancePath+"/rendering/activity/transitionMs",schemaPath:"#/properties/rendering/properties/activity/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err222];
 }
@@ -11533,11 +11759,11 @@ vErrors.push(err222);
 errors++;
 }
 }
-if(data57.leaderColor !== undefined){
-let data72 = data57.leaderColor;
+if(data58.matchBackground !== undefined){
+let data72 = data58.matchBackground;
 if(typeof data72 === "string"){
 if(func3(data72) > 80){
-const err223 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err223 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err223];
 }
@@ -11547,7 +11773,7 @@ vErrors.push(err223);
 errors++;
 }
 if(func3(data72) < 1){
-const err224 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err224 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err224];
 }
@@ -11556,8 +11782,8 @@ vErrors.push(err224);
 }
 errors++;
 }
-if(!pattern2.test(data72)){
-const err225 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data72)){
+const err225 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err225];
 }
@@ -11568,7 +11794,7 @@ errors++;
 }
 }
 else {
-const err226 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err226 = {instancePath:instancePath+"/rendering/activity/matchBackground",schemaPath:"#/properties/rendering/properties/activity/properties/matchBackground/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err226];
 }
@@ -11578,11 +11804,11 @@ vErrors.push(err226);
 errors++;
 }
 }
-if(data57.selectedLeaderColor !== undefined){
-let data73 = data57.selectedLeaderColor;
+if(data58.leaderColor !== undefined){
+let data73 = data58.leaderColor;
 if(typeof data73 === "string"){
 if(func3(data73) > 80){
-const err227 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+const err227 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err227];
 }
@@ -11592,7 +11818,7 @@ vErrors.push(err227);
 errors++;
 }
 if(func3(data73) < 1){
-const err228 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+const err228 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err228];
 }
@@ -11601,8 +11827,8 @@ vErrors.push(err228);
 }
 errors++;
 }
-if(!pattern2.test(data73)){
-const err229 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
+if(!pattern4.test(data73)){
+const err229 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err229];
 }
@@ -11613,7 +11839,7 @@ errors++;
 }
 }
 else {
-const err230 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err230 = {instancePath:instancePath+"/rendering/activity/leaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/leaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err230];
 }
@@ -11623,9 +11849,11 @@ vErrors.push(err230);
 errors++;
 }
 }
-}
-else {
-const err231 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data58.selectedLeaderColor !== undefined){
+let data74 = data58.selectedLeaderColor;
+if(typeof data74 === "string"){
+if(func3(data74) > 80){
+const err231 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err231];
 }
@@ -11634,13 +11862,8 @@ vErrors.push(err231);
 }
 errors++;
 }
-}
-if(data6.layout !== undefined){
-let data74 = data6.layout;
-if(data74 && typeof data74 == "object" && !Array.isArray(data74)){
-for(const key6 in data74){
-if(!(func2.call(schema20.properties.rendering.properties.layout.properties, key6))){
-const err232 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
+if(func3(data74) < 1){
+const err232 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err232];
 }
@@ -11649,12 +11872,8 @@ vErrors.push(err232);
 }
 errors++;
 }
-}
-if(data74.sidebarBreakpoint !== undefined){
-let data75 = data74.sidebarBreakpoint;
-if((typeof data75 == "number") && (isFinite(data75))){
-if(data75 > 2400 || isNaN(data75)){
-const err233 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
+if(!pattern4.test(data74)){
+const err233 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/pattern",keyword:"pattern",params:{pattern: "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"},message:"must match pattern \""+"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$"+"\""};
 if(vErrors === null){
 vErrors = [err233];
 }
@@ -11663,8 +11882,9 @@ vErrors.push(err233);
 }
 errors++;
 }
-if(data75 < 320 || isNaN(data75)){
-const err234 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
+}
+else {
+const err234 = {instancePath:instancePath+"/rendering/activity/selectedLeaderColor",schemaPath:"#/properties/rendering/properties/activity/properties/selectedLeaderColor/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err234];
 }
@@ -11674,8 +11894,9 @@ vErrors.push(err234);
 errors++;
 }
 }
+}
 else {
-const err235 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err235 = {instancePath:instancePath+"/rendering/activity",schemaPath:"#/properties/rendering/properties/activity/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err235];
 }
@@ -11685,11 +11906,12 @@ vErrors.push(err235);
 errors++;
 }
 }
-if(data74.sidebarMinimum !== undefined){
-let data76 = data74.sidebarMinimum;
-if((typeof data76 == "number") && (isFinite(data76))){
-if(data76 > 800 || isNaN(data76)){
-const err236 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(data6.layout !== undefined){
+let data75 = data6.layout;
+if(data75 && typeof data75 == "object" && !Array.isArray(data75)){
+for(const key6 in data75){
+if(!(func2.call(schema20.properties.rendering.properties.layout.properties, key6))){
+const err236 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err236];
 }
@@ -11698,8 +11920,12 @@ vErrors.push(err236);
 }
 errors++;
 }
-if(data76 < 180 || isNaN(data76)){
-const err237 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+}
+if(data75.sidebarBreakpoint !== undefined){
+let data76 = data75.sidebarBreakpoint;
+if((typeof data76 == "number") && (isFinite(data76))){
+if(data76 > 2400 || isNaN(data76)){
+const err237 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
 if(vErrors === null){
 vErrors = [err237];
 }
@@ -11708,9 +11934,8 @@ vErrors.push(err237);
 }
 errors++;
 }
-}
-else {
-const err238 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data76 < 320 || isNaN(data76)){
+const err238 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
 if(vErrors === null){
 vErrors = [err238];
 }
@@ -11720,11 +11945,8 @@ vErrors.push(err238);
 errors++;
 }
 }
-if(data74.sidebarDefaultMaximum !== undefined){
-let data77 = data74.sidebarDefaultMaximum;
-if((typeof data77 == "number") && (isFinite(data77))){
-if(data77 > 1400 || isNaN(data77)){
-const err239 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
+else {
+const err239 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err239];
 }
@@ -11733,8 +11955,12 @@ vErrors.push(err239);
 }
 errors++;
 }
-if(data77 < 180 || isNaN(data77)){
-const err240 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+}
+if(data75.sidebarMinimum !== undefined){
+let data77 = data75.sidebarMinimum;
+if((typeof data77 == "number") && (isFinite(data77))){
+if(data77 > 800 || isNaN(data77)){
+const err240 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err240];
 }
@@ -11743,9 +11969,8 @@ vErrors.push(err240);
 }
 errors++;
 }
-}
-else {
-const err241 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data77 < 180 || isNaN(data77)){
+const err241 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err241];
 }
@@ -11755,11 +11980,8 @@ vErrors.push(err241);
 errors++;
 }
 }
-if(data74.sidebarDefaultRatio !== undefined){
-let data78 = data74.sidebarDefaultRatio;
-if((typeof data78 == "number") && (isFinite(data78))){
-if(data78 > 0.7 || isNaN(data78)){
-const err242 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
+else {
+const err242 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err242];
 }
@@ -11768,8 +11990,12 @@ vErrors.push(err242);
 }
 errors++;
 }
-if(data78 < 0.1 || isNaN(data78)){
-const err243 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data75.sidebarDefaultMaximum !== undefined){
+let data78 = data75.sidebarDefaultMaximum;
+if((typeof data78 == "number") && (isFinite(data78))){
+if(data78 > 1400 || isNaN(data78)){
+const err243 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
 if(vErrors === null){
 vErrors = [err243];
 }
@@ -11778,9 +12004,8 @@ vErrors.push(err243);
 }
 errors++;
 }
-}
-else {
-const err244 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data78 < 180 || isNaN(data78)){
+const err244 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err244];
 }
@@ -11790,11 +12015,8 @@ vErrors.push(err244);
 errors++;
 }
 }
-if(data74.sidebarMaximumRatio !== undefined){
-let data79 = data74.sidebarMaximumRatio;
-if((typeof data79 == "number") && (isFinite(data79))){
-if(data79 > 0.85 || isNaN(data79)){
-const err245 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
+else {
+const err245 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err245];
 }
@@ -11803,8 +12025,12 @@ vErrors.push(err245);
 }
 errors++;
 }
-if(data79 < 0.2 || isNaN(data79)){
-const err246 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+}
+if(data75.sidebarDefaultRatio !== undefined){
+let data79 = data75.sidebarDefaultRatio;
+if((typeof data79 == "number") && (isFinite(data79))){
+if(data79 > 0.7 || isNaN(data79)){
+const err246 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
 if(vErrors === null){
 vErrors = [err246];
 }
@@ -11813,9 +12039,8 @@ vErrors.push(err246);
 }
 errors++;
 }
-}
-else {
-const err247 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data79 < 0.1 || isNaN(data79)){
+const err247 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err247];
 }
@@ -11825,11 +12050,8 @@ vErrors.push(err247);
 errors++;
 }
 }
-if(data74.minimumPlotWidth !== undefined){
-let data80 = data74.minimumPlotWidth;
-if((typeof data80 == "number") && (isFinite(data80))){
-if(data80 > 1200 || isNaN(data80)){
-const err248 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+else {
+const err248 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err248];
 }
@@ -11838,8 +12060,12 @@ vErrors.push(err248);
 }
 errors++;
 }
-if(data80 < 80 || isNaN(data80)){
-const err249 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
+}
+if(data75.sidebarMaximumRatio !== undefined){
+let data80 = data75.sidebarMaximumRatio;
+if((typeof data80 == "number") && (isFinite(data80))){
+if(data80 > 0.85 || isNaN(data80)){
+const err249 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
 if(vErrors === null){
 vErrors = [err249];
 }
@@ -11848,9 +12074,8 @@ vErrors.push(err249);
 }
 errors++;
 }
-}
-else {
-const err250 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data80 < 0.2 || isNaN(data80)){
+const err250 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err250];
 }
@@ -11860,11 +12085,8 @@ vErrors.push(err250);
 errors++;
 }
 }
-if(data74.overviewMaxHeight !== undefined){
-let data81 = data74.overviewMaxHeight;
-if((typeof data81 == "number") && (isFinite(data81))){
-if(data81 > 800 || isNaN(data81)){
-const err251 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err251 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err251];
 }
@@ -11873,8 +12095,12 @@ vErrors.push(err251);
 }
 errors++;
 }
-if(data81 < 40 || isNaN(data81)){
-const err252 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.minimumPlotWidth !== undefined){
+let data81 = data75.minimumPlotWidth;
+if((typeof data81 == "number") && (isFinite(data81))){
+if(data81 > 1200 || isNaN(data81)){
+const err252 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err252];
 }
@@ -11883,9 +12109,8 @@ vErrors.push(err252);
 }
 errors++;
 }
-}
-else {
-const err253 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data81 < 80 || isNaN(data81)){
+const err253 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
 if(vErrors === null){
 vErrors = [err253];
 }
@@ -11895,11 +12120,8 @@ vErrors.push(err253);
 errors++;
 }
 }
-if(data74.minimumDetailHeight !== undefined){
-let data82 = data74.minimumDetailHeight;
-if((typeof data82 == "number") && (isFinite(data82))){
-if(data82 > 800 || isNaN(data82)){
-const err254 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err254 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err254];
 }
@@ -11908,8 +12130,12 @@ vErrors.push(err254);
 }
 errors++;
 }
-if(data82 < 40 || isNaN(data82)){
-const err255 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.overviewMaxHeight !== undefined){
+let data82 = data75.overviewMaxHeight;
+if((typeof data82 == "number") && (isFinite(data82))){
+if(data82 > 800 || isNaN(data82)){
+const err255 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err255];
 }
@@ -11918,9 +12144,8 @@ vErrors.push(err255);
 }
 errors++;
 }
-}
-else {
-const err256 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data82 < 40 || isNaN(data82)){
+const err256 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err256];
 }
@@ -11930,11 +12155,8 @@ vErrors.push(err256);
 errors++;
 }
 }
-if(data74.splitRatio !== undefined){
-let data83 = data74.splitRatio;
-if((typeof data83 == "number") && (isFinite(data83))){
-if(data83 > 0.8 || isNaN(data83)){
-const err257 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
+else {
+const err257 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err257];
 }
@@ -11943,8 +12165,12 @@ vErrors.push(err257);
 }
 errors++;
 }
-if(data83 < 0.2 || isNaN(data83)){
-const err258 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+}
+if(data75.minimumDetailHeight !== undefined){
+let data83 = data75.minimumDetailHeight;
+if((typeof data83 == "number") && (isFinite(data83))){
+if(data83 > 800 || isNaN(data83)){
+const err258 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err258];
 }
@@ -11953,9 +12179,8 @@ vErrors.push(err258);
 }
 errors++;
 }
-}
-else {
-const err259 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data83 < 40 || isNaN(data83)){
+const err259 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err259];
 }
@@ -11965,9 +12190,8 @@ vErrors.push(err259);
 errors++;
 }
 }
-}
 else {
-const err260 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err260 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err260];
 }
@@ -11977,12 +12201,11 @@ vErrors.push(err260);
 errors++;
 }
 }
-if(data6.interaction !== undefined){
-let data84 = data6.interaction;
-if(data84 && typeof data84 == "object" && !Array.isArray(data84)){
-for(const key7 in data84){
-if(!(func2.call(schema20.properties.rendering.properties.interaction.properties, key7))){
-const err261 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
+if(data75.splitRatio !== undefined){
+let data84 = data75.splitRatio;
+if((typeof data84 == "number") && (isFinite(data84))){
+if(data84 > 0.8 || isNaN(data84)){
+const err261 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
 if(vErrors === null){
 vErrors = [err261];
 }
@@ -11991,11 +12214,8 @@ vErrors.push(err261);
 }
 errors++;
 }
-}
-if(data84.searchMode !== undefined){
-let data85 = data84.searchMode;
-if(typeof data85 !== "string"){
-const err262 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data84 < 0.2 || isNaN(data84)){
+const err262 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err262];
 }
@@ -12004,8 +12224,9 @@ vErrors.push(err262);
 }
 errors++;
 }
-if(!((data85 === "highlight") || (data85 === "only"))){
-const err263 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+}
+else {
+const err263 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err263];
 }
@@ -12015,9 +12236,9 @@ vErrors.push(err263);
 errors++;
 }
 }
-if(data84.highlight !== undefined){
-if(typeof data84.highlight !== "boolean"){
-const err264 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+}
+else {
+const err264 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err264];
 }
@@ -12027,9 +12248,12 @@ vErrors.push(err264);
 errors++;
 }
 }
-if(data84.autoScale !== undefined){
-if(typeof data84.autoScale !== "boolean"){
-const err265 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(data6.interaction !== undefined){
+let data85 = data6.interaction;
+if(data85 && typeof data85 == "object" && !Array.isArray(data85)){
+for(const key7 in data85){
+if(!(func2.call(schema20.properties.rendering.properties.interaction.properties, key7))){
+const err265 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err265];
 }
@@ -12039,11 +12263,10 @@ vErrors.push(err265);
 errors++;
 }
 }
-if(data84.adaptiveRatio !== undefined){
-let data88 = data84.adaptiveRatio;
-if((typeof data88 == "number") && (isFinite(data88))){
-if(data88 > 16 || isNaN(data88)){
-const err266 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+if(data85.searchMode !== undefined){
+let data86 = data85.searchMode;
+if(typeof data86 !== "string"){
+const err266 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err266];
 }
@@ -12052,8 +12275,8 @@ vErrors.push(err266);
 }
 errors++;
 }
-if(data88 < 1 || isNaN(data88)){
-const err267 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(!((data86 === "highlight") || (data86 === "only"))){
+const err267 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err267];
 }
@@ -12063,8 +12286,9 @@ vErrors.push(err267);
 errors++;
 }
 }
-else {
-const err268 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data85.highlight !== undefined){
+if(typeof data85.highlight !== "boolean"){
+const err268 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err268];
 }
@@ -12074,11 +12298,9 @@ vErrors.push(err268);
 errors++;
 }
 }
-if(data84.zoomInFactor !== undefined){
-let data89 = data84.zoomInFactor;
-if((typeof data89 == "number") && (isFinite(data89))){
-if(data89 > 0.99 || isNaN(data89)){
-const err269 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+if(data85.autoScale !== undefined){
+if(typeof data85.autoScale !== "boolean"){
+const err269 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err269];
 }
@@ -12087,8 +12309,12 @@ vErrors.push(err269);
 }
 errors++;
 }
-if(data89 < 0.1 || isNaN(data89)){
-const err270 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data85.adaptiveRatio !== undefined){
+let data89 = data85.adaptiveRatio;
+if((typeof data89 == "number") && (isFinite(data89))){
+if(data89 > 16 || isNaN(data89)){
+const err270 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
 if(vErrors === null){
 vErrors = [err270];
 }
@@ -12097,9 +12323,8 @@ vErrors.push(err270);
 }
 errors++;
 }
-}
-else {
-const err271 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data89 < 1 || isNaN(data89)){
+const err271 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err271];
 }
@@ -12109,11 +12334,8 @@ vErrors.push(err271);
 errors++;
 }
 }
-if(data84.zoomOutFactor !== undefined){
-let data90 = data84.zoomOutFactor;
-if((typeof data90 == "number") && (isFinite(data90))){
-if(data90 > 10 || isNaN(data90)){
-const err272 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+else {
+const err272 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err272];
 }
@@ -12122,8 +12344,12 @@ vErrors.push(err272);
 }
 errors++;
 }
-if(data90 < 1.01 || isNaN(data90)){
-const err273 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+}
+if(data85.zoomInFactor !== undefined){
+let data90 = data85.zoomInFactor;
+if((typeof data90 == "number") && (isFinite(data90))){
+if(data90 > 0.99 || isNaN(data90)){
+const err273 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
 if(vErrors === null){
 vErrors = [err273];
 }
@@ -12132,9 +12358,8 @@ vErrors.push(err273);
 }
 errors++;
 }
-}
-else {
-const err274 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data90 < 0.1 || isNaN(data90)){
+const err274 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err274];
 }
@@ -12144,11 +12369,8 @@ vErrors.push(err274);
 errors++;
 }
 }
-if(data84.overviewPanFraction !== undefined){
-let data91 = data84.overviewPanFraction;
-if((typeof data91 == "number") && (isFinite(data91))){
-if(data91 > 1 || isNaN(data91)){
-const err275 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err275 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err275];
 }
@@ -12157,8 +12379,12 @@ vErrors.push(err275);
 }
 errors++;
 }
-if(data91 < 0.05 || isNaN(data91)){
-const err276 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+}
+if(data85.zoomOutFactor !== undefined){
+let data91 = data85.zoomOutFactor;
+if((typeof data91 == "number") && (isFinite(data91))){
+if(data91 > 10 || isNaN(data91)){
+const err276 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
 if(vErrors === null){
 vErrors = [err276];
 }
@@ -12167,9 +12393,8 @@ vErrors.push(err276);
 }
 errors++;
 }
-}
-else {
-const err277 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data91 < 1.01 || isNaN(data91)){
+const err277 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
 if(vErrors === null){
 vErrors = [err277];
 }
@@ -12179,11 +12404,8 @@ vErrors.push(err277);
 errors++;
 }
 }
-if(data84.overviewKeyboardFraction !== undefined){
-let data92 = data84.overviewKeyboardFraction;
-if((typeof data92 == "number") && (isFinite(data92))){
-if(data92 > 1 || isNaN(data92)){
-const err278 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err278 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err278];
 }
@@ -12192,8 +12414,12 @@ vErrors.push(err278);
 }
 errors++;
 }
-if(data92 < 0.01 || isNaN(data92)){
-const err279 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+}
+if(data85.overviewPanFraction !== undefined){
+let data92 = data85.overviewPanFraction;
+if((typeof data92 == "number") && (isFinite(data92))){
+if(data92 > 1 || isNaN(data92)){
+const err279 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err279];
 }
@@ -12202,9 +12428,8 @@ vErrors.push(err279);
 }
 errors++;
 }
-}
-else {
-const err280 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data92 < 0.05 || isNaN(data92)){
+const err280 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
 if(vErrors === null){
 vErrors = [err280];
 }
@@ -12214,11 +12439,8 @@ vErrors.push(err280);
 errors++;
 }
 }
-if(data84.resizeStep !== undefined){
-let data93 = data84.resizeStep;
-if((typeof data93 == "number") && (isFinite(data93))){
-if(data93 > 100 || isNaN(data93)){
-const err281 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err281 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err281];
 }
@@ -12227,8 +12449,12 @@ vErrors.push(err281);
 }
 errors++;
 }
-if(data93 < 1 || isNaN(data93)){
-const err282 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data85.overviewKeyboardFraction !== undefined){
+let data93 = data85.overviewKeyboardFraction;
+if((typeof data93 == "number") && (isFinite(data93))){
+if(data93 > 1 || isNaN(data93)){
+const err282 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err282];
 }
@@ -12237,9 +12463,8 @@ vErrors.push(err282);
 }
 errors++;
 }
-}
-else {
-const err283 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data93 < 0.01 || isNaN(data93)){
+const err283 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
 if(vErrors === null){
 vErrors = [err283];
 }
@@ -12249,11 +12474,8 @@ vErrors.push(err283);
 errors++;
 }
 }
-if(data84.resizeLargeStep !== undefined){
-let data94 = data84.resizeLargeStep;
-if((typeof data94 == "number") && (isFinite(data94))){
-if(data94 > 300 || isNaN(data94)){
-const err284 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+else {
+const err284 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err284];
 }
@@ -12262,8 +12484,12 @@ vErrors.push(err284);
 }
 errors++;
 }
-if(data94 < 1 || isNaN(data94)){
-const err285 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data85.resizeStep !== undefined){
+let data94 = data85.resizeStep;
+if((typeof data94 == "number") && (isFinite(data94))){
+if(data94 > 100 || isNaN(data94)){
+const err285 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err285];
 }
@@ -12272,9 +12498,8 @@ vErrors.push(err285);
 }
 errors++;
 }
-}
-else {
-const err286 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data94 < 1 || isNaN(data94)){
+const err286 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err286];
 }
@@ -12284,9 +12509,8 @@ vErrors.push(err286);
 errors++;
 }
 }
-}
 else {
-const err287 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err287 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err287];
 }
@@ -12296,12 +12520,11 @@ vErrors.push(err287);
 errors++;
 }
 }
-if(data6.controls !== undefined){
-let data95 = data6.controls;
-if(data95 && typeof data95 == "object" && !Array.isArray(data95)){
-for(const key8 in data95){
-if(!(func2.call(schema20.properties.rendering.properties.controls.properties, key8))){
-const err288 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(data85.resizeLargeStep !== undefined){
+let data95 = data85.resizeLargeStep;
+if((typeof data95 == "number") && (isFinite(data95))){
+if(data95 > 300 || isNaN(data95)){
+const err288 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
 if(vErrors === null){
 vErrors = [err288];
 }
@@ -12310,12 +12533,8 @@ vErrors.push(err288);
 }
 errors++;
 }
-}
-if(data95.timelineLabel !== undefined){
-let data96 = data95.timelineLabel;
-if(typeof data96 === "string"){
-if(func3(data96) > 160){
-const err289 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data95 < 1 || isNaN(data95)){
+const err289 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err289];
 }
@@ -12324,8 +12543,9 @@ vErrors.push(err289);
 }
 errors++;
 }
-if(func3(data96) < 1){
-const err290 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err290 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err290];
 }
@@ -12335,8 +12555,9 @@ vErrors.push(err290);
 errors++;
 }
 }
+}
 else {
-const err291 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err291 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err291];
 }
@@ -12346,11 +12567,12 @@ vErrors.push(err291);
 errors++;
 }
 }
-if(data95.tableLabel !== undefined){
-let data97 = data95.tableLabel;
-if(typeof data97 === "string"){
-if(func3(data97) > 160){
-const err292 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data6.controls !== undefined){
+let data96 = data6.controls;
+if(data96 && typeof data96 == "object" && !Array.isArray(data96)){
+for(const key8 in data96){
+if(!(func2.call(schema20.properties.rendering.properties.controls.properties, key8))){
+const err292 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err292];
 }
@@ -12359,8 +12581,12 @@ vErrors.push(err292);
 }
 errors++;
 }
-if(func3(data97) < 1){
-const err293 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.timelineLabel !== undefined){
+let data97 = data96.timelineLabel;
+if(typeof data97 === "string"){
+if(func3(data97) > 160){
+const err293 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err293];
 }
@@ -12369,9 +12595,8 @@ vErrors.push(err293);
 }
 errors++;
 }
-}
-else {
-const err294 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data97) < 1){
+const err294 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err294];
 }
@@ -12381,11 +12606,8 @@ vErrors.push(err294);
 errors++;
 }
 }
-if(data95.splitLabel !== undefined){
-let data98 = data95.splitLabel;
-if(typeof data98 === "string"){
-if(func3(data98) > 160){
-const err295 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err295 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err295];
 }
@@ -12394,8 +12616,12 @@ vErrors.push(err295);
 }
 errors++;
 }
-if(func3(data98) < 1){
-const err296 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.tableLabel !== undefined){
+let data98 = data96.tableLabel;
+if(typeof data98 === "string"){
+if(func3(data98) > 160){
+const err296 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err296];
 }
@@ -12404,9 +12630,8 @@ vErrors.push(err296);
 }
 errors++;
 }
-}
-else {
-const err297 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data98) < 1){
+const err297 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err297];
 }
@@ -12416,11 +12641,8 @@ vErrors.push(err297);
 errors++;
 }
 }
-if(data95.previousOverviewLabel !== undefined){
-let data99 = data95.previousOverviewLabel;
-if(typeof data99 === "string"){
-if(func3(data99) > 160){
-const err298 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err298 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err298];
 }
@@ -12429,8 +12651,12 @@ vErrors.push(err298);
 }
 errors++;
 }
-if(func3(data99) < 1){
-const err299 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.splitLabel !== undefined){
+let data99 = data96.splitLabel;
+if(typeof data99 === "string"){
+if(func3(data99) > 160){
+const err299 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err299];
 }
@@ -12439,9 +12665,8 @@ vErrors.push(err299);
 }
 errors++;
 }
-}
-else {
-const err300 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data99) < 1){
+const err300 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err300];
 }
@@ -12451,11 +12676,8 @@ vErrors.push(err300);
 errors++;
 }
 }
-if(data95.previousOverviewTitle !== undefined){
-let data100 = data95.previousOverviewTitle;
-if(typeof data100 === "string"){
-if(func3(data100) > 160){
-const err301 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err301 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err301];
 }
@@ -12464,8 +12686,12 @@ vErrors.push(err301);
 }
 errors++;
 }
-if(func3(data100) < 1){
-const err302 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.previousOverviewLabel !== undefined){
+let data100 = data96.previousOverviewLabel;
+if(typeof data100 === "string"){
+if(func3(data100) > 160){
+const err302 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err302];
 }
@@ -12474,9 +12700,8 @@ vErrors.push(err302);
 }
 errors++;
 }
-}
-else {
-const err303 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data100) < 1){
+const err303 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err303];
 }
@@ -12486,11 +12711,8 @@ vErrors.push(err303);
 errors++;
 }
 }
-if(data95.nextOverviewLabel !== undefined){
-let data101 = data95.nextOverviewLabel;
-if(typeof data101 === "string"){
-if(func3(data101) > 160){
-const err304 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err304 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err304];
 }
@@ -12499,8 +12721,12 @@ vErrors.push(err304);
 }
 errors++;
 }
-if(func3(data101) < 1){
-const err305 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.previousOverviewTitle !== undefined){
+let data101 = data96.previousOverviewTitle;
+if(typeof data101 === "string"){
+if(func3(data101) > 160){
+const err305 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err305];
 }
@@ -12509,9 +12735,8 @@ vErrors.push(err305);
 }
 errors++;
 }
-}
-else {
-const err306 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data101) < 1){
+const err306 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err306];
 }
@@ -12521,11 +12746,8 @@ vErrors.push(err306);
 errors++;
 }
 }
-if(data95.nextOverviewTitle !== undefined){
-let data102 = data95.nextOverviewTitle;
-if(typeof data102 === "string"){
-if(func3(data102) > 160){
-const err307 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err307 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err307];
 }
@@ -12534,8 +12756,12 @@ vErrors.push(err307);
 }
 errors++;
 }
-if(func3(data102) < 1){
-const err308 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.nextOverviewLabel !== undefined){
+let data102 = data96.nextOverviewLabel;
+if(typeof data102 === "string"){
+if(func3(data102) > 160){
+const err308 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err308];
 }
@@ -12544,9 +12770,8 @@ vErrors.push(err308);
 }
 errors++;
 }
-}
-else {
-const err309 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data102) < 1){
+const err309 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err309];
 }
@@ -12556,11 +12781,8 @@ vErrors.push(err309);
 errors++;
 }
 }
-if(data95.fitOverviewLabel !== undefined){
-let data103 = data95.fitOverviewLabel;
-if(typeof data103 === "string"){
-if(func3(data103) > 160){
-const err310 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err310 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err310];
 }
@@ -12569,8 +12791,12 @@ vErrors.push(err310);
 }
 errors++;
 }
-if(func3(data103) < 1){
-const err311 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.nextOverviewTitle !== undefined){
+let data103 = data96.nextOverviewTitle;
+if(typeof data103 === "string"){
+if(func3(data103) > 160){
+const err311 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err311];
 }
@@ -12579,9 +12805,8 @@ vErrors.push(err311);
 }
 errors++;
 }
-}
-else {
-const err312 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data103) < 1){
+const err312 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err312];
 }
@@ -12591,11 +12816,8 @@ vErrors.push(err312);
 errors++;
 }
 }
-if(data95.fitOverviewTitle !== undefined){
-let data104 = data95.fitOverviewTitle;
-if(typeof data104 === "string"){
-if(func3(data104) > 160){
-const err313 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err313 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err313];
 }
@@ -12604,8 +12826,12 @@ vErrors.push(err313);
 }
 errors++;
 }
-if(func3(data104) < 1){
-const err314 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data96.fitOverviewLabel !== undefined){
+let data104 = data96.fitOverviewLabel;
+if(typeof data104 === "string"){
+if(func3(data104) > 160){
+const err314 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err314];
 }
@@ -12614,9 +12840,8 @@ vErrors.push(err314);
 }
 errors++;
 }
-}
-else {
-const err315 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data104) < 1){
+const err315 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err315];
 }
@@ -12626,9 +12851,8 @@ vErrors.push(err315);
 errors++;
 }
 }
-}
 else {
-const err316 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err316 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err316];
 }
@@ -12638,12 +12862,11 @@ vErrors.push(err316);
 errors++;
 }
 }
-if(data6.table !== undefined){
-let data105 = data6.table;
-if(data105 && typeof data105 == "object" && !Array.isArray(data105)){
-for(const key9 in data105){
-if(!((key9 === "emptyText") || (key9 === "columns"))){
-const err317 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
+if(data96.fitOverviewTitle !== undefined){
+let data105 = data96.fitOverviewTitle;
+if(typeof data105 === "string"){
+if(func3(data105) > 160){
+const err317 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err317];
 }
@@ -12652,12 +12875,8 @@ vErrors.push(err317);
 }
 errors++;
 }
-}
-if(data105.emptyText !== undefined){
-let data106 = data105.emptyText;
-if(typeof data106 === "string"){
-if(func3(data106) > 160){
-const err318 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data105) < 1){
+const err318 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err318];
 }
@@ -12666,8 +12885,9 @@ vErrors.push(err318);
 }
 errors++;
 }
-if(func3(data106) < 1){
-const err319 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err319 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err319];
 }
@@ -12677,8 +12897,9 @@ vErrors.push(err319);
 errors++;
 }
 }
+}
 else {
-const err320 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err320 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err320];
 }
@@ -12688,11 +12909,12 @@ vErrors.push(err320);
 errors++;
 }
 }
-if(data105.columns !== undefined){
-let data107 = data105.columns;
-if(Array.isArray(data107)){
-if(data107.length > 20){
-const err321 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(data6.table !== undefined){
+let data106 = data6.table;
+if(data106 && typeof data106 == "object" && !Array.isArray(data106)){
+for(const key9 in data106){
+if(!((key9 === "emptyText") || (key9 === "columns"))){
+const err321 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err321];
 }
@@ -12701,8 +12923,12 @@ vErrors.push(err321);
 }
 errors++;
 }
-if(data107.length < 1){
-const err322 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+}
+if(data106.emptyText !== undefined){
+let data107 = data106.emptyText;
+if(typeof data107 === "string"){
+if(func3(data107) > 160){
+const err322 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err322];
 }
@@ -12711,12 +12937,8 @@ vErrors.push(err322);
 }
 errors++;
 }
-const len2 = data107.length;
-for(let i2=0; i2<len2; i2++){
-let data108 = data107[i2];
-if(data108 && typeof data108 == "object" && !Array.isArray(data108)){
-if(data108.field === undefined){
-const err323 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+if(func3(data107) < 1){
+const err323 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err323];
 }
@@ -12725,8 +12947,9 @@ vErrors.push(err323);
 }
 errors++;
 }
-if(data108.label === undefined){
-const err324 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+}
+else {
+const err324 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err324];
 }
@@ -12735,9 +12958,12 @@ vErrors.push(err324);
 }
 errors++;
 }
-for(const key10 in data108){
-if(!((((key10 === "field") || (key10 === "label")) || (key10 === "width")) || (key10 === "visible"))){
-const err325 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+}
+if(data106.columns !== undefined){
+let data108 = data106.columns;
+if(Array.isArray(data108)){
+if(data108.length > 20){
+const err325 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
 if(vErrors === null){
 vErrors = [err325];
 }
@@ -12746,11 +12972,8 @@ vErrors.push(err325);
 }
 errors++;
 }
-}
-if(data108.field !== undefined){
-let data109 = data108.field;
-if(typeof data109 !== "string"){
-const err326 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data108.length < 1){
+const err326 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
 if(vErrors === null){
 vErrors = [err326];
 }
@@ -12759,8 +12982,12 @@ vErrors.push(err326);
 }
 errors++;
 }
-if(!(((((((data109 === "title") || (data109 === "start")) || (data109 === "end")) || (data109 === "source")) || (data109 === "status")) || (data109 === "description")) || (data109 === "id"))){
-const err327 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+const len2 = data108.length;
+for(let i2=0; i2<len2; i2++){
+let data109 = data108[i2];
+if(data109 && typeof data109 == "object" && !Array.isArray(data109)){
+if(data109.field === undefined){
+const err327 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
 if(vErrors === null){
 vErrors = [err327];
 }
@@ -12769,12 +12996,8 @@ vErrors.push(err327);
 }
 errors++;
 }
-}
-if(data108.label !== undefined){
-let data110 = data108.label;
-if(typeof data110 === "string"){
-if(func3(data110) > 80){
-const err328 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(data109.label === undefined){
+const err328 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
 if(vErrors === null){
 vErrors = [err328];
 }
@@ -12783,8 +13006,9 @@ vErrors.push(err328);
 }
 errors++;
 }
-if(func3(data110) < 1){
-const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+for(const key10 in data109){
+if(!((((key10 === "field") || (key10 === "label")) || (key10 === "width")) || (key10 === "visible"))){
+const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err329];
 }
@@ -12794,8 +13018,10 @@ vErrors.push(err329);
 errors++;
 }
 }
-else {
-const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data109.field !== undefined){
+let data110 = data109.field;
+if(typeof data110 !== "string"){
+const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err330];
 }
@@ -12804,12 +13030,8 @@ vErrors.push(err330);
 }
 errors++;
 }
-}
-if(data108.width !== undefined){
-let data111 = data108.width;
-if((typeof data111 == "number") && (isFinite(data111))){
-if(data111 > 1200 || isNaN(data111)){
-const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(!(((((((data110 === "title") || (data110 === "start")) || (data110 === "end")) || (data110 === "source")) || (data110 === "status")) || (data110 === "description")) || (data110 === "id"))){
+const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema20.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err331];
 }
@@ -12818,8 +13040,12 @@ vErrors.push(err331);
 }
 errors++;
 }
-if(data111 < 40 || isNaN(data111)){
-const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data109.label !== undefined){
+let data111 = data109.label;
+if(typeof data111 === "string"){
+if(func3(data111) > 80){
+const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
 if(vErrors === null){
 vErrors = [err332];
 }
@@ -12828,9 +13054,8 @@ vErrors.push(err332);
 }
 errors++;
 }
-}
-else {
-const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data111) < 1){
+const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err333];
 }
@@ -12840,9 +13065,8 @@ vErrors.push(err333);
 errors++;
 }
 }
-if(data108.visible !== undefined){
-if(typeof data108.visible !== "boolean"){
-const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+else {
+const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err334];
 }
@@ -12852,9 +13076,11 @@ vErrors.push(err334);
 errors++;
 }
 }
-}
-else {
-const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data109.width !== undefined){
+let data112 = data109.width;
+if((typeof data112 == "number") && (isFinite(data112))){
+if(data112 > 1200 || isNaN(data112)){
+const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err335];
 }
@@ -12863,10 +13089,8 @@ vErrors.push(err335);
 }
 errors++;
 }
-}
-}
-else {
-const err336 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(data112 < 40 || isNaN(data112)){
+const err336 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err336];
 }
@@ -12876,9 +13100,8 @@ vErrors.push(err336);
 errors++;
 }
 }
-}
 else {
-const err337 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err337 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err337];
 }
@@ -12888,9 +13111,9 @@ vErrors.push(err337);
 errors++;
 }
 }
-}
-else {
-const err338 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data109.visible !== undefined){
+if(typeof data109.visible !== "boolean"){
+const err338 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err338];
 }
@@ -12902,12 +13125,60 @@ errors++;
 }
 }
 else {
-const err339 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err339 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err339];
 }
 else {
 vErrors.push(err339);
+}
+errors++;
+}
+}
+}
+else {
+const err340 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err340];
+}
+else {
+vErrors.push(err340);
+}
+errors++;
+}
+}
+}
+else {
+const err341 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err341];
+}
+else {
+vErrors.push(err341);
+}
+errors++;
+}
+}
+}
+else {
+const err342 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err342];
+}
+else {
+vErrors.push(err342);
+}
+errors++;
+}
+}
+}
+else {
+const err343 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err343];
+}
+else {
+vErrors.push(err343);
 }
 errors++;
 }
@@ -12917,7 +13188,7 @@ return errors === 0;
 
 export const catalogSchema = validate185;
 const schema34 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/schemas/demo-catalog.schema.json","title":"OpenBEXI live demo catalog","type":"object","additionalProperties":false,"required":["version","basePath","demos"],"properties":{"$schema":{"type":"string"},"version":{"const":1},"basePath":{"type":"string","minLength":1},"demos":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","title","description","dataset","model","recordCount"],"properties":{"id":{"type":"string","pattern":"^[a-z0-9_-]+$"},"title":{"type":"string","minLength":1},"description":{"type":"string"},"dataset":{"type":"string","minLength":1},"model":{"type":"string","minLength":1},"reference":{"type":["string","null"],"minLength":1},"recordCount":{"type":"integer","minimum":0}}}}}};
-const pattern61 = new RegExp("^[a-z0-9_-]+$", "");
+const pattern67 = new RegExp("^[a-z0-9_-]+$", "");
 
 function validate185(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 /*# sourceURL="https://openbexi.org/schemas/demo-catalog.schema.json" */;
@@ -13107,7 +13378,7 @@ errors++;
 if(data4.id !== undefined){
 let data5 = data4.id;
 if(typeof data5 === "string"){
-if(!pattern61.test(data5)){
+if(!pattern67.test(data5)){
 const err16 = {instancePath:instancePath+"/demos/" + i0+"/id",schemaPath:"#/properties/demos/items/properties/id/pattern",keyword:"pattern",params:{pattern: "^[a-z0-9_-]+$"},message:"must match pattern \""+"^[a-z0-9_-]+$"+"\""};
 if(vErrors === null){
 vErrors = [err16];

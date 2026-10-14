@@ -1,0 +1,14 @@
+# Python 3.12 runtime, validated on Windows. Install before `pip install --no-deps -e .`.
+anyio==4.15.1
+certifi==2026.7.22
+click==8.5.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
+ijson==3.6.0
+PyYAML==6.0.3
+regex==2026.9.29
+starlette==1.8.0
+typing_extensions==4.16.0
+uvicorn==0.54.0

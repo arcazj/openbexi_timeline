@@ -39,7 +39,7 @@ class TimelineV24ContractTest {
             try { Thread.sleep(providerDelay.get()); } catch (InterruptedException error) { Thread.currentThread().interrupt(); }
             JSONObject result = new JSONObject().put("explanation", "Candidate appearance change only.").put("assumptions", new JSONArray()).put("warnings", new JSONArray())
                     .put("proposal", new JSONObject().put("kind", "model").put("format", "json")
-                            .put("text", Files.readString(root.resolve("models/demos/monet.json"))));
+                            .put("text", Files.readString(root.resolve("HBDS/templates/models/demos/monet.json"))));
             byte[] body = new JSONObject().put("choices", new JSONArray().put(new JSONObject().put("finish_reason", "stop")
                     .put("message", new JSONObject().put("content", result.toString())))).toString().getBytes(StandardCharsets.UTF_8);
             try { exchange.sendResponseHeaders(200, body.length); exchange.getResponseBody().write(body); }
@@ -98,7 +98,7 @@ class TimelineV24ContractTest {
     private JSONObject aiInput() throws Exception {
         return new JSONObject().put("requestId", UUID.randomUUID().toString()).put("providerId", "local-test").put("providerModelId", "mock-model")
                 .put("operation", "generate").put("prompt", "Review the existing appearance.")
-                .put("document", new JSONObject().put("kind", "model").put("format", "json").put("text", Files.readString(root.resolve("models/demos/monet.json"))));
+                .put("document", new JSONObject().put("kind", "model").put("format", "json").put("text", Files.readString(root.resolve("HBDS/templates/models/demos/monet.json"))));
     }
 
     @Test void newPublishedResourcesConformAndConfigurationOperationsPreserveEveryItemField() throws Exception {

@@ -3,15 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Model and YAML editor — OpenBEXI Timeline</title>
+  <title>HBDS Editor — OpenBEXI Timeline</title>
   <link rel="stylesheet" href="css/ob_model_editor.css">
 </head>
 <body>
 <header class="editor-heading">
-  <div class="editor-title"><h1>Model and YAML editor</h1><p>Edit a property and see its effect in the live timeline.</p></div>
+  <div class="editor-title"><h1>HBDS Editor</h1><p>Edit a property and see its effect in the live timeline.</p></div>
+  <button id="open-hbds" type="button">Namespaces and tabs</button>
   <button id="connect">Connect to server</button>
 </header>
-<main>
+<main id="hbds-editor" hidden></main>
+<main id="model-editor-main">
   <section id="document-management" aria-label="Document management" hidden>
   <nav class="document-bar" aria-label="Document actions">
     <label>Open document <select id="documents"><option value="">Loading examples…</option></select></label>

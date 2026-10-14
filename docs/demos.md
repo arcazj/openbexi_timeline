@@ -22,13 +22,13 @@ Each demo uses Timeline, Table and Split views with its own data, model and time
 
 | Demo | What it shows | Resources |
 | --- | --- | --- |
-| [Operations sample](https://arcazj.github.io/openbexi_timeline/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](../json/test-data/default-dataset.json) · [Model](../models/demos/default-dataset.json) · [Screenshot](../docs/ui/overview/default-dataset-desktop.png) |
-| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](../json/test-data/dinausaurs.json) · [Model](../models/demos/dinausaurs.json) · [Screenshot](../docs/ui/overview/dinausaurs-desktop.png) |
-| [Satellite ephemeris](https://arcazj.github.io/openbexi_timeline/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](../json/test-data/ephemeris.json) · [Model](../models/demos/ephemeris.json) · [Screenshot](../docs/ui/overview/ephemeris-desktop.png) |
-| [JFK chronology](https://arcazj.github.io/openbexi_timeline/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](../json/test-data/jfk.json) · [Model](../models/demos/jfk.json) · [Screenshot](../docs/ui/overview/jfk-desktop.png) |
-| [Claude Monet](https://arcazj.github.io/openbexi_timeline/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](../json/test-data/monet.json) · [Model](../models/demos/monet.json) · [Screenshot](../docs/ui/overview/monet-desktop.png) |
-| [Religious history](https://arcazj.github.io/openbexi_timeline/demos.html?demo=religions) | BCE/CE dates, duration and event bands, and overview context. | [Data](../json/test-data/religions.json) · [Model](../models/demos/religions.json) · [Screenshot](../docs/ui/overview/religions-desktop.png) |
-| [Space exploration](https://arcazj.github.io/openbexi_timeline/demos.html?demo=space_exploration) | A month-scale view with a yearly overview of the supplied space-history events. | [Data](../json/test-data/space_exploration.json) · [Model](../models/demos/space_exploration.json) · [Screenshot](../docs/ui/overview/space_exploration-desktop.png) |
+| [Operations sample](https://arcazj.github.io/openbexi_timeline/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](../json/test-data/default-dataset.json) · [Model](../HBDS/templates/models/demos/default-dataset.json) · [Screenshot](../docs/ui/overview/default-dataset-desktop.png) |
+| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](../json/test-data/dinausaurs.json) · [Model](../HBDS/templates/models/demos/dinausaurs.json) · [Screenshot](../docs/ui/overview/dinausaurs-desktop.png) |
+| [Satellite ephemeris](https://arcazj.github.io/openbexi_timeline/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](../json/test-data/ephemeris.json) · [Model](../HBDS/templates/models/demos/ephemeris.json) · [Screenshot](../docs/ui/overview/ephemeris-desktop.png) |
+| [JFK chronology](https://arcazj.github.io/openbexi_timeline/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](../json/test-data/jfk.json) · [Model](../HBDS/templates/models/demos/jfk.json) · [Screenshot](../docs/ui/overview/jfk-desktop.png) |
+| [Claude Monet](https://arcazj.github.io/openbexi_timeline/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](../json/test-data/monet.json) · [Model](../HBDS/templates/models/demos/monet.json) · [Screenshot](../docs/ui/overview/monet-desktop.png) |
+| [Religious history](https://arcazj.github.io/openbexi_timeline/demos.html?demo=religions) | BCE/CE dates, duration and event bands, and overview context. | [Data](../json/test-data/religions.json) · [Model](../HBDS/templates/models/demos/religions.json) · [Screenshot](../docs/ui/overview/religions-desktop.png) |
+| [Space exploration](https://arcazj.github.io/openbexi_timeline/demos.html?demo=space_exploration) | A month-scale view with a yearly overview of the supplied space-history events. | [Data](../json/test-data/space_exploration.json) · [Model](../HBDS/templates/models/demos/space_exploration.json) · [Screenshot](../docs/ui/overview/space_exploration-desktop.png) |
 
 Append `&view=table` or `&view=split` to a demo URL to open that view directly.
 <!-- DEMO_RESOURCES:END -->
@@ -42,7 +42,7 @@ Existing pages can keep their model selection:
 
 ```javascript
 const ob_timeline = new OB_TIMELINE();
-ob_timeline.loadModel("models/regular_timeline_earthquake.json");
+ob_timeline.loadModel("HBDS/templates/models/regular_timeline_earthquake.json");
 ```
 
 An explicit call skips server configuration discovery. Models with a local JSON data
@@ -53,7 +53,7 @@ call. The browser requests `openbexi_timeline/config` under the application's ro
 The server reads the top-level `model` field from the YAML selected by `-data_conf`:
 
 ```yaml
-model: models/regular_timeline_earthquake.json
+model: HBDS/templates/models/regular_timeline_earthquake.json
 data_sources:
   # Existing source definitions remain here.
 ```
@@ -85,7 +85,7 @@ Both demo and provider models also accept the optional root `rendering` object.
 Its 92 settings cover theme, axes, Overview, camera, activity appearance, layout,
 interactions, controls and table columns. Omitted settings keep the established
 defaults. The [rendering inventory](model-rendering-inventory.md) lists every
-setting and its precedence. Open **Settings → Model and YAML editor** to edit
+setting and its precedence. Open **Settings → HBDS Editor** to edit
 these properties and preview the actual timeline as you type; see the
 [editor guide](model-editor.md) for import/export and server file management.
 
@@ -189,7 +189,7 @@ npx playwright install chromium --only-shell
 npm run pages:verify
 ```
 
-`pages:build` writes `dist/pages` using the reviewed public-file manifest and the exact browser dependency files referenced by the import map. It includes their license notices, help, public models, datasets, reference images and the Model and YAML editor with its live preview. Server configuration, runtime files and local data are excluded. The generated gallery is `index.html`; `version.json` records the release and commit.
+`pages:build` writes `dist/pages` using the reviewed public-file manifest and the exact browser dependency files referenced by the import map. It includes their license notices, help, public models, datasets, reference images and the HBDS Editor with its live preview. Server configuration, runtime files and local data are excluded. The generated gallery is `index.html`; `version.json` records the release and commit.
 
 The [Pages workflow](../.github/workflows/pages.yml) runs on pushes to `master`. It validates all seven demos and live model previews at desktop and narrow sizes under `/openbexi_timeline/`, then deploys the tested artifact. Repository **Settings > Pages > Source** must be **GitHub Actions**. The README demo table is generated with the public Pages URL; local use remains available through `npm run demo`.
 

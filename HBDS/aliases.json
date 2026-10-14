@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "aliases": {
+    "models/demos/default-dataset.json": "HBDS/templates/models/demos/default-dataset.json",
+    "models/demos/dinausaurs.json": "HBDS/templates/models/demos/dinausaurs.json",
+    "models/demos/ephemeris.json": "HBDS/templates/models/demos/ephemeris.json",
+    "models/demos/jfk.json": "HBDS/templates/models/demos/jfk.json",
+    "models/demos/monet.json": "HBDS/templates/models/demos/monet.json",
+    "models/demos/religions.json": "HBDS/templates/models/demos/religions.json",
+    "models/demos/space_exploration.json": "HBDS/templates/models/demos/space_exploration.json",
+    "models/model_template.json": "HBDS/templates/models/model_template.json",
+    "models/regular_timeline.json": "HBDS/templates/models/regular_timeline.json",
+    "models/regular_timeline_earthquake.json": "HBDS/templates/models/regular_timeline_earthquake.json",
+    "yaml/deployment.yaml": "HBDS/templates/yaml/deployment.yaml",
+    "yaml/service.yaml": "HBDS/templates/yaml/service.yaml",
+    "yaml/sources_container.yml": "HBDS/templates/yaml/sources_container.yml",
+    "yaml/sources_default.yml": "HBDS/templates/yaml/sources_default.yml",
+    "yaml/sources_default_test.yml": "HBDS/templates/yaml/sources_default_test.yml",
+    "yaml/sources_earthquake.yml": "HBDS/templates/yaml/sources_earthquake.yml",
+    "yaml/source_template.yml": "HBDS/templates/yaml/source_template.yml",
+    "yaml/test-data/default-dataset.yml": "HBDS/templates/yaml/test-data/default-dataset.yml",
+    "yaml/test-data/ephemeris.yml": "HBDS/templates/yaml/test-data/ephemeris.yml",
+    "yaml/test-data/jfk.yml": "HBDS/templates/yaml/test-data/jfk.yml",
+    "yaml/test-data/monet.yml": "HBDS/templates/yaml/test-data/monet.yml",
+    "yaml/test-data/religions.yml": "HBDS/templates/yaml/test-data/religions.yml",
+    "yaml/test-data/space_exploration.yml": "HBDS/templates/yaml/test-data/space_exploration.yml",
+    "yaml/tomcat.yml": "HBDS/templates/yaml/tomcat.yml",
+    "filters/README.md": "HBDS/templates/filters/README.md"
+  }
+}

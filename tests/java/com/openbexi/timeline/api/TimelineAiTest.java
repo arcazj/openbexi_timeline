@@ -61,7 +61,7 @@ class TimelineAiTest {
     private TimelineAiService service(String adapter, boolean vision, boolean structured) throws IOException {
         return new TimelineAiService(root, configuration(adapter, vision, structured), key -> SECRET);
     }
-    private JSONObject model() throws IOException { return new JSONObject(Files.readString(root.resolve("models/demos/default-dataset.json"))); }
+    private JSONObject model() throws IOException { return new JSONObject(Files.readString(root.resolve("HBDS/templates/models/demos/default-dataset.json"))); }
     private JSONObject input() throws IOException {
         return new JSONObject().put("requestId", UUID.randomUUID().toString()).put("providerId", "provider").put("providerModelId", "configured-model")
                 .put("operation", "generate").put("prompt", "Improve the title.")

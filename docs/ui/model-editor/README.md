@@ -1,4 +1,4 @@
-# Model and YAML editor
+# HBDS Editor
 
 The public Monet example shows the full document manager, five editor areas and
 live preview at [desktop](desktop.png), [narrow](narrow.png) and [phone](phone.png)

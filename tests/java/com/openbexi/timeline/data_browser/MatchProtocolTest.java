@@ -208,7 +208,7 @@ class MatchProtocolTest {
         log.addHandler(capture);
         write("2025/01/01/long.json", record("long", "volcano", "2025-01-01T00:00:00Z", "2027-01-01T00:00:00Z"));
         Path yaml = temporary.resolve("sources.yml");
-        String template = Files.readString(Path.of("yaml/sources_default.yml"));
+        String template = Files.readString(Path.of("HBDS/templates/yaml/sources_default.yml"));
         Files.writeString(yaml, template.replace("/data/", temporary.resolve("data").toString().replace('\\','/')+"/"));
         Tomcat server = new Tomcat(); server.setBaseDir(temporary.resolve("tomcat").toString()); server.setPort(0);
         server.getConnector().setProperty("address","127.0.0.1");

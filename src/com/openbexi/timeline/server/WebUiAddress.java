@@ -6,12 +6,15 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.util.*;
+import com.openbexi.timeline.api.TimelineHbds;
 
 /** Optional deployment address; independent of any site's filenames or ports. */
 public record WebUiAddress(String host,Integer port,String contextPath,String entryPage,String externalBaseUrl) {
     public static WebUiAddress read(String configuration) throws IOException {
-        try(Reader reader=Files.newBufferedReader(Path.of(configuration))) {
-            Object document=new Yaml(new SafeConstructor(new LoaderOptions())).load(reader);
+        Path selected=TimelineHbds.resolve(Path.of(""),configuration);
+        try(Reader reader=Files.newBufferedReader(selected)) {
+            Object document=TimelineHbds.canonical(selected)?TimelineHbds.open(TimelineHbds.projectRoot(selected),selected).legacyConfiguration().toMap():
+                    new Yaml(new SafeConstructor(new LoaderOptions())).load(reader);
             Map<?,?> values=document instanceof Map<?,?> root && root.get("web_ui") instanceof Map<?,?> ui?ui:Map.of();
             String context=Objects.toString(values.get("context_path"),"").replaceAll("/+$","");
             if(!context.isEmpty() && !context.startsWith("/")) context="/"+context;

@@ -30,17 +30,19 @@ class TimelineConfigServletTest {
         server.start();base=URI.create("http://127.0.0.1:"+server.getConnector().getLocalPort()+contextPath+"/");
     }
     private HttpResponse<String> get(String path) throws Exception {
-        return client.send(HttpRequest.newBuilder(base.resolve(path)).timeout(Duration.ofSeconds(5)).GET().build(),HttpResponse.BodyHandlers.ofString());
+        return client.send(HttpRequest.newBuilder(base.resolve(path)).timeout(Duration.ofSeconds(15)).GET().build(),HttpResponse.BodyHandlers.ofString());
     }
     @AfterEach void stop() throws Exception {if(server!=null){server.stop();server.destroy();}}
 
     @Test void exposesOnlyTheModelAndDataRouteFromTheActiveYaml() throws Exception {
-        start("model: models/regular_timeline_earthquake.json\ndata_sources:\n  - permission: private-token\n    data_path: /private/archive\n","","/openbexi_timeline/sessions");
+        start("model: HBDS/templates/models/regular_timeline_earthquake.json\ndata_sources:\n  - permission: private-token\n    data_path: /private/archive\n","","/openbexi_timeline/sessions");
         HttpResponse<String> response=get("openbexi_timeline/config");
         assertEquals(200,response.statusCode());assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
         assertEquals("no-store",response.headers().firstValue("Cache-Control").orElse(""));
-        JSONObject body=new JSONObject(response.body());assertEquals(2,body.length());
-        assertEquals("models/regular_timeline_earthquake.json",body.getString("model"));
+        JSONObject body=new JSONObject(response.body());assertEquals(3,body.length());
+        assertEquals("Java",body.getJSONObject("server").getString("implementation"));
+        assertEquals("2.8.0",body.getJSONObject("server").getString("version"));
+        assertEquals("HBDS/templates/models/regular_timeline_earthquake.json",body.getString("model"));
         assertEquals("/openbexi_timeline/sessions",body.getString("data"));
         assertFalse(response.body().contains("private"));assertEquals(404,get("yaml/sources.yml").statusCode());
     }

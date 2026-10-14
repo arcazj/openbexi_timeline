@@ -4,6 +4,7 @@ import {OB_TIMELINE} from '../src/openbexi_timeline.js';
 export function runTimelineViewTests() {
     const results = [];
     const timelines = [];
+    const resources = [];
     const check = (condition, label) => {
         if (!condition) throw new Error(label);
         results.push('PASS: ' + label);
@@ -17,7 +18,9 @@ export function runTimelineViewTests() {
     const createTimeline = (name, events) => {
         const timeline = new OB_TIMELINE();
         timeline.name = name;
+        timeline.track = [resource => {resources.push(resource); return resource;}];
         timeline.ob_scene = [{
+            userData: {},
             top: 0, left: 0, width: 1200, ob_height: 480,
             sessions: {events}, ob_camera: {zoom: 2}
         }];
@@ -202,6 +205,7 @@ export function runTimelineViewTests() {
         results.push(results.length + ' checks passed.');
         return results;
     } finally {
+        for (const resource of resources) resource.dispose?.();
         for (const timeline of timelines) {
             timeline.ob_timeline_panel.remove();
             timeline.ob_timeline_right_panel.remove();

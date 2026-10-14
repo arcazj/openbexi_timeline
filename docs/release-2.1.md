@@ -19,7 +19,7 @@ Release checks cover generated schemas, demo models and README links, the OpenAP
 
 Local validation passed 184 JavaScript tests, 59 Java tests (34 environment-dependent skips), and the browser checks. The release suite includes 131 browser cases and seven intentional duplicate-case skips. The 28 screenshot baselines and 18 documentation captures were reviewed and refreshed for the new controls. The npm audit and the audit of 24 Maven runtime dependencies reported no known advisories.
 
-The connected earthquake example is checked with `-data_conf yaml/sources_earthquake.yml`, including a `volcano` search, previous/next activity, compact 3D and narrow layouts. Local source data and validation captures are kept outside the public release.
+The connected earthquake example is checked with `-data_conf HBDS/templates/yaml/sources_earthquake.yml`, including a `volcano` search, previous/next activity, compact 3D and narrow layouts. Local source data and validation captures are kept outside the public release.
 
 Run the documented checks in the [browser guide](browser-tests.md) and [demo hosting guide](demos.md#hosting-portability). GitHub Actions provides the results for the tagged commit.
 
