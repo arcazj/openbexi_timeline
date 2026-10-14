@@ -129,7 +129,15 @@ test('SSE revisions refresh changes once, reconcile deletions and ignore closed 
         await waitFor(()=>requests.length>offset);
         await finishCycle(f,offset,request=>batch(request,['reconnected'],null,true,{'X-Timeline-Revision':'three'}));
         assert.equal(r.error,'');assert.equal(r.snapshot.entries[0].record.id,'reconnected');
-        offset=requests.length;t.ob_loader.cancel();stream.message('late');
+        const trace=await h.importModule('src/openbexi_timeline_trace.js');offset=requests.length;
+        trace.setTraceLevel('ERROR');
+        assert.equal(streams.length,2);assert.equal(stream.closed,true);
+        assert.equal(new URL(streams[1].url).searchParams.get('traceLevel'),'ERROR');
+        streams[1].message('three');stream.message('late');
+        await new Promise(resolve=>setTimeout(resolve,130));assert.equal(requests.length,offset,'Changing trace level must not reload cached records');
+        trace.setTraceLevel('ERROR');assert.equal(streams.length,2,'An unchanged preference keeps the live connection');
+        t.ob_loader.cancel();streams[1].message('late');trace.setTraceLevel('INFO');
+        assert.equal(streams.length,2,'Closed subscriptions remove their trace listener');
         await new Promise(resolve=>setTimeout(resolve,130));
         assert.equal(stream.closed,true);assert.equal(requests.length,offset);assert.equal(r.liveState,'');
     } finally {f.close();}
@@ -157,6 +165,30 @@ function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:url.searchParams.get('search')||'',
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
+
+test('A trace change takes effect on the next cursor page without restarting or invalidating cached data',async()=>{
+    const f=await connected(),{h,t,r,requests,settings}=f;
+    try {
+        const trace=await h.importModule('src/openbexi_timeline_trace.js');
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>requests.length===2);
+        const first=new URL(requests[1].url);assert.equal(first.searchParams.get('traceLevel'),'INFO');
+        trace.setTraceLevel('WARNING');assert.equal(requests.length,2);
+        batch(requests[1],['first'],'saved-cursor');
+        let continuation=false;
+        await finishCycle(f,2,request=>{
+            const next=new URL(request.url);assert.equal(next.searchParams.get('traceLevel'),'WARNING');
+            if(next.searchParams.has('cursor')) {
+                continuation=true;assert.equal(next.searchParams.get('cursor'),'saved-cursor');
+                for(const key of ['loadId','startDate','endDate','filter','search'])assert.equal(next.searchParams.get(key),first.searchParams.get(key));
+            }
+            batch(request,['last']);
+        });
+        assert.equal(continuation,true);
+        const count=requests.length,snapshot=r.snapshot;
+        trace.setTraceLevel('ERROR');await t.ob_loader.load(t.ob_loader.input);
+        assert.equal(requests.length,count);assert.equal(r.snapshot,snapshot);
+    } finally {f.close();}
+});
 
 test('A failed connected filter save retains the draft and shows the error beside its editor',async()=>{
     const f=await connected(),{t,r,requests,settings}=f;
@@ -539,6 +571,24 @@ test('An expired cursor restarts once with retained records and a repeated failu
         assert.match(r.error,/cursor expired or unavailable/);assert.equal(dataRequests().length,6,'Recovery never loops indefinitely');
         assert.ok(r.snapshot.entries.some(entry=>entry.record.id==='recovered'));
         assert.equal(t.ob_loader.running,false);
+    } finally {f.close();}
+});
+
+test('A malformed cursor reports the error without restarting the archive scan',async()=>{
+    const f=await connected();const {r,requests,settings}=f;
+    const dataRequests=()=>requests.filter(request=>{const url=new URL(request.url);return url.searchParams.has('startDate') && !url.searchParams.has('cancel');});
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});await waitFor(()=>dataRequests().length===1);
+        batch(dataRequests()[0],['current'],'invalid');await waitFor(()=>dataRequests().length===2);
+        batch(dataRequests()[1],[]);await waitFor(()=>dataRequests().length===3);
+        batch(dataRequests()[2],[]);await waitFor(()=>dataRequests().length===4);
+        dataRequests()[3].resolve({ok:true,json:async()=>({events:[],timelineMatch:{
+            error:'Invalid loading cursor. Reload the timeline to start a new request.'}})});
+        await waitFor(()=>!!r.error);
+        assert.match(r.error,/Invalid loading cursor/);
+        assert.equal(dataRequests().length,4,'Malformed cursors must not trigger an automatic rescan');
+        assert.ok(r.snapshot.entries.some(entry=>entry.record.id==='current'));
+        assert.equal(f.t.ob_loader.running,false);
     } finally {f.close();}
 });
 

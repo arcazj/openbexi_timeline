@@ -145,7 +145,7 @@
 .ob_activity_controls > button { white-space:nowrap; }
 .ob_results_title_slot { flex: 1 0 180px; min-width: 180px; display: flex; justify-content: center; }
 .ob_results_title_slot > .ob_time_marker { overflow:hidden; text-overflow:ellipsis; }
-.ob_results_title_slot > .ob_time_marker { position: static !important; flex: 0 1 auto; width: fit-content !important; min-width: 0; max-width: 100%; min-height: 36px; height: auto !important; box-sizing: border-box; padding: 7px 14px; border-radius: 8px; font-size: 14px; line-height: 22px; text-align: center; white-space: nowrap; }
+.ob_results_title_slot > .ob_time_marker { position: static !important; flex: 0 1 auto; width: fit-content !important; min-width: 0; max-width: 100%; min-height: 36px; height: auto !important; box-sizing: border-box; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: 700; line-height: 24px; text-align: center; white-space: nowrap; }
 .ob_toolbar_group { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; }
 .ob_toolbar_separator { display: inline-block; flex-shrink:0; width: 1px; height: 24px; margin: 0 4px; background: #b5c2cc; }
 .ob_results_navigation, .ob_results_utilities { display: flex; align-items: center; gap: 5px; }
@@ -331,6 +331,8 @@ body.ob_timeline_app { margin: 0; height: 100dvh; overflow: clip; }
 .ob_settings_section { border-bottom:1px solid #c4d0da; padding:8px 0; }
 .ob_settings_section > summary { padding:8px 0; font-weight:600; cursor:pointer; }
 .ob_settings_section_body > p { margin:6px 0 12px; }
+.ob_application_version { font-weight:600; overflow-wrap:anywhere; }
+[data-timeline-trace-level] { display:block; width:100%; max-width:100%; margin:8px 0; }
 .ob_settings_panel .ob_panel_form label { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0; }
 .ob_settings_panel .ob_panel_form label.ob_full_window { justify-content:flex-start; flex-wrap:wrap; }
 .ob_settings_panel .ob_perspective_settings, .ob_settings_panel .ob_scale_settings { margin:10px 0; }

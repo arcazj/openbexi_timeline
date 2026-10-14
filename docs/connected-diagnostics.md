@@ -127,24 +127,51 @@ seconds after the first snapshot. Finite requests emit one bounded summary each.
 No extra archive scan is performed for diagnostics. Structured summaries omit raw
 filters, grouping field names, record contents, credentials and source paths.
 
-### Readable request and response lines
+### Log levels and readable summaries
 
-The default `-Dopenbexi.timeline.logFormat=both` writes readable request/response
-lines alongside structured summaries. Choose `readable` or `json` to use only one
-format; normal `java.util.logging` levels control verbosity. Each request line
-contains its actual URL, with private query values redacted by default. For local
-troubleshooting, `-Dopenbexi.timeline.logQueryValues=true` includes allowlisted
-filter, grouping and record identifiers. Credentials, cookies, authorization
+The default format is `readable`, including after a restart without VM overrides.
+In **Settings > Trace level**, select INFO (information, warnings and errors),
+WARNING (warnings and errors), or ERROR (errors only). INFO is the default.
+The browser saves this preference locally and sends `traceLevel=INFO`, `WARNING`
+or `ERROR` with each timeline request, including cursor pages, cancellations,
+history searches and descriptor reads. The server applies that threshold only
+to the request's diagnostics; other clients and server startup logs retain their
+own logging settings. Java labels ERROR messages as SEVERE. The same selection
+controls browser timeline console messages. Changing it does not reload records
+or discard the cache; an active live subscription reconnects once to apply it.
+Settings shows the installed UI release from the same metadata used by Help.
+
+At the normal INFO logging level, each request produces one concise response
+summary. Successful responses use INFO; partial coverage and HTTP 4xx errors use
+WARNING; HTTP 5xx, provider failures and unexpected request failures use SEVERE
+(Java's error level). Summaries include the request ID, operation, purpose, batch,
+returned counts, server processing time, outcome and load ID when available.
+When a scan ends, WARNING lines identify affected sources and relative files,
+explain the problem and suggest a fix. Cumulative file diagnostics are not
+repeated on every continuation page.
+
+GET URLs and detailed scan metrics are logged only at FINE (DEBUG). To enable
+them for troubleshooting, configure both the logger and the relevant handlers
+at FINE, and omit `traceLevel` on diagnostic requests (the UI choices deliberately
+exclude debug output). Request URLs redact private query values by default. The optional
+`-Dopenbexi.timeline.logQueryValues=true` includes allowlisted filter, grouping and
+record identifiers in these debug URLs. Credentials, cookies, authorization
 headers and cursor tokens are never included. Keep detailed runtime logs local.
+
+Structured summaries remain available with `-Dopenbexi.timeline.logFormat=json`;
+`both` explicitly enables both readable and JSON response summaries. Neither
+option promotes GET URLs to INFO. Detailed scan counters, cache/index statistics
+and date bounds remain available in the structured summary and FINE diagnostics.
 
 Illustrative synthetic output:
 
 ```text
-timeline-request [sample-request] GET http://localhost:8123/openbexi_timeline/sessions?startDate=2026-09-12T12%3A00%3A00Z&endDate=2026-09-12T13%3A00%3A00Z&markerDate=2026-09-12T12%3A30%3A00Z&scene=0&loadId=%5Bredacted%5D&purpose=initial
-timeline-response [sample-request] Response OK! HTTP 200 operation=records outcome=loading server processing=24 ms loadId=sample-load scene=0 purpose=initial; returned 2 session(s), 18 event(s); batch=0 examined=256 excluded=236 cumulative sessions=2 events=18 complete=false more=true cache=miss coverage warnings=0; date min=2026-09-12T12:00:00Z; date marker=2026-09-12T12:30:00Z; date max=2026-09-12T13:00:00Z
+INFO: timeline-response [sample-request] HTTP 200 operation=records purpose=visible batch=0 sessions=2 events=18 time=24ms outcome=loading loadId=sample-load
+WARNING: timeline-response [final-request] HTTP 200 operation=records purpose=visible batch=1 sessions=0 events=0 time=5ms outcome=partial warnings=1 loadId=sample-load
+WARNING: timeline-warning [final-request] code=record_too_large source=ESOC sourceIndex=1 file=2026/10/13/events.json reason=A record exceeds the limit of 2 Mi decoded characters. action=Split the record, then Refresh.
 ```
 
-The marker comes from the client's `markerDate`; clients that omit it report
+The detailed marker comes from the client's `markerDate`; clients that omit it report
 `unknown`. Browser `timeline-client` lines use the response's request ID and
 report loaded snapshot counts, request latency and client build time separately
 from server processing. They describe completion of scene construction, not a

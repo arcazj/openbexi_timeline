@@ -32,6 +32,25 @@ class ProgressiveSourceScanTest {
     private JSONObject request(JSONObject config) { return (JSONObject)new json_files_manager(null,null,new data_configuration(config)).getData("","0"); }
     private JSONObject meta(JSONObject page) { return (JSONObject)page.get("timelineMatch"); }
 
+    @Test void redactedAndMalformedCursorsAreNotReportedAsExpired() {
+        JSONObject config = configuration();
+        config.put("cursor", "[redacted]");
+        String redacted = (String)meta(request(config)).get("error");
+        assertTrue(redacted.contains("redacted loading cursor"));
+        assertFalse(redacted.contains("cursor expired or unavailable"));
+
+        String id = UUID.randomUUID().toString();
+        for (String cursor : List.of("invalid", "invalid:1", id + ":", id + ":-1", id + ":0",
+                id + ":2147483648", id + ":1:2")) {
+            config.put("cursor", cursor);
+            assertEquals("Invalid loading cursor. Reload the timeline to start a new request.",
+                    meta(request(config)).get("error"));
+        }
+        config.put("cursor", id + ":1");
+        assertEquals("Loading cursor expired or unavailable. Retry the visible time window.",
+                meta(request(config)).get("error"), "A valid cursor lost after restart still allows bounded recovery");
+    }
+
     private JSONObject history(JSONObject config) {
         config.put("history", "backward"); config.put("search", "locked"); config.put("sortBy", "namespace");
         return config;
@@ -288,6 +307,47 @@ class ProgressiveSourceScanTest {
         System.out.println("Progressive fixture: 1801 records, "+pages+" bounded pages; first page precedes full file/archive scan.");
     }
 
+    @Test void coalescesEmptyArchiveWorkWithoutLosingOverlappingSessionsOrReplayCounts() throws Exception {
+        JSONArray records = new JSONArray();
+        for (int index = 0; index < 6000; index++) {
+            JSONObject old = record("old-" + index, "2025-01-01T00:00:00Z", null);
+            old.put("padding", "x".repeat(1024));
+            records.add(old);
+        }
+        records.add(record("overlapping", "2025-01-01T00:00:00Z", "2027-01-01T00:00:00Z"));
+        write("2025/01/01/archive.json", records);
+        JSONObject config = configuration();
+        int pages = 0, slices = 0, examined = 0, excluded = 0;
+        Set<String> found = new HashSet<>();
+        JSONObject page;
+        do {
+            page = request(config);
+            JSONObject metadata = meta(page);
+            assertNull(metadata.get("error"));
+            assertEquals(pages++, ((Number)metadata.get("batch")).intValue());
+            slices += ((Number)metadata.get("scanSlices")).intValue();
+            examined += ((Number)metadata.get("recordsExamined")).intValue();
+            excluded += ((Number)metadata.get("recordsExcluded")).intValue();
+            for (Object value : (JSONArray)page.get("events"))
+                assertTrue(found.add((String)((JSONObject)value).get("id")));
+            if (config.get("cursor") != null) {
+                JSONObject replay = request(config);
+                assertEquals(page.get("events"), replay.get("events"));
+                assertEquals(metadata.get("recordsExamined"), meta(replay).get("recordsExamined"));
+                assertEquals(metadata.get("scanSlices"), meta(replay).get("scanSlices"));
+                assertEquals("replay", meta(replay).get("cache"));
+            }
+            config.put("cursor", metadata.get("nextCursor"));
+            assertTrue(pages < 100);
+        } while (config.get("cursor") != null);
+        assertEquals(Set.of("overlapping"), found);
+        assertEquals(6001, examined);
+        assertEquals(6000, excluded);
+        assertEquals(true, meta(page).get("complete"));
+        assertTrue(slices > pages, "Empty slices should share HTTP responses");
+        System.out.println("Sparse archive fixture: " + slices + " work slices in " + pages + " responses.");
+    }
+
     @Test void preservesNestedSessionContextAndLegacyNamespaceExclusionRules() throws Exception {
         JSONArray records=new JSONArray();
         JSONObject parent=record("session","2025-01-01T00:00:00Z","2027-01-01T00:00:00Z");
@@ -436,6 +496,119 @@ class ProgressiveSourceScanTest {
             config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 400);
         } while (config.get("cursor") != null);
         return page;
+    }
+
+    private record Scan(JSONArray events, JSONObject metadata, long characters, int pages) {}
+    private Scan scan(JSONObject config) {
+        JSONArray events = new JSONArray(); JSONObject page; long characters = 0; int pages = 0;
+        do {
+            page = request(config); assertNull(meta(page).get("error"));
+            events.addAll((JSONArray)page.get("events"));
+            characters += ((Number)meta(page).get("charactersRead")).longValue();
+            config.put("cursor", meta(page).get("nextCursor")); assertTrue(++pages < 400);
+        } while (config.get("cursor") != null);
+        return new Scan(events, meta(page), characters, pages);
+    }
+
+    @Test void fileIndexSurvivesRecordCacheEvictionAndKeepsLongSessionsAtInclusiveBoundaries() throws Exception {
+        for (int i = 0; i < 300; i++) {
+            JSONArray old = new JSONArray(); old.add(record("old-" + i, "2020-01-01T00:00:00Z", null));
+            write("2020/01/01/part-" + i + ".json", old);
+        }
+        JSONArray spanning = new JSONArray();
+        spanning.add(record("spanning", "2020-01-01T00:00:00Z", "2026-09-12T00:00:00Z"));
+        spanning.add(record("boundary", "2026-09-13T00:00:00Z", null));
+        write("2020/01/01/spanning.json", spanning);
+        Scan first = scan(configuration());
+        assertEquals(2, first.events.size()); assertTrue(first.characters > 0);
+        Scan warm = scan(configuration());
+        assertEquals(first.events, warm.events);
+        assertEquals(300, warm.metadata.get("indexedFilesSkipped"));
+        assertEquals(true, warm.metadata.get("complete"));
+        // The matching file can be evicted, but none of the 300 unrelated files are decoded again.
+        assertTrue(warm.characters <= Files.size(temporary.resolve("2020/01/01/spanning.json")));
+        assertEquals(first.metadata.get("latestRange"), warm.metadata.get("latestRange"));
+    }
+
+    @Test void largeUncachedFilesUseIndexAndKeepTheNearestAndLatestActualIntervals() throws Exception {
+        JSONArray records = new JSONArray();
+        for (int i = 0; i < 5000; i++) {
+            JSONObject old = record("old-" + i, "2020-01-01T00:00:00Z", "2026-09-11T23:00:00Z");
+            old.put("padding", "x".repeat(1000)); records.add(old);
+        }
+        records.add(record("latest-start", "2026-08-01T00:00:00Z", "2026-08-02T00:00:00Z"));
+        write("large.json", records);
+        assertTrue(Files.size(temporary.resolve("large.json")) > 4 * 1024 * 1024);
+        Scan first = scan(configuration()), warm = scan(configuration());
+        assertTrue(first.characters > 4 * 1024 * 1024); assertEquals(0, warm.characters);
+        assertEquals(1, warm.metadata.get("indexedFilesSkipped"));
+        assertEquals(first.metadata.get("availableRange"), warm.metadata.get("availableRange"));
+        assertEquals(first.metadata.get("latestRange"), warm.metadata.get("latestRange"));
+        assertEquals("2026-09-11T23:00:00Z", ((JSONObject)warm.metadata.get("availableRange")).get("to"));
+        assertEquals(true, warm.metadata.get("complete"));
+    }
+
+    @Test void fileIndexInvalidatesChangedFilesAndDiscoversAdditionsAndDeletions() throws Exception {
+        JSONArray records = new JSONArray(); records.add(record("same-id", "2020-09-12T12:00:00Z", null));
+        write("changed.json", records); scan(configuration());
+        assertEquals(0, scan(configuration()).characters);
+        Path file = temporary.resolve("changed.json");
+        long size = Files.size(file), modified = Files.getLastModifiedTime(file).toMillis();
+        records.clear(); records.add(record("same-id", "2026-09-12T12:00:00Z", null));
+        write("changed.json", records);
+        Files.setLastModifiedTime(file, java.nio.file.attribute.FileTime.fromMillis(modified + 2000));
+        assertEquals(size, Files.size(file), "Timestamp changes invalidate even equal-sized replacements");
+        Scan changed = scan(configuration()); assertEquals(1, changed.events.size()); assertTrue(changed.characters > 0);
+        records.clear(); records.add(record("added", "2026-09-12T14:00:00Z", null));
+        write("added.json", records); Files.delete(file);
+        Scan added = scan(configuration()); assertEquals(1, added.events.size());
+        assertEquals("added", ((JSONObject)added.events.get(0)).get("id"));
+    }
+
+    @Test void cancelledPartialFileMustNotPublishAnIndexThatHidesItsLaterRecords() throws Exception {
+        JSONArray records = new JSONArray();
+        for (int i = 0; i < 600; i++) records.add(record("visible-" + i, "2026-09-12T12:00:00Z", null));
+        records.add(record("future-tail", "2026-09-14T12:00:00Z", null));
+        write("partial.json", records);
+        JSONObject config = configuration(), first = request(config);
+        assertNotNull(meta(first).get("nextCursor"));
+        config.put("cursor", meta(first).get("nextCursor")); config.put("cancel", "1"); request(config);
+        config = configuration();
+        config.put("startDate", "Mon, 14 Sep 2026 00:00:00 GMT");
+        config.put("endDate", "Tue, 15 Sep 2026 00:00:00 GMT");
+        Scan later = scan(config); assertEquals(1, later.events.size());
+        assertEquals("future-tail", ((JSONObject)later.events.get(0)).get("id"));
+        assertTrue(later.characters > 0); assertEquals(true, later.metadata.get("complete"));
+    }
+
+    @Test void unchangedOversizedFilesReuseDiagnosticsButStillReadMatchingPrefixesAndRepairs() throws Exception {
+        JSONObject prefix = record("readable-prefix", "2020-01-01T12:00:00Z", null);
+        Path file = temporary.resolve("oversized.json");
+        Files.writeString(file, "{\"events\":[" + prefix.toJSONString() + ", {\"padding\":\"" + "x".repeat(2 * 1024 * 1024 + 8192) + "\"}]}");
+        Scan first = scan(configuration()), warm = scan(configuration());
+        assertEquals("record_too_large", ((JSONObject)((JSONArray)first.metadata.get("warningDetails")).get(0)).get("code"));
+        assertTrue(first.characters > 2 * 1024 * 1024); assertEquals(0, warm.characters);
+        assertEquals(false, warm.metadata.get("complete"));
+        assertEquals(first.metadata.get("warningDetails"), warm.metadata.get("warningDetails"));
+        JSONObject past = configuration();
+        past.put("startDate", "Wed, 01 Jan 2020 00:00:00 GMT"); past.put("endDate", "Thu, 02 Jan 2020 00:00:00 GMT");
+        Scan matching = scan(past); assertEquals(1, matching.events.size()); assertTrue(matching.characters > 0);
+        assertEquals("readable-prefix", ((JSONObject)matching.events.get(0)).get("id"));
+        assertEquals(false, matching.metadata.get("complete"));
+        JSONArray repaired = new JSONArray(); repaired.add(record("repaired", "2026-09-12T12:00:00Z", null));
+        write("oversized.json", repaired);
+        Scan afterRepair = scan(configuration()); assertEquals(1, afterRepair.events.size());
+        assertEquals(true, afterRepair.metadata.get("complete"));
+        assertTrue(((JSONArray)afterRepair.metadata.get("warningDetails")).isEmpty());
+    }
+
+    @Test void invalidTimestampsCannotBeIndexedAsAnEmptyHealthyFile() throws Exception {
+        JSONArray records = new JSONArray(); records.add(record("invalid", "bad timestamp", null));
+        write("invalid.json", records);
+        Scan first = scan(configuration()), warm = scan(configuration());
+        assertEquals(false, warm.metadata.get("complete")); assertTrue(warm.characters > 0);
+        assertEquals(first.metadata.get("warningDetails"), warm.metadata.get("warningDetails"));
+        assertEquals(0, warm.metadata.get("indexedFilesSkipped"));
     }
 
     @Test void warningDetailsIdentifyEverySourceAndRelativeFileAndSurviveRefresh() throws Exception {

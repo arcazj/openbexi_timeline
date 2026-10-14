@@ -18,12 +18,21 @@ public final class TimelineRequestLog {
     private long lastStreamLog;
     private int snapshots;
     private boolean recorded;
-    private final String format=System.getProperty("openbexi.timeline.logFormat","both");
+    private final String format=System.getProperty("openbexi.timeline.logFormat","readable");
+    private final Level threshold;
 
     private TimelineRequestLog(HttpServletRequest request,HttpServletResponse response) {
         this.request=request;this.response=response;response.setHeader("X-Request-ID",id);
-        if(readable()) LOG.info("timeline-request ["+id+"] "+request.getMethod()+" "+requestURL());
+        // A browser controls only its own request traces, never the shared logger.
+        String requested=request.getParameter("traceLevel");
+        threshold=requested==null?Level.ALL:switch(requested) {
+            case "WARNING" -> Level.WARNING;
+            case "ERROR" -> Level.SEVERE;
+            default -> Level.INFO;
+        };
+        if(readable() && enabled(Level.FINE)) LOG.fine(()->"timeline-request ["+id+"] "+request.getMethod()+" "+requestURL());
     }
+    private boolean enabled(Level level) {return level.intValue()>=threshold.intValue() && LOG.isLoggable(level);}
     private boolean readable() {return !"json".equalsIgnoreCase(format);}
     private String requestURL() {
         StringBuffer address=request.getRequestURL();
@@ -137,26 +146,45 @@ public final class TimelineRequestLog {
         };
         entry.put("reason",reason);
         entry.put("sessionsReturned",counts.get("sessions"));entry.put("eventsReturned",counts.get("events"));
-        for(String key:List.of("batch","recordsExamined","recordsExcluded","recordsReturned","uniqueSessions","uniqueEvents","cache"))
+        for(String key:List.of("batch","recordsExamined","recordsExcluded","recordsReturned","uniqueSessions","uniqueEvents","cache","indexedFilesSkipped"))
             entry.put(key,meta.containsKey(key)?meta.get(key):"unknown");
         entry.put("more",meta.isEmpty()?"unknown":more);entry.put("complete",meta.containsKey("complete")?meta.get("complete"):"unknown");
         entry.put("elapsedMs",(System.nanoTime()-started)/1_000_000);
-        entry.put("warningCount",meta.get("warnings") instanceof List<?> warnings?warnings.size():0);
+        int warningCount=meta.get("warnings") instanceof List<?> warnings?warnings.size():0;
+        entry.put("warningCount",warningCount);
         if(stream) entry.put("snapshot",snapshots);
-        Level level=outcome.equals("failed") || failure!=null?Level.WARNING:Level.INFO;
-        if(!"readable".equalsIgnoreCase(format)) LOG.log(level,"timeline "+new org.json.JSONObject(entry));
+        boolean failed=outcome.equals("failed") || failure!=null;
+        Level level=failed?(response.getStatus()>=400 && response.getStatus()<500?Level.WARNING:Level.SEVERE):
+                warningCount>0?Level.WARNING:Level.INFO;
+        if(enabled(level) && !"readable".equalsIgnoreCase(format)) LOG.log(level,"timeline "+new org.json.JSONObject(entry));
         if(readable()) {
-            boolean ok=level!=Level.WARNING;
-            LOG.log(level,"timeline-response ["+id+"] "+(ok?"Response OK!":"Response failed!")+" HTTP "+response.getStatus()+
-                    " operation="+operation+" outcome="+outcome+(ok?"":" reason="+reason)+" server processing="+entry.get("elapsedMs")+" ms"+
-                    " loadId="+entry.get("loadId")+" scene="+entry.get("scene")+" purpose="+entry.get("purpose")+
-                    (known?"; returned "+counts.get("sessions")+" session(s), "+counts.get("events")+" event(s)"+
-                    "; batch="+entry.get("batch")+" examined="+entry.get("recordsExamined")+" excluded="+entry.get("recordsExcluded")+
-                    " cumulative sessions="+entry.get("uniqueSessions")+" events="+entry.get("uniqueEvents")+
-                    " complete="+entry.get("complete")+" more="+entry.get("more")+" cache="+entry.get("cache")+" coverage warnings="+entry.get("warningCount"):"")+
-                    "; date min="+entry.get("from")+"; date marker="+entry.get("marker")+"; date max="+entry.get("to"));
+            if(enabled(level)) LOG.log(level,"timeline-response ["+id+"] HTTP "+response.getStatus()+" operation="+operation+
+                    (!entry.get("purpose").equals("unspecified")?" purpose="+entry.get("purpose"):"")+
+                    (meta.containsKey("batch")?" batch="+entry.get("batch"):"")+
+                    (known?" sessions="+counts.get("sessions")+" events="+counts.get("events"):"")+
+                    " time="+entry.get("elapsedMs")+"ms outcome="+outcome+
+                    (!reason.equals("none")?" reason="+reason:"")+
+                    (warningCount>0?" warnings="+warningCount:"")+
+                    (!entry.get("loadId").equals("unspecified")?" loadId="+entry.get("loadId"):""));
+            // Details accumulate across cursor pages. Emit them once the scan ends,
+            // instead of repeating the same file diagnostics on every continuation.
+            if(enabled(Level.WARNING) && !more && meta.get("warningDetails") instanceof List<?> details) {
+                int emitted=0;
+                for(Object item:details) if(item instanceof Map<?,?> detail) {
+                    if(emitted++>=100) break;
+                    LOG.warning("timeline-warning ["+id+"] code="+diagnostic(detail.get("code"))+
+                            " source="+diagnostic(detail.get("namespace"))+
+                            (detail.containsKey("sourceIndex")?" sourceIndex="+diagnostic(detail.get("sourceIndex")):"")+
+                            (detail.containsKey("path")?" file="+diagnostic(detail.get("path")):"")+
+                            " reason="+diagnostic(detail.get("reason"))+" action="+diagnostic(detail.get("action")));
+                }
+            }
         }
-        if(LOG.isLoggable(Level.FINE)) LOG.fine("timeline requestId="+id+" transport="+(stream?"sse":"json")+" warningCount="+
-                (meta.get("warnings") instanceof List<?> warnings?warnings.size():0));
+        if(enabled(Level.FINE)) LOG.fine("timeline-details "+new org.json.JSONObject(entry));
+    }
+
+    private static String diagnostic(Object value) {
+        String text=Objects.toString(value,"unknown").replaceAll("[\\r\\n\\t]"," ");
+        return text.length()>1024?text.substring(0,1024)+"[truncated]":text;
     }
 }

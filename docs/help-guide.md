@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.6.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.7.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -12,7 +12,7 @@ These notes describe the version 2.6.1 browser application and the local demos i
 - Hover an event's text, icon, circle or duration bar to read its complete caption. Click either its text or its shape to open the same **Data** panel in 2D or 3D. Dragging from ordinary 2D event text still pans; Escape dismisses the caption.
 - **Data** starts with the event's time, duration, source and status. Expand **All fields** for other metadata. Copy controls beside identifiers and timestamps copy their original values; if clipboard access is blocked, select and copy the offered text manually.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
-- The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Go to latest data, Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
+- The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
 - The secondary bar groups **Calendar | Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.
 - At widths of 600 pixels or less, search, previous/next activity and status stay visible in two rows. **More** opens view choices, settings, filters and other controls. Press Escape to close it and return focus to More. The menu also closes when you select a view or open a side panel.
 - Choose a search mode inside **Filters → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
@@ -88,8 +88,7 @@ Paths are relative to that source's root. After fixing the issue, use **Refresh*
 restart the service first if its source configuration changed.
 The plot stays clear. Toolbar messages describe empty intervals after loading settles
 with no records in the visible interval. Partial coverage and source failures have
-distinct messages. **Go to latest data** moves to the latest observed timestamp
-when one is available; it may not be the newest record in an incomplete archive.
+distinct messages.
 
 For a REST connection (`secure:<port>`), the browser loads the view and bounded
 adjacent buffers, then stays idle. Moving the view reuses cached data and checks
@@ -149,10 +148,17 @@ its normal view and buffers.
 
 ## Settings
 
-Settings has four sections: **1. Edit models**, **2. Timeline info**,
-**3. Update perspective**, and **4. Change look and feel**. Timeline info and
+The installed UI version appears at the top of Settings.
+Settings has five sections: **1. Edit models**, **2. Timeline info**,
+**3. Update perspective**, **4. Change look and feel**, and **5. Trace level**. Timeline info and
 Update perspective start collapsed; select their headings to expand them.
 Timeline info contains geometry and the maximum adaptive ratio.
+
+Trace level controls browser timeline messages and server request summaries for
+this browser: **INFO** includes information, warnings and errors; **WARNING**
+includes warnings and errors; **ERROR** includes errors only (SEVERE in Java).
+INFO is the default. Changes save in this browser and apply to new requests
+without reloading records; live connections reconnect once.
 
 Choose Default, Apple style, Windows style, Minimal or High contrast using the
 circular radio buttons in Change look and feel. They appear horizontally and

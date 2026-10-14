@@ -8,6 +8,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -19,6 +20,8 @@ import java.util.regex.PatternSyntaxException;
 final class ProgressiveSourceScan implements AutoCloseable {
     private static final Map<String, ProgressiveSourceScan> ACTIVE = new LinkedHashMap<>();
     private static final long TTL = 90_000, MAX_BYTES = 64L * 1024 * 1024;
+    private static final int MAX_EMPTY_SLICES = 8;
+    private static final long SLICE_NANOS = 50_000_000, EMPTY_PAGE_NANOS = 250_000_000;
     private static final int MAX_WARNING_DETAILS = 100;
     static {
         var cleanup = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(task -> {
@@ -82,8 +85,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private final JSONArray warningDetails = new JSONArray();
     private Source diagnosticSource;
     private Path diagnosticPath;
-    private long touched = System.currentTimeMillis(), bytes, deadline, pageStart;
-    private int sequence, work, examined, totalExamined;
+    private long touched = System.currentTimeMillis(), bytes, deadline, pageStart, sliceStart;
+    private int sequence, work, examined, totalExamined, sliceWork, sliceExamined;
     private boolean done;
     private boolean historySupported = true;
     private long[] checkingRange;
@@ -94,6 +97,9 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private String fileIdentity;
     private Path currentFile;
     private SourceRecordCache.Stamp fileStamp;
+    private SourceFileIndex.Builder fileIndex;
+    private SourceFileIndex.Problem fileProblem;
+    private int indexedFilesSkipped;
     private List<JSONObject> collected;
     private List<SourceRecordCache.Record> cached;
     private int cachedIndex;
@@ -117,9 +123,25 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 configuration.get("timelineName"), configuration.get("filter"), configuration.get("sortBy"),
                 configuration.get("history"), searchMode, query, scene, from, to).toString();
         String cursor = Objects.toString(configuration.get("cursor"), "");
+        if (cursor.contains("[redacted]"))
+            return MatchResults.failure(query, scene, from, to,
+                    "This URL contains a redacted loading cursor copied from a server log. " +
+                    "Reload the timeline, or inspect the original request in the browser Network panel.");
+        String[] cursorParts = cursor.split(":", -1);
+        int requested = 0;
+        if (!cursor.isEmpty()) {
+            try {
+                if (cursorParts.length != 2 || !UUID.fromString(cursorParts[0]).toString().equals(cursorParts[0]))
+                    throw new IllegalArgumentException();
+                requested = Integer.parseInt(cursorParts[1]);
+                if (requested < 1) throw new IllegalArgumentException();
+            } catch (IllegalArgumentException error) {
+                return MatchResults.failure(query, scene, from, to,
+                        "Invalid loading cursor. Reload the timeline to start a new request.");
+            }
+        }
         try {
             ProgressiveSourceScan scan;
-            int requested = 0;
             if (cursor.isEmpty()) {
                 while (ACTIVE.size() >= 8) {
                     // Completed scans retain a replay page, but must not evict
@@ -132,9 +154,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
                 scan = new ProgressiveSourceScan(identity, configuration, query, scene, from, to, filter);
                 ACTIVE.put(scan.id, scan);
             } else {
-                String[] parts = cursor.split(":", 2);
-                scan = ACTIVE.get(parts[0]);
-                requested = parts.length == 2 ? Integer.parseInt(parts[1]) : -1;
+                scan = ACTIVE.get(cursorParts[0]);
                 if (scan == null || !scan.identity.equals(identity)) throw new IllegalArgumentException();
             }
             if ("1".equals(configuration.get("cancel"))) {
@@ -261,41 +281,61 @@ final class ProgressiveSourceScan implements AutoCloseable {
         diagnosticPath = path;
     }
 
-    private boolean budget() { return page.size() >= 256 || examined >= 4096 || work >= 512 || bytes - pageStart >= 512 * 1024 || System.nanoTime() >= deadline; }
+    private boolean budget() {
+        return page.size() >= 256 || examined - sliceExamined >= 4096 || work - sliceWork >= 512 ||
+                bytes - sliceStart >= 512 * 1024 || System.nanoTime() >= deadline;
+    }
 
     private JSONObject next() {
         page = new JSONArray(); examined = work = 0; pageStart = bytes;
-        long started = System.nanoTime(); deadline = started + 50_000_000;
-        while (!done && !budget()) {
-            if (!history && (bytes >= MAX_BYTES || seen.size() >= 10000 || totalExamined >= 100000)) {
-                String limit = bytes >= MAX_BYTES ? "64 Mi decoded characters" : seen.size() >= 10000 ? "10,000 files" : "100,000 top-level records";
-                warn("scan_limit", "Scan limit reached; coverage is partial. Narrow the visible time window.", null, null,
-                        "The interval scan reached " + limit + ". Examined " + seen.size() + " files, " + totalExamined + " records and " + bytes + " decoded characters.",
-                        "Narrow the visible time window. If the limit persists, reduce the archive covered by the configured sources.");
-                close(); break;
-            }
-            try {
-                if (reader == null && cached == null && !openNext()) break;
-                if(cached!=null) {
-                    while(cachedIndex<cached.size() && !budget()) {
-                        var record=cached.get(cachedIndex++);accept(record.value(),record.ordinal());
-                    }
-                    if(cachedIndex==cached.size())closeFile();
-                } else {
-                    parser.parse(reader, handler, true);
-                    if (handler.ended) {
-                        if(handler.inEvents && collected!=null && fileStamp.equals(SourceRecordCache.Stamp.of(Files.readAttributes(currentFile,java.nio.file.attribute.BasicFileAttributes.class))))
-                            SourceRecordCache.put(currentFile,fileStamp,collected,bytes-fileStart);
-                        closeFile();
-                    }
+        long started = System.nanoTime();
+        int slices = 0;
+        // Empty archive work needs no browser update. Coalesce bounded slices
+        // instead of requiring an HTTP round trip for each one. Return a slice
+        // with records promptly, and retain every overall scan limit.
+        do {
+            sliceStart = bytes; sliceExamined = examined; sliceWork = work; slices++;
+            deadline = Math.min(System.nanoTime() + SLICE_NANOS, started + EMPTY_PAGE_NANOS);
+            while (!done && !budget()) {
+                if (!history && (bytes >= MAX_BYTES || seen.size() >= 10000 || totalExamined >= 100000)) {
+                    String limit = bytes >= MAX_BYTES ? "64 Mi decoded characters" : seen.size() >= 10000 ? "10,000 files" : "100,000 top-level records";
+                    warn("scan_limit", "Scan limit reached; coverage is partial. Narrow the visible time window.", null, null,
+                            "The interval scan reached " + limit + ". Examined " + seen.size() + " files, " + totalExamined + " records and " + bytes + " decoded characters.",
+                            "Narrow the visible time window. If the limit persists, reduce the archive covered by the configured sources.");
+                    close(); break;
                 }
-            } catch (Exception error) {
-                warn(error instanceof RecordSizeLimitException ? "record_too_large" : "source_read_failed",
-                        "Unreadable or oversized records were skipped; coverage is partial.", diagnosticSource, diagnosticPath, failureReason(error),
-                        "Check file access and JSON syntax, finish any interrupted write, or split records larger than 2 Mi decoded characters. Then Refresh.");
-                closeFile();
+                try {
+                    if (reader == null && cached == null && !openNext()) break;
+                    if(cached!=null) {
+                        while(cachedIndex<cached.size() && !budget()) {
+                            var record=cached.get(cachedIndex++);accept(record.value(),record.ordinal());
+                        }
+                        if(cachedIndex==cached.size())closeFile();
+                    } else {
+                        parser.parse(reader, handler, true);
+                        if (handler.ended) {
+                            if (unchangedFile()) {
+                                SourceFileIndex.put(currentFile, fileIndex.finish(fileStamp, fileProblem));
+                                if (handler.inEvents && collected != null)
+                                    SourceRecordCache.put(currentFile, fileStamp, collected, bytes - fileStart);
+                            }
+                            closeFile();
+                        }
+                    }
+                } catch (Exception error) {
+                    SourceFileIndex.Problem problem = new SourceFileIndex.Problem(
+                            error instanceof RecordSizeLimitException ? "record_too_large" : "source_read_failed",
+                            "Unreadable or oversized records were skipped; coverage is partial.", failureReason(error),
+                            "Check file access and JSON syntax, finish any interrupted write, or split records larger than 2 Mi decoded characters. Then Refresh.");
+                    report(problem);
+                    // Remember only deterministic parse failures, with the bounds of their readable prefix.
+                    // Overlapping prefixes are still read; skipped files retain the coverage warning.
+                    if (fileIndex != null && (error instanceof RecordSizeLimitException || error instanceof ParseException) && unchangedFile())
+                        SourceFileIndex.put(currentFile, fileIndex.finish(fileStamp, problem));
+                    closeFile();
+                }
             }
-        }
+        } while (!done && page.isEmpty() && slices < MAX_EMPTY_SLICES && System.nanoTime() < started + EMPTY_PAGE_NANOS);
         JSONObject response = MatchResults.envelope(page, query, scene, from, to, done && warnings.isEmpty(), searchMode);
         JSONObject metadata = (JSONObject) response.get("timelineMatch");
         metadata.put("progressive", true);
@@ -304,6 +344,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
         metadata.put("recordsExamined", examined);
         metadata.put("recordsReturned",page.size());
         metadata.put("recordsExcluded",examined-page.size());
+        metadata.put("scanSlices", slices);
+        metadata.put("indexedFilesSkipped", indexedFilesSkipped);
         unique.putAll(com.openbexi.timeline.servlets.TimelineRequestLog.identities((JSONArray)response.get("events")));
         long sessions=unique.values().stream().filter(Boolean::booleanValue).count();
         metadata.put("uniqueSessions",sessions);metadata.put("uniqueEvents",unique.size()-sessions);
@@ -338,7 +380,10 @@ final class ProgressiveSourceScan implements AutoCloseable {
             if (walks.isEmpty()) {
                 Directory next = history ? historyDirectories.poll() : directories.poll();
                 if (next == null) { done = true; return false; }
-                if (Files.isRegularFile(next.path, LinkOption.NOFOLLOW_LINKS)) {if(openFile(next.path, next))return true;else continue;}
+                diagnose(next, next.path);
+                BasicFileAttributes attributes = Files.readAttributes(next.path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                if (attributes.isRegularFile()) {if(openFile(next.path, next, attributes))return true;else continue;}
+                if (!attributes.isDirectory()) continue;
                 push(next);
             }
             Walk walk = walks.peek();
@@ -350,8 +395,12 @@ final class ProgressiveSourceScan implements AutoCloseable {
             }
             Path file = walk.iterator.next(); work++;
             String name = file.getFileName().toString();
-            if (name.startsWith("descriptors") || name.contains("noises") || Files.isSymbolicLink(file)) continue;
-            if (Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS)) {
+            if (name.startsWith("descriptors") || name.contains("noises")) continue;
+            diagnose(walk.directory, file);
+            // One no-follow metadata read replaces separate symlink/directory/file checks.
+            BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            if (attributes.isSymbolicLink()) continue;
+            if (attributes.isDirectory()) {
                 if (walk.directory.depth >= 31) warn("directory_depth", "A source directory exceeds the scan depth limit.",
                         walk.directory.origin, file, "The directory is beyond the 32-level scan depth limit.",
                         "Use a shallower source directory structure or configure a more specific data_model root.");
@@ -359,7 +408,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
                     Partition partition = walk.directory.partition == null ? null : walk.directory.partition.child(name);
                     historyDirectories.add(new Directory(file, walk.directory.namespace, walk.directory.filter, walk.directory.origin, partition, walk.directory.depth + 1));
                 } else push(new Directory(file, walk.directory.namespace, walk.directory.filter, walk.directory.origin, null, walk.directory.depth + 1));
-            } else if (name.endsWith(".json") && Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) && openFile(file, walk.directory)) return true;
+            } else if (name.endsWith(".json") && attributes.isRegularFile() && openFile(file, walk.directory, attributes)) return true;
         }
         return false;
     }
@@ -370,14 +419,27 @@ final class ProgressiveSourceScan implements AutoCloseable {
         walks.push(new Walk(stream, stream.iterator(), directory));
     }
 
-    private boolean openFile(Path file, Directory directory) throws IOException {
+    private boolean openFile(Path file, Directory directory, BasicFileAttributes attributes) throws IOException {
         diagnose(directory, file);
-        Path canonical=file.toRealPath();
+        // Roots are resolved with toRealPath; traversal never follows child symlinks.
+        // Re-resolving every ancestor for each file is especially costly on Windows.
+        Path canonical=file.toAbsolutePath().normalize();
         if (!seen.add(new FileVisit(canonical, directory.origin.index))) return false;
         source = directory;
         if (history && directory.partition != null) checkingRange = directory.partition.range();
-        currentFile=canonical;fileStamp=SourceRecordCache.Stamp.of(Files.readAttributes(canonical,java.nio.file.attribute.BasicFileAttributes.class));
+        currentFile=canonical;fileStamp=SourceRecordCache.Stamp.of(attributes);
         fileStart=bytes;
+        var indexed = SourceFileIndex.get(canonical, fileStamp);
+        if (indexed != null && indexed.outside(from, to)) {
+            indexedFilesSkipped++;
+            if (indexed.latest() != null) {
+                noteRange(indexed.latest().from(), indexed.latest().to());
+                SourceFileIndex.Span nearest = indexed.earliest().from() > to ? indexed.earliest() : indexed.furthestEnd();
+                noteRange(nearest.from(), nearest.to());
+            }
+            if (indexed.problem() != null) report(indexed.problem());
+            return false;
+        }
         fileIdentity = UUID.nameUUIDFromBytes((canonical + ":" + directory.namespace)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
         var entry=SourceRecordCache.get(canonical,fileStamp);
@@ -389,9 +451,26 @@ final class ProgressiveSourceScan implements AutoCloseable {
             cached=entry.select(from,to);cachedIndex=0;return true;
         }
         collected=fileStamp.size()<=4*1024*1024L?new ArrayList<>():null;
+        fileIndex = new SourceFileIndex.Builder();
         reader = new CountingReader(Files.newBufferedReader(file));
         parser = new JSONParser(); handler = new Records();
         return true;
+    }
+
+    private boolean unchangedFile() {
+        try {
+            return fileStamp.equals(SourceRecordCache.Stamp.of(Files.readAttributes(currentFile, BasicFileAttributes.class)));
+        } catch (IOException | SecurityException error) { return false; }
+    }
+
+    private void report(SourceFileIndex.Problem problem) {
+        warn(problem.code(), problem.message(), diagnosticSource, diagnosticPath, problem.reason(), problem.action());
+    }
+
+    private void noteRange(long start, long end) {
+        if (start > latestFrom) { latestFrom = start; latestTo = Math.max(start + 1, end); }
+        long distance = start > to ? start - to : end < from ? from - end : 0;
+        if (distance < nearestDistance) { nearestDistance = distance; nearestFrom = start; nearestTo = Math.max(start + 1, end); }
     }
 
     private JSONObject select(JSONObject record, int depth, String inheritedNamespace, String fallbackId) {
@@ -401,10 +480,9 @@ final class ProgressiveSourceScan implements AutoCloseable {
             long end = rawEnd == null || rawEnd.toString().isBlank() ? start : MatchResults.time(rawEnd);
             if (end < start || depth > 32) throw new IllegalArgumentException();
             if(depth==0) {
+                if (fileIndex != null) fileIndex.add(start, end);
                 if (history) checkingRange = new long[]{start, Math.max(start + 1, end)};
-                if(start>latestFrom) {latestFrom=start;latestTo=Math.max(start+1,end);}
-                long distance=start>to?start-to:end<from?from-end:0;
-                if(distance<nearestDistance) { nearestDistance=distance;nearestFrom=start;nearestTo=Math.max(start+1,end); }
+                noteRange(start, end);
             }
             // Legacy exclusions inspect the whole session, including activities
             // outside the viewport. The response scopes children after filtering.
@@ -423,6 +501,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
             }
             return copy;
         } catch (RuntimeException error) {
+            if (depth == 0 && fileIndex != null) fileIndex.invalidate();
             warn("invalid_record", "Invalid records were skipped; coverage is partial.", diagnosticSource, diagnosticPath,
                     "Record " + currentOrdinal + " has invalid timestamps, nested records or nesting deeper than 32 levels.",
                     "Check start/end timestamps and activities in this record, then Refresh.");
@@ -483,9 +562,12 @@ final class ProgressiveSourceScan implements AutoCloseable {
         }
         public void startJSON() {}
         public void endJSON() {
-            if (!inEvents) warn("missing_events", "A source file has no events array; coverage is partial.", diagnosticSource, diagnosticPath,
-                    "The JSON document has no top-level events array.",
-                    "Add the required events array to this event file, or move unrelated JSON outside the configured source tree. Then Refresh.");
+            if (!inEvents) {
+                fileProblem = new SourceFileIndex.Problem("missing_events", "A source file has no events array; coverage is partial.",
+                        "The JSON document has no top-level events array.",
+                        "Add the required events array to this event file, or move unrelated JSON outside the configured source tree. Then Refresh.");
+                report(fileProblem);
+            }
             ended = true;
         }
         public boolean startObject() {
@@ -526,6 +608,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         if (reader != null) try { reader.close(); } catch (IOException ignored) {}
         reader = null; parser = null; handler = null;
         cached=null;collected=null;
+        fileIndex=null;fileProblem=null;
     }
     public void close() {
         closeFile();

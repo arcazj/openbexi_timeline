@@ -140,6 +140,8 @@ Progressive responses include these additional fields:
 | `batch` | Zero-based page sequence |
 | `recordsExamined` | Top-level source records examined for this page |
 | `charactersRead` | Decoded source characters read for this page |
+| `scanSlices` | Bounded work slices combined into this response |
+| `indexedFilesSkipped` | Cumulative unchanged files excluded using their indexed time bounds; known file problems still appear in warnings |
 | `elapsedMillis` | Time spent processing this page, excluding HTTP overhead |
 | `warnings` | Reasons that coverage is incomplete |
 | `warningDetails` | Source number and namespace, relative file/directory path when available, reason and suggested fix for each issue; at most 100 entries per scan |
@@ -163,10 +165,12 @@ still require visiting the archive. An empty early page is not proof of no data.
 
 ## Bounds and compatibility
 
-- A page yields after 256 returned records, 4096 examined records, 512 directory entries, 512 Ki decoded
-  characters, or a 50 ms cooperative processing target. Checks happen between work
-  units, so these are not hard HTTP latency guarantees. A single record is capped
-  at 2 Mi decoded characters; the final record can exceed the page character target.
+- A work slice yields after 256 returned records, 4096 examined records, 512 directory entries,
+  512 Ki decoded characters, or a 50 ms cooperative processing target. Empty slices
+  are combined into one response, up to eight slices or a 250 ms target. A slice
+  containing records returns promptly. Checks happen between work units, so these
+  are not hard HTTP latency guarantees. A single record is capped at 2 Mi decoded
+  characters; the final record can exceed the slice character target.
 - An ordinary interval scan stops at 64 Mi decoded characters, 10,000 files, or
   100,000 top-level records. Directory and nested-record depth is limited to 32. Limits and skipped
   malformed records produce partial-coverage warnings. Historical searches keep
@@ -226,9 +230,6 @@ Use `secure_sse` for live updates; `secure_see` is not a connector name.
   window completes. This can temporarily retain one old and one new copy of a
   window, in addition to the normal cache budget. An incomplete scan retains old
   records and reports partial coverage; narrow the view to finish reconciliation.
-- **Go to latest data** appears for an empty visible interval when the loader has
-  observed another timestamp. It preserves the time span. Its destination is the
-  latest observed data, which can be incomplete when a scan reaches its limit.
 
 Conditional responses and live notifications use a shared metadata inventory of
 configured JSON sources. It checks file paths, sizes and modification times,
@@ -324,9 +325,22 @@ A shared server cache retains immutable records and a time index for complete,
 unchanged JSON files. It admits files up to 4 Mi characters, retains at most
 256 files and 16 Mi characters of source text equivalent, and evicts the least
 recently used entries. Parsed object overhead is additional. File size,
-modification time and file identity are checked before reuse. Incomplete or
-oversized files continue through the streaming parser. This cache stores source
-records; every request reapplies its own source rules and user filter.
+modification time and file identity are checked before reuse. This cache stores
+source records; every request reapplies its own source rules and user filter.
+
+A separate in-memory index retains compact timestamp bounds for up to 10,000 files,
+including files too large for the record cache. Once a file has been scanned,
+neighboring windows and refreshes can skip decoding it when its records are outside
+the requested interval. Bounds come from actual record start/end timestamps, so
+long sessions in older directories remain eligible. Directory traversal still
+discovers new and deleted files; changed size, modification time or file identity
+invalidates an entry. Restarting the server clears both caches.
+
+Cancelled or unfinished files never publish partial bounds as complete coverage.
+For unchanged JSON syntax errors, oversized records and missing events arrays, the
+index retains the diagnostic as well as the bounds of any readable prefix. Skipping
+such a file still reports partial coverage; a request overlapping its readable
+prefix parses it again. File access failures and invalid timestamps are retried.
 
 Explicit-model pages discover the connector through the public configuration
 endpoint. Finite settings requests precede data loading. SSE connects at the

@@ -1,6 +1,7 @@
 import {parseTimelineData} from './openbexi_timeline_data.js';
 import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
 import {TimelineLive} from './openbexi_timeline_live.js';
+import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
 
 const key = record => JSON.stringify([record.namespace ?? record.data?.namespace ?? '', record.sourceRecordKey || record.id]);
@@ -42,7 +43,7 @@ export class TimelineLoader {
         const address=this.cursorURLs?.get(entry);
         if (address) {
             const url=new URL(address);url.searchParams.set('cancel','1');
-            fetch(url,{headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});
+            fetchTimeline(url,{headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});
             this.cursorURLs.delete(entry);
         }
         entry.cursor=null;
@@ -55,7 +56,7 @@ export class TimelineLoader {
         const cursor=json?.timelineMatch?.nextCursor;
         if (!cursor) return;
         const url=new URL(request);url.searchParams.set('cursor',cursor);url.searchParams.set('cancel','1');
-        fetch(url,{headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});
+        fetchTimeline(url,{headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});
     }
 
     cancel(keepLive=false) {
@@ -244,7 +245,7 @@ export class TimelineLoader {
                 try {
                     const headers={Accept:'application/json'};
                     if(!entry.cursor && entry.validation?.etag)headers['If-None-Match']=entry.validation.etag;
-                    response=await fetch(request.href,{signal:controller.signal,headers});
+                    response=await fetchTimeline(request.href,{signal:controller.signal,headers});
                     if(response.status===304) {
                         if(!current() || entry.retired)continue;
                         const previous=entry.validation;

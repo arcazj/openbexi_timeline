@@ -128,9 +128,8 @@ test('Two menu bars keep ordered controls accessible and move navigation after S
         }
         await expect(header.getByRole('combobox',{name:'Search mode',exact:true})).toHaveCount(0);
         expect(await page.locator('.ob_activity_controls').evaluate(element=>[...element.children].map(child=>child.classList.contains('ob_toolbar_separator')?'|':child.textContent.trim())))
-            .toEqual(['Go to latest data','Find previous activity','Find next activity','|','Auto scale','Lock current view']);
-        const controls=[page.getByRole('button',{name:'Go to latest data',exact:true}),
-            page.getByRole('button',{name:'Find previous activity',exact:true}),page.getByRole('button',{name:'Find next activity',exact:true}),
+            .toEqual(['Find previous activity','Find next activity','|','Auto scale','Lock current view']);
+        const controls=[page.getByRole('button',{name:'Find previous activity',exact:true}),page.getByRole('button',{name:'Find next activity',exact:true}),
             page.getByLabel('Auto scale',{exact:true}).locator('..'),page.getByLabel('Lock current view',{exact:true}).locator('..')];
         const boxes=[];
         for(const control of controls){await expect(control).toBeVisible();boxes.push(await control.boundingBox());}
@@ -291,8 +290,8 @@ test('Settings sections and native theme radios persist without changing data or
     await page.goto('/demos.html?demo=default-dataset');await ready(page);
     await page.getByAltText('Settings',{exact:true}).click();await ready(page);
     const sections=page.locator('.ob_settings_section');
-    expect(await sections.locator(':scope > summary').allTextContents()).toEqual(['1. Edit models','2. Timeline info','3. Update perspective','4. Change look and feel']);
-    expect(await sections.evaluateAll(nodes=>nodes.map(node=>node.open))).toEqual([true,false,false,true]);
+    expect(await sections.locator(':scope > summary').allTextContents()).toEqual(['1. Edit models','2. Timeline info','3. Update perspective','4. Change look and feel','5. Trace level']);
+    expect(await sections.evaluateAll(nodes=>nodes.map(node=>node.open))).toEqual([true,false,false,true,true]);
     await expect(page.getByRole('radio',{name:'Default',exact:true})).toBeChecked();
     const before=await state(page),colors=[];
     for(const [id,name] of [['default','Default'],['apple','Apple style'],['windows','Windows style'],['minimal','Minimal'],['contrast','High contrast']]) {
@@ -320,7 +319,30 @@ test('Settings sections and native theme radios persist without changing data or
     expect(errors).toEqual([]);
 });
 
-test('Refresh and latest data work for local records while preserving the filter',async({page})=>{
+test('Settings show the release and persist trace levels without reloading records',async({page})=>{
+    const fixture=await setup(page,{connected:true});
+    const version=JSON.parse(await fs.readFile('package.json','utf8')).version;
+    await page.getByAltText('Settings',{exact:true}).click();await ready(page);
+    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version '+version);
+    const select=page.getByLabel('Trace level',{exact:true});
+    await expect(select).toHaveValue('INFO');
+    const before=await state(page),count=fixture.requests.length;
+    await select.selectOption('WARNING');await ready(page);
+    expect(fixture.requests.length).toBe(count);
+    const after=await state(page);expect(after.ids).toEqual(before.ids);sameRange(after.range,before.range);
+    await page.getByRole('button',{name:'Close settings',exact:true}).click();await ready(page);
+    await page.getByRole('button',{name:'Refresh',exact:true}).click();await ready(page);
+    expect(fixture.requests.length).toBeGreaterThan(count);
+    expect(fixture.requests.slice(count).every(url=>url.searchParams.get('traceLevel')==='WARNING')).toBe(true);
+    await page.reload();await ready(page);
+    await page.getByAltText('Settings',{exact:true}).click();
+    await expect(select).toHaveValue('WARNING');
+    await select.selectOption('ERROR');
+    await expect(page.locator('[data-settings-section=trace] [role=status]')).toHaveText('Trace level saved in this browser.');
+    expect(fixture.errors).toEqual([]);
+});
+
+test('Refresh works for local records while preserving the filter',async({page})=>{
     const fixture=await setup(page);
     await find(page,'Ground station');
     await page.getByRole('button',{name:'Filters',exact:true}).click();
@@ -334,11 +356,6 @@ test('Refresh and latest data work for local records while preserving the filter
     const refreshed=await state(page);
     expect(refreshed.query).toBe(before.query);expect(refreshed.matches).toEqual(before.matches);
     expect(refreshed.filter).toBe(before.filter);expect(refreshed.ids).toEqual(['ground']);
-    await page.getByRole('button',{name:'Go to latest data',exact:true}).click();await ready(page);
-    const after=await state(page);
-    expect(after.query).toBe(before.query);expect(after.ids).toEqual(before.ids);
-    const latest=Date.parse(data.events.find(record=>record.id==='ground').start);
-    expect((after.range.from+after.range.to)/2).toBeCloseTo(latest,-1);
     expect(fixture.errors).toEqual([]);
 });
 

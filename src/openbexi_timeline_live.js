@@ -1,7 +1,10 @@
+import {traceURL, TRACE_CHANGE} from './openbexi_timeline_trace.js';
+
 /** One reconnecting SSE subscription. Revisions invalidate bounded cached reads. */
 export class TimelineLive {
     constructor(loader) {this.loader=loader;}
     close() {
+        window.removeEventListener(TRACE_CHANGE, this.traceChanged);
         clearTimeout(this.retry);
         this.generation=(this.generation || 0)+1;
         this.source?.close();this.source=null;this.address=null;this.last=null;
@@ -12,12 +15,14 @@ export class TimelineLive {
         }
     }
     start(input) {
-        const url=new URL(input,window.location.href);
+        const url=new URL(traceURL(input));
         if(!url.pathname.includes('/openbexi_timeline_sse/') || !window.EventSource) {this.close();return;}
         for(const key of ['cursor','cancel','ob_request','loadId','purpose','markerDate','progressive'])url.searchParams.delete(key);
         url.searchParams.set('live','1');
         if(this.address===url.href && this.source)return;
         this.close();this.address=url.href;
+        this.traceChanged=()=>this.start(this.address);
+        window.addEventListener(TRACE_CHANGE,this.traceChanged);
         const generation=this.generation,source=this.source=new window.EventSource(url.href);
         const results=this.loader.timeline.ob_results,current=()=>generation===this.generation;
         source.onopen=()=>{if(current()){

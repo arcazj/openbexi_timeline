@@ -292,7 +292,7 @@ button, and opening and closing the Status report with the same control.
 It captures both menu layouts and all five themes.
 Search-mode controls are checked inside Filters. A controlled clock verifies
 debouncing independently of machine load; Text, Pattern, invalid-pattern recovery,
-Back, filter labels, local Refresh and Go to latest data are exercised through the UI.
+Back, filter labels and local Refresh are exercised through the UI.
 
 Settings checks cover the four ordered sections, the initially collapsed Timeline
 info and Update perspective sections, native keyboard radio navigation, immediate

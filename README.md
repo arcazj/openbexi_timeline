@@ -1,5 +1,7 @@
 # OpenBEXI Timeline
 
+Version **2.7.0** · [Release notes](docs/release-2.7.0.md).
+
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their
 details. Use local JSON datasets or connect to a Java server for progressive
@@ -23,6 +25,13 @@ npm run demo
 Open [the local demo](http://localhost:8780/demos.html). The supplied datasets run
 without a Java server. For connected data, see [server setup](docs/connected-diagnostics.md)
 and [the REST API guide](docs/rest-api.md).
+
+Server logs default to readable INFO summaries and WARNING/SEVERE diagnostics.
+**Settings > Trace level** selects INFO (all three levels), WARNING (warnings and
+errors), or ERROR (errors only) for this browser's timeline messages and requests.
+The choice is saved locally and takes effect without reloading records. Settings
+also displays the installed UI version above the sections.
+GET URLs and scan details require DEBUG/FINE logging; see [logging options](docs/connected-diagnostics.md#log-levels-and-readable-summaries).
 
 <!-- LIVE_DEMOS:START -->
 ## Live demos

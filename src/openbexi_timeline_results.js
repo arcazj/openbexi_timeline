@@ -660,16 +660,6 @@ export class TimelineResults {
         this.loadingStatus.hidden=true;
         this.details.append(this.liveStatus,this.loadingStatus);
         this.statusGroup=node('div',undefined,{class:'ob_status_controls'});
-        this.availableButton=button('Go to latest data',()=>{
-            const available=this.latestAvailable();
-            if (!available) return;
-            const main=this.visibleRanges.values().next().value || this.ranges.values().next().value;
-            if(!main)return;
-            const span=main.to-main.from;
-            const center=instant(available.from);
-            this.navigate({from:center-span/2,to:center+span/2},true);
-        });
-        this.availableButton.title='Go to the latest timestamp observed while loading. Coverage may be partial.';
         const titleSlot=node('div',undefined,{class:'ob_results_title_slot'}); titleSlot.append(t.ob_time_marker);
         this.titleSlot=titleSlot;
         this.primaryToolbar=node('div',undefined,{class:'ob_primary_toolbar',role:'group','aria-label':'Main menu bar',tabindex:'0'});
@@ -830,17 +820,6 @@ export class TimelineResults {
         panel.append(fieldset);
     }
 
-    latestAvailable() {
-        const remote=this.remoteMetadata?.latestRange || this.remoteMetadata?.availableRange;
-        if(remote && Number.isFinite(instant(remote.from)))return remote;
-        let latest=-Infinity;
-        for(const entry of this.snapshot?.entries || []) {
-            const timestamp=instant(entry.record.end || entry.record.start);
-            if(Number.isFinite(timestamp))latest=Math.max(latest,timestamp);
-        }
-        return Number.isFinite(latest)?{from:new Date(latest).toISOString()}:null;
-    }
-
     visibleCoverage() {
         const metadata=this.remoteMetadata,range=this.visibleRanges.values().next().value || this.ranges.values().next().value;
         const entries=metadata?.coverage;
@@ -964,10 +943,6 @@ export class TimelineResults {
         this.updateSourceDiagnostics();
         const noRecords=this.supported && this.snapshot?.counts.eligible.events===0 && this.snapshot?.counts.eligible.sessions===0;
         if (!t.staticData && !this.remoteMetadata && !this.error) this.summary.textContent='Loading timeline data';
-        const available=this.latestAvailable();
-        this.availableButton.hidden=false;
-        this.availableButton.disabled=!available || this.pending || this.loading;
-        if(available)this.availableButton.title='Latest observed data: '+available.from+'; coverage may be partial.';
         if (noRecords && this.remoteMetadata && !this.error && !this.cancelled && !coverage.limited) {
             this.statusMessage.textContent=working?'':coverage.complete?'No records in this interval':'No records loaded; coverage is partial';
             this.feedback.hidden=false;

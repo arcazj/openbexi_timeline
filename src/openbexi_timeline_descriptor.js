@@ -1,4 +1,5 @@
 import {cleanTimelineURL,readTimelineResponse} from './openbexi_timeline_transport.js';
+import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {parseTimelineDate} from './openbexi_timeline_data_parser.js';
 
 const element = (tag,text,className) => {
@@ -163,7 +164,7 @@ export async function loadDescriptor(t,index,record) {
             filterName:t.ob_scene[index].ob_filter_name,filter:t.ob_scene[index].ob_filter_value,search:t.ob_results?.state.query || ''};
         for(const [key,value] of Object.entries(values)) if(value!==undefined && value!==null) url.searchParams.set(key,String(value));
         t.ob_descriptor_timeout=setTimeout(()=>controller.abort(),15000);
-        const response=await fetch(url.href,{method:'POST',signal:controller.signal,headers:{Accept:'application/json'}});
+        const response=await fetchTimeline(url.href,{method:'POST',signal:controller.signal,headers:{Accept:'application/json'}});
         const body=await readTimelineResponse(response,'Descriptor request');
         if(!current()) return;
         if(!Array.isArray(body.event_descriptor)) throw new Error('The response contains no descriptor list.');
