@@ -196,6 +196,7 @@ class MatchProtocolTest {
     }
 
     @Test void actualHttpServletReturnsCompleteMatchProtocolAndEmptyResultsWithoutDummyEvents() throws Exception {
+        String previousFormat=System.getProperty("openbexi.timeline.logFormat");
         var logged=new java.util.concurrent.ConcurrentHashMap<String,org.json.JSONObject>();
         var log=java.util.logging.Logger.getLogger(com.openbexi.timeline.servlets.TimelineRequestLog.class.getName());
         var capture=new java.util.logging.Handler() {
@@ -214,6 +215,7 @@ class MatchProtocolTest {
         Context context = server.addContext("",temporary.toString()); context.addParameter("data_conf",yaml.toString());
         Tomcat.addServlet(context,"timeline",new ob_ajax_timeline()); context.addServletMappingDecoded("/sessions","timeline");
         try {
+            System.setProperty("openbexi.timeline.logFormat","json");
             server.start();
             String base = "http://127.0.0.1:"+server.getConnector().getLocalPort()+"/sessions?matchProtocol=1&scene=0&search=volcano&startDate="+
                 URLEncoder.encode("Sat, 12 Sep 2026 00:00:00 GMT",StandardCharsets.UTF_8)+"&endDate="+
@@ -267,6 +269,9 @@ class MatchProtocolTest {
                 assertEquals(((Number)expected.getValue().get("events")).longValue(),summary.getLong("eventsReturned"));
                 assertEquals("synthetic-http-load",summary.getString("loadId"));
             }
-        } finally {log.removeHandler(capture);server.stop(); server.destroy();}
+        } finally {
+            if(previousFormat==null)System.clearProperty("openbexi.timeline.logFormat");else System.setProperty("openbexi.timeline.logFormat",previousFormat);
+            log.removeHandler(capture);server.stop(); server.destroy();
+        }
     }
 }

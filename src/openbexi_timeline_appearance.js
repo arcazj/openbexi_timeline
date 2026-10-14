@@ -83,7 +83,7 @@ export function markContrastGroups(controls) {
     const groups = {
         navigation:[r.primaryNavigation], search:[r.search], views:[t.ob_views.controls],
         perspective:[t.ob_view,t.ob_no_view,t.ob_3d], settings:[t.ob_settings,t.ob_help,controls.moreButton,controls.morePanel.firstElementChild],
-        activity:[r.availableButton,r.explorer.findPrevious,r.explorer.findNext,r.refreshButton],
+        activity:[r.explorer.findPrevious,r.explorer.findNext,r.refreshButton],
         scale:[r.autoLabel,r.explorer.lockLabel], results:[r.toolbar], filters:[t.ob_calendar,r.filterButton,controls.labels],
         details:[r.detailsToggle], status:[r.statusGroup], date:[t.ob_time_marker]
     };

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.6.1
+ *     OpenBEXI Timeline version 2.7.0
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -22,6 +22,7 @@ import {readLocalTimelineData, describeLocalProgress} from './openbexi_timeline_
 import {TimelineTextureCache} from './openbexi_timeline_textures.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
 import {createTimelineSettings} from './openbexi_timeline_settings.js';
+import {fetchTimeline,traceURL,timelineTrace} from './openbexi_timeline_trace.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
 import {bindEventTextHitTarget, TimelineEventInteraction} from './openbexi_timeline_event_interaction.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
@@ -119,7 +120,7 @@ function OB_TIMELINE(options = {}) {
                 return this.getUTCTime(Date.parse(this.date));
             }
         } catch (err) {
-            console.log("get_synced_time(): Invalid timeline date - set to default: current date");
+            timelineTrace('WARNING', "get_synced_time(): Invalid timeline date - set to default: current date");
             return this.timeZone === "UTC" ? this.getUTCTime(Date.now()) : Date.now();
         }
     };
@@ -186,7 +187,7 @@ function OB_TIMELINE(options = {}) {
                 this.ob_scene.sync_time = this.ob_markerDate.getTime();
             }
         } catch (err) {
-            console.log("reset_synced_time(): Exception - Cannot sync time");
+            timelineTrace('WARNING', "reset_synced_time(): Exception - Cannot sync time");
             if (this.timeZone === "UTC")
                 this.ob_scene.sync_time = this.getUTCTime(Date.now());
             else
@@ -310,12 +311,12 @@ function OB_TIMELINE(options = {}) {
             if (this.top !== undefined && !isNaN(this.top)) {
                 this.ob_scene[ob_scene_index].top = this.top;
             } else {
-                console.log("ob_scene_init(): timeline top not defined - set to default : 0");
+                timelineTrace('INFO', "ob_scene_init(): timeline top not defined - set to default : 0");
                 this.top = 0;
                 this.ob_scene[ob_scene_index].top = this.top;
             }
         } catch (err) {
-            console.log("ob_scene_init(): Wrong timeline top - set to default : 0");
+            timelineTrace('WARNING', "ob_scene_init(): Wrong timeline top - set to default : 0");
             this.ob_scene[ob_scene_index].top = 0;
         }
 
@@ -325,12 +326,12 @@ function OB_TIMELINE(options = {}) {
             if (this.height !== undefined && !isNaN(this.height)) {
                 this.ob_scene[ob_scene_index].ob_height = parseInt(this.height);
             } else {
-                console.log("ob_scene_init(): timeline height not defined - set to default : 800");
+                timelineTrace('INFO', "ob_scene_init(): timeline height not defined - set to default : 800");
                 this.height = 800;
                 this.ob_scene[ob_scene_index].ob_height = this.height;
             }
         } catch (err) {
-            console.log("ob_scene_init(): Wrong timeline height - set to default : 800");
+            timelineTrace('WARNING', "ob_scene_init(): Wrong timeline height - set to default : 800");
             this.ob_scene[ob_scene_index].ob_height = 800;
         }
 
@@ -339,12 +340,12 @@ function OB_TIMELINE(options = {}) {
             if (this.width !== undefined && !isNaN(this.width)) {
                 this.ob_scene[ob_scene_index].width = this.width;
             } else {
-                console.log("ob_scene_init(): timeline width not defined - set to default : 800");
+                timelineTrace('INFO', "ob_scene_init(): timeline width not defined - set to default : 800");
                 this.width = 1350;
                 this.ob_scene[ob_scene_index].width = this.width;
             }
         } catch (err) {
-            console.log("ob_scene_init(): Wrong timeline width - set to default : 800");
+            timelineTrace('WARNING', "ob_scene_init(): Wrong timeline width - set to default : 800");
             this.ob_scene[ob_scene_index].width = 800;
         }
         // -- set timeline left --
@@ -352,12 +353,12 @@ function OB_TIMELINE(options = {}) {
             if (this.left !== undefined && !isNaN(this.left)) {
                 this.ob_scene[ob_scene_index].left = this.left;
             } else {
-                console.log("ob_scene_init(): timeline left not defined - set to default : 0");
+                timelineTrace('INFO', "ob_scene_init(): timeline left not defined - set to default : 0");
                 this.left = 0;
                 this.ob_scene[ob_scene_index].left = this.left;
             }
         } catch (err) {
-            console.log("ob_scene_init(): Wrong timeline width - set to default : 0");
+            timelineTrace('WARNING', "ob_scene_init(): Wrong timeline width - set to default : 0");
             this.ob_scene[ob_scene_index].left = 0;
         }
     };
@@ -2932,7 +2933,7 @@ function OB_TIMELINE(options = {}) {
                             timing.viewTo=ob_timeline.pixelOffSetToBandDate(ob_scene_index,band,left+width).toISOString();
                         }
                         ob_timeline.ob_last_population=timing;
-                        console.log(`timeline-client [${timing.requestId || (ob_timeline.staticData?'local':'uncorrelated')}] populated ${counts.sessions} session(s), ${counts.events} event(s); `+
+                        timelineTrace('INFO', `timeline-client [${timing.requestId || (ob_timeline.staticData?'local':'uncorrelated')}] populated ${counts.sessions} session(s), ${counts.events} event(s); `+
                             `client build=${timing.clientBuildMs} ms; request=${timing.requestMs===undefined?(ob_timeline.staticData?'local':'unknown'):timing.requestMs+' ms'}; scene=${ob_scene_index}; `+
                             `view min=${timing.viewFrom || 'unknown'}; date marker=${ob_timeline.ob_markerDate?.toISOString() || 'unknown'}; view max=${timing.viewTo || 'unknown'}`);
                     }
@@ -3386,7 +3387,7 @@ function OB_TIMELINE(options = {}) {
             }
         } catch (e) {
             // Handle exceptions here if needed
-            console.error("An error occurred:", e);
+            timelineTrace('ERROR', "An error occurred:", e);
             return activities[0].width;
         }
 
@@ -3413,7 +3414,7 @@ function OB_TIMELINE(options = {}) {
                 if (activity.x < min_x) min_x = activity.x;
             }
         } catch (e) {
-            console.error("An error occurred:", e);
+            timelineTrace('ERROR', "An error occurred:", e);
             return activities[0].total_width;
         }
 
@@ -3431,7 +3432,7 @@ function OB_TIMELINE(options = {}) {
         try {
             ob_y = activities[0].y - h / 2 + activities[0].height;
         } catch (e) {
-            console.error(e);
+            timelineTrace('ERROR', e);
             return parseInt(ob_y);
         }
 
@@ -3452,7 +3453,7 @@ function OB_TIMELINE(options = {}) {
                 }
             }
         } catch (e) {
-            console.error(e);
+            timelineTrace('ERROR', e);
             return parseInt(ob_x);
         }
 
@@ -3474,7 +3475,7 @@ function OB_TIMELINE(options = {}) {
             }
             ob_x += total_w / 2;
         } catch (e) {
-            console.error(e);
+            timelineTrace('ERROR', e);
             return parseInt(ob_x);
         }
 
@@ -3496,7 +3497,7 @@ function OB_TIMELINE(options = {}) {
                 }
             }
         } catch (e) {
-            console.error(e);
+            timelineTrace('ERROR', e);
             return parseInt(ob_x);
         }
 
@@ -4187,7 +4188,7 @@ function OB_TIMELINE(options = {}) {
 
             // Check for invalid geometry
             if (geometry.boundingSphere && isNaN(geometry.boundingSphere.radius)) {
-                console.error("Invalid geometry created. Bounding sphere radius is NaN.");
+                timelineTrace('ERROR', "Invalid geometry created. Bounding sphere radius is NaN.");
                 return;
             }
 
@@ -4211,7 +4212,7 @@ function OB_TIMELINE(options = {}) {
             }
 
         } catch (e) {
-            console.error("An error occurred in add_segment:", e);
+            timelineTrace('ERROR', "An error occurred in add_segment:", e);
         }
     };
 
@@ -4303,7 +4304,7 @@ function OB_TIMELINE(options = {}) {
                             }
                         }
                     } catch (err) {
-                        console.log(err.toString());
+                        timelineTrace('ERROR', err.toString());
                     }
                 }
             }
@@ -4331,7 +4332,7 @@ function OB_TIMELINE(options = {}) {
                         that.ob_scene[ob_scene_index].ob_camera_type, null, false);
                 }, 10);
             } catch (err) {
-                console.log("loadJSON - no file to load");
+                timelineTrace('INFO', "loadJSON - no file to load");
             }
         };
     };
@@ -4991,7 +4992,7 @@ function OB_TIMELINE(options = {}) {
                     this.eventSource.close();
                 }
 
-                let eventSource = new EventSource(this.data, {
+                let eventSource = new EventSource(traceURL(this.data), {
                     // If clients have set Access-Control-Allow-Credentials to true, the openbexi.timeline.server
                     // will not permit the use of credentials and access to resource by the client will be blocked
                     // by CORS policy withCredentials: true
@@ -5026,7 +5027,7 @@ function OB_TIMELINE(options = {}) {
                                 that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
                                 null, true);
                         } catch (err) {
-                            console.log('POST - cannot save setting_and_filters ...');
+                            timelineTrace('ERROR', 'POST - cannot save setting_and_filters ...');
                             results?.fail(err);
                         }
                     } else if (dataType === "event_descriptor") {
@@ -5037,7 +5038,7 @@ function OB_TIMELINE(options = {}) {
                                 that.ob_open_descriptor(ob_scene_index, data.event_descriptor[0]);
                             }
                         } catch (err) {
-                            console.log('POST - cannot read event_descriptor ...');
+                            timelineTrace('ERROR', 'POST - cannot read event_descriptor ...');
                         }
                     } else {
                         if (results && json.timelineMatch) {
@@ -5077,7 +5078,7 @@ function OB_TIMELINE(options = {}) {
                         && !that.data.includes("saveFilter") && !that.data.includes("deleteFilter")
                         && !that.data.includes("readFilters") && !that.data.includes("event_descriptor")
                         && !that.data.includes("readDescriptor")) {
-                        console.log('SSE - onerror');
+                        timelineTrace('WARNING', 'SSE - onerror');
                         that.data = that.ob_get_url_head(ob_scene_index) +
                             "?startDate=" + that.ob_scene[ob_scene_index].minDate +
                             "&endDate=" + that.ob_scene[ob_scene_index].maxDate +
@@ -5103,13 +5104,13 @@ function OB_TIMELINE(options = {}) {
                         that.ob_connected(ob_scene_index);
                         return;
                     }
-                    console.log('SSE - reconnecting ...');
+                    timelineTrace('WARNING', 'SSE - reconnecting ...');
                 }
             } else {
                 let that = this;
                 const savingFilter=['saveFilter','addFilter'].includes(new URL(this.data,window.location.href).searchParams.get('ob_request'));
                 this.ob_not_connected(ob_scene_index);
-                fetch(this.data, {
+                fetchTimeline(this.data, {
                     method: this.method,
                     signal: requestSignal,
                     dataType: 'json',
@@ -5123,7 +5124,7 @@ function OB_TIMELINE(options = {}) {
                     clearTimeout(this.requestTimeout);
                     if (results) results.fetching=false;
                     if (response.ok) {
-                        console.log("Response OK!");
+                        timelineTrace('INFO', "Response OK!");
                         this.ob_connected(ob_scene_index);
                         return readTimelineResponse(response, 'Timeline request');
                     } else if ([404,405].includes(response.status) && this.autoEndpoint && this.data.includes('/openbexi_timeline/sessions')) {
@@ -5157,7 +5158,7 @@ function OB_TIMELINE(options = {}) {
                                 that.ob_scene[ob_scene_index].sessions, that.ob_scene[ob_scene_index].ob_camera_type,
                                 null, true);
                         } catch (err) {
-                            console.log('POST - cannot save setting_and_filters ...' + err);
+                            timelineTrace('ERROR', 'POST - cannot save setting_and_filters ...' + err);
                             results?.fail(err);
                         }
                     } else if (dataType === "event_descriptor") {
@@ -5177,7 +5178,7 @@ function OB_TIMELINE(options = {}) {
                                 "&timelineName=" + that.name +
                                 "&userName=" + that.ob_user_name;
                         } catch (err) {
-                            console.log('POST - cannot read event_descriptor ...');
+                            timelineTrace('ERROR', 'POST - cannot read event_descriptor ...');
                         }
                     } else {
                         if (results && json.timelineMatch) {
@@ -5202,7 +5203,7 @@ function OB_TIMELINE(options = {}) {
                     if (results) results.fetching=false;
                     if(savingFilter)showFilterError(this,err);
                     results?.fail(err);
-                    console.log('Error message:', err.statusText);
+                    timelineTrace('ERROR', 'Error message:', err.statusText);
                     this.ob_not_connected(ob_scene_index);
                 });
             }

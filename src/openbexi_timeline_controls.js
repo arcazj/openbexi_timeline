@@ -62,7 +62,7 @@ export class TimelineControls {
         r.feedback.insertBefore(this.labels,r.filterButton);
         this.activityControls=element('div',undefined,{class:'ob_activity_controls',role:'group','aria-label':'Activity navigation and scale'});
         const separator=()=>element('span',undefined,{class:'ob_toolbar_separator','aria-hidden':'true'});
-        this.activityControls.append(r.availableButton,r.explorer.findPrevious,
+        this.activityControls.append(r.explorer.findPrevious,
             r.explorer.findNext,separator(),r.autoLabel,r.explorer.lockLabel);
         r.activityToolbar.append(r.refreshButton,this.activityControls,r.toolbar,r.statusGroup,r.feedback);
         this.mountMore();
@@ -171,8 +171,7 @@ export class TimelineControls {
             r.primaryToolbar.insertBefore(r.titleSlot,this.moreButton);
             r.primaryToolbar.insertBefore(r.utilities,this.moreButton);
             for(const [control,label] of moves)control.textContent=label;
-            this.activityControls.insertBefore(r.explorer.findPrevious,this.activityControls.children[1]);
-            this.activityControls.insertBefore(r.explorer.findNext,this.activityControls.children[2]);
+            this.activityControls.prepend(r.explorer.findPrevious,r.explorer.findNext);
             r.activityToolbar.replaceChildren(r.refreshButton,this.activityControls,r.toolbar,r.statusGroup,r.feedback);
         }
         if(focused && t.ob_timeline_header.contains(focused)) {

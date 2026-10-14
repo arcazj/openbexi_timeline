@@ -1,4 +1,5 @@
 import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
+import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
 
 export const recordRange = record => ({from:Date.parse(record.start),to:Date.parse(record.end || record.start)});
@@ -83,7 +84,7 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
     const release=()=>{
         if(!cursorURL)return;
         const url=new URL(cursorURL);cursorURL=null;url.searchParams.set('cancel','1');
-        fetch(url,{keepalive:true,headers:{Accept:'application/json'}}).catch(()=>{});
+        fetchTimeline(url,{keepalive:true,headers:{Accept:'application/json'}}).catch(()=>{});
     };
     const abort=()=>release();signal?.addEventListener('abort',abort,{once:true});
     try {
@@ -94,7 +95,7 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
             signal?.addEventListener('abort',cancel,{once:true});
             const timer=setTimeout(cancel,timeout);
             let json;
-            try {json=await readTimelineResponse(await fetch(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Search timeline history');}
+            try {json=await readTimelineResponse(await fetchTimeline(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Search timeline history');}
             finally {clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
             const meta=json.timelineMatch;
             if(meta?.nextCursor) {const next=new URL(request);next.searchParams.set('cursor',meta.nextCursor);cursorURL=next.href;}
@@ -146,7 +147,7 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
     const started=Date.now(),bound=8640000000000000;
     let pages=0,cursorURL,complete=true;
     const edges={past:range.from,future:range.to};
-    const release=()=>{if(cursorURL){const url=new URL(cursorURL);url.searchParams.set('cancel','1');fetch(url,{keepalive:true,headers:{Accept:'application/json'}}).catch(()=>{});cursorURL=null;}};
+    const release=()=>{if(cursorURL){const url=new URL(cursorURL);url.searchParams.set('cancel','1');fetchTimeline(url,{keepalive:true,headers:{Accept:'application/json'}}).catch(()=>{});cursorURL=null;}};
     try {
         for(let window=0;window<maxWindows && pages<maxPages;window++) {
             const side=direction==='both'?(window%2?'future':'past'):direction;
@@ -166,7 +167,7 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
                 signal?.addEventListener('abort',abort,{once:true});
                 const timer=setTimeout(abort,Math.min(10000,timeout-(Date.now()-started)));
                 let json;
-                try {json=await readTimelineResponse(await fetch(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Find timeline activity');}
+                try {json=await readTimelineResponse(await fetchTimeline(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Find timeline activity');}
                 finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
                 pages++;windowPages++;
                 const meta=json.timelineMatch;

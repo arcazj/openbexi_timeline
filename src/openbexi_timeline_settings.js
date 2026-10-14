@@ -1,5 +1,22 @@
 import {openModelEditor} from './openbexi_timeline_model_link.js';
 import {mountAppearance} from './openbexi_timeline_appearance.js';
+import {mountTraceSettings} from './openbexi_timeline_trace.js';
+
+let releaseMetadata;
+function showVersion(container) {
+    const version = node('p', 'OpenBEXI Timeline · Version loading…', 'ob_application_version');
+    container.append(version);
+    // Use the same release metadata as Help; no extra request during timeline loading.
+    releaseMetadata ||= fetch(new URL('../help/resources.json', import.meta.url)).then(async response => {
+        if (!response.ok) throw new Error('Version unavailable');
+        const resources = await response.json();
+        if (typeof resources.version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(resources.version))
+            throw new Error('Invalid version');
+        return resources.version;
+    }).catch(error => { releaseMetadata = null; throw error; });
+    releaseMetadata.then(value => { version.textContent = 'OpenBEXI Timeline · Version ' + value; })
+        .catch(() => { version.textContent = 'OpenBEXI Timeline · Version unavailable'; });
+}
 
 const node = (tag, text, className) => {
     const element = document.createElement(tag);
@@ -19,6 +36,7 @@ export function createTimelineSettings(timeline, index) {
     const heading = node('div', 'Settings', 'ob_panel_heading');
     const close = button('Close', () => timeline.ob_remove_setting()); close.setAttribute('aria-label', 'Close settings');
     heading.append(close); panel.append(heading);
+    showVersion(panel);
     const section = (id, title, open = false) => {
         const details = node('details', undefined, 'ob_settings_section');
         details.dataset.settingsSection = id; details.open = open;
@@ -48,6 +66,7 @@ export function createTimelineSettings(timeline, index) {
     timeline.ob_viewport?.mountSettings(info); timeline.ob_results?.mountSettings(info);
     timeline.ob_perspective?.mount(section('perspective', '3. Update perspective'));
     mountAppearance(section('appearance', '4. Change look and feel', true), timeline);
+    mountTraceSettings(section('trace', '5. Trace level', true));
     timeline.ob_timeline_right_panel.append(panel);
     timeline.ob_timeline_right_panel.style.visibility = 'visible';
     timeline.ob_perspective?.syncFields(); timeline.ob_viewport?.schedule();
