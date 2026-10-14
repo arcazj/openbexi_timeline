@@ -13,6 +13,7 @@ import {hbdsFixture} from '../helpers/hbds-fixture.mjs';
 
 const expect=playwrightExpect.configure({timeout:45000}),root=fileURLToPath(new URL('../../',import.meta.url));
 const backend=process.argv.includes('--java')?'Java':'Python';
+await fs.mkdir(path.join(root,'target'),{recursive:true});
 const directory=await fs.mkdtemp(path.join(root,'target','.hbds-e2e-'));
 const serverDirectory=backend==='Java'?await fs.mkdtemp(path.join(os.tmpdir(),'openbexi-hbds-browser-')):directory;
 const configurationFile=path.join(directory,'example.hbds.json'),token=crypto.randomBytes(32).toString('hex');
