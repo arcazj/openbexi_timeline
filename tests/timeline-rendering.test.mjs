@@ -25,8 +25,8 @@ test('Both model formats reject invalid rendering options and retain legacy exte
         {activity:{labelMaxWidth:40}},{table:{columns:[{field:'title',label:'Title',visible:false}]}},
         {table:{columns:[{field:'password',label:'Private'}]}},{theme:{unknown:'red'}},{camera:{mode:'arbitrary-code'}},null])
         assert.throws(()=>validateRendering(invalid),error=>error.issues?.[0].path.startsWith('$.rendering'));
-    for(const file of (await fs.readdir(path.join(root,'models'))).filter(file=>file.endsWith('.json'))) {
-        const model=await read('models/'+file);if(model.dataSource)continue;
+    for(const file of (await fs.readdir(path.join(root,'HBDS/templates/models'))).filter(file=>file.endsWith('.json'))) {
+        const model=await read('HBDS/templates/models/'+file);if(model.dataSource)continue;
         const serialized=JSON.stringify(model);validateLegacyModel(model);assert.equal(JSON.stringify(model),serialized);
     }
     const model=await read('HBDS/templates/models/regular_timeline_earthquake.json');

@@ -8,6 +8,8 @@ The Python file backend supports legacy/typed filters, text/pattern/legacy searc
 
 Settings now shows both the UI version and the connected backend implementation/version. Trace selection continues to offer INFO, WARNING and ERROR, with one readable request summary and no GET URLs by default.
 
+The bundled LZ4 dependency is updated to 1.11.4 for the native-library extraction and decompression fixes reported during release validation.
+
 HBDS brings generic schemas, model and source templates into `HBDS/`, with private
 deployment configuration, users and filters kept outside the public allowlist.
 The HBDS Editor supports administrator-authenticated edits on both Java and

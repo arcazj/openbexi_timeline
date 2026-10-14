@@ -133,6 +133,7 @@ test('static demo server never serves HBDS private configuration', async () => {
 });
 
 test('static demo server blocks mixed-case private paths and restored legacy files', async () => {
+    await fs.mkdir(path.join(root, 'target'), {recursive: true});
     const directory = await fs.mkdtemp(path.join(root, 'target', 'hbds-private-http-'));
     await fs.mkdir(path.join(directory, 'HBDS/private'), {recursive: true});
     await fs.mkdir(path.join(directory, 'models'));
@@ -153,6 +154,7 @@ test('static demo server blocks mixed-case private paths and restored legacy fil
     }
 });
 test('workspace migration validates before moving and preserves exact original bytes in backup', async () => {
+    await fs.mkdir(path.join(root, 'target'), {recursive: true});
     const workspace = await fs.mkdtemp(path.join(root, 'target/hbds-migration-test-'));
     try {
         for (const directory of ['release', 'models', 'yaml', 'filters']) await fs.mkdir(path.join(workspace, directory));

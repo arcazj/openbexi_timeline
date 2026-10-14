@@ -6,7 +6,7 @@ The September 2026 maintenance replaces the old Java dependency set while preser
 | --- | --- | --- | --- |
 | Embedded Tomcat | 9.0.85 | 9.0.122 | Current Tomcat 9 maintenance release; incorporates the published HTTP/2 and authentication fixes while retaining Servlet 4 compatibility. See [Tomcat advisories](https://tomcat.apache.org/security-9.html). |
 | Kafka client | 3.7.0 | 3.9.2 | Preserves the 3.x client API and incorporates fixes for configuration access, OAuth URL handling, logging disclosure, and producer buffer handling. See [Kafka advisories](https://kafka.apache.org/community/cve-list/). |
-| Kafka's LZ4 dependency | 1.10.1 in Kafka 3.9.2 | 1.11.3 | Explicit dependency management avoids the native XXHash bounds issue fixed in 1.11.1. See the [maintainer advisory](https://github.com/yawkat/lz4-java/security/advisories/GHSA-xx22-p4ch-683r). |
+| Kafka's LZ4 dependency | 1.10.1 in Kafka 3.9.2 | 1.11.4 | Explicit dependency management includes the native-library extraction and decompression fixes in 1.11.4, plus the earlier XXHash bounds fix. See the [maintainer advisories](https://github.com/yawkat/lz4-java/security/advisories). |
 | MongoDB driver | 5.1.0 | 5.12.0 | Updates the driver and keeps its core/BSON modules aligned through the sync driver dependency. |
 | JSON / SnakeYAML / jsoup | 20240303 / 2.2 / 1.17.2 | 20260814 / 2.7 / 1.23.2 | Updates the existing parsing libraries. |
 | JUnit | Mixed 4.x and 5.x milestones in production | Jupiter 5.14.4, tests only | Removes test libraries from production and runs the isolated Java tests under `tests/java`. |
