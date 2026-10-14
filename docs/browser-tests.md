@@ -21,6 +21,12 @@ It does not connect to a deployed server or modify a database. Failure screensho
 expected/actual/diff images, traces, and the HTML report are saved under
 `test-results/` and `playwright-report/` (both ignored by Git).
 
+The 2.8 toolbar references reflect removal of Go to latest data and the larger,
+bold title. All 28 timeline/split reference images were compared with their
+previous versions: changed pixels were confined to the first 102 toolbar rows;
+timeline, table and Help content pixels were identical. The 14 demo scenarios
+then passed with strict screenshot comparisons and functional assertions.
+
 ## Touch, keyboard and other browsers
 
 ```sh
