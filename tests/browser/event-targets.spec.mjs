@@ -19,9 +19,9 @@ async function ready(page) {
 }
 async function setup(page) {
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:new Date(base).toISOString(),data:'/__event_targets.json',showCurrentTime:false});
-    await page.route('**/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
     await page.route('**/__event_targets.json',route=>route.fulfill({json:{events}}));
     await page.goto('/openbexi_timeline_earthquake.html');await ready(page);
     return errors;

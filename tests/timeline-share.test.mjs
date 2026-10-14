@@ -352,7 +352,7 @@ test('Diagnostics expose useful aggregate presentation state without private dat
         const serialized = JSON.stringify(diagnostics);
         assert.equal(diagnostics.version, '1.1');
         assert.equal(diagnostics.demo.id, 'dinausaurs');
-        assert.equal(diagnostics.demo.model, 'models/demos/dinausaurs.json');
+        assert.equal(diagnostics.demo.model, 'HBDS/templates/models/demos/dinausaurs.json');
         assert.equal(diagnostics.reference.label, '140 Ma');
         assert.equal(diagnostics.counts.records, 224);
         assert.equal(diagnostics.searchActive, true);

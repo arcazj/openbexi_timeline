@@ -26,7 +26,7 @@ class PublicAssetServletTest {
     @BeforeAll void start() throws Exception {
         root = Files.createDirectory(temporary.resolve("site"));
         for (String path : List.of("demos.html", "openbexi_timeline_model.html", "openbexi_timeline_model_preview.html", "src/vendor/yaml/index.js", "src/vendor/yaml/parse/parser.js", "src/vendor/yaml/LICENSE", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
-                "models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) file(path, "public");
+                "HBDS/templates/models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) file(path, "public");
         for (String path : List.of(".git/config", ".env", "pom.xml", "package-lock.json", "yaml/credentials.yml", "json/sources_default.json",
                 "target/classes/Secret.class", "src/com/example/Secret.java", "tests/java/Secret.java", "tools/internal.js", "private.json", "icon/.secret.png")) file(path, "private");
         // Use a real published demo reference image to catch changes to the asset allowlist.
@@ -34,6 +34,12 @@ class PublicAssetServletTest {
                 "src/openbexi_timeline_embed_frame.js", "src/openbexi_timeline_earth_orbit.js",
                 "demos/embedded-earth-orbit.html", "demos/embedded-earth-orbit.js")) file(path, "public");
         file("demos/private.html", "private"); file("demos/internal.js", "private");
+        file("HBDS/private/configurations/private.hbds.json","private");file("HBDS/templates/unreviewed.json","private");
+        file("release/public-files.json",new org.json.JSONArray().put("HBDS/templates/models/regular_timeline.json").toString());
+        file("HBDS/aliases.json",new org.json.JSONObject().put("version",1).put("aliases",new org.json.JSONObject()
+                .put("models/regular_timeline.json","HBDS/templates/models/regular_timeline.json")).toString());
+        file("HBDS/private/migration.json",new org.json.JSONObject().put("version",1).put("aliases",new org.json.JSONObject()
+                .put("models/private.json","HBDS/private/configurations/private.hbds.json")).toString());
         try (var images = Files.list(Paths.get("json/test-data"))) {
             Path image = images.filter(path -> path.getFileName().toString().endsWith(".png")).sorted().findFirst().orElseThrow();
             Files.copy(image, root.resolve("json/test-data/reference.png"));
@@ -58,7 +64,7 @@ class PublicAssetServletTest {
     }
     @Test void browserAssetsAndDocumentationRemainUsableWithCorrectMimeTypes() throws Exception {
         for (String path : List.of("", "demos.html", "openbexi_timeline_model.html", "openbexi_timeline_model_preview.html", "src/vendor/yaml/index.js", "src/vendor/yaml/parse/parser.js", "src/vendor/yaml/LICENSE", "src/openbexi_demo.js", "css/ob_demo.css", "node_modules/three/build/three.module.js",
-                "models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) {
+                "HBDS/templates/models/regular_timeline.json", "demos/catalog.json", "json/test-data/example.json", "docs/api.html", "README.md", "LICENSE", "swagger/openapi-v1.json")) {
             HttpResponse<String> result = request("GET", path);
             assertEquals(200, result.statusCode(), path); assertEquals("public", result.body());
             assertEquals("nosniff", result.headers().firstValue("X-Content-Type-Options").orElseThrow());
@@ -91,6 +97,11 @@ class PublicAssetServletTest {
         }
         assertEquals(404, request("GET", "demos/private.html").statusCode());
         assertEquals(404, request("GET", "demos/internal.js").statusCode());
+    }
+    @Test void genericAliasesWorkButPrivateAndUnreviewedHbdsFilesRemainUnpublished() throws Exception {
+        assertEquals("public",request("GET","models/regular_timeline.json").body());
+        for(String path:List.of("HBDS/private/configurations/private.hbds.json","HBDS/private/migration.json","hBdS/private/migration.json","HBDS/PRIVATE/migration.json","HBDS/templates/unreviewed.json","models/private.json","mOdElS/private.json"))
+            assertEquals(404,request("GET",path).statusCode(),path);
     }
     @Test void symlinksCannotExposeFilesOutsideTheRootOrAnUnpublishedFileInsideIt() throws Exception {
         Path external = temporary.resolve("secret.txt"); Files.writeString(external, "private");

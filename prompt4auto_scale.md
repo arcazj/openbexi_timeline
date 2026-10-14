@@ -1889,8 +1889,8 @@ Identify existing components responsible for:
   API persistence, revision checks, and runtime reload/restart behavior.
 
 Start with [openbexi_timeline_earthquake.html](openbexi_timeline_earthquake.html),
-[models/regular_timeline_earthquake.json](models/regular_timeline_earthquake.json),
-and [yaml/sources_earthquake.yml](yaml/sources_earthquake.yml). The model currently
+[HBDS/templates/models/regular_timeline_earthquake.json](HBDS/templates/models/regular_timeline_earthquake.json),
+and [HBDS/templates/yaml/sources_earthquake.yml](HBDS/templates/yaml/sources_earthquake.yml). The model currently
 has an empty `params[0].data`; the HTML page alone does not establish a working
 live data connection. Confirm the active data path and renderer instead of
 assuming the missing `yaml/earthquake_volcano_data.yml` exists.

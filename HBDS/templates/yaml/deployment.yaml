@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openbexi-timeline-deployment
+  labels:
+    app: openbexi-timeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openbexi-timeline
+  template:
+    metadata:
+      labels:
+        app: openbexi-timeline
+    spec:
+      containers:
+        - name: openbexi-timeline
+          image: arcazj/openbexi_timeline:latest
+          ports:
+            - containerPort: 8441
+            - containerPort: 8442
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: SOME_VARIABLE
+              value: "value"  # Set any environment variables if needed
+      volumes:
+        - name: data-volume
+          emptyDir: {}  # Use appropriate volume type (emptyDir, persistentVolumeClaim, etc.)
+

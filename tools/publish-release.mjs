@@ -50,7 +50,7 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
     };
     const tags = await list('/tags');
     if (!tags.some(item => item.name === tag)) throw new Error('Release tag is missing.');
-    // A delayed older build must never publish over or prune a newer tag.
+    // A delayed older build must never become the latest release over a newer tag.
     for (const item of tags) if (compareTags(item.name, tag) > 0) throw new Error('A newer tag already exists.');
     const expected = new Map();
     for (const suffix of ['windows-x64-setup.exe', 'source.tar.gz']) {
@@ -92,14 +92,9 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
     }
     verifyRelease(release, tag, expected);
     if (release.draft) throw new Error('Release is still a draft.');
-    const currentTags = await list('/tags');
-    for (const item of currentTags) if (compareTags(item.name, tag) > 0) throw new Error('A newer tag appeared; cleanup stopped.');
-    // Only tag refs are removed. Historical release records and assets remain available.
-    for (const old of currentTags) if (old.name !== tag)
-        await request('/git/refs/tags/' + encodeURIComponent(old.name), 'DELETE');
     const finalTags = await list('/tags');
-    if (finalTags.length !== 1 || finalTags[0].name !== tag) throw new Error('Tag retention verification failed.');
-    console.log(`Published ${release.html_url}; only ${tag} remains.`);
+    if (!finalTags.some(item => item.name === tag)) throw new Error('Published release tag is missing.');
+    console.log(`Published ${release.html_url}; historical release tags retained.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href)

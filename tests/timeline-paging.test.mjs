@@ -35,7 +35,7 @@ test('Top date axes stay opaque and separate from highlight-zone labels',async()
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
         const t=new OB_TIMELINE();
-        await t.loadModel('models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
+        await t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
         await settle();
         const scene=t.ob_scene[0],band=scene.bands.find(b=>!b.name.includes('overview_'));
         const mesh=scene.getObjectByName(band.name),objects=[];
@@ -83,7 +83,7 @@ test('Timeline pages preserve time, full overview and counts; resize keeps the f
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
         const t=new OB_TIMELINE();
-        await t.loadModel('models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
+        await t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
         await settle();
         const v=t.ob_viewport,r=t.ob_results,scene=t.ob_scene[0];
         const fullKeys=keys(v.fullBands.filter(b=>!b.name.includes('overview_')));
@@ -113,7 +113,7 @@ test('Timeline Info retains requested custom geometry, validates sizes and resto
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
         const t=new OB_TIMELINE();
-        await t.loadModel('models/demos/monet.json',{dataset:'json/test-data/monet.json'});
+        await t.loadModel('HBDS/templates/models/demos/monet.json',{dataset:'json/test-data/monet.json'});
         t.ob_settings.click();await settle();
         const v=t.ob_viewport,panel=h.window.document.getElementById(t.name+'_setting');
         const checkbox=panel.querySelector('.ob_full_window input');
@@ -138,7 +138,7 @@ test('Providers without match metadata keep all loaded rows reachable through lo
     const h=await createTimelineHarness();
     try {
         const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
-        const model=JSON.parse(await fs.readFile(new URL('../models/regular_timeline.json',import.meta.url),'utf8'));
+        const model=JSON.parse(await fs.readFile(new URL('../HBDS/templates/models/regular_timeline.json',import.meta.url),'utf8'));
         const t=new OB_TIMELINE();t.params=model.params;t.bands=model.bands;
         Object.assign(t.params[0],{date:'2024-05-03T07:00:00Z',showCurrentTime:false});t.initializeTimeline();
         const scene=t.ob_scene[0];t.ob_visible_view=true;

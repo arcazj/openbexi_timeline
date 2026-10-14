@@ -79,7 +79,7 @@ test('Historical dates, legacy colors and model annotations retain their meaning
         assert.equal(new Date(parseTimelineDate('44 BCE')).getUTCFullYear(), -43);
         assert.equal(new Date(parseTimelineDate('6')).getUTCFullYear(), 6);
         assert.equal(formatTimelineDate('1 BC', 'yyyy'), '1 BCE');
-        const model = JSON.parse(await fs.readFile(path.join(root, 'models/demos/monet.json'), 'utf8'));
+        const model = JSON.parse(await fs.readFile(path.join(root, 'HBDS/templates/models/demos/monet.json'), 'utf8'));
         const dataset = parseTimelineData(await fs.readFile(path.join(root, 'json/test-data/monet.json'), 'utf8'), model.dataSource);
         assert.equal(dataset.events.find(event => event.data.title === 'Camille').render.color, '#00aa22');
         assert.equal(dataset.events.find(event => event.data.title === 'Camille').end, undefined, 'An uncertain point event is not promoted to a duration');

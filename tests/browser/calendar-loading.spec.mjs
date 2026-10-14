@@ -45,10 +45,10 @@ async function visibleRecord(page,prefix) {
 }
 async function setup(page,{holdBackground=false}={}) {
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{data:origin+'/__calendar',date:'2026-09-12T12:30:00Z',showCurrentTime:false,
         fullWindow:true,title:'Synthetic navigation timeline'});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     const control={requests:[],held:[],phase:'initial',failNext:false};
     await page.route('**/__calendar**',async route=>{
         const url=new URL(route.request().url());

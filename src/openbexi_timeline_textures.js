@@ -97,3 +97,64 @@ export class TimelineTextureCache {
         this.entries.clear();
     }
 }
+
+/** Backgrounds are served by the application; record data cannot request remote URLs. */
+export function backgroundImageURL(image, base = globalThis.location?.href) {
+    if (typeof image !== 'string' || !image.trim() || /[\u0000-\u001f\u007f]/.test(image)) return null;
+    try {
+        const origin = new URL(base), url = new URL(image, origin);
+        return /^https?:$/.test(url.protocol) && url.origin === origin.origin && !url.username && !url.password ? url.href : null;
+    } catch { return null; }
+}
+
+/** Share one image across bands, zones and rebuilds; retain color until loading succeeds. */
+export class TimelineBackgroundTextureCache {
+    constructor(loader, onLoad = () => {}, base = globalThis.location?.href) {
+        this.loader = loader;
+        this.onLoad = onLoad;
+        this.base = base;
+        this.entries = new Map();
+    }
+
+    subscribe(image, listener) {
+        const url = backgroundImageURL(image, this.base);
+        if (!url) return () => {};
+        let entry = this.entries.get(url);
+        if (!entry) {
+            entry = {listeners: new Set(), ready: false, failed: false};
+            this.entries.set(url, entry);
+            entry.listeners.add(listener);
+            try {
+                entry.texture = this.loader.load(url, texture => {
+                    if (this.entries.get(url) !== entry) return;
+                    texture.colorSpace = 'srgb';
+                    entry.texture = texture;
+                    entry.ready = true;
+                    for (const callback of entry.listeners) callback(texture);
+                    this.onLoad();
+                }, undefined, () => {
+                    if (this.entries.get(url) !== entry) return;
+                    entry.failed = true;
+                    entry.listeners.clear();
+                    entry.texture?.dispose();
+                });
+                if (entry.failed) entry.texture?.dispose();
+            } catch {
+                entry.failed = true;
+                entry.listeners.clear();
+            }
+        } else if (!entry.failed) {
+            entry.listeners.add(listener);
+            if (entry.ready) listener(entry.texture);
+        }
+        return () => entry.listeners.delete(listener);
+    }
+
+    dispose() {
+        for (const entry of this.entries.values()) {
+            entry.listeners.clear();
+            if (!entry.failed) entry.texture?.dispose();
+        }
+        this.entries.clear();
+    }
+}

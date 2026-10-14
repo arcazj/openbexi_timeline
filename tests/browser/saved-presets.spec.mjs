@@ -5,9 +5,9 @@ import path from 'node:path';
 test('Connected presets restore and regroup the same records while later pages are delayed',async({page},info)=>{
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{data:'http://127.0.0.1:8782/__presets',date:'2026-09-12T12:30:00Z',showCurrentTime:false});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     const filters=[{name:'All records',filter_value:'',sortBy:'NONE',current:'no'},
         {name:'Exclude routine',filter_value:'|status:nominal',sortBy:'NONE',current:'yes'},
         {name:'Warnings by namespace',filter_value:'|status:nominal',sortBy:'namespace',current:'no'}];

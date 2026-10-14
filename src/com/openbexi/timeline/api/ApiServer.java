@@ -12,10 +12,21 @@ public final class ApiServer {
         Tomcat server = new Tomcat(); server.setBaseDir(Files.createTempDirectory("openbexi-api-tomcat-").toString());
         server.setPort(port); server.getConnector().setProperty("address", "127.0.0.1");
         Context context = server.addContext("", root.toString());
+        mountTimeline(context,root);
         Tomcat.addServlet(context, "assets", new PublicAssetServlet()); context.addServletMappingDecoded("/", "assets");
         Tomcat.addServlet(context, "api", new TimelineApiServlet()).setLoadOnStartup(1); context.addServletMappingDecoded("/api/v1/*", "api");
         context.addMimeMapping("js", "text/javascript"); context.addMimeMapping("mjs", "text/javascript"); context.addMimeMapping("json", "application/json");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> { try { server.stop(); server.destroy(); } catch (Exception ignored) {} }));
         server.start(); System.out.println("OpenBEXI API: http://localhost:" + port + "/api/v1/health"); server.getServer().await();
+    }
+    static void mountTimeline(Context context,Path root) {
+        Path configuration=TimelineHbds.selected(root,null);
+        context.addParameter("data_conf",configuration.toString());
+        Tomcat.addServlet(context,"timelineConfig",new com.openbexi.timeline.servlets.TimelineConfigServlet());
+        context.addServletMappingDecoded("/openbexi_timeline/config","timelineConfig");
+        Tomcat.addServlet(context,"timelineSessions",new com.openbexi.timeline.servlets.ob_ajax_timeline());
+        context.addServletMappingDecoded("/openbexi_timeline/sessions","timelineSessions");
+        Tomcat.addServlet(context,"timelineSse",new com.openbexi.timeline.servlets.ob_sse_timeline());
+        context.addServletMappingDecoded("/openbexi_timeline_sse/sessions","timelineSse");
     }
 }

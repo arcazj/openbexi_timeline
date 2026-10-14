@@ -1,6 +1,7 @@
 import {renderingFor} from './openbexi_timeline_rendering.js';
 import {formatTimelineValue} from './openbexi_timeline_data.js';
 import {bandTicks} from './openbexi_timeline_ticks.js';
+import {backgroundImageURL} from './openbexi_timeline_textures.js';
 
 const states = new WeakMap();
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -21,6 +22,14 @@ const styles = (element, values) => {
     for (const [key, value] of Object.entries(values)) if (element.style[key] !== value) element.style[key] = value;
 };
 const equalKey = (a, b) => a?.length === b.length && b.every((value, index) => Object.is(value, a[index]));
+function appendBackgroundImage(parent, image, bounds, opacity = 1) {
+    const href = backgroundImageURL(image);
+    if (!href) return;
+    const element = svgElement('image', {...bounds, href, opacity, preserveAspectRatio:'none',
+        'pointer-events':'none', 'data-background-image':image});
+    element.addEventListener('error', () => element.remove(), {once:true});
+    parent.append(element);
+}
 
 function createPanel(timeline) {
     const config=renderingFor(timeline).overview, interaction=renderingFor(timeline).interaction, labels=renderingFor(timeline).controls;
@@ -169,10 +178,10 @@ function projectionKey(band, width, height, highlight) {
     // Include topology and rendered values too, so an in-place edit cannot leave
     // stale miniature geometry. This inexpensive scan never reads DOM layout.
     const key = [band, band.timeScale, band.sessions, band.zones, band.overviewRegions, width, height,
-        band.overviewLabel, band.showContextLabel, band.viewportHandles, highlight];
-    for (const region of band.overviewRegions || []) key.push(region, region.sourceBand, region.color, region.y, region.height);
+        band.overviewLabel, band.showContextLabel, band.viewportHandles, band.backgroundImage, highlight];
+    for (const region of band.overviewRegions || []) key.push(region, region.sourceBand, region.color, region.backgroundImage, region.y, region.height);
     for (const zone of band.zones || []) key.push(zone, zone.id, zone.start, zone.end, zone.overviewY,
-        zone.overviewHeight, zone.render?.color, zone.render?.opacity);
+        zone.overviewHeight, zone.render?.color, zone.render?.opacity, zone.render?.backgroundImage);
     for (const session of band.sessions || []) {
         key.push(session, session.id, session.activities);
         for (const activity of session.activities) key.push(activity, activity.id, activity.data?.title,
@@ -267,6 +276,9 @@ function syncPanel(timeline, index, band, panels, position, count) {
         state.panel.style.background = background;
         state.backgroundColor = background;
     }
+    const backgroundURL = backgroundImageURL(band.backgroundImage);
+    styles(state.panel, {backgroundImage: backgroundURL ? `url(${JSON.stringify(backgroundURL)})` : '',
+        backgroundSize:'100% 100%', backgroundRepeat:'no-repeat'});
     if (timeline.ob_timeline_panel.style.getPropertyValue('--ob-overview-height') !== height*count + 'px')
         timeline.ob_timeline_panel.style.setProperty('--ob-overview-height', height*count + 'px');
     const trailingHeight = [...bands].reverse().findIndex(item => !isOverview(item));
@@ -314,10 +326,11 @@ function syncPanel(timeline, index, band, panels, position, count) {
     if (!equalKey(state.projectionKey, key)) {
         state.projectionKey = key;
         state.backgrounds.replaceChildren();
-        regions.forEach((region, i) => state.backgrounds.append(svgElement('rect', {
-            x:0, y:y(region.y + region.height / 2), width, height:Math.max(0.5, region.height * scaleY),
-            fill:sourceColors[i], 'data-overview-band':region.sourceBand
-        })));
+        regions.forEach((region, i) => {
+            const bounds = {x:0, y:y(region.y + region.height / 2), width, height:Math.max(0.5, region.height * scaleY)};
+            state.backgrounds.append(svgElement('rect', {...bounds, fill:sourceColors[i], 'data-overview-band':region.sourceBand}));
+            appendBackgroundImage(state.backgrounds, band.backgroundImage || region.backgroundImage, bounds);
+        });
         state.content.replaceChildren();
         state.matches.replaceChildren();
         state.heading.replaceChildren();
@@ -343,9 +356,11 @@ function syncPanel(timeline, index, band, panels, position, count) {
         for (const zone of band.zones || []) {
             const left = timeline.dateToBandPixelOffSet(index, band, zone.start);
             const right = timeline.dateToBandPixelOffSet(index, band, zone.end);
-            state.content.appendChild(svgElement('rect', {x: contentX(left), y: y(zone.overviewY + zone.overviewHeight / 2),
-                width: Math.max(0, right - left), height: Math.max(0.5, zone.overviewHeight * scaleY),
+            const bounds = {x: contentX(left), y: y(zone.overviewY + zone.overviewHeight / 2),
+                width: Math.max(0, right - left), height: Math.max(0.5, zone.overviewHeight * scaleY)};
+            state.content.appendChild(svgElement('rect', {...bounds,
                 fill: zone.render?.color || '#f5c994', 'fill-opacity': zone.render?.opacity ?? 0.25, 'data-zone-id': zone.id}));
+            appendBackgroundImage(state.content, zone.render?.backgroundImage, bounds, zone.render?.opacity ?? 0.25);
         }
         const bins=new Map();
         const matchingKeys=new Set();

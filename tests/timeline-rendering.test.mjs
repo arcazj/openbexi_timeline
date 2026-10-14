@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import * as THREE from 'three';
 import {RENDERING_DEFAULTS, RENDERING_SCHEMA, resolveRendering, validateRendering} from '../src/openbexi_timeline_rendering.js';
 import {validateDemoModel, validateLegacyModel} from '../src/openbexi_timeline_model_validation.js';
 import {adaptiveTickSettings} from '../src/openbexi_timeline_ticks.js';
@@ -28,7 +29,7 @@ test('Both model formats reject invalid rendering options and retain legacy exte
         const model=await read('models/'+file);if(model.dataSource)continue;
         const serialized=JSON.stringify(model);validateLegacyModel(model);assert.equal(JSON.stringify(model),serialized);
     }
-    const model=await read('models/regular_timeline_earthquake.json');
+    const model=await read('HBDS/templates/models/regular_timeline_earthquake.json');
     model.customExtension={untouched:true};model.rendering={camera:{fieldOfView:42}};
     assert.equal(validateLegacyModel(model),model);
     model.rendering.camera.fieldOfView=999;assert.throws(()=>validateLegacyModel(model),/fieldOfView/);
@@ -45,7 +46,7 @@ async function render(model,dataset='json/test-data/monet.json') {
 }
 
 test('Current-time lines advance on legacy date scales',async()=>{
-    const model=await read('models/demos/monet.json');
+    const model=await read('HBDS/templates/models/demos/monet.json');
     const {harness,timeline:t}=await render(model);
     try {
         const {syncCurrentTime}=await harness.importModule('src/openbexi_timeline_current_time.js');
@@ -64,6 +65,67 @@ test('Current-time lines advance on legacy date scales',async()=>{
             assert.equal(t.pixelOffSetToBandDate(0,marker.band,x).getTime(),now,
                 'the line follows the current instant through the legacy Date parser');
         }
+    } finally {harness.close();}
+});
+
+test('Background image fields validate in both model formats and the generic template',async()=>{
+    const template=await read('HBDS/templates/models/model_template.json');
+    validateDemoModel(template);validateLegacyModel(template);
+    const setters=[
+        (model,value)=>model.rendering.theme.sceneBackgroundImage=value,
+        (model,value)=>model.bands[0].backgroundImage=value,
+        (model,value)=>model.dataSource.zones[0].render.backgroundImage=value
+    ];
+    for(const set of setters) {
+        for(const value of [null,'images/background.png']) {
+            const model=structuredClone(template);set(model,value);
+            validateDemoModel(model);validateLegacyModel(model);
+        }
+        for(const value of ['',true,{},'bad\nimage.png']) {
+            const model=structuredClone(template);set(model,value);
+            assert.throws(()=>validateDemoModel(model),/BackgroundImage|backgroundImage/);
+            assert.throws(()=>validateLegacyModel(model),/BackgroundImage|backgroundImage/);
+        }
+    }
+});
+
+test('Backgrounds reach canvas, bands, zones and docked overview with shared textures and color fallback',async()=>{
+    const model=await read('HBDS/templates/models/demos/monet.json'),harness=await createTimelineHarness();
+    const image='icon/ob_info.png',overviewImage='icon/ob_warning.png';
+    model.rendering={theme:{sceneBackground:'#112233',sceneBackgroundImage:image}};
+    model.bands[0].backgroundImage=image;model.bands[1].backgroundImage=overviewImage;
+    model.dataSource.zones=[{id:'image-zone',start:'1860-01-01T00:00:00Z',end:'1880-01-01T00:00:00Z',
+        title:'Reference',render:{backgroundImage:image,color:'#ffccaa',opacity:.4}}];
+    try {
+        const {OB_TIMELINE}=await harness.importModule('src/openbexi_timeline.js');
+        const t=new OB_TIMELINE({autoStart:false}),pending=[];
+        t.backgroundTextures.loader={load(url,loaded) {const texture=new THREE.Texture();pending.push({url,loaded,texture});return texture;}};
+        await t.applyModel(model,{dataset:'json/test-data/monet.json'});
+        const scene=t.ob_scene[0],images=[];
+        scene.traverse(mesh=>{if(mesh.userData.backgroundImage)images.push(mesh);});
+        assert.equal(pending.length,2,'One request per URL across every surface');
+        assert.ok(images.length>=4);assert.ok(images.every(mesh=>!mesh.visible));
+        assert.equal(scene.background.getHexString(),'112233','Color remains until the image loads');
+        for(const item of pending)item.loaded(item.texture);
+        const texture=pending.find(item=>item.url.endsWith('/ob_info.png')).texture;
+        assert.equal(scene.background,texture);
+        assert.ok(images.every(mesh=>mesh.visible && mesh.material.map));
+        assert.ok(images.some(mesh=>mesh.material.opacity===.4),'Zone opacity applies to its image');
+        assert.ok(harness.window.document.querySelector('[data-overview-backgrounds] image[data-background-image="'+overviewImage+'"]'));
+        assert.ok(harness.window.document.querySelector('[data-overview-content] image[data-background-image="'+image+'"]'));
+        const {applyAppearance,applyContrastColors}=await harness.importModule('src/openbexi_timeline_appearance.js');
+        applyAppearance('contrast');applyContrastColors({background:'#123456',backgroundApplied:true});
+        assert.equal(scene.background.getHexString(),'123456');
+        applyAppearance('default');assert.equal(scene.background,texture,'Restores image after high contrast');
+        t.ob_apply_perspective_camera(0);
+        await new Promise(resolve=>setTimeout(resolve,150));
+        assert.equal(pending.length,2,'Camera rebuild reuses loaded images');
+        assert.equal(t.ob_scene[0].background,texture);
+        let perspectiveImages=0;t.ob_scene[0].traverse(mesh=>{if(mesh.userData.backgroundImage && mesh.visible && mesh.material.map)perspectiveImages++;});
+        assert.ok(perspectiveImages>=4);
+        t.destroy_scene(0);
+        assert.ok([...t.backgroundTextures.entries.values()].every(entry=>entry.listeners.size===0));
+        t.disposeTextures();
     } finally {harness.close();}
 });
 
@@ -90,7 +152,7 @@ for(const demo of catalog.demos)test('Omitted rendering settings preserve explic
 });
 
 test('Configured values reach WebGL axes, SVG overview, table columns, search and layout',async()=>{
-    const model=await read('models/demos/monet.json');
+    const model=await read('HBDS/templates/models/demos/monet.json');
     model.rendering={theme:{sceneBackground:'#112233',headerBackground:'#eeddaa'},axis:{background:'#ddffee',minimumHeight:44,textColor:'#221133'},
         overview:{markerStroke:'#ff0000',markerStrokeWidth:3,viewportColor:'#aabbcc'},
         interaction:{searchMode:'only',highlight:false,adaptiveRatio:4},layout:{splitRatio:.6,overviewMaxHeight:90},
@@ -115,7 +177,7 @@ test('Configured values reach WebGL axes, SVG overview, table columns, search an
 });
 
 test('3D model preferences set camera, light, label metrics and glow without changing activity size',async()=>{
-    const model=await read('models/demos/monet.json');
+    const model=await read('HBDS/templates/models/demos/monet.json');
     model.rendering={camera:{mode:'Perspective',fieldOfView:42,ambientIntensity:.4,rotationSensitivity:.004},
         activity:{glowColor:'#ff0000',glowOpacity:.5,transitionMs:0,labelMaxWidth:180,lineHeight:1.8,shininess:10}};
     const {harness,timeline:t}=await render(model);
@@ -142,7 +204,7 @@ test('Automatic date ticks respect the model spacing preference',()=>{
 });
 
 test('Static typography inherits model defaults while keeping explicit band overrides',async()=>{
-    const model=await read('models/demos/monet.json');
+    const model=await read('HBDS/templates/models/demos/monet.json');
     model.params[0].fontStyle='italic';model.params[0].fontWeight='bold';
     model.bands[0].fontStyle='normal';model.bands[0].fontWeight='300';
     const {harness,timeline}=await render(model);

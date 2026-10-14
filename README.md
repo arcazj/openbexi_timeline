@@ -1,11 +1,11 @@
 # OpenBEXI Timeline
 
-Version **2.7.0** · [Release notes](docs/release-2.7.0.md).
+Version **2.8.0** · [Release notes](docs/release-2.8.0.md).
 
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their
-details. Use local JSON datasets or connect to a Java server for progressive
-loading and managed data.
+details. Use local JSON datasets, the indexed Python server for progressive
+loading, or the Java server for managed data and administration.
 
 Save named views, share a demo's exact time range and filters, and export filtered
 table results as CSV. On small screens, **More** keeps secondary controls within reach.
@@ -14,6 +14,15 @@ table results as CSV. On small screens, **More** keeps secondary controls within
 
 **Windows:** download the installer from the [latest release](https://github.com/arcazj/openbexi_timeline/releases/latest).
 It includes Java and browser dependencies. See [Windows installation](docs/windows-installation.md).
+
+**Python backend (2.8):** see [installation, configuration and benchmarks](docs/python-server.md).
+The Python service uses the existing UI and supports HBDS administration. Java
+remains available for managed data and other providers.
+
+**HBDS configuration:** models, namespaces, sources and tabs now live under
+[`HBDS/`](HBDS/README.md). Open **Settings → HBDS Editor → Namespaces and tabs**
+to edit a deployment with an administrator token. Operational configurations
+remain private; generic templates are explicitly allowlisted for Git.
 
 Install **Node.js 24**, then run:
 
@@ -27,7 +36,7 @@ without a Java server. For connected data, see [server setup](docs/connected-dia
 and [the REST API guide](docs/rest-api.md).
 
 For the separate Python collector, use the
-[source configuration template](yaml/source_template.yml). Its header lists the
+[source configuration template](HBDS/templates/yaml/source_template.yml). Its header lists the
 collector startup command and optional dependencies.
 
 Server logs default to readable INFO summaries and WARNING/SEVERE diagnostics.

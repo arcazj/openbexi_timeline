@@ -1,0 +1,223 @@
+{
+  "params": [
+    {
+      "fullWindow": true,
+      "name": "ob_demo",
+      "title": "Religious history",
+      "date": "0000-01-01T00:00:00Z",
+      "timeZone": "UTC",
+      "top": 130,
+      "left": 12,
+      "width": 1400,
+      "height": 760,
+      "fontSize": 12,
+      "data": "",
+      "overview": true,
+      "showCurrentTime": false,
+      "dockOverview": true,
+      "overviewHeightRatio": 0.18
+    }
+  ],
+  "dataSource": {
+    "format": "simile-xml"
+  },
+  "bands": [
+    {
+      "name": "ob_overview_band_top",
+      "height": "10%",
+      "intervalUnit": "CENTURY",
+      "intervalPixels": 110,
+      "color": "#cfcdca",
+      "dateFormat": "yyyy",
+      "dateColor": "#8d989f",
+      "textColor": "#263238",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "range": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "focus": {
+        "from": "0000-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z",
+        "magnification": 5,
+        "ticks": {
+          "unit": "YEAR",
+          "step": 50
+        }
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 200
+      },
+      "labelPosition": "inside",
+      "sessionHeight": 3,
+      "defaultEventSize": 1,
+      "topPadding": 8,
+      "trackIncrement": 4,
+      "overviewLabel": "Magnified overview",
+      "sourceBands": [
+        "ob_band_durations"
+      ]
+    },
+    {
+      "name": "ob_band_durations",
+      "height": "30%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 300,
+      "color": "#e8dfd5",
+      "dateFormat": "yyyy",
+      "dateColor": "#8d989f",
+      "textColor": "#263238",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "eventKind": "duration",
+      "range": {
+        "from": "-000365-01-01T00:00:00Z",
+        "to": "0036-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "focus": {
+        "from": "0000-01-01T00:00:00Z",
+        "to": "0036-01-01T00:00:00Z",
+        "magnification": 10,
+        "ticks": {
+          "unit": "YEAR",
+          "step": 5
+        }
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 50
+      },
+      "labelPosition": "inside",
+      "sessionHeight": 17,
+      "defaultEventSize": 4,
+      "topPadding": 14,
+      "trackIncrement": 25,
+      "filter": {
+        "field": "namespace",
+        "equals": "Judaism"
+      }
+    },
+    {
+      "name": "ob_band_events",
+      "height": "42%",
+      "intervalUnit": "DECADE",
+      "intervalPixels": 300,
+      "color": "#e9e8f5",
+      "dateFormat": "yyyy",
+      "dateColor": "#8d989f",
+      "textColor": "#263238",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "range": {
+        "from": "-000365-01-01T00:00:00Z",
+        "to": "0036-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "focus": {
+        "from": "0000-01-01T00:00:00Z",
+        "to": "0036-01-01T00:00:00Z",
+        "magnification": 10,
+        "ticks": {
+          "unit": "YEAR",
+          "step": 5
+        }
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 50
+      },
+      "labelPosition": "inside",
+      "sessionHeight": 17,
+      "defaultEventSize": 4,
+      "topPadding": 14,
+      "trackIncrement": 25,
+      "filter": {
+        "field": "namespace",
+        "equals": "Christianity"
+      }
+    },
+    {
+      "name": "ob_overview_band_bottom",
+      "height": "18%",
+      "intervalUnit": "CENTURY",
+      "intervalPixels": 110,
+      "color": "#d0cde6",
+      "dateFormat": "yyyy",
+      "dateColor": "#8d989f",
+      "textColor": "#263238",
+      "SessionColor": "#6591e8",
+      "eventColor": "#7564d8",
+      "fontSize": 12,
+      "intervalUnitPos": "BOTTOM",
+      "model": [
+        {
+          "sortBy": "NONE"
+        }
+      ],
+      "range": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "context": {
+        "from": "-001310-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z"
+      },
+      "focus": {
+        "from": "0000-01-01T00:00:00Z",
+        "to": "0255-01-01T00:00:00Z",
+        "magnification": 5,
+        "ticks": {
+          "unit": "YEAR",
+          "step": 50
+        }
+      },
+      "ticks": {
+        "unit": "YEAR",
+        "step": 200
+      },
+      "labelPosition": "inside",
+      "sessionHeight": 3,
+      "defaultEventSize": 1,
+      "topPadding": 8,
+      "trackIncrement": 4,
+      "overviewLabel": "Magnified overview",
+      "sourceBands": [
+        "ob_band_events"
+      ]
+    }
+  ]
+}

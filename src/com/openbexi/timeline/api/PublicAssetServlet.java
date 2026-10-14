@@ -18,16 +18,25 @@ public final class PublicAssetServlet extends HttpServlet {
             Map.entry("woff", "font/woff"), Map.entry("woff2", "font/woff2"), Map.entry("ttf", "font/ttf"),
             Map.entry("otf", "font/otf"), Map.entry("wasm", "application/wasm"), Map.entry("pdf", "application/pdf"));
     private Path root;
+    private Set<String> hbdsPublished=Set.of();
 
     @Override public void init() throws ServletException {
         try {
             String base = getServletContext().getRealPath("/");
             if (base == null) throw new IOException("Exploded static document root is required.");
             root = Paths.get(base).toRealPath();
+            Path manifest=root.resolve("release/public-files.json");
+            if(Files.isRegularFile(manifest)) {
+                Set<String> paths=new HashSet<>();for(Object item:new org.json.JSONArray(Files.readString(manifest))) {
+                    String path=Objects.toString(item,"");
+                    if(path.startsWith("HBDS/schema/")||path.startsWith("HBDS/templates/"))paths.add(path);
+                }
+                hbdsPublished=Set.copyOf(paths);
+            }
         } catch (IOException e) { throw new ServletException("Cannot initialize public assets.", e); }
     }
 
-    private static boolean published(Path relative) {
+    private boolean published(Path relative) {
         String filename = relative.getFileName().toString();
         String lower = filename.toLowerCase(Locale.ROOT);
         int dot = lower.lastIndexOf('.');
@@ -39,6 +48,7 @@ public final class PublicAssetServlet extends HttpServlet {
         if (relative.getNameCount() == 1)
             return ROOT_DOCUMENTS.contains(filename) || Set.of("html", "png", "jpg", "jpeg", "svg", "ico").contains(extension);
         String folder = relative.getName(0).toString();
+        if(folder.equals("HBDS"))return hbdsPublished.contains(relative.toString().replace('\\','/'));
         return switch (folder) {
             case "src" -> (relative.getNameCount() == 2 ||
                     (relative.getNameCount() > 3 && relative.getName(1).toString().equals("vendor") && relative.getName(2).toString().equals("yaml")))
@@ -46,10 +56,10 @@ public final class PublicAssetServlet extends HttpServlet {
             case "node_modules", "icon", "css" -> BROWSER_EXTENSIONS.contains(extension);
             case "demos" -> extension.equals("json") || relative.getNameCount() == 2
                     && Set.of("embedded-earth-orbit.html", "embedded-earth-orbit.js").contains(filename);
-            case "models", "help", "schemas" -> extension.equals("json");
+            case "help", "schemas" -> extension.equals("json");
             case "json" -> relative.getNameCount() > 2 && relative.getName(1).toString().equals("test-data")
                     && Set.of("json", "xml", "txt", "png").contains(extension);
-            case "docs", "doc" -> Set.of("html", "md", "txt", "png", "jpg", "jpeg", "svg", "pdf", "css", "js").contains(extension);
+            case "docs", "doc" -> relative.equals(Path.of("docs","python-server-benchmark.json")) || Set.of("html", "md", "txt", "png", "jpg", "jpeg", "svg", "pdf", "css", "js").contains(extension);
             case "swagger" -> Set.of("json", "yaml", "yml", "html", "css", "js").contains(extension);
             case "tests" -> relative.getNameCount() == 2 && Set.of("timeline_views.html", "timeline_views.test.js").contains(filename);
             default -> false;
@@ -64,8 +74,9 @@ public final class PublicAssetServlet extends HttpServlet {
         try {
             if (path.contains("\\")) { response.sendError(404); return; }
             Path relative = Paths.get(path.startsWith("/") ? path.substring(1) : path);
-            if (relative.isAbsolute() || !published(relative)) { response.sendError(404); return; }
-            Path candidate = root.resolve(relative).normalize();
+            if(relative.isAbsolute()){response.sendError(404);return;}
+            Path candidate = TimelineHbds.resolve(root,relative.toString());
+            if(!candidate.startsWith(root)||!published(root.relativize(candidate))) { response.sendError(404); return; }
             if (!candidate.startsWith(root) || !Files.isRegularFile(candidate)) { response.sendError(404); return; }
             Path actual = candidate.toRealPath();
             // A symlink must resolve to another published file inside the same static root.

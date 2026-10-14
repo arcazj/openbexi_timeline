@@ -15,7 +15,7 @@ for(const demo of catalog.demos)test(`Model editor previews and updates ${demo.i
     await expect(page.locator('#dirty')).toHaveText('Unsaved changes');
 });
 test('Invalid edits retain the last valid live preview and undo restores synchronized text',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     const revision=await page.locator('#preview-host').getAttribute('data-revision');
     await page.getByRole('tab',{name:'Advanced text'}).click();const original=await page.locator('#raw').inputValue();
     await page.locator('#raw').fill('{ invalid JSON');await expect(page.locator('#errors')).toBeVisible();
@@ -25,10 +25,10 @@ test('Invalid edits retain the last valid live preview and undo restores synchro
 });
 test('YAML forms preserve comments and export an edited local document',async({page})=>{
     await page.goto('/openbexi_timeline_model.html');await ready(page);
-    const content='# Preserve this comment\nmodel: models/demos/monet.json\nunknown: retained\ndata_sources:\n  - namespace: earthquake # namespace comment\n    enable: true\n';
+    const content='# Preserve this comment\nmodel: HBDS/templates/models/demos/monet.json\nunknown: retained\ndata_sources:\n  - namespace: earthquake # namespace comment\n    enable: true\n';
     await page.locator('#file').setInputFiles({name:'sources.yml',mimeType:'application/yaml',buffer:Buffer.from(content)});
     await expect(page.locator('#document-name')).toHaveText('sources.yml');
-    await page.getByRole('textbox',{name:'model',exact:true}).fill('models/demos/jfk.json');
+    await page.getByRole('textbox',{name:'model',exact:true}).fill('HBDS/templates/models/demos/jfk.json');
     await page.getByRole('tab',{name:'Advanced text'}).click();
     await expect(page.locator('#raw')).toHaveValue(/# Preserve this comment/);await expect(page.locator('#raw')).toHaveValue(/unknown: retained/);await expect(page.locator('#raw')).toHaveValue(/# namespace comment/);
     const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Export',exact:true}).click();const download=await downloadPromise;expect(download.suggestedFilename()).toBe('sources.yml');
@@ -36,7 +36,7 @@ test('YAML forms preserve comments and export an edited local document',async({p
 test('Settings opens the active model and Apply updates the originating timeline',async({page})=>{
     await page.goto('/demos.html?demo=monet');await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
     await page.getByAltText('Settings',{exact:true}).click();
-    const popupPromise=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popupPromise;
+    const popupPromise=page.waitForEvent('popup');await page.getByRole('button',{name:'HBDS Editor',exact:true}).click();const editor=await popupPromise;
     await ready(editor);await expect(editor.getByRole('textbox',{name:'params.0.title',exact:true})).toHaveValue('Claude Monet');
     await expect(editor.locator('#document-management')).toBeVisible();
     await expect(editor.locator('#editing-actions')).toBeHidden();
@@ -53,7 +53,7 @@ test('Editing camera optics keeps a 3D preview while an explicit camera mode cha
     await page.goto('/demos.html?demo=monet');await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
     await page.getByAltText('2D or 3D view',{exact:true}).click();
     await page.getByAltText('Settings',{exact:true}).click();
-    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();
+    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'HBDS Editor',exact:true}).click();
     const editor=await popup;await ready(editor);
     await expect.poll(()=>previewValue(editor,()=>window.previewTimeline?.ob_scene?.[0]?.ob_camera?.type)).toBe('PerspectiveCamera');
     await editor.getByRole('tab',{name:'Advanced text'}).click();
@@ -66,14 +66,14 @@ test('Editing camera optics keeps a 3D preview while an explicit camera mode cha
     await editor.close();
 });
 test('Legacy earthquake model previews standalone and with chosen sample data',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/regular_timeline_earthquake.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/regular_timeline_earthquake.json');await ready(page);
     await expect(page.locator('#preview-state')).toContainText('Timeline Hazard report');
     await page.locator('#preview-data').selectOption('default-dataset');
     await expect(page.locator('#preview-state')).toContainText('1008 records');
     expect(await page.evaluate(()=>window.modelEditor.document.value.dataSource)).toBeUndefined();
 });
 test('Optional rendering controls immediately change the actual preview scene color',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     await page.getByRole('combobox',{name:'Optional root property',exact:true}).selectOption('rendering');await page.getByRole('button',{name:'Add section',exact:true}).click();
     await page.getByRole('combobox',{name:'Optional property in rendering',exact:true}).selectOption('theme');await page.getByRole('button',{name:'Add optional property to rendering',exact:true}).click();
     await page.getByRole('combobox',{name:'Optional property in rendering.theme',exact:true}).selectOption('sceneBackground');await page.getByRole('button',{name:'Add optional property to rendering.theme',exact:true}).click();
@@ -100,7 +100,7 @@ test('Server document CRUD uses conditional writes and retains a draft on confli
         if(method==='DELETE'){saved=null;return route.fulfill({status:204});}
     });
     page.on('dialog',dialog=>dialog.accept());
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     await page.getByRole('button',{name:'Use preview data URL in model'}).click();
     await page.getByRole('button',{name:'Connect to server',exact:true}).click();await page.locator('#dialog-input').fill('test-admin');await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#connect')).toHaveText('Disconnect');
     await page.locator('#save').click();await page.locator('#dialog-input').fill('monet-copy.json');await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#dirty')).toHaveText('Saved on server');
@@ -109,21 +109,21 @@ test('Server document CRUD uses conditional writes and retains a draft on confli
     conflict=true;await page.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Conflicting draft');await page.locator('#save').click();await expect(page.locator('#errors')).toContainText('Document changed');await expect(page.getByRole('textbox',{name:'params.0.title',exact:true})).toHaveValue('Conflicting draft');await expect(page.locator('#save')).toBeEnabled();
     conflict=false;await page.locator('#documents').selectOption('server:original');await expect(page.getByRole('textbox',{name:'params.0.title',exact:true})).toHaveValue('Saved Monet');
     await page.locator('#rename').click();await page.locator('#dialog-input').fill('renamed.json');await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#document-name')).toHaveText('renamed.json');
-    await page.locator('#delete').click();await expect(page.locator('#document-name')).toHaveText('models/demos/default-dataset.json');expect(saved).toBeNull();
+    await page.locator('#delete').click();await expect(page.locator('#document-name')).toHaveText('HBDS/templates/models/demos/default-dataset.json');expect(saved).toBeNull();
     expect(requests.filter(request=>request.method==='PUT').every(request=>Boolean(request.headers['if-match']))).toBe(true);
     expect(await page.evaluate(()=>Object.values(localStorage).some(value=>String(value).includes('test-admin')))).toBe(false);
 });
 test('A delayed document open cannot replace a newer selection or edits',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     let release;
-    await page.route('**/models/demos/jfk.json',async route=>{await new Promise(resolve=>{release=resolve;});await route.continue();});
+    await page.route('**/HBDS/templates/models/demos/jfk.json',async route=>{await new Promise(resolve=>{release=resolve;});await route.continue();});
     const complete=async()=>{
-        const finished=page.waitForEvent('requestfinished',{predicate:request=>request.url().endsWith('/models/demos/jfk.json')});
+        const finished=page.waitForEvent('requestfinished',{predicate:request=>request.url().endsWith('/HBDS/templates/models/demos/jfk.json')});
         release();await finished;await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     };
     await page.locator('#documents').selectOption('demo:jfk');await expect.poll(()=>typeof release).toBe('function');
-    await page.locator('#documents').selectOption('demo:ephemeris');await expect(page.locator('#document-name')).toHaveText('models/demos/ephemeris.json');
-    await complete();await expect(page.locator('#document-name')).toHaveText('models/demos/ephemeris.json');
+    await page.locator('#documents').selectOption('demo:ephemeris');await expect(page.locator('#document-name')).toHaveText('HBDS/templates/models/demos/ephemeris.json');
+    await complete();await expect(page.locator('#document-name')).toHaveText('HBDS/templates/models/demos/ephemeris.json');
     release=undefined;await page.locator('#documents').selectOption('demo:jfk');await expect.poll(()=>typeof release).toBe('function');
     await page.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Keep these edits');
     await complete();await expect(page.getByRole('textbox',{name:'params.0.title',exact:true})).toHaveValue('Keep these edits');await expect(page.locator('#dirty')).toHaveText('Unsaved changes');
@@ -136,7 +136,7 @@ test('Known YAML errors disable saving and exporting until the property is corre
 });
 
 async function workspaceServer(page,{admin=true}={}){
-    const calls=[];let source=JSON.parse(await fs.readFile('models/demos/monet.json','utf8')),revision=1;
+    const calls=[];let source=JSON.parse(await fs.readFile('HBDS/templates/models/demos/monet.json','utf8')),revision=1;
     const grants=[{userId:'alice',role:'admin'}];
     await page.route(url=>url.pathname.startsWith('/api/v1/'),async route=>{
         const request=route.request(),url=new URL(request.url()),path=url.pathname,method=request.method(),body=request.postDataJSON();calls.push({path,method,body,headers:request.headers()});
@@ -169,7 +169,7 @@ async function workspaceServer(page,{admin=true}={}){
 async function connectModel(page){await page.locator('#connect').click();await page.locator('#dialog-input').fill('session-admin');await page.getByRole('button',{name:'Continue',exact:true}).click();await expect(page.locator('#workspace-role')).toContainText('studio');}
 
 test('Five editor areas share the draft, search across areas, and retain keyboard navigation',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     await expect(page.locator('.area-nav button')).toHaveCount(5);
     await page.getByRole('button',{name:'Appearance',exact:true}).click();await expect(page.locator('[data-area="appearance"][data-path="bands"]')).toBeVisible();
     await page.locator('#property-filter').fill('params.0.title');await page.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Search across areas');await expect(page.locator('#preview-state')).toContainText('Search across areas');
@@ -178,7 +178,7 @@ test('Five editor areas share the draft, search across areas, and retain keyboar
 });
 
 test('Editor remains usable at desktop, narrow and phone widths',async({page})=>{
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);
     for(const [name,width,height] of [['desktop',1440,900],['narrow',800,900],['phone',390,844]]){
         await page.setViewportSize({width,height});
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
@@ -194,7 +194,7 @@ test('Apply receives the editor acknowledgement before reloading the originating
     await page.goto('/demos.html?demo=monet');
     await page.evaluate(async()=>await(await import('/src/openbexi_demo.js')).demoReady);
     await page.getByAltText('Settings',{exact:true}).click();
-    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popup;
+    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'HBDS Editor',exact:true}).click();const editor=await popup;
     await ready(editor);
     const before=await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).params[0].title);
     await editor.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Acknowledged edit');
@@ -218,7 +218,7 @@ test('Apply receives the editor acknowledgement before reloading the originating
 test('A server-configured application opens a focused editor with a compact heading, responsive preview and working Apply',async({page,context})=>{
     const errors=[];context.on('page',target=>target.on('pageerror',error=>errors.push(error.message)));
     const html=(await fs.readFile('openbexi_timeline.html','utf8')).replace('const ob_timeline = new OB_TIMELINE();','const ob_timeline = window.connectedTimeline = new OB_TIMELINE();');
-    const model=JSON.parse(await fs.readFile('models/demos/monet.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/demos/monet.json','utf8'));
     model.params[0].title='Connected model';model.dataSource.url='/json/test-data/monet.json';
     await context.route('**/openbexi_timeline.html',route=>route.fulfill({contentType:'text/html',body:html}));
     await context.route('**/openbexi_timeline/config',route=>route.fulfill({json:{model:'models/connected-model.json'}}));
@@ -226,7 +226,7 @@ test('A server-configured application opens a focused editor with a compact head
     await page.goto('/openbexi_timeline.html');await page.evaluate(()=>connectedTimeline.ready);
     const before=await page.evaluate(()=>JSON.stringify(connectedTimeline.staticData));
     await page.getByAltText('Settings',{exact:true}).click();
-    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'Model and YAML editor',exact:true}).click();const editor=await popup;
+    const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'HBDS Editor',exact:true}).click();const editor=await popup;
     await ready(editor);expect(new URL(editor.url()).searchParams.get('launch')).toBe('connected');
     await expect(editor.locator('#document-management')).toBeHidden();await expect(editor.locator('#documents')).toBeHidden();
     await expect(editor.locator('#workspace-model')).toBeHidden();await expect(editor.locator('.editor-heading a')).toHaveCount(0);
@@ -289,7 +289,7 @@ test('Connected model access gates the editor and avoids protected requests for 
 });
 
 test('AI proposals show a validated diff and preview before explicit acceptance, never autosave',async({page})=>{
-    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);
+    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);
     await page.locator('#ai-panel summary').click();await page.locator('#ai-prompt').fill('Suggest a clearer title');await page.locator('#ai-generate').click();await expect(page.locator('#ai-status')).toContainText('Validated proposal');
     await expect(page.locator('#ai-diff')).toContainText('params.0.title');expect(await page.evaluate(()=>window.modelEditor.document.value.params[0].title)).toBe('Claude Monet');
     await page.screenshot({path:'.local-private/editor24-ai-review.png',fullPage:true});
@@ -301,7 +301,7 @@ test('AI proposals show a validated diff and preview before explicit acceptance,
 });
 
 test('AI capability controls image upload and protects a manually edited draft from an old proposal',async({page})=>{
-    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);await page.locator('#ai-panel summary').click();
+    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);await page.locator('#ai-panel summary').click();
     await expect(page.locator('#ai-image')).toBeDisabled();await page.locator('#ai-model').selectOption('vision');await expect(page.locator('#ai-image')).toBeEnabled();
     const image='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6x1sAAAAASUVORK5CYII=';
     await page.locator('#ai-image').setInputFiles({name:'timeline.png',mimeType:'image/png',buffer:Buffer.from(image,'base64')});await expect(page.locator('#ai-image-name')).toContainText('timeline.png');
@@ -312,7 +312,7 @@ test('AI capability controls image upload and protects a manually edited draft f
 test('Cancelling an AI request preserves the draft and sends a scoped cancellation',async({page})=>{
     const calls=await workspaceServer(page);let release,started=false;
     await page.route('**/api/v1/models/monet/ai/generate',async route=>{started=true;await new Promise(resolve=>{release=resolve;});await route.fulfill({json:{explanation:'Late response'}}).catch(()=>{});});
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);await page.locator('#ai-panel summary').click();await page.locator('#ai-generate').click();await expect.poll(()=>started).toBe(true);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);await page.locator('#ai-panel summary').click();await page.locator('#ai-generate').click();await expect.poll(()=>started).toBe(true);
     await page.locator('#ai-cancel').click();await expect(page.locator('#ai-status')).toContainText('cancelled');await expect.poll(()=>calls.filter(call=>call.path.endsWith('/ai/cancel')).length).toBe(1);release();
     expect(await page.evaluate(()=>window.modelEditor.document.value.params[0].title)).toBe('Claude Monet');await expect(page.locator('#ai-review')).toBeHidden();
 });
@@ -327,7 +327,7 @@ test('Protected model loading and preview wait for administrator authentication 
 });
 
 test('Access and filters use model-scoped friendly forms with conditional writes',async({page})=>{
-    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);
+    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);
     await page.getByRole('button',{name:'Access',exact:true}).click();await expect(page.getByRole('button',{name:'Remove access for alice',exact:true})).toBeDisabled();await page.locator('#grant-user').fill('bob');await page.locator('#grant-role').selectOption('readOnly');await page.getByRole('button',{name:'Add or update access',exact:true}).click();
     await expect(page.locator('#grant-role option[value="reviewer"]')).toHaveText('reviewer');
     await expect(page.locator('#model-grants')).toContainText('bob');const access=calls.find(call=>call.path.endsWith('/access') && call.method==='PUT');expect(access.headers['if-match']).toBe('"access1"');expect(access.body.grants).toContainEqual({userId:'bob',role:'readOnly'});
@@ -335,7 +335,7 @@ test('Access and filters use model-scoped friendly forms with conditional writes
 });
 
 test('Managed model save updates its resource and history, preserves a conflicting draft, and refreshes filter revision',async({page})=>{
-    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);
+    const calls=await workspaceServer(page);await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);
     await page.locator('#workspace-model').selectOption('monet');
     await expect(page.locator('#document-source')).toHaveText('Managed model');await expect(page.locator('#document-revision')).toContainText('data1');
     await page.getByRole('textbox',{name:'params.0.title',exact:true}).fill('Saved model title');await page.locator('#save').click();
@@ -348,13 +348,13 @@ test('Managed model save updates its resource and history, preserves a conflicti
 });
 
 test('An accepted YAML model proposal saves a scoped file with original comments preserved',async({page})=>{
-    const calls=await workspaceServer(page),model=JSON.parse(await fs.readFile('models/demos/monet.json','utf8'));model.params[0].title='YAML original';
+    const calls=await workspaceServer(page),model=JSON.parse(await fs.readFile('HBDS/templates/models/demos/monet.json','utf8'));model.params[0].title='YAML original';
     await page.route('**/api/v1/models/monet/ai/generate',async route=>{
         const request=route.request().postDataJSON();expect(request.document.format).toBe('yaml');
         const proposed=structuredClone(model);proposed.params[0].title='YAML reviewed';
         await route.fulfill({json:{requestId:request.requestId,proposal:{kind:'model',format:'yaml',text:JSON.stringify(proposed,null,2)},validation:{valid:true,errors:[]}}});
     });
-    await page.goto('/openbexi_timeline_model.html?model=models/demos/monet.json');await ready(page);await connectModel(page);
+    await page.goto('/openbexi_timeline_model.html?model=HBDS/templates/models/demos/monet.json');await ready(page);await connectModel(page);
     await page.locator('#file').setInputFiles({name:'model-with-comments.yml',mimeType:'application/yaml',buffer:Buffer.from('# Keep this model comment\n'+JSON.stringify(model,null,2)+'\n')});
     await expect(page.locator('#document-name')).toHaveText('model-with-comments.yml');await page.locator('#ai-panel summary').click();await page.locator('#ai-generate').click();await expect(page.locator('#ai-status')).toContainText('Validated proposal');await page.locator('#ai-accept').click();
     expect(await page.evaluate(()=>window.modelEditor.document.text)).toContain('# Keep this model comment');expect(calls.some(call=>call.method==='POST' && call.path.endsWith('/config-files'))).toBe(false);

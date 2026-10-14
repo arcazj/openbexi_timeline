@@ -17,7 +17,7 @@ public final class FilterExpression {
     }
     public static Predicate<JSONObject> source(JSONObject source) {
         if(!(source.get("filter") instanceof Map<?,?> rules))return record->true;
-        String include=Objects.toString(rules.get("include"),""),exclude=Objects.toString(rules.get("exclude"),"");
+        String include=rules.get("include") instanceof String text?text:"",exclude=rules.get("exclude") instanceof String text?text:"";
         Predicate<JSONObject> yes=compile(include),no=exclude.isEmpty()?record->false:compile(exclude);
         return record->yes.test(record) && !no.test(record);
     }

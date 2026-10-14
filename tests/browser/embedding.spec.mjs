@@ -15,7 +15,7 @@ async function host(page) {
 async function mount(page,url) {
     return page.evaluate(async({data,url})=>{
         const {createTimelineEmbed}=await import('/src/openbexi_timeline_embed.js');
-        const model=await(await fetch('/models/demos/space_exploration.json')).json();
+        const model=await(await fetch('/HBDS/templates/models/demos/space_exploration.json')).json();
         model.params[0].date='2026-05-01';
         window.selections=[];window.ranges=[];window.embedErrors=[];window.originalData=data;
         window.embed=createTimelineEmbed(document.getElementById('host'),{url,model,data,view:'table',
@@ -40,7 +40,7 @@ for(const crossOrigin of [false,true])test(`Embedded timeline ${crossOrigin?'cro
     await page.evaluate(()=>embed.selectEvent('decay'));
     expect(await page.evaluate(()=>selections.length)).toBe(1);
     await frame(page).getByAltText('Settings',{exact:true}).click();
-    await expect(frame(page).getByRole('button',{name:'Model and YAML editor',exact:true})).toBeHidden();
+    await expect(frame(page).getByRole('button',{name:'HBDS Editor',exact:true})).toBeHidden();
     await frame(page).getByRole('button',{name:'Close settings',exact:true}).click();
     await page.evaluate(()=>embed.setView('timeline'));
     await expect(frame(page).locator('.ob_paged_frame canvas').first()).toBeVisible();
@@ -98,7 +98,7 @@ test('Snapshot records and queued updates retain original IDs, parent links and 
     const child={id:0,parentSessionId:'s',start:'2026-03-02',data:{title:'Snapshot child',extra:null},extensions:{arbitrary:[1,'a',false]}};
     await page.evaluate(async child=>{
         const {createTimelineEmbed}=await import('/src/openbexi_timeline_embed.js');
-        const model=await(await fetch('/models/demos/space_exploration.json')).json();model.params[0].date='2026-03-02';
+        const model=await(await fetch('/HBDS/templates/models/demos/space_exploration.json')).json();model.params[0].date='2026-03-02';
         const records=[{id:'removed',start:'2026-03-01',deletedAt:'2026-03-02'},
             {id:'s',start:'2026-03-01',end:'2026-03-05',data:{title:'Snapshot session',kind:'session'},activities:[
                 {id:'legacy-marker',start:'2026-03-02',deletedAt:'legacy-metadata',data:{title:'Legacy activity'}},
@@ -139,7 +139,7 @@ test('Model field mappings expose their IDs without changing the source record',
     const record={id:'legacy-id',catalog:{id:'mapped-id',title:'Mapped fixture'},start:'2026-03-02',extra:null};
     await page.evaluate(async record=>{
         const {createTimelineEmbed}=await import('/src/openbexi_timeline_embed.js');
-        const model=await(await fetch('/models/demos/space_exploration.json')).json();model.params[0].date='2026-03-02';
+        const model=await(await fetch('/HBDS/templates/models/demos/space_exploration.json')).json();model.params[0].date='2026-03-02';
         model.dataSource={format:'json',recordsPath:'catalog.items',fields:{id:'catalog.id',title:'catalog.title'}};
         window.selections=[];window.embed=createTimelineEmbed(document.getElementById('host'),{
             model,data:{catalog:{items:[record]}},view:'table',onSelect:value=>selections.push(value)});

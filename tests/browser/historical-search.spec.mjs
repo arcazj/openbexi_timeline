@@ -34,10 +34,10 @@ function unchanged(actual,before) {
 // A continuation preserves the initial bounds while the server visits files.
 async function setup(page,{pages=3,holdPage=0,failPage=0,match=true,incomplete=false,supported=true,filtered=false}={}) {
     await page.clock.setFixedTime(new Date(now));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:new Date(now).toISOString(),showCurrentTime:false,fullWindow:true,
         data:'http://127.0.0.1:8782/__historical-search',title:'Synthetic historical search'});
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     await page.route('**/json/test-data/default-dataset.json',route=>route.fulfill({json:{events:[]}}));
     const control={requests:[],held:[],errors:[],popups:[]};
     page.on('pageerror',error=>control.errors.push(error.message));

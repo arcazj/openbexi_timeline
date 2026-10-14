@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {Worker} from 'node:worker_threads';
 import {parseTimelineData} from '../src/openbexi_timeline_data_parser.js';
 import {parseLocalTimelineData, readLocalTimelineData, describeLocalProgress, LOCAL_WORKER_THRESHOLD} from '../src/openbexi_timeline_local_data.js';
-import {TimelineTextureCache} from '../src/openbexi_timeline_textures.js';
+import {TimelineTextureCache, TimelineBackgroundTextureCache, backgroundImageURL} from '../src/openbexi_timeline_textures.js';
 import {createTimelineHarness} from './helpers/timeline-dom.mjs';
 
 const padding = ' '.repeat(LOCAL_WORKER_THRESHOLD);
@@ -152,6 +152,37 @@ test('Timeline instances keep separate icon ownership despite shared prototype m
         assert.equal(second.load_texture('icon/ob_info.png'), b);
         second.disposeTextures();
     } finally {harness.close();}
+});
+
+test('Background images share loads, retain fallback on failure and detach disposed consumers', () => {
+    const base='https://timeline.test/app/index.html', pending=[];
+    const loader={load(url,loaded,progress,failed) {
+        const texture={disposed:0,dispose(){this.disposed++;}};
+        pending.push({url,loaded,failed,texture});return texture;
+    }};
+    let repaints=0,first=0,second=0;
+    const cache=new TimelineBackgroundTextureCache(loader,()=>repaints++,base);
+    for(const url of ['https://elsewhere.test/image.png','javascript:alert(1)','data:image/png;base64,AA','file:///image.png',null,'', 'icon/\nimage.png']) {
+        assert.equal(backgroundImageURL(url,base),null);
+        cache.subscribe(url,()=>assert.fail('Invalid URL was loaded'));
+    }
+    assert.equal(pending.length,0);
+    const detach=cache.subscribe('images/background.png',()=>first++);
+    cache.subscribe('./images/background.png',()=>second++);
+    assert.equal(pending.length,1);assert.equal(first+second,0);
+    detach();pending[0].loaded(pending[0].texture);
+    assert.equal(first,0);assert.equal(second,1);assert.equal(repaints,1);
+    assert.equal(pending[0].texture.colorSpace,'srgb');
+    cache.subscribe('images/background.png',()=>second++);
+    assert.equal(second,2);assert.equal(pending.length,1);
+    cache.subscribe('missing.png',()=>assert.fail('Failed image replaced fallback'));
+    pending[1].failed();
+    cache.subscribe('missing.png',()=>assert.fail('Failed image retried during rebuild'));
+    assert.equal(pending.length,2);assert.equal(pending[1].texture.disposed,1);
+    cache.subscribe('late.png',()=>assert.fail('Disposed timeline updated'));
+    cache.dispose();cache.dispose();pending[2].loaded(pending[2].texture);
+    assert.equal(repaints,1);
+    assert.ok(pending.every(entry=>entry.texture.disposed===1));
 });
 
 test('A newer local load wins when an aborted older request still returns', async () => {

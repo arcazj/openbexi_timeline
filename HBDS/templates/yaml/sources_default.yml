@@ -1,0 +1,320 @@
+data_sources:
+- namespace: TEST_SOURCE1
+  type: json_file
+  enable: true
+  permission: ''
+  converter2events_class: build_in
+  data_path: /data/
+  data_model: /data/yyyy/mm/dd
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8441|secure:8442
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: TEST_SOURCE1
+  type: json_file
+  enable: false
+  permission: <required_permission_for_access>
+  converter2events_class: <ConverterToEventsClassName>
+  data_path: /test/
+  data_model: /test/yyyy/mm/dd
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8441|secure:8442
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_mongoDb>
+  data_path: ''
+  data_model: ./data/<namespace_for_mongoDb>/yyyy/mm/dd
+  type: mongoDb
+  enable: false
+  permission: <required_permission_for_access>
+  converter2events_class: <ConverterToEventsClassName>
+  url: <mongodb_connection_string>
+  database: <database_name>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  collection: <collection_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_kafka>
+  data_path: ''
+  data_model: ./data/<namespace_for_kafka>/yyyy/mm/dd
+  type: kafka
+  enable: false
+  permission: <required_permission_for_access>
+  converter2events_class: <ConverterToEventsClassName>
+  url: <kafka_connection_string>
+  partitions:
+    ms: <partition_time_in_ms>
+  filter:
+    include: ''
+    exclude: ''
+  security:
+    protocol: <security_protocol>
+    sasl_mechanism: <sasl_mechanism>
+  connector: secure_sse:8443|secure:8445
+  topicName: <topic_name>
+  producer:
+    name: <producer_name>
+    group: <producer_group>
+  compression:
+    type: <compression_type>
+  version: <kafka_version>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+  retention:
+    ms: <retention_time_in_ms>
+  consumer:
+    name: <consumer_name>
+    group: <consumer_group>
+- namespace: <namespace_for_mqtt>
+  data_path: ''
+  data_model: ./data/<namespace_for_mqtt>/yyyy/mm/dd
+  type: mqtt
+  enable: false
+  permission: <required_permission_for_access>
+  converter2events_class: <ConverterToEventsClassName>
+  url: <mqtt_broker_url>
+  filter:
+    include: ''
+    exclude: ''
+  clientID: <mqtt_client_id>
+  qos: <quality_of_service_level>
+  connector: secure_sse:8443|secure:8445
+  topicName: <mqtt_topic_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_elasticsearch>
+  data_path: ''
+  data_model: ./data/<namespace_for_elasticsearch>/yyyy/mm/dd
+  type: elasticsearch
+  enable: false
+  permission: <required_permission_for_access>
+  converter2events_class: <ConverterToEventsClassName>
+  url: <elasticsearch_url>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  index: <index_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+  document_type: <document_type_if_needed>
+- namespace: <namespace_for_postgresql>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_postgresql>/yyyy/mm/dd
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  render:
+    color: '#a1d9ff'
+    textColor: '#000000'
+    dateColor: '#000000'
+  type: postgresql
+  enable: false
+  url: <connection_string>
+  database: <database_name>
+  user: <username>
+  password: <password>
+- namespace: <namespace_for_cassandra>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_cassandra>/yyyy/mm/dd
+  type: cassandra
+  enable: false
+  url: <connection_string>
+  filter:
+    include: ''
+    exclude: ''
+  keyspace: <keyspace_name>
+  connector: secure_sse:8443|secure:8445
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_hdfs>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_hdfs>/yyyy/mm/dd
+  type: hdfs
+  enable: false
+  url: <hdfs_url>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  directory: <directory_path>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_rest_api>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_rest_api>/yyyy/mm/dd
+  type: rest_api
+  enable: false
+  url: <api_endpoint_url>
+  filter:
+    include: ''
+    exclude: ''
+  headers:
+    Authorization: Bearer <token>
+  method: GET
+  connector: secure_sse:8443|secure:8445
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_apache_pulsar>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_apache_pulsar>/yyyy/mm/dd
+  type: apache_pulsar
+  enable: false
+  url: <pulsar_connection_string>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  topicName: <topic_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_snowflake>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_snowflake>/yyyy/mm/dd
+  type: snowflake
+  enable: false
+  url: <snowflake_url>
+  database: <database_name>
+  user: <username>
+  password: <password>
+  schema: <schema_name>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_aws_iot_core>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_aws_iot_core>/yyyy/mm/dd
+  type: aws_iot_core
+  enable: false
+  filter:
+    include: ''
+    exclude: ''
+  endpoint: <aws_iot_endpoint>
+  connector: secure_sse:8443|secure:8445
+  thingName: <thing_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_azure_event_hubs>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_azure_event_hubs>/yyyy/mm/dd
+  type: azure_event_hubs
+  enable: false
+  connectionString: <connection_string>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  eventHubName: <event_hub_name>
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+  namespaceName: <namespace_name>
+- namespace: <namespace_for_neo4j>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_neo4j>/yyyy/mm/dd
+  type: neo4j
+  enable: false
+  url: <neo4j_connection_string>
+  user: <username>
+  password: <password>
+  filter:
+    include: ''
+    exclude: ''
+  connector: secure_sse:8443|secure:8445
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+- namespace: <namespace_for_solr>
+  permission: ''
+  converter2events_class: build_in
+  data_path: ''
+  data_model: ./data/<namespace_for_solr>/yyyy/mm/dd
+  type: solr
+  enable: false
+  url: <solr_url>
+  filter:
+    include: ''
+    exclude: ''
+  core: <solr_core_name>
+  connector: secure_sse:8443|secure:8445
+  render:
+    textColor: '#000000'
+    dateColor: '#000000'
+    color: '#00b300'
+    alternateColor": '#6ac1db'
+ai:
+  enabled: false
+  provider: compatible
+  base_url: ''
+  model: ''
+  api_key: ${AI_API_KEY}
+  ocr_engine: rapidocr

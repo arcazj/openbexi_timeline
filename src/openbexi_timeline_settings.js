@@ -18,6 +18,28 @@ function showVersion(container) {
         .catch(() => { version.textContent = 'OpenBEXI Timeline · Version unavailable'; });
 }
 
+export async function showBackendVersion(container,timeline) {
+    const label=node('p','Backend: local data','ob_backend_version');container.append(label);
+    const input=timeline.ob_loader?.input || timeline.data || timeline.params?.[0]?.data;
+    if(!input)return;
+    let url;
+    try {url=new URL(input,window.location.href);} catch {return;}
+    if(!/\/openbexi_timeline(?:_sse)?\/sessions$/.test(url.pathname))return;
+    label.textContent='Backend: checking version…';
+    url.pathname=url.pathname.replace(/\/openbexi_timeline(?:_sse)?\/sessions$/,'/openbexi_timeline/config');
+    url.search='';url.hash='';
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),3000);
+    try {
+        const response=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'},cache:'no-store'});
+        if(!response.ok)throw new Error('Backend unavailable');
+        const {server}=await response.json();
+        if(!server || !['Java','Python'].includes(server.implementation) || !/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(server.version))
+            throw new Error('Backend version unavailable');
+        label.textContent=`Backend: ${server.implementation} ${server.version}${server.provider==='Java'?' · Java data provider':''}`;
+    } catch {label.textContent='Backend: version unavailable';}
+    finally {clearTimeout(timeout);}
+}
+
 const node = (tag, text, className) => {
     const element = document.createElement(tag);
     if (text) element.textContent = text;
@@ -37,6 +59,7 @@ export function createTimelineSettings(timeline, index) {
     const close = button('Close', () => timeline.ob_remove_setting()); close.setAttribute('aria-label', 'Close settings');
     heading.append(close); panel.append(heading);
     showVersion(panel);
+    showBackendVersion(panel,timeline);
     const section = (id, title, open = false) => {
         const details = node('details', undefined, 'ob_settings_section');
         details.dataset.settingsSection = id; details.open = open;
@@ -44,8 +67,8 @@ export function createTimelineSettings(timeline, index) {
         details.append(summary, body); panel.append(details); return body;
     };
     const models = section('models', '1. Edit models', true);
-    models.append(node('p', 'Edit the active model and YAML configuration with a live preview.'));
-    const editor = button('Model and YAML editor', () => openModelEditor(timeline)); editor.className = 'ob_model_editor_launch';
+    models.append(node('p', 'Edit timeline models, namespaces and tabs in the HBDS Editor.'));
+    const editor = button('HBDS Editor', () => openModelEditor(timeline)); editor.className = 'ob_model_editor_launch';
     if (timeline.modelAccess?.permissions?.admin === false) {
         editor.disabled = true;
         editor.title = 'Only this model’s administrators can edit its configuration.';

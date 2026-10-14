@@ -17,7 +17,7 @@ Use 2.5.1 for the corrected 2.5 release.
   removable labels. Re-selecting an exclusion preset reliably reapplies it.
 - Add a new filter appears first, with a labeled name field and an expanded,
   wide Advanced expression editor.
-- The Model and YAML editor button has stronger contrast. High contrast provides
+- The HBDS Editor button has stronger contrast. High contrast provides
   saved color choices for the overall background and separate menu-bar groups,
   automatic readable text and a reset action.
 - Compact phone controls move secondary actions into More. Named browser-local

@@ -51,7 +51,7 @@ for (const demo of ['default-dataset', 'dinausaurs']) test(`${demo}: drag batche
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel(`models/demos/${demo}.json`, {dataset: `json/test-data/${demo}.json`, width: 1200, height: 640});
+        await timeline.loadModel(`HBDS/templates/models/demos/${demo}.json`, {dataset: `json/test-data/${demo}.json`, width: 1200, height: 640});
         const clock = animationClock(harness.window);
         const scene = timeline.ob_scene[0];
         const band = scene.getObjectByName(scene.bands[0].name);
@@ -104,7 +104,7 @@ test('Static pan inertia follows frames and stops for another gesture or an expl
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/dinausaurs.json', {dataset: 'json/test-data/dinausaurs.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/dinausaurs.json', {dataset: 'json/test-data/dinausaurs.json'});
         const clock = animationClock(harness.window);
         const scene = timeline.ob_scene[0];
         const band = scene.getObjectByName(scene.bands[0].name);
@@ -166,7 +166,7 @@ for (const mode of ['timeline', 'split']) test(`Server layout covers the viewpor
     const harness = await createTimelineHarness();
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
-        const model = JSON.parse(await fs.readFile(path.join(root, 'models/regular_timeline.json'), 'utf8'));
+        const model = JSON.parse(await fs.readFile(path.join(root, 'HBDS/templates/models/regular_timeline.json'), 'utf8'));
         const timeline = new OB_TIMELINE();
         timeline.params = model.params;
         Object.assign(timeline.params[0], {date: '2024-05-03T07:00:00Z', showCurrentTime: false});
@@ -206,7 +206,7 @@ for (const mode of ['timeline', 'split']) test(`Selecting a demo event preserves
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
         const timeline = new OB_TIMELINE();
-        await timeline.loadModel('models/demos/space_exploration.json', {dataset: 'json/test-data/space_exploration.json'});
+        await timeline.loadModel('HBDS/templates/models/demos/space_exploration.json', {dataset: 'json/test-data/space_exploration.json'});
         const clock=animationClock(harness.window);
         timeline.ob_views.setMode(mode);
         timeline.ob_calendar.click();

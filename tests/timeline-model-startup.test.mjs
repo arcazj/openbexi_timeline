@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createTimelineHarness} from './helpers/timeline-dom.mjs';
 
-const fixture=JSON.parse(await fs.readFile('models/demos/default-dataset.json','utf8'));
+const fixture=JSON.parse(await fs.readFile('HBDS/templates/models/demos/default-dataset.json','utf8'));
 fixture.dataSource.url='/json/test-data/default-dataset.json';
 const configPath='/openbexi_timeline/config';
 const json=value=>new Response(JSON.stringify(value),{status:200});
@@ -23,7 +23,7 @@ async function setup(fetcher,options={}) {
 test('An explicit HTML model takes priority without requesting server configuration',async()=>{
     const f=await setup();
     try {
-        await f.t.loadModel('models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
+        await f.t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
         await settle();
         assert.equal(f.t.modelSource,'html');assert.ok(f.t.staticData.events.length);
         assert.equal(f.requests.includes(configPath),false);
@@ -34,7 +34,7 @@ test('An explicit HTML model takes priority without requesting server configurat
 });
 
 test('An explicit connected model discovers the SSE route before its first settings request',async()=>{
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     model.params[0].data='';
     const f=await setup(path=>path===configPath?json({data:'/openbexi_timeline_sse/sessions'}):
         path==='/model.json'?json(model):path==='/openbexi_timeline_sse/sessions'?json({events:[]}):undefined);
@@ -60,7 +60,7 @@ test('Constructing a timeline without loadModel loads the YAML model advertised 
 });
 
 test('An explicit current-time model can display standalone JSON data without contacting the server',async()=>{
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     model.params[0].data='/standalone.json';
     const f=await setup(path=>path==='/models/standalone.json'?json(model):path==='/standalone.json'?
         json({events:[{id:'one',start:new Date().toISOString(),data:{title:'Local event'}}]}):undefined);
@@ -111,7 +111,7 @@ for(const phase of ['configuration','model'])test(`A late ${phase} response cann
     });
     try {
         await waiting;
-        await f.t.loadModel('models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
+        await f.t.loadModel('HBDS/templates/models/demos/default-dataset.json',{dataset:'json/test-data/default-dataset.json'});
         const panel=f.t.ob_timeline_panel,params=f.t.params;
         reply(json(phase==='configuration'?{model:'models/yaml.json'}:fixture));await settle();
         assert.equal(f.t.modelSource,'html');assert.equal(f.t.params,params);assert.equal(f.t.ob_timeline_panel,panel);

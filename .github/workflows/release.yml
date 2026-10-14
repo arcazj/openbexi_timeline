@@ -92,7 +92,7 @@ jobs:
             source/dist/*-source.tar.gz
           if-no-files-found: error
           retention-days: 14
-      - name: Publish complete release and retain only its tag
+      - name: Publish complete release and retain historical tags
         env:
           GH_TOKEN: ${{ github.token }}
         run: node automation/tools/publish-release.mjs source

@@ -43,9 +43,16 @@ Consumer: `openbexi_timeline.js: update_scene; applyRenderingTheme`.
 | Property | Default | Type / allowed values |
 | --- | --- | --- |
 | `rendering.theme.sceneBackground` | `"#f7f9fc"` | string |
+| `rendering.theme.sceneBackgroundImage` | `null` | same-origin image URL string or null; stretched behind the bands |
 | `rendering.theme.headerBackground` | `null` | string or null |
 | `rendering.theme.panelBackground` | `null` | string or null |
 | `rendering.theme.panelText` | `null` | string or null |
+
+Bands can set `backgroundImage`; highlight zones can set `render.backgroundImage`.
+Both accept the same image URL or `null`. Images retain the color fallback while
+loading or on failure, and zone images use the zone's opacity. Overview projections
+include these images. See the [model template guide](model-template.md#background-images)
+for URL resolution, precedence, and high-contrast behavior.
 
 ### axis
 
@@ -234,4 +241,4 @@ These audit findings are not exposed as editable model properties in this migrat
 
 `tests/timeline-rendering.test.mjs` checks independent immutable defaults, parity between model schemas and rendering metadata, invalid settings, all top-level legacy models, and default-output equivalence for all seven public demos. It also checks WebGL axis/background output, SVG overview styles, table column order, search defaults, responsive split geometry, 3D camera/light/material values, wrapping metrics and glow without activity resizing. Existing overview, paging, startup, model, interaction and browser suites remain required; visual baselines are not changed for default rendering.
 
-Use `openbexi_timeline_earthquake -data_conf "yaml/sources_earthquake.yml"` for connected-provider validation alongside every catalog demo. The editor previews use the real renderer and apply valid model revisions in an isolated frame; importing or previewing a configuration does not save it.
+Use `openbexi_timeline_earthquake -data_conf "HBDS/templates/yaml/sources_earthquake.yml"` for connected-provider validation alongside every catalog demo. The editor previews use the real renderer and apply valid model revisions in an isolated frame; importing or previewing a configuration does not save it.

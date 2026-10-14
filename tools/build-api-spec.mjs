@@ -95,6 +95,9 @@ const listOf=schema=>({type:'object',required:['items'],properties:{items:{type:
 const workspaceId=param('workspaceId','path',{type:'string'},'Existing workspace ID',true);
 const documentId=param('documentId','path',{type:'string',pattern:'^[a-f0-9]{32}$'},'Server-issued document ID within this model',true);
 Object.assign(paths,{
+    '/hbds':{get:securedRead('System administrator: read the active HBDS configuration and revision',ref('HbdsState')),
+        put:mutation('System administrator: validate and atomically save HBDS; apply supported changes and report pending restart',ref('HbdsDocument'),200,ref('HbdsState'))},
+    '/hbds/schema':{get:securedRead('System administrator: read the complete HBDS runtime JSON Schema',{type:'object'})},
     '/me':{get:securedRead('Inspect the authenticated principal',ref('Principal'))},
     '/access/users':{get:securedRead('System administrator: list users without credentials',listOf(ref('AccessUser'))),post:mutation('System administrator: create a user and workspace memberships',ref('AccessUserInput'),201,ref('AccessUser'),false)},
     '/workspaces':{get:securedRead('System administrator: list workspaces',listOf({type:'object'})),post:mutation('System administrator: create a workspace',ref('WorkspaceInput'),201,{type:'object'},false)},
@@ -108,6 +111,14 @@ Object.assign(paths,{
     '/models/{datasetId}/ai/providers':{parameters:[datasetId],get:securedRead('Model administrator: discover configured AI providers and capabilities without credentials',{type:'object',required:['enabled','providers'],properties:{enabled:{type:'boolean'},providers:{type:'array',items:{type:'object'}}}})},
     '/models/{datasetId}/ai/generate':{parameters:[datasetId],post:mutation('Model administrator with AI entitlement: explain or propose configuration; never save or mutate records',ref('AiRequest'),200,ref('AiResult'),false)},
     '/models/{datasetId}/ai/cancel':{parameters:[datasetId],post:mutation('Model administrator: cancel their own in-flight AI request for this model',{type:'object',additionalProperties:false,required:['requestId'],properties:{requestId:{type:'string'}}},200,{type:'object',required:['requestId','cancelled'],properties:{requestId:{type:'string'},cancelled:{type:'boolean'}}},false)}
+});
+Object.assign(schemas, {
+    HbdsDocument:{type:'object',description:'Validated using HBDS/schema/configuration.schema.json and semantic relationship/model checks. Owned entity projection of HBDS/schema/openbexi_timeline.json.',
+        required:['schemaVersion','defaultNamespaceId','namespaces','models','sources','connectors','tabs','users','groups','roles','grants','deployment'],
+        properties:{schemaVersion:{const:1},defaultNamespaceId:{type:'string'},deployment:{type:'object'},
+            ...Object.fromEntries(['namespaces','models','sources','connectors','tabs','users','groups','roles','grants'].map(name=>[name,{type:'array',items:{type:'object'}}]))}},
+    HbdsState:{type:'object',required:['document','revision'],properties:{document:ref('HbdsDocument'),revision:{type:'string',pattern:'^[a-f0-9]{64}$'},
+        changedNamespaceIds:strings,restartRequired:{type:'boolean'},restartReasons:strings}}
 });
 const queryParameters = [param('from', 'query', {type: 'string'}, 'Inclusive start, in chronological axis order. For Ma, from=165&to=115.'),
     param('to', 'query', {type: 'string'}, 'Inclusive end; returns intersecting records.'), param('search', 'query', {type: 'string', maxLength: 500}, 'Case-insensitive text search'),

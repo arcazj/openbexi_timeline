@@ -1,4 +1,4 @@
-import {cleanTimelineURL, readTimelineResponse} from './openbexi_timeline_transport.js';
+import {cleanTimelineURL, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
 import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
 
@@ -133,7 +133,7 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
             cursors.add(meta.nextCursor);request.searchParams.set('cursor',meta.nextCursor);
             // Yield between cached responses as well, so Stop and query edits
             // can interrupt a long scan without waiting for the next network hop.
-            await new Promise(resolve=>setTimeout(resolve,0));
+            await waitForTimelinePage(meta,signal);
         }
     } finally {signal?.removeEventListener('abort',abort);release();}
 }
@@ -190,6 +190,7 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
                 if(meta.nextCursor && meta.nextCursor===request.searchParams.get('cursor')) throw new Error('The source repeated a search cursor.');
                 if(meta.nextCursor) request.searchParams.set('cursor',meta.nextCursor);
                 else complete=complete && meta.complete===true;
+                await waitForTimelinePage(meta,signal);
             } while(cursorURL && windowPages<pagesPerWindow);
             // Give each nearby interval a chance before spending the whole
             // search budget on one archive. Unfinished coverage stays partial.

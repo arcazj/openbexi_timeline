@@ -27,3 +27,15 @@ export function cleanTimelineURL(input) {
         (value === 'undefined' || value === 'null')) url.searchParams.delete(key);
     return url;
 }
+
+/** Yield between pages; index-building replies can request a bounded, cancellable pause. */
+export function waitForTimelinePage(metadata, signal) {
+    const requested=Number(metadata?.retryAfterMs);
+    const delay=metadata?.nextCursor && Number.isFinite(requested) ? Math.max(0,Math.min(2000,requested)) : 0;
+    return new Promise(resolve=>{
+        if(signal?.aborted){resolve();return;}
+        const finish=()=>{clearTimeout(timer);signal?.removeEventListener('abort',finish);resolve();};
+        const timer=setTimeout(finish,delay);
+        signal?.addEventListener('abort',finish,{once:true});
+    });
+}

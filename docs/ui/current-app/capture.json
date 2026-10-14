@@ -12,7 +12,7 @@
   "webgl2": true,
   "drawCalls": 128,
   "dataset": "json/test-data/space_exploration.json",
-  "model": "models/demos/space_exploration.json",
+  "model": "HBDS/templates/models/demos/space_exploration.json",
   "pageErrors": [],
   "scope": "Existing local file-backed demo and legacy Settings; proposed Auto scale, Results, Fit matches and server configuration editor are not implemented.",
   "screenshots": [

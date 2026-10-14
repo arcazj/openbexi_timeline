@@ -7,6 +7,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WebUiAddressTest {
     @TempDir Path temporary;
+    @Test void canonicalHttpProtocolsSelectTheExistingJavaListeners() {
+        assertEquals(ob_mode.no_secure,openbexi_timeline.connectorMode("http"));
+        assertEquals(ob_mode.no_secure,openbexi_timeline.connectorMode("no_secure"));
+        assertEquals(ob_mode.secure,openbexi_timeline.connectorMode("https"));
+        assertEquals(ob_mode.secure_ws,openbexi_timeline.connectorMode("wss"));
+        assertThrows(IllegalArgumentException.class,()->openbexi_timeline.connectorMode("unknown"));
+    }
     @Test void resolvesConfiguredPageOnlyOnItsReadyListenerAndPreservesContextAndExtension() throws Exception {
         Path config=temporary.resolve("sources.yml");
         Files.writeString(config,"web_ui:\n  entry_page: timeline.htm\n  port: 8123\n  host: localhost\n  context_path: /viewer/\ndata_sources: []\n");

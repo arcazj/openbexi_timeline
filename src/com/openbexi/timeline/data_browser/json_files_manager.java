@@ -1,5 +1,7 @@
 package com.openbexi.timeline.data_browser;
 
+import java.nio.file.Path;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -402,10 +404,12 @@ public class json_files_manager extends data_manager {
                 buildFile = buildFile.replace("/mm", "/" + MM);
                 buildFile = buildFile.replace("/dd", "/" + dd);
 
+                var filenameRules=SourceFileFilters.compile(_data_configuration.getConfiguration(d),Path.of(currentPathModel.split("/(?:yyyy|mm|dd)(?:/|$)",2)[0]));
                 FilenameFilter filter = new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        return !name.startsWith("descriptors") && !name.contains("noises");
+                        File candidate=new File(dir,name);
+                        return !name.startsWith("descriptors") && !name.contains("noises")&&(candidate.isDirectory()||filenameRules.test(candidate.toPath()));
                     }
                 };
                 File[] file_list = new File(buildFile).listFiles(filter);

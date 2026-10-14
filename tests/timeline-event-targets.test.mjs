@@ -19,7 +19,7 @@ const settle = async predicate => {
 };
 async function setup() {
     const h = await createTimelineHarness();
-    const model = JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json', 'utf8'));
+    const model = JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json', 'utf8'));
     Object.assign(model.params[0], {date:new Date(base).toISOString(), width:1200, height:640, showCurrentTime:false});
     const {OB_TIMELINE} = await h.importModule('src/openbexi_timeline.js');
     const t = new OB_TIMELINE({autoStart:false});

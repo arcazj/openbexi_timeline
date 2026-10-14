@@ -1,12 +1,12 @@
 # OpenBEXI Timeline 2.2.0
 
-Version 2.2.0 adds a visual Model and YAML editor with a live timeline preview
+Version 2.2.0 adds a visual HBDS Editor with a live timeline preview
 and moves 92 more rendering settings into validated models. Existing models
 keep their appearance and behavior when these optional settings are omitted.
 
 ## Changes
 
-- Open **Settings → Model and YAML editor** or the
+- Open **Settings → HBDS Editor** or the
   [public editor](https://arcazj.github.io/openbexi_timeline/openbexi_timeline_model.html).
   Edit colors, choices, numbers, toggles, nested fields and arrays, or use the
   synchronized JSON/YAML text view. Create, import, duplicate, rename, delete,
@@ -58,7 +58,7 @@ cases. The 34 environment-dependent Java skips and seven duplicate browser-case
 skips are unchanged. Existing screenshot baselines are retained.
 
 Connected validation uses `openbexi_timeline_earthquake.html` with
-`-data_conf yaml/sources_earthquake.yml`, including a `volcano` search, previous/next
+`-data_conf HBDS/templates/yaml/sources_earthquake.yml`, including a `volcano` search, previous/next
 activity, 3D and the Settings editor. Local data and captures are excluded from
 the release. See the [browser testing guide](browser-tests.md).
 

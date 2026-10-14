@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openbexi-timeline-server"
+version = "2.8.0"
+description = "Indexed Python backend for the OpenBEXI Timeline browser"
+requires-python = ">=3.12"
+license = "LicenseRef-OpenBEXI-Commercial-Exempt-1.0"
+dependencies = ["starlette>=0.47,<2", "uvicorn>=0.35,<1", "PyYAML>=6,<7", "ijson>=3.4,<4", "regex>=2025.7", "httpx>=0.28,<1"]
+
+[project.scripts]
+openbexi-timeline-server = "openbexi_timeline_server.__main__:main"
+
+[project.optional-dependencies]
+benchmark = ["psutil>=7,<9"]
+
+[tool.setuptools.packages.find]
+where = ["python"]

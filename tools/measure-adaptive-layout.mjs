@@ -5,7 +5,7 @@ import {densityMap,chooseDensityMap} from '../src/openbexi_timeline_adaptive.js'
 import {createStaticMatchSnapshot,projectMatchSnapshot} from '../src/openbexi_timeline_matches.js';
 import {measureCandidateLayout} from '../src/openbexi_timeline_data.js';
 const domain={from:Date.parse('2026-09-12'),to:Date.parse('2026-09-13')};
-const model=JSON.parse(await fs.readFile(new URL('../models/demos/default-dataset.json',import.meta.url),'utf8'));
+const model=JSON.parse(await fs.readFile(new URL('../HBDS/templates/models/demos/default-dataset.json',import.meta.url),'utf8'));
 const band={...model.bands[0],height:500,fontSize:'13px',fontSizeInt:13,fontFamily:'Arial'};
 const ranges=new Map([[band.name,domain]]);
 const timeline={ob_scene:{sync_time:(domain.from+domain.to)/2},getTextWidth:text=>String(text).length*7};

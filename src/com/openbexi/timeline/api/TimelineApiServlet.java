@@ -17,6 +17,7 @@ public final class TimelineApiServlet extends HttpServlet {
     private TimelineAccessStore accessStore;
     private TimelineAiService aiService;
     private TimelineModelHistory modelHistory;
+    private TimelineHbds hbds;
     private Path root, storage;
     private final Map<String,TimelineConfigFiles> modelConfigFiles = new java.util.concurrent.ConcurrentHashMap<>();
     private String adminToken, writeToken, readToken;
@@ -119,6 +120,17 @@ public final class TimelineApiServlet extends HttpServlet {
         String path = Optional.ofNullable(req.getPathInfo()).orElse("");
         String[] parts = path.replaceFirst("^/", "").split("/", -1);
         String method = req.getMethod(); boolean get = method.equals("GET") || method.equals("HEAD");
+        if(parts[0].equals("hbds")) {
+            requireSystemAdmin(principal);
+            if(hbds==null) synchronized(this) {
+                if(hbds==null)hbds=TimelineHbds.open(root,TimelineHbds.selected(root,getServletContext().getInitParameter("data_conf")));
+            }
+            if(parts.length==2&&parts[1].equals("schema")) {readOnly(get,res);send(req,res,200,hbds.schema(),null);return;}
+            if(parts.length!=1)throw new ApiException(404,"HBDS resource not found.");
+            if(get){send(req,res,200,hbds.read(),hbds.etag());return;}
+            if(!method.equals("PUT"))methodNotAllowed(res,"GET, HEAD, PUT");
+            send(req,res,200,hbds.update(req.getHeader("If-Match"),body(req)),hbds.etag());return;
+        }
         // A request owner can still stop an in-flight provider call after a grant or entitlement is revoked.
         // The AI service checks the exact model/principal/request tuple; this cannot start or inspect generation.
         if(parts.length==4 && parts[0].equals("models") && parts[2].equals("ai") && parts[3].equals("cancel")) {

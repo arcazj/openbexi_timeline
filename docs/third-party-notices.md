@@ -26,6 +26,13 @@ The editor vendors the browser modules from `yaml` 2.8.3 under
 source package. Pages and source packaging include these modules and that notice.
 
 The Java dependencies and overrides are listed in [pom.xml](../pom.xml).
+
+The optional Python server declares its dependencies in [pyproject.toml](../pyproject.toml)
+and pins the validated runtime in [requirements.lock](../requirements.lock).
+Their installed distributions include their own license and attribution files;
+retain those files when bundling Python, including the native parser/regex wheels.
+Python and SQLite also carry their own notices. The benchmark-only `psutil`
+dependency is installed separately and is not required to run the service.
 The installed `javax.websocket-api` 1.1 parent POM declares CDDL 1.1 / GPL 2
 dual licensing; do not replace those terms with the application's license.
 The JSON-java 20260814 POM declares public-domain status; jsoup and SLF4J

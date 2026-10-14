@@ -12,14 +12,14 @@ const settle=page=>expect.poll(async()=>(await state(page)).pending).toBe(false)
 
 async function setup(page,records,{connected=false,partial=false,holdSearch=false}={}) {
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:'2026-09-12T12:00:00Z',showCurrentTime:false,fullWindow:true,
         data:connected?'http://127.0.0.1:8782/__explore':''});
     if(!connected) {
         model.dataSource={url:'/__explore-local',format:'json'};
         for(const band of model.bands) {delete band.subIntervalPixels;band.intervalPixels=Number(band.intervalPixels);if(band.model)band.model=[{sortBy:'NONE'}];}
     }
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     await page.route('**/json/test-data/default-dataset.json',route=>route.fulfill({json:{events:records}}));
     await page.route('**/__explore-local',route=>route.fulfill({json:{events:records}}));
     const requests=[],held=[];

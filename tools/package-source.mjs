@@ -3,11 +3,13 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {inspectPublicHbds, verifyPublicHbds} from './verify-hbds-public.mjs';
 
 const root=await fs.realpath(fileURLToPath(new URL('..',import.meta.url)));
 const pkg=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
 if(!/^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$/.test(pkg.version)) throw new Error('Invalid release version.');
 const files=JSON.parse(await fs.readFile(path.join(root,'release/public-files.json'),'utf8'));
+await verifyPublicHbds(root);
 if(!Array.isArray(files) || new Set(files).size!==files.length) throw new Error('Invalid public-file manifest.');
 const inside=(base,file)=>{const relative=path.relative(base,file);return relative!=='' && !relative.startsWith('..') && !path.isAbsolute(relative);};
 const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -21,7 +23,7 @@ for(const file of files) {
         /\.(?:iml|jks|p12|pfx|key|jar|class|log)$/i.test(file)) throw new Error('Disallowed public-file entry: '+file);
     const source=path.resolve(root,file),real=await fs.realpath(source),stat=await fs.lstat(source);
     if(!inside(root,real) || real!==source || !stat.isFile() || stat.isSymbolicLink()) throw new Error('Not a regular public source file: '+file);
-    const bytes=await fs.readFile(source);payload.push({file,bytes,sha256:sha256(bytes)});
+    const bytes=await fs.readFile(source);inspectPublicHbds(file,bytes.toString('utf8'));payload.push({file,bytes,sha256:sha256(bytes)});
 }
 // Documentation must not link to an unreviewed local screenshot outside the
 // public manifest, even when the archive would otherwise omit that image.

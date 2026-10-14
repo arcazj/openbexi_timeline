@@ -27,7 +27,7 @@ async function searchMode(page,mode) {
 }
 function sameRange(a,b) {expect(a.from).toBeCloseTo(b.from,-1);expect(a.to).toBeCloseTo(b.to,-1);}
 async function setup(page,{connected=false,standalone=false}={}) {
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:'2026-09-12T16:00:00Z',showCurrentTime:false,fullWindow:true,
         data:connected?new URL('/__ux-server',test.info().project.use.baseURL).href:''});
     if(!connected) {
@@ -36,7 +36,7 @@ async function setup(page,{connected=false,standalone=false}={}) {
     }
     const errors=[],requests=[];
     page.on('pageerror',error=>errors.push(error.message));
-    await page.route('**/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',route=>route.fulfill({json:model}));
     await page.route('**/json/test-data/default-dataset.json',route=>route.fulfill({json:fixture}));
     await page.route('**/__ux-local',route=>route.fulfill({json:fixture}));
     if(connected)await page.route('**/__ux-server?**',route=>{
@@ -56,7 +56,7 @@ async function setup(page,{connected=false,standalone=false}={}) {
     });
     if(standalone) {
         const html=(await fs.readFile('demos.html','utf8')).replace(/<body[\s\S]*$/,
-            '<body><script type="module">import {OB_TIMELINE} from "/src/openbexi_timeline.js"; window.toolbarStandalone=new OB_TIMELINE(); window.toolbarStarted=toolbarStandalone.loadModel("/models/demos/default-dataset.json",{dataset:"/json/test-data/default-dataset.json"});</script></body></html>');
+            '<body><script type="module">import {OB_TIMELINE} from "/src/openbexi_timeline.js"; window.toolbarStandalone=new OB_TIMELINE(); window.toolbarStarted=toolbarStandalone.loadModel("/HBDS/templates/models/demos/default-dataset.json",{dataset:"/json/test-data/default-dataset.json"});</script></body></html>');
         await page.route('**/__toolbar-standalone.html',route=>route.fulfill({contentType:'text/html',body:html}));
         await page.goto('/__toolbar-standalone.html');await page.evaluate(()=>window.toolbarStarted);
     } else await page.goto('/demos.html?demo=default-dataset');
@@ -71,10 +71,12 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await expect(page.getByLabel('Lock current view',{exact:true})).toBeVisible();
     await expect(page.locator('.ob_view_options, .ob_saved_views')).toHaveCount(0);
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
+    await page.locator('.ob_filter_build_section > summary').click();
     await page.getByLabel('Filter field',{exact:true}).selectOption('status');
     await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
     await page.getByLabel('Filter value',{exact:true}).fill('warning');
-    await page.getByRole('button',{name:'Apply filter',exact:true}).click();await ready(page);
+    await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Custom');
+    await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toEqual(['ground']);
     await page.getByLabel('Sort by',{exact:true}).selectOption('namespace');
     await page.getByRole('button',{name:'Apply',exact:true}).click();await ready(page);
@@ -90,13 +92,15 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await page.getByRole('button',{name:'Remove Filter: Custom',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toHaveLength(3);
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
+    await page.locator('.ob_filter_build_section > summary').click();
     await page.getByLabel('Filter field',{exact:true}).selectOption('namespace');
     await page.getByLabel('Filter operator',{exact:true}).selectOption('!=');
     await page.getByLabel('Filter value',{exact:true}).fill('Operations');
-    await page.getByRole('button',{name:'Apply filter',exact:true}).click();await ready(page);
+    await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Excluded_operations');
+    await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toEqual(['radio','literal']);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();
-    await page.getByRole('button',{name:'Remove Source: does not equal Operations',exact:true}).click();await ready(page);
+    await page.getByRole('button',{name:'Remove Filter: Excluded_operations',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toHaveLength(3);
     await page.setViewportSize({width:420,height:740});await ready(page);
     await page.getByRole('button',{name:'More',exact:true}).click();
@@ -346,10 +350,12 @@ test('Refresh works for local records while preserving the filter',async({page})
     const fixture=await setup(page);
     await find(page,'Ground station');
     await page.getByRole('button',{name:'Filters',exact:true}).click();
+    await page.locator('.ob_filter_build_section > summary').click();
     await page.getByLabel('Filter field',{exact:true}).selectOption('status');
     await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
     await page.getByLabel('Filter value',{exact:true}).fill('warning');
-    await page.getByRole('button',{name:'Apply filter',exact:true}).click();await ready(page);
+    await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Custom');
+    await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();await ready(page);
     const before=await state(page);
     await page.getByRole('button',{name:'Refresh',exact:true}).click();await ready(page);

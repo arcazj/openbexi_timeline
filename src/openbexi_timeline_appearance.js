@@ -29,7 +29,13 @@ const timelines = new Set(), sceneBackgrounds = new WeakMap();
 export function applyAppearanceBackground(timeline) {
     if (typeof document === 'undefined') return;
     const active = document.documentElement.dataset.obTheme === 'contrast' && backgroundApplied;
-    for (const scene of timeline.ob_scene || []) if (scene?.background?.isColor) {
+    for (const scene of timeline.ob_scene || []) {
+        const background = scene?.userData?.timelineBackground;
+        if (background) {
+            scene.background = active ? background.color.clone().set(colors.background) : background.texture || background.color;
+            continue;
+        }
+        if (!scene?.background?.isColor) continue;
         if (active) {
             if (!sceneBackgrounds.has(scene)) sceneBackgrounds.set(scene,scene.background.clone());
             scene.background.set(colors.background);

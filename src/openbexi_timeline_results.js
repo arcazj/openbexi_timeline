@@ -3,7 +3,7 @@ import {createStaticMatchSnapshot, createProviderMatchSnapshot, projectMatchSnap
 import {ADAPTIVE_LIMITS, finiteRange, fitRange, densityMap, chooseDensityMap, projectMap, zoomMappedRange} from './openbexi_timeline_adaptive.js';
 import {measureCandidateLayout} from './openbexi_timeline_data.js';
 import {recordKey} from './openbexi_timeline_paging.js';
-import {filterLocalData,syncFilterSelection} from './openbexi_timeline_filters.js';
+import {filterLocalData,syncFilterSelection,refreshFilterOptions} from './openbexi_timeline_filters.js';
 import {projectOverviewSessions} from './openbexi_timeline_overview.js';
 import {syncOverviewPanel} from './openbexi_timeline_overview_panel.js';
 import {TimelineExplorer} from './openbexi_timeline_explorer.js';
@@ -892,12 +892,7 @@ export class TimelineResults {
         this.searchErrorLabel.textContent=this.searchError || '';
         this.searchErrorLabel.hidden=!this.searchError;
         this.auto.checked = this.state.auto; this.mode.checked = this.state.mode === 'only';
-        const sorting=document.getElementById(t.name+'_setting')?.querySelector('#ob_sort_by');
-        if (sorting) {
-            const selected=sorting.value || t.ob_sortBy || 'NONE';
-            const options=t.ob_get_all_sorting_options(0);
-            if (sorting.innerHTML!==options) { sorting.innerHTML=options; sorting.value=selected; }
-        }
+        refreshFilterOptions(t);
         this.highlight.checked = this.state.highlight !== false;
         this.auto.disabled = this.mode.disabled = this.highlight.disabled = !this.supported;
         const active = Boolean(this.state.query.trim() ||

@@ -40,12 +40,12 @@ test('Overview band backgrounds follow filtered and sorted bands, including save
     });
     expect(namespace).toBeTruthy();
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
-    await page.getByRole('button',{name:'Add a new filter',exact:true}).click();
+    await page.locator('.ob_filter_build_section > summary').click();
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Grouped sample');
     await expect(page.locator('.ob_filter_advanced')).toHaveAttribute('open','');
     await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: namespace = '+JSON.stringify(namespace));
-    await page.getByRole('combobox',{name:'Sort by',exact:true}).selectOption('namespace');
-    await page.getByRole('button',{name:'Save new filter',exact:true}).click();await ready(page);
+    await page.getByRole('combobox',{name:'Group by (sort_by)',exact:true}).selectOption('namespace');
+    await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     await expect(page.getByRole('combobox',{name:'Sort by',exact:true})).toHaveValue('namespace');
     expect(await matchingColors()).toBe(true);
     await page.reload();await ready(page);

@@ -13,7 +13,7 @@ async function render(page) {
 test('Current time follows the red line and hides at date ticks and viewport edges',async({page},info)=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-09-12T12:37:00Z'));
-    await page.route('**/models/demos/default-dataset.json',async route=>{
+    await page.route('**/HBDS/templates/models/demos/default-dataset.json',async route=>{
         const response=await route.fetch(),model=await response.json();
         model.params[0].showCurrentTime=true;
         for(const band of model.bands){band.intervalUnitPos='TOP';band.tickMinutes=120;delete band.focus;}

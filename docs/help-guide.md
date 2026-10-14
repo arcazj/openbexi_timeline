@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.7.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.8.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -17,8 +17,8 @@ These notes describe the version 2.7.0 browser application and the local demos i
 - At widths of 600 pixels or less, search, previous/next activity and status stay visible in two rows. **More** opens view choices, settings, filters and other controls. Press Escape to close it and return focus to More. The menu also closes when you select a view or open a side panel.
 - Choose a search mode inside **Filters → Search options**. **Text** search matches literal words and phrases without case sensitivity. **Pattern** uses a case-insensitive regular expression. **Legacy** preserves older case-sensitive expressions, with spaces and semicolons as OR. Typing waits briefly before searching; Enter searches immediately. Invalid patterns leave current results in place. Connected Text and Pattern modes require the updated server.
 - **Back to previous view** restores the date and zoom before a search or selection moved the timeline, while retaining the current query and filters.
-- Active filters and grouping appear as removable labels. In **Sorting & Filtering**, use **Field → Operator → Value** and choose a text, number or boolean value type. **Apply filter** changes the current view; **Add a new filter** saves it as a preset. Existing syntax remains available under **Advanced expression**.
-- **Add filter** is beside the panel title and opens the editor above the sorting controls. The **Filter name** label sits beside the name field, and **Advanced expression** starts expanded with a text area filling the available width. Saved-filter selections follow the active expression and grouping, including changes made through the builder or removable labels.
+- **Sorting & Filtering** contains three sections: **Namespaces** stays expanded, **Build a new filter** starts collapsed, and **List of saved filters** uses compact rows. Selecting a saved filter applies it immediately. Each row has a **?** syntax-help button; expression fields grow and shrink to fit their text. Active filters and grouping remain available as removable labels.
+- Open **Build a new filter** to enter a unique **Filter name**. Choose a **Namespace** and a separate **Group by (sort_by)** field, then build a condition with **Field → Operator → Value → Type** or edit **Advanced expression**. **Clone existing filter** copies a saved expression and grouping into the draft without applying it. **Save filter** and **Cancel** appear once at the bottom; Cancel discards the draft and keeps the active filter.
 - Drag the timeline or an activity to navigate through time. Clicking an activity selects it; dragging does not open Data or recenter it. Overview keeps its visible-window rectangle centered while the surrounding time context moves. Its arrows and plot dragging navigate the main view; wheel zoom over Overview changes only its context span.
 - Previous/next activity centers the result while preserving the current time span, widening only when needed for the activity's duration. A gold glow marks the result without enlarging its bar, icon or text, changing its depth, or adding rows. Reduced-motion settings disable the brief brightness pulse.
 - **3D** uses an angled grid, colored tracks and raised, shaded activity bars. Open **Settings → Update perspective** and enable **Adjust perspective** to rotate, pan and zoom the camera. Turn adjustment off or press Escape to navigate the timeline. Save the viewpoint, lighting, metalness and roughness for later visits. The UI always opens in **2D**; enabling 3D restores your saved settings or the reference preset. Metalness affects the view span and activities while icons keep their colors. See [Perspective settings](perspective.md).
@@ -62,7 +62,7 @@ In **Diagnostics**, use **Refresh** for current view, scale, and record-count in
 The preview is read-only and can be selected and copied. Choose **Edit** to change
 it, **Save** to validate and store it, or **Cancel** (Escape in the editor) to
 restore the saved expression. Errors stay beside the editor and retain your draft.
-Use **Add filter** in the panel header to create a preset. Compact metallic rows
+Open **Build a new filter** to create or clone a preset. Compact metallic rows
 highlight the active filter; narrow panels place the expression below the controls.
 
 Calendar month arrows browse dates without moving the timeline. Select a day to
@@ -176,10 +176,10 @@ customize separate menu-bar groups, including controls moved into **More**.
 Text adjusts to black or white for readability. Model-defined band backgrounds,
 event colors and status indicators retain their meaning. Choices persist in this
 browser; **Reset high contrast colors** restores the defaults. Switching themes
-restores that theme's appearance. The **Model and YAML editor** button has a
+restores that theme's appearance. The **HBDS Editor** button has a
 stronger fill and outline in every theme.
 
-## Model and YAML editor
+## HBDS Editor
 
 The editor organizes work into Overview, Data, Appearance, Filters and Access,
 with an Advanced text view of the same draft. Managed configuration requires
@@ -188,7 +188,7 @@ timeline image; review changes before accepting them. Event/session item JSON
 metadata remains unchanged. See [model access](model-access.md),
 [AI assistance](ai-assistance.md), and the [item contract](event-session-contract.md).
 
-Open **Settings → Edit models → Model and YAML editor** to edit the current model with color
+Open **Settings → Edit models → HBDS Editor** to edit the current model with color
 pickers, choices, numeric fields and synchronized JSON/YAML text. Valid changes
 refresh a live timeline preview; invalid changes keep the last valid preview.
 The preview starts with your current date, search, view and camera.
@@ -267,7 +267,7 @@ Open `http://localhost:8780/demos.html`. The server binds to `127.0.0.1`; `npm r
 
 Static hosting must include the page, source modules, styles, icons, demo catalog, models, datasets, and browser dependencies referenced by the page's import map. Include `help`, `docs`, `swagger`, `README.md`, and `LICENSE` to keep the Help links available. Keep their relative directory structure when hosting under a subdirectory. See [hosting portability](demos.md#hosting-portability).
 
-The Java deployment is separate. Its [Maven configuration](https://github.com/arcazj/openbexi_timeline/blob/master/pom.xml) targets Java 17, and the repository provides [Windows](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.bat) and [shell](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.sh) startup examples. Configure their installation and data paths for your environment before use. The [Kubernetes deployment](https://github.com/arcazj/openbexi_timeline/blob/master/yaml/deployment.yaml) and [service](https://github.com/arcazj/openbexi_timeline/blob/master/yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
+The Java deployment is separate. Its [Maven configuration](https://github.com/arcazj/openbexi_timeline/blob/master/pom.xml) targets Java 17, and the repository provides [Windows](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.bat) and [shell](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.sh) startup examples. Configure their installation and data paths for your environment before use. The [Kubernetes deployment](https://github.com/arcazj/openbexi_timeline/blob/master/HBDS/templates/yaml/deployment.yaml) and [service](https://github.com/arcazj/openbexi_timeline/blob/master/HBDS/templates/yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
 
 ## Resource maintenance
 
@@ -275,4 +275,4 @@ The Java deployment is separate. Its [Maven configuration](https://github.com/ar
 
 ## Sorting and filtering
 
-Open **Filter syntax** in the Sorting & Filtering editor for legacy and advanced examples. Prefix advanced expressions with `expr:`. Invalid edits leave the last valid filter active. Presets retain **Sort by**. Both REST and SSE apply filters on the server before returning records. See [Filter syntax](filter-syntax.md).
+Open the **?** button at the end of a filter row for legacy and advanced examples. Prefix advanced expressions with `expr:`. Invalid edits leave the last valid filter active. Presets retain **Sort by** and apply immediately when selected. Both REST and SSE apply filters on the server before returning records. See [Filter syntax](filter-syntax.md).

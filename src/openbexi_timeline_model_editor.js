@@ -10,6 +10,13 @@ const state={catalog:[],schemas:{},document:null,record:null,context:{},client:n
 const documentOpen=new DocumentOpenGate();
 const documentControls=()=>document.querySelectorAll('.document-bar button,.document-bar select,.document-state button,#editing-actions button');
 let previewTimer,rawTimer,previewFrame,pendingFrame,pendingPayload,previewTimeout;
+let hbdsEditor;
+async function showHbdsEditor(){
+    $('hbds-editor').hidden=false;$('model-editor-main').hidden=true;$('connect').hidden=true;
+    clearTimeout(previewTimer);clearTimeout(previewTimeout);state.revision++;retireFrame(previewFrame);retireFrame(pendingFrame);previewFrame=pendingFrame=null;pendingPayload=null;
+    const {mountHbdsEditor}=await import('./openbexi_timeline_hbds_editor.js');
+    hbdsEditor ||= mountHbdsEditor($('hbds-editor'),{ask,namespaceId:state.context.hbdsNamespaceId||new URLSearchParams(location.search).get('namespaceId')||'',onClose:()=>{$('hbds-editor').hidden=true;$('model-editor-main').hidden=false;$('connect').hidden=false;schedulePreview(true);}});
+}
 function retireFrame(frame){if(!frame)return;try{frame.contentWindow?.disposePreview?.();}catch{ /* A frame may still be navigating. */ }if(frame.dataset.previewBlob)URL.revokeObjectURL(frame.dataset.previewBlob);frame.remove();}
 const clone=value=>structuredClone(value);
 const status=message=>{$('notice').textContent=message;};
@@ -241,11 +248,11 @@ async function previewPayload() {
 }
 function schedulePreview(force=false) {
     clearTimeout(previewTimer);
-    if(!state.valid || (!force && !$('live').checked))return;
+    if(!$('hbds-editor').hidden || !state.valid || (!force && !$('live').checked))return;
     previewTimer=setTimeout(()=>refreshPreview(),force?0:350);
 }
 async function refreshPreview() {
-    if(!canEdit() || (!state.valid && !state.previewCandidate))return;
+    if(!$('hbds-editor').hidden || !canEdit() || (!state.valid && !state.previewCandidate))return;
     const revision=++state.revision;$('preview-state').textContent='Updating preview…';
     try {
         const payload=await previewPayload();if(revision!==state.revision){if(payload.previewBlob)URL.revokeObjectURL(payload.previewBlob);return;}
@@ -492,6 +499,7 @@ function bindWorkspaceActions(){
 }
 function bindActions(){
     bindWorkspaceActions();
+    $('open-hbds').onclick=()=>showHbdsEditor().catch(fail);
     for(const id of ['form','text'])$(id+'-tab').onclick=()=>{if(id==='form' && state.rawInvalid){fail(new Error('Correct the document syntax before returning to Properties, or use Revert to restore the previous document.'));return;}for(const mode of ['form','text']){$(mode+'-view').hidden=mode!==id;$(mode+'-tab').setAttribute('aria-selected',String(mode===id));}if(id==='form')renderForm();};
     $('property-filter').oninput=filterProperties;
     $('raw').oninput=()=>{documentOpen.invalidate();clearTimeout(rawTimer);state.rawInvalid=true;state.valid=false;updateState();const source=state.document;rawTimer=setTimeout(()=>{if(state.document!==source)return;try{source.replace($('raw').value);state.rawInvalid=false;if(validate())schedulePreview();}catch(error){fail(error,true);}},350);};
@@ -505,7 +513,7 @@ function bindActions(){
             else if(kind==='local'){const record=state.locals.find(item=>item.key===id);if(record)openDocument(record.text,{...record,selection:'local:'+id},intent,record.context || {});}
         }catch(error){if(documentOpen.accepts(intent,state.document))fail(error);}
     };
-    for(const kind of ['model','yaml'])$('new-'+kind).onclick=()=>{if(!canLeave())return;const name=kind==='yaml'?'sources-new.yml':'timeline-new.json',text=kind==='yaml'?'# Timeline source configuration\nmodel: models/regular_timeline.json\ndata_sources: []\n':JSON.stringify(buildDefaultModel(),null,2)+'\n';const key=crypto.randomUUID();const record={key,name,kind,text,selection:'local:'+key};state.locals.push(record);state.context={};$('preview-data').value='document';openDocument(text,record);status('Created a local draft. Import or select preview data to see activities.');};
+    for(const kind of ['model','yaml'])$('new-'+kind).onclick=()=>{if(!canLeave())return;const name=kind==='yaml'?'sources-new.yml':'timeline-new.json',text=kind==='yaml'?'# Timeline source configuration\nmodel: HBDS/templates/models/regular_timeline.json\ndata_sources: []\n':JSON.stringify(buildDefaultModel(),null,2)+'\n';const key=crypto.randomUUID();const record={key,name,kind,text,selection:'local:'+key};state.locals.push(record);state.context={};$('preview-data').value='document';openDocument(text,record);status('Created a local draft. Import or select preview data to see activities.');};
     $('import').onclick=()=>$('file').click();$('file').onchange=async()=>{
         const file=$('file').files[0];if(!file || !canLeave())return;const intent=documentOpen.begin(state.document);clearTimeout(rawTimer);
         try{const text=await file.text();if(!documentOpen.accepts(intent,state.document))return;
@@ -551,5 +559,6 @@ async function start(){
     status(state.requiredModelId?'Connect with a model administrator session to open this protected model.':state.focused?'':'Local editing is ready. Changes refresh the preview automatically; saving is explicit.');
     // Expose read-only diagnostics useful for browser validation, without credentials.
     window.modelEditor={get document(){return state.document;},get record(){return {...state.record};},get revision(){return state.revision;}};
+    if(query.get('hbds')==='1')await showHbdsEditor();
 }
 start().catch(fail);

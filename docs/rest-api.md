@@ -86,7 +86,7 @@ Anonymous list responses contain only bundled examples. Authenticated lists incl
 
 ### Configuration documents
 
-The [Model and YAML editor](model-editor.md) uses `/config-files` for system administrators and `/models/{id}/config-files` for model administrators. These documents
+The [HBDS Editor](model-editor.md) uses `/config-files` for system administrators and `/models/{id}/config-files` for model administrators. These documents
 are independent of datasets; deleting a configuration document never deletes
 events or sessions. All operations, including reads, require administrator access.
 Global documents are real files in `<API data directory>/config-files`; scoped documents use isolated `config-files-models/<modelId>` directories. Register

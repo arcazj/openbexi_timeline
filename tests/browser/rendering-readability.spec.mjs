@@ -47,7 +47,7 @@ test('Grouped timelines keep one readable date axis at the top through paging an
 });
 
 test('An explicit per-band model retains separate bottom date axes', async ({page}) => {
-    await page.route('**/models/demos/ephemeris.json', async route => {
+    await page.route('**/HBDS/templates/models/demos/ephemeris.json', async route => {
         const response = await route.fetch(), model = await response.json();
         model.params[0].dateAxisMode = 'per-band';
         await route.fulfill({response, json:model});

@@ -7,6 +7,7 @@ if defined OPENBEXI_TIMELINE_HOME (
   set "OB_LAUNCH_ROOT=%~dp0"
 )
 for %%I in ("%OB_LAUNCH_ROOT%") do set "OB_LAUNCH_ROOT=%%~fI"
+if defined OPENBEXI_HBDS_CONFIG for %%I in ("%OPENBEXI_HBDS_CONFIG%") do set "OPENBEXI_HBDS_CONFIG=%%~fI"
 set "OB_LAUNCH_JAVA=java.exe"
 if defined JAVA_HOME set "OB_LAUNCH_JAVA=%JAVA_HOME%\bin\java.exe"
 if defined JDK_HOME set "OB_LAUNCH_JAVA=%JDK_HOME%\bin\java.exe"
@@ -18,9 +19,10 @@ if not exist "%OB_LAUNCH_ROOT%\target\classes\com\openbexi\timeline\server\openb
 if not exist "%OB_LAUNCH_ROOT%\target\runtime\*.jar" goto missingBuild
 set "OB_LAUNCH_CONFIG="
 if not "%~1"=="" goto explicitConfig
-set "OB_LAUNCH_CONFIG=%OB_LAUNCH_ROOT%\yaml\sources_startup.yml"
+set "OB_LAUNCH_CONFIG=%OB_LAUNCH_ROOT%\HBDS\templates\default.hbds.json"
 if defined OPENBEXI_TIMELINE_DATA_PATH set "OB_LAUNCH_CONFIG=%OPENBEXI_TIMELINE_DATA_PATH%"
 if defined OPENBEXI_TIMELINE_CONFIG set "OB_LAUNCH_CONFIG=%OPENBEXI_TIMELINE_CONFIG%"
+if defined OPENBEXI_HBDS_CONFIG set "OB_LAUNCH_CONFIG=%OPENBEXI_HBDS_CONFIG%"
 goto resolveConfig
 :explicitConfig
 if not "%~3"=="" goto run
@@ -29,10 +31,7 @@ if "%~1"=="-data_path" set "OB_LAUNCH_CONFIG=%~2"
 if not defined OB_LAUNCH_CONFIG goto run
 :resolveConfig
 for %%I in ("%OB_LAUNCH_CONFIG%") do set "OB_LAUNCH_CONFIG=%%~fI"
-if not exist "%OB_LAUNCH_CONFIG%" (
-  echo Configuration not found. Pass -data_conf with an existing YAML file or set OPENBEXI_TIMELINE_CONFIG. Local startup configurations are not shipped with the release.
-  exit /b 1
-)
+rem The server resolves HBDS migration aliases before checking the selected file.
 :run
 pushd "%OB_LAUNCH_ROOT%" || exit /b 1
 if not exist tomcat mkdir tomcat

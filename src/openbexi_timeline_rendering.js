@@ -8,6 +8,8 @@ const choice = (value, values, description) => ({type:'string',default:value,enu
 const bool = (value, description) => ({type:'boolean',default:value,description});
 const text = (value, description) => ({type:'string',default:value,minLength:1,maxLength:160,description});
 const group = (description, properties) => ({type:'object',additionalProperties:false,description,properties});
+export const BACKGROUND_IMAGE_SCHEMA = {type:['string','null'],default:null,minLength:1,maxLength:2048,
+    pattern:'^[^\\u0000-\\u001f\\u007f]+$',description:'Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color.'};
 // Reference pose from the supplied perspective screenshot. Camera fitting scales
 // the pose to the available board; saved user poses remain relative to that board.
 export const PERSPECTIVE_PRESET=freeze({
@@ -19,6 +21,7 @@ export const PERSPECTIVE_PRESET=freeze({
 export const RENDERING_SCHEMA = group('Optional rendering settings. Omitted properties retain the existing presentation.', {
     theme:group('Scene and optional application surface colors.',{
         sceneBackground:color('#f7f9fc','Canvas background.'),
+        sceneBackgroundImage:{...BACKGROUND_IMAGE_SCHEMA},
         headerBackground:optionalColor('Header background; null keeps the stylesheet theme.'),
         panelBackground:optionalColor('Timeline panel background; null keeps the stylesheet theme.'),
         panelText:optionalColor('Panel text color; null keeps the stylesheet theme.')

@@ -102,7 +102,7 @@ const titles=[
 const records=titles.map((title,index)=>({id:'activity-'+index,start:new Date(base+(index-1)*hour).toISOString(),namespace:'volcano',data:{title}}));
 async function setup(page,{dense=false,compact=false,markers=false,textureIcon=false}={}) {
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
-    const model=JSON.parse(await fs.readFile('models/regular_timeline_earthquake.json','utf8'));
+    const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     Object.assign(model.params[0],{date:new Date(base).toISOString(),data:'/__focus.json',showCurrentTime:false});
     const events=compact?Array.from({length:20},(_,index)=>({...records[index%3],id:'compact-'+index,
         start:new Date(base+(index-10)*4*60000).toISOString(),end:new Date(base+(index-10)*4*60000+90000).toISOString(),
@@ -114,7 +114,7 @@ async function setup(page,{dense=false,compact=false,markers=false,textureIcon=f
         events[2].end=new Date(base+hour+15*60000).toISOString();
         await page.route('**/missing-activity-icon.png',route=>route.fulfill({status:404,body:'Not found'}));
     }
-    await page.route('**/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
+    await page.route('**/HBDS/templates/models/regular_timeline_earthquake.json',route=>route.fulfill({json:model}));
     await page.route('**/__focus.json',route=>route.fulfill({json:{events}}));
     await page.goto('/openbexi_timeline_earthquake.html');await ready(page);
     return {errors,events};

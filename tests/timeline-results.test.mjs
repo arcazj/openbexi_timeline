@@ -19,7 +19,7 @@ async function load() {
     const h = await createTimelineHarness();
     const {OB_TIMELINE} = await h.importModule('src/openbexi_timeline.js');
     const t = new OB_TIMELINE({autoStart:false});
-    const model = JSON.parse(await fs.readFile(new URL('../models/regular_timeline_earthquake.json', import.meta.url), 'utf8'));
+    const model = JSON.parse(await fs.readFile(new URL('../HBDS/templates/models/regular_timeline_earthquake.json', import.meta.url), 'utf8'));
     t.params = model.params;
     Object.assign(t.params[0], {date: '2026-09-12T12:30:00Z', width: 1100, height: 650, dockOverview: true, showCurrentTime: false});
     t.bands = model.bands;
@@ -243,7 +243,7 @@ async function connectedStartup(modelName = 'regular_timeline_earthquake.json', 
     const {OB_TIMELINE} = await h.importModule('src/openbexi_timeline.js');
     const t = new OB_TIMELINE({autoStart:false});
     t.progressiveLoading=false; // Retain coverage of the compatible foreground/SSE path.
-    const model = JSON.parse(await fs.readFile(new URL('../models/' + modelName, import.meta.url), 'utf8'));
+    const model = JSON.parse(await fs.readFile(new URL('../HBDS/templates/models/' + modelName, import.meta.url), 'utf8'));
     t.params = model.params; t.bands = model.bands;
     Object.assign(t.params[0], {data:'http://localhost/sessions',date:'2026-09-12T12:30:00Z',width:1100,height:650,showCurrentTime:false}, dimensions);
     const requests=[];
