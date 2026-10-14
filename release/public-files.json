@@ -632,6 +632,7 @@
   "yaml/service.yaml",
   "yaml/sources_container.yml",
   "yaml/sources_default.yml",
+  "yaml/source_template.yml",
   "yaml/sources_default_test.yml",
   "yaml/sources_earthquake.yml",
   "yaml/test-data/default-dataset.yml",

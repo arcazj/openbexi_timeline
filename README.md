@@ -26,6 +26,10 @@ Open [the local demo](http://localhost:8780/demos.html). The supplied datasets r
 without a Java server. For connected data, see [server setup](docs/connected-diagnostics.md)
 and [the REST API guide](docs/rest-api.md).
 
+For the separate Python collector, use the
+[source configuration template](yaml/source_template.yml). Its header lists the
+collector startup command and optional dependencies.
+
 Server logs default to readable INFO summaries and WARNING/SEVERE diagnostics.
 **Settings > Trace level** selects INFO (all three levels), WARNING (warnings and
 errors), or ERROR (errors only) for this browser's timeline messages and requests.
