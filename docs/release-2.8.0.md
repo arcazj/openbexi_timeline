@@ -30,4 +30,6 @@ Validation includes shared filter/search fixtures, Python integration tests, rea
 
 Local release validation passed 398 JavaScript tests (including the connected-save regression), 48 Python tests, and 152 Java tests with 34 legacy/environment-dependent tests skipped. Desktop/phone checks cover creation, cloning, unique names, cancellation, saved expressions, offline behavior and progressive loading. Real Java and Python HBDS browser checks cover authentication, revision conflicts, lazy tabs, scoped refresh and restart persistence. The legacy Java editor integration also passed.
 
+The complete browser run and focused reruns verify 329 scenarios, with seven conditional skips. Toolbar screenshot references were reviewed separately: every changed pixel is within the toolbar, matching the requested button removal and title styling.
+
 The 100,000-record benchmark passed 11 Java/Python record comparisons. Both servers completed all 20 warm loads; the Java cold scan reached its configured scan limit and reported partial coverage. Browser tests used one dataset request for load/search/grouping/builder interactions at both 1,000 and 10,000 records. At 10,000 records, builder expansion took 231 ms and grouping took 6.91 s with software rendering; grouping remains a performance limitation. See the [measurement details](python-server.md#validation-and-measurement).

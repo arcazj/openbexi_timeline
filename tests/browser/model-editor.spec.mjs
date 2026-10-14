@@ -217,14 +217,15 @@ test('Apply receives the editor acknowledgement before reloading the originating
 
 test('A server-configured application opens a focused editor with a compact heading, responsive preview and working Apply',async({page,context})=>{
     const errors=[];context.on('page',target=>target.on('pageerror',error=>errors.push(error.message)));
-    const html=(await fs.readFile('openbexi_timeline.html','utf8')).replace('const ob_timeline = new OB_TIMELINE();','const ob_timeline = window.connectedTimeline = new OB_TIMELINE();');
+    const html=await fs.readFile('openbexi_timeline.html','utf8');
     const model=JSON.parse(await fs.readFile('HBDS/templates/models/demos/monet.json','utf8'));
     model.params[0].title='Connected model';model.dataSource.url='/json/test-data/monet.json';
     await context.route('**/openbexi_timeline.html',route=>route.fulfill({contentType:'text/html',body:html}));
     await context.route('**/openbexi_timeline/config',route=>route.fulfill({json:{model:'models/connected-model.json'}}));
     await context.route('**/models/connected-model.json',route=>route.fulfill({json:model}));
-    await page.goto('/openbexi_timeline.html');await page.evaluate(()=>connectedTimeline.ready);
-    const before=await page.evaluate(()=>JSON.stringify(connectedTimeline.staticData));
+    await page.goto('/openbexi_timeline.html');await page.waitForFunction(()=>window.openbexiTimeline?.ready);
+    await page.evaluate(()=>window.openbexiTimeline.ready);
+    const before=await page.evaluate(()=>JSON.stringify(window.openbexiTimeline.staticData));
     await page.getByAltText('Settings',{exact:true}).click();
     const popup=page.waitForEvent('popup');await page.getByRole('button',{name:'HBDS Editor',exact:true}).click();const editor=await popup;
     await ready(editor);expect(new URL(editor.url()).searchParams.get('launch')).toBe('connected');
@@ -250,9 +251,10 @@ test('A server-configured application opens a focused editor with a compact head
     await expect(editor.locator('#dirty')).toHaveText('Unsaved changes');await editor.locator('#undo').click();await expect(title).toHaveValue('Connected model');
     await editor.locator('#redo').click();await expect(title).toHaveValue('Edited connected model');
     const download=editor.waitForEvent('download');await editor.locator('#export').click();expect((await download).suggestedFilename()).toBe('connected-model.json');
-    const reloaded=page.waitForEvent('domcontentloaded');await editor.locator('#apply').click();await reloaded;await page.evaluate(()=>connectedTimeline.ready);
-    expect(await page.evaluate(()=>connectedTimeline.params[0].title)).toBe('Edited connected model');
-    expect(await page.evaluate(()=>JSON.stringify(connectedTimeline.staticData))).toBe(before);
+    const reloaded=page.waitForEvent('domcontentloaded');await editor.locator('#apply').click();await reloaded;
+    await page.waitForFunction(()=>window.openbexiTimeline?.ready);await page.evaluate(()=>window.openbexiTimeline.ready);
+    expect(await page.evaluate(()=>window.openbexiTimeline.params[0].title)).toBe('Edited connected model');
+    expect(await page.evaluate(()=>JSON.stringify(window.openbexiTimeline.staticData))).toBe(before);
     await expect(editor.locator('#notice')).toContainText('applied');expect(errors).toEqual([]);await editor.close();
 });
 
