@@ -65,54 +65,66 @@ test('Occurrence keys stay internal while descriptor requests use the original e
         assert.equal(requested.searchParams.get('event_id'),'external-record');
         assert.ok(!panel.textContent.includes('sourceRecordKey'));assert.ok(!panel.textContent.includes('opaque-'));
         assert.match(panel.textContent,/external-record/);assert.match(panel.textContent,/external-child/);
+        assert.equal(panel.querySelector('details,summary'),null,'Activities and metadata are always expanded');
         cancelDescriptor(t);
     } finally {h.close();}
 });
 
-test('Details show readable dates, duration, source/status and collapsed complete metadata with safe copy controls',async()=>{
+test('Details prioritize ID and namespace with readable dates and always visible metadata',async()=>{
     const h=await createTimelineHarness();
     try {
         const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
         const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
         const t={name:'summary',staticData:{},ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
-        const record={id:'external-1',start:'2026-09-12T12:00:00Z',end:'2026-09-12T13:30:00Z',namespace:'Operations',
-            data:{title:'Inspection',status:'Ready',custom:'Detailed metadata',description:'<b>Safe description</b>'}};
+        const record={id:'external-1',recordKind:'event',start:'2026-09-12T12:00:00Z',end:'2026-09-12T13:30:00Z',namespace:'Operations',
+            data:{title:'Inspection',status:'Ready',type:'Session',custom:'Detailed metadata',description:'<b>Safe description</b>'}};
         renderDescriptor(t,0,record);
         const summary=panel.querySelector('.ob_descriptor_summary');
         assert.match(summary.textContent,/2026-09-12 12:00:00 UTC/);
         assert.match(summary.textContent,/1 hour 30 minutes/);
         assert.match(summary.textContent,/Operations/);assert.match(summary.textContent,/Ready/);
-        assert.equal(panel.querySelector('.ob_descriptor_fields').open,false);
+        assert.deepEqual([...summary.querySelectorAll('dt')].map(node=>node.textContent),['ID','Namespace','Status','Type','Start','End','Duration']);
+        assert.equal(panel.querySelector('details,summary'),null);
         assert.match(panel.querySelector('.ob_descriptor_fields').textContent,/Detailed metadata/);
+        assert.deepEqual([...panel.querySelectorAll('.ob_descriptor_fields th')].map(node=>node.textContent),['custom']);
         assert.equal(panel.querySelector('.ob_descriptor_description b').textContent,'Safe description');
-        let copied;
-        Object.defineProperty(h.window.navigator,'clipboard',{value:{writeText:async value=>{copied=value;}}});
-        await summary.querySelector('[aria-label="Copy Start"]').onclick();
-        assert.equal(copied,record.start);
-        assert.equal(panel.querySelector('.ob_descriptor_copy_status').textContent,'Start copied.');
-        panel.querySelector('.ob_descriptor_fields').open=true;
+        assert.equal(panel.querySelector('.ob_record_details').lastElementChild.className,'ob_descriptor_description_section');
+        assert.equal(panel.querySelector('[aria-label^="Copy"],.ob_descriptor_copy,textarea'),null);
         renderDescriptor(t,0,{...record,data:{...record.data,custom:'Updated metadata'}});
-        assert.equal(panel.querySelector('.ob_descriptor_fields').open,true,'Fetching details preserves the expanded fields');
+        assert.equal(panel.querySelector('details,summary'),null,'Fetched metadata stays expanded');
+        assert.match(panel.querySelector('.ob_descriptor_fields').textContent,/Updated metadata/);
         renderDescriptor(t,0,{id:'different',start:record.start,data:{title:'Instant'}});
-        assert.equal(panel.querySelector('.ob_descriptor_fields').open,false);
+        assert.equal(panel.querySelector('.ob_descriptor_fields'),null);
         assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/Instant event/);
     } finally {h.close();}
 });
 
-test('Clipboard restrictions fall back to selectable original values and announce the outcome',async()=>{
+test('Full formatted descriptions appear once after all visible metadata, without a flattened preview',async()=>{
     const h=await createTimelineHarness();
     try {
         const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
         const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
-        const t={name:'copy',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
-        renderDescriptor(t,0,{id:'original-id',start:0,data:{title:'At epoch'}});
-        const button=panel.querySelector('[aria-label="Copy ID"]');
-        await button.onclick();
-        const fallback=panel.querySelector('textarea');
-        assert.equal(fallback.value,'original-id');assert.equal(fallback.readOnly,true);
-        assert.equal(h.window.document.activeElement,fallback);assert.equal(fallback.selectionEnd,'original-id'.length);
-        assert.match(panel.querySelector('.ob_descriptor_copy_status').textContent,/Select and copy/);
-        assert.equal(panel.querySelector('[aria-label="Copy Start"]').disabled,false,'Zero timestamps have a copy control');
+        const t={name:'compact',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
+        const description='<b>'+ 'Detailed report. '.repeat(30)+'</b><br><a href="https://example.org/report">Full report</a>';
+        renderDescriptor(t,0,{id:0,start:0,namespace:' ',data:{title:'At epoch',status:'',type:null,namespace:'Operations',empty:[],blank:'  ',count:0,enabled:false,description}});
+        const summary=panel.querySelector('.ob_descriptor_summary');
+        assert.deepEqual([...summary.querySelectorAll('dt')].map(node=>node.textContent),['ID','Namespace','Start','Duration']);
+        assert.equal(summary.querySelector('dd').textContent,'0');
+        assert.equal(panel.querySelector('.ob_descriptor_namespace').textContent,'Operations');
+        assert.equal(panel.querySelector('.ob_descriptor_preview'),null);
+        const more=panel.querySelector('.ob_descriptor_fields');assert.equal(more.tagName,'DIV');
+        assert.equal(panel.querySelector('details,summary'),null);
+        const full=panel.querySelector('.ob_descriptor_description');
+        assert.equal(panel.querySelectorAll('.ob_descriptor_description').length,1);
+        assert.equal(full.closest('details'),null);
+        assert.equal(full.textContent,'Detailed report. '.repeat(30)+'Full report');
+        assert.equal(full.querySelectorAll('br').length,1);
+        assert.equal(full.querySelector('a').href,'https://example.org/report');
+        assert.equal(panel.querySelector('.ob_record_details').lastElementChild,full.parentElement);
+        assert.equal(summary.nextElementSibling,more,'No description preview follows Duration');
+        assert.deepEqual([...more.querySelectorAll('th')].map(node=>node.textContent),['count','enabled']);
+        assert.match(more.textContent,/count0enabledfalse/);
+        assert.equal(panel.querySelector('[aria-label^="Copy"],textarea'),null);
     } finally {h.close();}
 });
 
@@ -131,14 +143,15 @@ test('Descriptor duration follows numeric-axis units and handles historical time
     } finally {h.close();}
 });
 
-test('Descriptor summary falls back to source metadata when normalized namespaces are empty',async()=>{
+test('Source metadata remains secondary and is never mislabeled as namespace',async()=>{
     const h=await createTimelineHarness();
     try {
         const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
         const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
         const t={name:'source',ob_timeline_right_panel:panel,ob_remove_descriptor:()=>{}};
         renderDescriptor(t,0,{id:'report',start:0,namespace:'',data:{title:'Report',namespace:'',source:'Original provider'}});
-        const source=[...panel.querySelectorAll('.ob_descriptor_summary dt')].find(term=>term.textContent==='Source');
+        assert.ok(![...panel.querySelectorAll('.ob_descriptor_summary dt')].some(term=>['Source','Namespace'].includes(term.textContent)));
+        const source=[...panel.querySelectorAll('.ob_descriptor_fields th')].find(term=>term.textContent==='source');
         assert.equal(source.nextElementSibling.textContent,'Original provider');
     } finally {h.close();}
 });

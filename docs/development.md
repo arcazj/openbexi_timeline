@@ -68,7 +68,10 @@ references before publishing.
 1. Choose the next version using the existing release sequence. Synchronize
    `package.json`, both root versions in `package-lock.json`, `pom.xml`,
    `help/resources.json`, the header in `src/openbexi_timeline.js`, and the
-   version shown in both user guides. The OpenAPI contract has its own version.
+   version shown in both user guides. Also synchronize `pyproject.toml`, Python
+   package/CLI versions, the Java startup response and their version assertions.
+   Historical release notes and benchmark measurements retain their original
+   version. The OpenAPI contract has its own version.
 2. Add `docs/release-<version>.md` with changes, upgrade information and the
    actual validation results. Link it from the documentation index.
 3. Update `release/public-files.json` for new public sources, tests and guides.
@@ -86,8 +89,8 @@ references before publishing.
    successfully for that commit, then tag it as `v<version>` and push the tag.
 7. The **Release Windows installer** workflow builds and tests the tagged source,
    then publishes its Windows installer, source archive, checksums and required
-   release notes. Older Git tags are removed only after the complete release is
-   verified; older release records and downloads remain available. Never publish
+   release notes. Historical Git tags, release records and downloads remain
+   available. Never publish
    a release without the installer and notes. See [Windows packaging](windows-installation.md).
    Confirm the deployed `version.json` identifies the release commit, then verify
    the live demo flows. Synchronize local tags with

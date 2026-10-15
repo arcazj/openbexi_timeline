@@ -46,17 +46,24 @@ Namespace navigation is inside **Sorting & Filtering**, in its always-expanded
 **Namespaces** section. Switching there keeps the panel open and reuses visited
 timelines; no namespace bar occupies the top of the page.
 
-The HBDS Editor adds a namespace workspace to the existing model editor. Connect
-using the configured system administrator token. Forms are built from schemas as
-sections open. Save checks the whole document, references and revision before
+The HBDS Editor connects automatically when opened from the local running Java or
+Python server; no token entry or Connect button is needed. If the server is still
+starting, the editor retries every five seconds until connected. The current
+namespace, tab and live model preview open together; selecting another namespace
+or tab updates the properties and preview. Forms are built from schemas as
+sections open. Tab labels and other nonvisual edits keep preview data loaded.
+Save checks the whole document, references and revision before
 replacing the canonical file atomically. A conflict keeps the draft intact. Undo,
 cancel and advanced JSON remain available. There is no periodic browser polling
 for configuration changes.
 
 The public startup response contains selected UI configuration, tab metadata and
 namespace identity. Private documents, provider credentials and user/group lists
-are never static assets. Global HBDS read/write APIs require a system administrator
-credential (`OPENBEXI_API_TOKEN`); tokens are kept in editor memory. The modeled
+are never static assets. Direct same-origin loopback editor requests can read and
+write HBDS without a token. Both the client address and Host must be local, and
+cross-origin or forwarded requests do not qualify. Other HBDS API clients require
+a system administrator credential (`OPENBEXI_API_TOKEN`). This local access applies
+only to HBDS; other administration APIs retain their authorization checks. The modeled
 role/group/grant policy is validated as configuration. Existing legacy sessions
 authorization is not replaced by this migration; adding users or grants does not
 silently establish a new login or data-access system.

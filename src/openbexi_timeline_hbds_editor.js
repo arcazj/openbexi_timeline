@@ -24,9 +24,10 @@ export class HbdsEditorDraft {
 }
 
 export class HbdsEditorClient {
-    constructor(baseURL,token,fetcher=(...args)=>fetch(...args)){this.baseURL=baseURL.replace(/\/$/,'');this.token=token;this.fetch=fetcher;}
+    constructor(baseURL,token='',fetcher=(...args)=>fetch(...args)){this.baseURL=baseURL.replace(/\/$/,'');this.token=token;this.fetch=fetcher;}
     async request({method='GET',document,revision,resource=''}={}){
-        const headers={Accept:'application/json',Authorization:'Bearer '+this.token};
+        const headers={Accept:'application/json','X-OpenBEXI-HBDS':'local-editor'};
+        if(this.token)headers.Authorization='Bearer '+this.token;
         if(document!==undefined)headers['Content-Type']='application/json';
         if(method==='PUT'){if(!revision)throw new Error('Reload HBDS to obtain its revision before saving.');headers['If-Match']=revision.startsWith('"')?revision:JSON.stringify(revision);}
         const response=await this.fetch(this.baseURL+resource,{method,headers,cache:'no-store',body:document===undefined?undefined:JSON.stringify(document)});
@@ -43,36 +44,48 @@ const title=key=>String(key).replace(/([a-z])([A-Z])/g,'$1 $2').replaceAll('_','
 const references={namespaceId:'namespaces',defaultNamespaceId:'namespaces',modelId:'models',groupId:'groups',roleId:'roles'};
 
 /** Compact namespace workspace; object forms are built only when their section opens. */
-export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL('../api/v1/hbds',import.meta.url).href,onSaved}={}){
-    let client,draft,schema={},modelSchema={},selection=namespaceId,area='namespace',busy=false,invalidText=false,disposed=false;
-    const heading=element('div',undefined,{class:'hbds-toolbar'}),connect=button('Connect to HBDS',()=>connectServer().catch(fail));
-    const back=button('Back to model preview',()=>{if(canLeave()){if(draft){draft.cancel();invalidText=false;render();}onClose?.();}});
-    heading.append(element('h2','Namespaces and tabs'),back,connect);
-    const notice=element('p','Connect with an administrator token to edit HBDS configuration.',{role:'status','aria-live':'polite'});
+export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPreview,askProperty=async()=>window.prompt('Property name'),baseURL=new URL('../api/v1/hbds',import.meta.url).href,onSaved}={}){
+    let client,draft,schema={},modelSchema={},selection=namespaceId,selectedTab=tabId,area='namespace',busy=false,invalidText=false,disposed=false;
+    let retryTimer;
+    const heading=element('div',undefined,{class:'hbds-toolbar'});
+    const context=element('div',undefined,{class:'hbds-context'}),modelLabel=element('span','',{class:'hbds-model-label'});
+    heading.append(element('h2','Namespaces and tabs'),modelLabel);
+    const notice=element('p','Connecting to the running server…',{role:'status','aria-live':'polite',class:'hbds-notice'});
     const errors=element('p','',{role:'alert',class:'hbds-errors'});errors.hidden=true;
     const controls=element('div',undefined,{class:'hbds-toolbar'}),select=element('select',undefined,{'aria-label':'HBDS namespace'});
     const label=element('label','Namespace ');label.append(select);
+    const tabs=element('select',undefined,{'aria-label':'HBDS timeline tab'}),tabLabel=element('label','Timeline tab ');tabLabel.append(tabs);
+    context.append(label,tabLabel);
     const save=button('Save and apply',()=>saveDraft().catch(fail));save.className='primary';
     const undo=button('Undo',()=>{draft.undo();invalidText=false;render();});
     const cancel=button('Cancel changes',()=>{if(canLeave()){draft.cancel();invalidText=false;render();}});
     const reload=button('Reload saved',()=>{if(canLeave())load().catch(fail);});
-    controls.append(label,save,undo,cancel,reload);
-    const revision=element('p','',{class:'property-description'}),navigation=element('nav',undefined,{'aria-label':'HBDS configuration areas',class:'area-nav'});
+    const revision=element('span','',{class:'hbds-draft-state'});
+    controls.append(save,undo,cancel,reload,revision);
+    const navigation=element('nav',undefined,{'aria-label':'HBDS configuration areas',class:'area-nav'});
     const areas={namespace:'Namespace',model:'Model and appearance',sources:'Sources',tabs:'Tabs',access:'Access',deployment:'Deployment',advanced:'Advanced JSON'};
     for(const [id,name] of Object.entries(areas))navigation.append(button(name,()=>{if(invalidText){fail(new Error('Correct the JSON syntax or cancel changes before switching sections.'));return;}area=id;renderBody();}));
-    const body=element('div',undefined,{class:'hbds-properties'}),workspace=element('section',undefined,{'aria-label':'HBDS configuration'});
-    workspace.hidden=true;workspace.append(controls,revision,navigation,body);host.append(heading,notice,errors,workspace);
-    select.onchange=()=>{selection=select.value;renderBody();};
+    const body=element('div',undefined,{class:'hbds-properties'}),workspace=element('section',undefined,{'aria-label':'HBDS configuration',class:'hbds-workspace'});
+    const sidebar=element('section',undefined,{class:'hbds-sidebar','aria-label':'HBDS properties'});
+    sidebar.append(navigation,body);workspace.append(sidebar);if(previewPanel)workspace.append(previewPanel);
+    workspace.hidden=true;host.append(heading,context,controls,notice,errors,workspace);
+    select.onchange=()=>{selection=select.value;selectedTab='';render();};
+    tabs.onchange=()=>{selectedTab=tabs.value;selection=draft.value.tabs.find(tab=>tab.id===selectedTab)?.namespaceId||selection;render();};
     function fail(error){if(disposed)return;errors.hidden=false;errors.textContent=error.message||String(error);update();}
     function canLeave(){return !(draft?.dirty||invalidText)||confirm('Discard unsaved HBDS changes?');}
-    function update(){const editable=Boolean(draft)&&!busy;save.disabled=!editable||invalidText||!draft?.dirty;undo.disabled=!editable||!draft?.history.length;cancel.disabled=!editable||!(draft?.dirty||invalidText);reload.disabled=!editable;connect.disabled=busy;body.inert=busy;select.disabled=busy;revision.textContent=draft?`Revision ${draft.revision} · ${draft.dirty||invalidText?'Unsaved changes':'Saved'}`:'';}
+    function update(){const editable=Boolean(draft)&&!busy;save.disabled=!editable||invalidText||!draft?.dirty;undo.disabled=!editable||!draft?.history.length;cancel.disabled=!editable||!(draft?.dirty||invalidText);reload.disabled=!editable;body.inert=busy;select.disabled=!editable||invalidText;tabs.disabled=!editable||invalidText||!draft?.value.tabs?.length;revision.textContent=draft?(draft.dirty||invalidText?'Unsaved changes':'Saved'):'';revision.dataset.dirty=String(Boolean(draft?.dirty||invalidText));revision.title=draft?`Revision ${draft.revision}`:'';}
     async function connectServer(){
-        if(client){if(!canLeave())return;client=null;draft=null;schema={};modelSchema={};body.replaceChildren();workspace.hidden=true;connect.textContent='Connect to HBDS';notice.textContent='Disconnected. The administrator token was discarded.';update();return;}
-        const token=await ask('Connect to HBDS','Administrator token','','Kept in memory for this editor session.',true);if(!token)return;
-        const next=new HbdsEditorClient(baseURL,token);busy=true;update();
+        if(disposed||busy||client)return;
+        clearTimeout(retryTimer);
+        const next=new HbdsEditorClient(baseURL);busy=true;update();
         try{const result=await next.request();if(!result.document||!result.revision)throw new Error('The server did not provide an HBDS document and revision.');validateHbdsDocument(result.document);
             const [fields,models]=await Promise.all([next.request({resource:'/schema'}).catch(()=>({})),fetch(new URL('../schemas/demo-model.schema.json',import.meta.url)).then(r=>r.ok?r.json():{}).catch(()=>({}))]);
-            if(disposed)return;schema=fields.schema||fields;modelSchema=models;client=next;draft=new HbdsEditorDraft(result.document,result.revision);connect.textContent='Disconnect HBDS';workspace.hidden=false;notice.textContent='Edit a draft, then save and apply. Source, connector and deployment changes may require a server restart.';render();
+            if(disposed)return;schema=fields.schema||fields;modelSchema=models;client=next;draft=new HbdsEditorDraft(result.document,result.revision);workspace.hidden=false;errors.hidden=true;notice.textContent='Connected · Preview your edits, then Save and apply.';render();
+        }catch(error){
+            if(disposed)return;fail(error);
+            const retry=!error.status||error.status>=500;
+            notice.textContent=retry?'Server unavailable. Retrying automatically…':'HBDS is unavailable from this address. Open the editor from the local running server.';
+            if(retry)retryTimer=setTimeout(connectServer,5000);
         }finally{busy=false;update();}
     }
     async function load(){busy=true;update();try{const result=await client.request();validateHbdsDocument(result.document);draft=new HbdsEditorDraft(result.document,result.revision);invalidText=false;errors.hidden=true;render();}finally{busy=false;update();}}
@@ -84,7 +97,7 @@ export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL
             try{window.opener?.postMessage(message,location.origin);}catch{ /* Other open HBDS hosts receive the broadcast. */ }onSaved?.(result);
         }finally{busy=false;update();}
     }
-    function changed(path,value,remove=false){try{draft.mutate(path,value,remove);errors.hidden=true;update();}catch(error){fail(error);}}
+    function changed(path,value,remove=false){try{draft.mutate(path,value,remove);errors.hidden=true;syncSelection();update();}catch(error){fail(error);}}
     function entityDefault(kind){
         const value=schemaDefault(schema.properties?.[kind]?.items||{type:'object'},schema);const item=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
         item.id='hbds-'+crypto.randomUUID();
@@ -98,10 +111,18 @@ export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL
         if(kind==='grants')Object.assign(item,{groupId:draft.value.groups[0]?.id||'',namespaceId:selection,permission:'denied'});
         return item;
     }
-    function render(){
-        const options=draft.value.namespaces;selection=options.some(n=>n.id===selection)?selection:draft.value.defaultNamespaceId||options[0]?.id||'';
-        select.replaceChildren(...options.map(n=>new Option(n.namespace||n.id,n.id)));select.value=selection;renderBody();
+    function syncSelection(){
+        const options=draft.value.namespaces||[],items=[...(draft.value.tabs||[])].sort((a,b)=>a.order-b.order);
+        selection=options.some(n=>n.id===selection)?selection:options.find(n=>n.id===draft.value.defaultNamespaceId)?.id||options[0]?.id||'';
+        if(!items.some(tab=>tab.id===selectedTab&&tab.namespaceId===selection))selectedTab=(items.find(tab=>tab.namespaceId===selection&&tab.enabled)||items.find(tab=>tab.namespaceId===selection))?.id||'';
+        select.replaceChildren(...options.map(n=>new Option(n.namespace||n.id,n.id)));select.value=selection;
+        tabs.replaceChildren(...items.map(tab=>new Option(`${tab.title||tab.id}${tab.enabled?'':' (disabled)'}`,tab.id)));
+        if(!selectedTab)tabs.prepend(new Option('No tab for this namespace',''));tabs.value=selectedTab;
+        const namespace=options.find(n=>n.id===selection),model=draft.value.models?.find(item=>item.id===namespace?.modelId),tab=items.find(item=>item.id===selectedTab);
+        modelLabel.textContent=model?`Model: ${model.configuration?.params?.[0]?.title||model.id}`:'No model selected';
+        onPreview?.({namespace:clone(namespace),model:clone(model),tab:clone(tab)});
     }
+    function render(){syncSelection();renderBody();}
     function field(value,definition,path,name,required=false){
         const root=path[0]==='models'&&path.includes('configuration')?modelSchema:schema;
         definition=resolveSchema(definition||{},root,value);
@@ -118,7 +139,7 @@ export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL
                     for(const [key,item] of Object.entries(current))group.append(field(item,path[0]==='models'&&key==='configuration'?modelSchema:definition.properties?.[key],[...path,key],key,definition.required?.includes(key)));
                     const missing=Object.keys(definition.properties||{}).filter(key=>!(key in current)&&key!=='$schema');
                     if(missing.length){const add=element('select',undefined,{'aria-label':`Optional field in ${path.join('.')}`});add.append(new Option('Add optional field…',''),...missing.map(key=>new Option(title(key),key)));group.append(add,button('Add field',()=>{if(add.value){changed([...path,add.value],schemaDefault(definition.properties[add.value],root));render();}}));}
-                    if(definition.additionalProperties!==false)group.append(button('Add property',async()=>{const key=await ask('Add property','Property name');if(key){if(Object.hasOwn(current,key)){fail(new Error('This property already exists.'));return;}changed([...path,key],'');render();}}));
+                    if(definition.additionalProperties!==false)group.append(button('Add property',async()=>{const key=await askProperty();if(key){if(Object.hasOwn(current,key)){fail(new Error('This property already exists.'));return;}changed([...path,key],'');render();}}));
                 }
             };
             group.addEventListener('toggle',()=>{if(group.open)build();});
@@ -126,7 +147,7 @@ export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL
             return group;
         }
         const row=element('label',undefined,{class:'property-field'}),caption=element('span',title(name));let input;
-        const reference=path.at(-2)==='connectorIds'?'connectors':references[name];
+        const reference=path.at(-2)==='connectorIds'?'connectors':references[path.at(-1)];
         const choices=reference?draft.value[reference].map(item=>({value:item.id,label:item.namespace||item.name||(item.protocol?`${item.protocol}:${item.port}`:item.id)})):definition.enum?.map(item=>({value:item,label:String(item)}));
         if(choices){input=element('select');if(!choices.some(item=>item.value===value))input.append(new Option(String(value),String(value)));for(const choice of choices)input.append(new Option(choice.label,String(choice.value)));input.value=String(value);}
         else if(typeof value==='boolean'){input=element('input',undefined,{type:'checkbox'});input.checked=value;}
@@ -153,9 +174,10 @@ export function mountHbdsEditor(host,{ask,onClose,namespaceId='',baseURL=new URL
         if(area==='tabs'){body.append(element('p','Tabs reference a namespace and use its model. Tabs load only when opened.',{class:'property-description'}));collection('tabs');}
         if(area==='access')for(const key of ['users','groups','roles','grants'])collection(key);
         if(area==='deployment'){body.append(element('p','Server and ingestion settings require a restart. Changes are validated before saving.',{class:'property-description'}),field(draft.value.deployment,schema.properties?.deployment,['deployment'],'Deployment',true));}
-        if(area==='advanced'){const label=element('label','Complete HBDS document'),text=element('textarea',JSON.stringify(draft.value,null,2),{'aria-label':'HBDS JSON',spellcheck:'false'});label.append(text);body.append(label);text.addEventListener('input',()=>{try{draft.replace(JSON.parse(text.value));invalidText=false;errors.hidden=true;}catch(error){invalidText=true;fail(error);}update();});}
+        if(area==='advanced'){const label=element('label','Complete HBDS document'),text=element('textarea',JSON.stringify(draft.value,null,2),{'aria-label':'HBDS JSON',spellcheck:'false'});label.append(text);body.append(label);text.addEventListener('input',()=>{try{const value=JSON.parse(text.value);if(!value||!['namespaces','models','tabs'].every(key=>Array.isArray(value[key])))throw new Error('HBDS requires namespaces, models and tabs collections.');draft.replace(value);invalidText=false;errors.hidden=true;syncSelection();}catch(error){invalidText=true;fail(error);}update();});}
         update();
     }
     const unload=event=>{if(draft?.dirty||invalidText){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',unload);update();
-    return {get dirty(){return Boolean(draft?.dirty||invalidText);},get document(){return draft?clone(draft.value):null;},connect:connectServer,dispose(){disposed=true;client=null;window.removeEventListener('beforeunload',unload);host.replaceChildren();}};
+    const ready=connectServer();
+    return {ready,get dirty(){return Boolean(draft?.dirty||invalidText);},get document(){return draft?clone(draft.value):null;},refreshPreview(){if(draft&&!invalidText)syncSelection();},dispose(){disposed=true;clearTimeout(retryTimer);client=null;window.removeEventListener('beforeunload',unload);host.replaceChildren();}};
 }

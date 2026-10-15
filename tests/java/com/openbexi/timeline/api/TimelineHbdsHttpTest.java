@@ -78,6 +78,33 @@ class TimelineHbdsHttpTest {
         start(false);assertEquals(503,call("GET","api/v1/hbds",admin,null,null).statusCode());
         assertEquals("data_sources: []\n",Files.readString(configuration));
     }
+    @Test void localEditorConnectsWithoutTokenAndStillRequiresRevision() throws Exception {
+        start(true);
+        HttpRequest.Builder local=HttpRequest.newBuilder(base.resolve("api/v1/hbds")).header("X-OpenBEXI-HBDS","local-editor").header("Origin",base.toString().replaceFirst("/$",""));
+        HttpResponse<String> read=client.send(local.GET().build(),HttpResponse.BodyHandlers.ofString());assertEquals(200,read.statusCode(),read.body());
+        JSONObject document=new JSONObject(read.body()).getJSONObject("document");document.getJSONArray("tabs").getJSONObject(0).put("title","Local editor");
+        local.header("Content-Type","application/json").PUT(HttpRequest.BodyPublishers.ofString(document.toString()));
+        assertEquals(428,client.send(local.build(),HttpResponse.BodyHandlers.ofString()).statusCode());
+        local.header("If-Match",read.headers().firstValue("ETag").orElseThrow());
+        assertEquals(200,client.send(local.build(),HttpResponse.BodyHandlers.ofString()).statusCode());
+        assertEquals(412,client.send(local.build(),HttpResponse.BodyHandlers.ofString()).statusCode());
+        for(String[] header:new String[][]{{"Origin","https://other.example"},{"Origin","null"},{"Sec-Fetch-Site","cross-site"},{"X-Forwarded-For","127.0.0.1"}}) {
+            HttpRequest request=HttpRequest.newBuilder(base.resolve("api/v1/hbds")).header("X-OpenBEXI-HBDS","local-editor").header(header[0],header[1]).GET().build();
+            assertEquals(401,client.send(request,HttpResponse.BodyHandlers.ofString()).statusCode(),header[0]);
+        }
+        HttpRequest unrelated=HttpRequest.newBuilder(base.resolve("api/v1/me")).header("X-OpenBEXI-HBDS","local-editor").GET().build();
+        assertEquals(401,client.send(unrelated,HttpResponse.BodyHandlers.ofString()).statusCode());
+    }
+    @Test void localEditorRejectsRemotePeerAndUntrustedHost() {
+        for(String[] address:new String[][]{{"192.0.2.10","localhost"},{"127.0.0.1","other.example"}}) {
+            javax.servlet.http.HttpServletRequest request=(javax.servlet.http.HttpServletRequest)java.lang.reflect.Proxy.newProxyInstance(
+                    getClass().getClassLoader(),new Class[]{javax.servlet.http.HttpServletRequest.class},(proxy,method,args)->switch(method.getName()) {
+                        case "getRemoteAddr"->address[0];case "getServerName"->address[1];
+                        case "getHeader"->"X-OpenBEXI-HBDS".equals(args[0])?"local-editor":null;default->null;
+                    });
+            assertFalse(TimelineApiServlet.localHbdsEditor(request));
+        }
+    }
     @Test void liveNamespaceFiltersChangeRecordsAndTabNamespaceRequestsStayScoped() throws Exception {
         start(true);String range="openbexi_timeline/sessions?startDate=2026-09-12T11:00:00Z&endDate=2026-09-12T13:00:00Z&scene=0&namespace=EXAMPLE&matchProtocol=1&progressive=1";
         assertEquals(2,records(range).length());

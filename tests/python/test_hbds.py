@@ -205,6 +205,30 @@ class HBDSTests(unittest.TestCase):
             self.assertEqual(404, client.get("/" + unlisted).status_code)
             self.assertEqual(404, client.get("/HBDS/private/configurations/example.hbds.json").status_code)
 
+    def test_local_editor_without_token_and_cross_origin_boundaries(self):
+        _, app = self.client()
+        headers = {"X-OpenBEXI-HBDS": "local-editor", "Origin": "http://127.0.0.1"}
+        with TestClient(app, base_url="http://127.0.0.1", client=("127.0.0.1", 50000)) as client:
+            response = client.get("/api/v1/hbds", headers=headers)
+            self.assertEqual(200, response.status_code)
+            self.assertEqual(200, client.get("/api/v1/hbds/schema", headers=headers).status_code)
+            edit = response.json()["document"]
+            edit["tabs"][0]["title"] = "Saved locally"
+            self.assertEqual(428, client.put("/api/v1/hbds", headers=headers, json=edit).status_code)
+            conditional = {**headers, "If-Match": response.headers["etag"]}
+            self.assertEqual(200, client.put("/api/v1/hbds", headers=conditional, json=edit).status_code)
+            self.assertEqual(412, client.put("/api/v1/hbds", headers=conditional, json=edit).status_code)
+            for changed in ({"Origin": "https://other.example"}, {"Origin": "null"},
+                            {"Origin": "http://127.0.0.1:8000"}, {"Host": "other.example"},
+                            {"X-Forwarded-For": "127.0.0.1"}, {"Sec-Fetch-Site": "cross-site"},
+                            {"X-OpenBEXI-HBDS": ""}):
+                with self.subTest(changed=changed):
+                    self.assertEqual(401, client.get("/api/v1/hbds", headers={**headers, **changed}).status_code)
+            self.assertEqual(403, client.get("/api/v1/hbds", headers={**headers, "Authorization": "Bearer reader-test-token-12345678901234567890"}).status_code)
+            self.assertEqual(503, client.get("/api/v1/me", headers=headers).status_code)
+        with TestClient(app, base_url="http://127.0.0.1", client=("192.0.2.10", 50000)) as remote:
+            self.assertEqual(401, remote.get("/api/v1/hbds", headers=headers).status_code)
+
     def test_select_namespace_and_keep_tab_edits_out_of_data_refresh(self):
         self.doc["namespaces"].append({**self.doc["namespaces"][0], "id": "ns-second", "namespace": "SECOND"})
         self.doc["tabs"].append({"id": "tab-second", "namespaceId": "ns-second", "title": "Second", "order": 1, "enabled": True})

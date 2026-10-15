@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.8.0 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.8.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -10,7 +10,7 @@ These notes describe the version 2.8.0 browser application and the local demos i
 - Selecting an event or session smoothly centers its timestamp or midpoint and preserves the visible time span. The gold selection glow remains visible, with a separate outlined marker above the Overview shading. A new gesture interrupts the movement; reduced motion makes centering immediate.
 - Select an event or session to open **Data**. Drag the divider beside the panel to change its width. The focused divider also supports arrow keys; double-click resets its width. Your chosen width is saved for that timeline.
 - Hover an event's text, icon, circle or duration bar to read its complete caption. Click either its text or its shape to open the same **Data** panel in 2D or 3D. Dragging from ordinary 2D event text still pans; Escape dismisses the caption.
-- **Data** starts with the event's time, duration, source and status. Expand **All fields** for other metadata. Copy controls beside identifiers and timestamps copy their original values; if clipboard access is blocked, select and copy the offered text manually.
+- **Data** shows a compact summary with **ID** first, then **Namespace**, status, type, dates and duration when available. All metadata and activities are displayed directly, followed by the complete formatted description at the bottom. Nothing is collapsed, and there is no description preview after Duration. Empty and duplicate fields are omitted, and descriptor Copy buttons have been removed.
 - Enter a search to center the first matching event or session automatically, with enough space for its full duration. This works with Auto scale on or off. File-backed demos search the complete dataset, including records outside the visible range.
 - The interface has exactly two menu bars: main and secondary. When space permits, the main bar places **Find previous activity, Find next activity | Auto scale, Lock current view** immediately after the search field. These controls move to the secondary bar when needed; horizontal scrolling keeps each bar to a single row. Activity navigation respects active search and filters. Use the mouse wheel or plus/minus keys to zoom.
 - The secondary bar groups **Calendar | Filter: \<filter name\> → Filters | Timeline details**. Refresh, status, search results and removable filter labels share the two existing bars. A separator also divides **3D** and **Settings**.

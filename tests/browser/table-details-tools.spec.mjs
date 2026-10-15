@@ -6,7 +6,7 @@ const records=Array.from({length:64},(_,index)=>{
     const number=64-index,start=base+number*60000;
     return {id:'event-'+number,start:new Date(start).toISOString(),end:new Date(start+5400000).toISOString(),namespace:'Operations',
         data:{title:number===64?'=1+1':number===63?'A "quote", then\na new line':'Inspection '+number,
-            status:number>10?'warning':'nominal',description:'<b>Inspection report</b>',custom:'Additional metadata '+number}};
+            status:number>10?'warning':'nominal',description:'<b>Inspection report</b>'+ (number===64?'<br>Inspection history entry'.repeat(30):''),custom:'Additional metadata '+number}};
 });
 async function ready(page) {
     await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
@@ -91,9 +91,8 @@ test('Sort, choose columns and download every filtered table page through user c
     expect(errors).toEqual([]);
 });
 
-test('Phone table controls and compact details preserve metadata and copy original values',async({page})=>{
+test('Phone details show ID and namespace first with all metadata visible and no copy buttons',async({page})=>{
     await page.setViewportSize({width:390,height:844});
-    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.copiedTimelineValue=value;}}}));
     const errors=await setup(page),panel=await table(page);
     for(const control of [panel.locator('.ob_table_columns > summary'),panel.getByRole('button',{name:'Export CSV',exact:true})])
         await expect(control).toBeInViewport({ratio:1});
@@ -106,25 +105,30 @@ test('Phone table controls and compact details preserve metadata and copy origin
     await expect(details).toBeVisible();await expect(details.locator('h2')).toHaveText('=1+1');
     await expect(summary).toContainText('1 hour 30 minutes');await expect(summary).toContainText('Operations');
     await expect(summary).toContainText('warning');
-    await expect(details.locator('.ob_descriptor_fields')).not.toHaveAttribute('open','');
-    await summary.getByRole('button',{name:'Copy Start',exact:true}).click();
-    await expect(details.locator('.ob_descriptor_copy_status')).toHaveText('Start copied.');
-    expect(await page.evaluate(()=>window.copiedTimelineValue)).toBe(records[0].start);
-    await summary.getByRole('button',{name:'Copy ID',exact:true}).click();
-    expect(await page.evaluate(()=>window.copiedTimelineValue)).toBe('event-64');
-    await details.getByText('All fields',{exact:true}).click();
-    await expect(details.locator('.ob_descriptor_fields')).toHaveAttribute('open','');
+    await expect(details.locator('.ob_descriptor_fields')).toBeVisible();
+    await expect(details.locator('details,summary')).toHaveCount(0);
+    await expect(summary.locator('dt').nth(0)).toHaveText('ID');
+    await expect(summary.locator('dd').nth(0)).toHaveText('event-64');
+    await expect(summary.locator('dt').nth(1)).toHaveText('Namespace');
+    await expect(details.locator('.ob_descriptor_namespace')).toBeInViewport({ratio:1});
+    await expect(details.getByRole('button',{name:/copy/i})).toHaveCount(0);
+    const description=details.locator('.ob_descriptor_description');
+    await expect(description).toBeVisible();
+    await expect(description).toHaveText('Inspection report'+'Inspection history entry'.repeat(30));
+    await expect(description.locator('br')).toHaveCount(30);
+    await expect(details.locator('.ob_descriptor_preview')).toHaveCount(0);
+    expect(await details.evaluate(node=>node.lastElementChild.classList.contains('ob_descriptor_description_section'))).toBe(true);
+    expect(await description.evaluate(node=>node.closest('details')===null)).toBe(true);
     await expect(details.locator('.ob_descriptor_fields')).toContainText('Additional metadata 64');
+    await expect(details.getByText('Additional metadata 64',{exact:true})).toBeVisible();
+    const metadataBox=await details.locator('.ob_descriptor_fields').boundingBox(),descriptionBox=await description.boundingBox();
+    expect(descriptionBox.y).toBeGreaterThanOrEqual(metadataBox.y+metadataBox.height);
     expect(await page.locator('.ob_viewport_side').evaluate(node=>node.scrollWidth<=node.clientWidth+1)).toBe(true);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     expect(errors).toEqual([]);
 });
 
-test('Clipboard denial exposes a keyboard-selectable fallback and partial tables label downloaded scope',async({page})=>{
-    await page.addInitScript(()=>{
-        Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new DOMException('Denied','NotAllowedError');}}});
-        document.execCommand=()=>false;
-    });
+test('Partial tables label downloaded scope and details keep original identifiers readable',async({page})=>{
     const errors=await setup(page),panel=await table(page);
     await page.evaluate(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady;
@@ -136,15 +140,13 @@ test('Clipboard denial exposes a keyboard-selectable fallback and partial tables
     await expect(panel.locator('.ob_table_export_status')).toContainText('from loaded data; coverage is incomplete.');
     await panel.locator('.ob_table_record').first().click();await ready(page);
     const details=page.locator('.ob_record_details');
-    await details.locator('.ob_descriptor_summary').getByRole('button',{name:'Copy ID',exact:true}).click();
-    const fallback=details.getByRole('textbox',{name:'ID to copy',exact:true});
-    await expect(fallback).toHaveValue('event-64');await expect(fallback).toBeFocused();
-    expect(await fallback.evaluate(node=>node.selectionStart===0 && node.selectionEnd===node.value.length)).toBe(true);
-    await expect(details.locator('.ob_descriptor_copy_status')).toContainText('Select and copy the ID below.');
+    await expect(details.locator('.ob_descriptor_summary dd').first()).toHaveText('event-64');
+    await expect(details.getByRole('button',{name:/copy/i})).toHaveCount(0);
+    await expect(details.locator('textarea')).toHaveCount(0);
     expect(errors).toEqual([]);
 });
 
-test('Table tools and detail copy controls follow the high contrast theme',async({page})=>{
+test('Table tools and fully visible detail metadata follow the high contrast theme',async({page})=>{
     await page.addInitScript(()=>localStorage.setItem('openbexi-timeline:appearance:v1','contrast'));
     const errors=await setup(page),panel=await table(page);
     await expect(panel.locator('.ob_table_tools')).toHaveCSS('color','rgb(20, 38, 56)');
@@ -154,8 +156,15 @@ test('Table tools and detail copy controls follow the high contrast theme',async
     await expect(exportButton).toHaveCSS('border-top-width','2px');
     await page.keyboard.press('Tab');await exportButton.focus();await expect(exportButton).toHaveCSS('outline-width','3px');
     await panel.locator('.ob_table_record').first().click();await ready(page);
-    const copy=page.locator('.ob_descriptor_summary').getByRole('button',{name:'Copy ID',exact:true});
-    await expect(copy).toHaveCSS('color','rgb(20, 38, 56)');await expect(copy).toHaveCSS('background-color','rgb(243, 247, 250)');
-    await expect(copy).toHaveCSS('border-top-color','rgb(62, 92, 117)');await expect(copy).toHaveCSS('border-top-width','2px');
+    const details=page.locator('.ob_descriptor_fields');
+    await expect(details).toHaveCSS('color','rgb(20, 38, 56)');
+    await expect(details).toHaveCSS('border-top-style','none');
+    await expect(details).toHaveCSS('padding-top','0px');
+    await expect(details.locator('td').first()).toHaveCSS('padding-top','2px');
+    await expect(details.locator('th').first()).toHaveCSS('width','78px');
+    await expect(details.locator('summary')).toHaveCount(0);
+    await expect(details).toBeVisible();
+    await expect(details).toContainText('Additional metadata 64');
+    await expect(page.locator('.ob_descriptor_namespace')).toHaveCSS('color','rgb(18, 79, 133)');
     expect(errors).toEqual([]);
 });

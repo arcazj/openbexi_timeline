@@ -1,6 +1,6 @@
 # OpenBEXI Timeline
 
-Version **2.8.0** · [Release notes](docs/release-2.8.0.md).
+Version **2.8.1** · [Release notes](docs/release-2.8.1.md).
 
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their
@@ -20,8 +20,10 @@ The Python service uses the existing UI and supports HBDS administration. Java
 remains available for managed data and other providers.
 
 **HBDS configuration:** models, namespaces, sources and tabs now live under
-[`HBDS/`](HBDS/README.md). Open **Settings → HBDS Editor → Namespaces and tabs**
-to edit a deployment with an administrator token. Operational configurations
+[`HBDS/`](HBDS/README.md). Open **Settings → HBDS Editor** to edit a deployment.
+The current model preview, namespace and tab controls share one workspace, with
+clearly highlighted editing sections. On the local running server, the editor
+connects automatically without a token prompt or Connect button. Operational configurations
 remain private; generic templates are explicitly allowlisted for Git.
 
 Install **Node.js 24**, then run:
