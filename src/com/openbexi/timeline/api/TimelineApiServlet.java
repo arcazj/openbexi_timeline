@@ -5,6 +5,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.*;
 import java.io.*;
 import java.net.URLEncoder;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
@@ -75,6 +76,22 @@ public final class TimelineApiServlet extends HttpServlet {
     private static void requireSystemAdmin(TimelineAccessStore.Principal principal) {
         if(!principal.systemAdmin())throw new ApiException(principal.authenticated()?403:401,"This operation requires system administrator access.");
     }
+    static boolean localHbdsEditor(HttpServletRequest request) {
+        Set<String> loopback=Set.of("127.0.0.1","::1","0:0:0:0:0:0:0:1");
+        if(request.getHeader("Authorization")!=null || !"local-editor".equals(request.getHeader("X-OpenBEXI-HBDS")) ||
+                !loopback.contains(Objects.toString(request.getRemoteAddr(),"")) ||
+                !Set.of("localhost","127.0.0.1","::1","[::1]").contains(request.getServerName()) ||
+                !"same-origin".equals(Objects.toString(request.getHeader("Sec-Fetch-Site"),"same-origin")))return false;
+        for(String header:List.of("Forwarded","X-Forwarded-For","X-Forwarded-Host"))if(request.getHeader(header)!=null)return false;
+        String origin=request.getHeader("Origin");if(origin==null)return true;
+        try {
+            URI supplied=URI.create(origin),actual=URI.create(request.getRequestURL().toString());
+            int port=supplied.getPort()<0?("https".equals(supplied.getScheme())?443:80):supplied.getPort();
+            int actualPort=actual.getPort()<0?("https".equals(actual.getScheme())?443:80):actual.getPort();
+            return Objects.equals(supplied.getScheme(),actual.getScheme())&&Objects.equals(supplied.getHost(),actual.getHost())&&port==actualPort&&
+                    supplied.getRawUserInfo()==null&&supplied.getRawQuery()==null&&supplied.getRawFragment()==null&&Objects.toString(supplied.getRawPath(),"").isEmpty();
+        }catch(IllegalArgumentException error){return false;}
+    }
     @Override protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
         com.openbexi.timeline.servlets.TimelineRequestLog diagnostics=com.openbexi.timeline.servlets.TimelineRequestLog.begin(request,response);
         response.setCharacterEncoding("UTF-8");
@@ -121,7 +138,7 @@ public final class TimelineApiServlet extends HttpServlet {
         String[] parts = path.replaceFirst("^/", "").split("/", -1);
         String method = req.getMethod(); boolean get = method.equals("GET") || method.equals("HEAD");
         if(parts[0].equals("hbds")) {
-            requireSystemAdmin(principal);
+            if(!localHbdsEditor(req))requireSystemAdmin(principal);
             if(hbds==null) synchronized(this) {
                 if(hbds==null)hbds=TimelineHbds.open(root,TimelineHbds.selected(root,getServletContext().getInitParameter("data_conf")));
             }

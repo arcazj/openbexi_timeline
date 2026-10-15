@@ -17,7 +17,7 @@ def factory():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.8.0")
+    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.8.1")
     parser.add_argument("-data_conf", "--data-conf", default=os.environ.get("OPENBEXI_HBDS_CONFIG"),
                         required=not os.environ.get("OPENBEXI_HBDS_CONFIG"), help="HBDS configuration or legacy YAML migration alias")
     parser.add_argument("--root", help="Application and HBDS workspace directory (default: working directory)")

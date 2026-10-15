@@ -10,12 +10,59 @@ const state={catalog:[],schemas:{},document:null,record:null,context:{},client:n
 const documentOpen=new DocumentOpenGate();
 const documentControls=()=>document.querySelectorAll('.document-bar button,.document-bar select,.document-state button,#editing-actions button');
 let previewTimer,rawTimer,previewFrame,pendingFrame,pendingPayload,previewTimeout;
-let hbdsEditor;
+let hbdsEditor,hbdsPreviewKey,hbdsGeneration=0;
 async function showHbdsEditor(){
-    $('hbds-editor').hidden=false;$('model-editor-main').hidden=true;$('connect').hidden=true;
+    if(hbdsEditor)return;
+    state.hbds=true;document.body.dataset.editorLaunch='hbds';
+    $('hbds-editor').hidden=false;$('model-editor-main').hidden=true;$('connect').hidden=true;$('open-hbds').hidden=true;
     clearTimeout(previewTimer);clearTimeout(previewTimeout);state.revision++;retireFrame(previewFrame);retireFrame(pendingFrame);previewFrame=pendingFrame=null;pendingPayload=null;
+    const launchContext=clone(state.context),configurations=new Map();
+    const previewPanel=document.querySelector('.preview-panel');
+    for(const node of previewPanel.querySelectorAll('.preview-source,#apply'))node.hidden=true;
+    previewPanel.querySelector('.preview-note').textContent='Preview uses the selected namespace and model. Save and apply publishes your draft to the running timelines.';
     const {mountHbdsEditor}=await import('./openbexi_timeline_hbds_editor.js');
-    hbdsEditor ||= mountHbdsEditor($('hbds-editor'),{ask,namespaceId:state.context.hbdsNamespaceId||new URLSearchParams(location.search).get('namespaceId')||'',onClose:()=>{$('hbds-editor').hidden=true;$('model-editor-main').hidden=false;$('connect').hidden=false;schedulePreview(true);}});
+    let forcePreview=false;
+    hbdsEditor=mountHbdsEditor($('hbds-editor'),{
+        namespaceId:launchContext.hbdsNamespaceId||new URLSearchParams(location.search).get('namespaceId')||'',
+        tabId:launchContext.hbdsTabId||new URLSearchParams(location.search).get('tabId')||'',previewPanel,
+        onPreview:selection=>void syncPreview(selection),askProperty:()=>ask('Add property','Property name'),
+        onSaved:()=>configurations.clear()
+    });
+    $('refresh').onclick=()=>{forcePreview=true;hbdsPreviewKey=null;configurations.clear();hbdsEditor.refreshPreview();};
+    window.addEventListener('pagehide',()=>{hbdsGeneration++;hbdsEditor.dispose();retireFrame(previewFrame);retireFrame(pendingFrame);},{once:true});
+    async function syncPreview({namespace,model,tab}){
+        const key=JSON.stringify([namespace?.id,namespace?.namespace,model?.configuration]);
+        if(key===hbdsPreviewKey)return;
+        hbdsPreviewKey=key;const generation=++hbdsGeneration,force=forcePreview;forcePreview=false;
+        clearTimeout(previewTimer);clearTimeout(previewTimeout);state.revision++;state.valid=false;
+        retireFrame(pendingFrame);pendingFrame=null;pendingPayload=null;
+        const switched=state.context.hbdsNamespaceId!==namespace?.id;
+        if(switched){retireFrame(previewFrame);previewFrame=null;$('preview-host').dataset.state='loading';}
+        $('preview-state').textContent='Preparing selected model…';
+        try{
+            if(!namespace||!model)throw new Error('Select a namespace with an existing model.');
+            (model.configuration.dataSource?validateDemoModel:validateLegacyModel)(model.configuration);
+            let configuration;
+            if(!model.configuration.dataSource){
+                if(!configurations.has(namespace.id)){
+                    const url=new URL('openbexi_timeline/config',appRoot);url.searchParams.set('namespaceId',namespace.id);
+                    configurations.set(namespace.id,fetch(url,{cache:'no-store',signal:AbortSignal.timeout(5000)}).then(async response=>{
+                        if(!response.ok)throw new Error('The namespace data source is unavailable. Save new namespaces and restart the server if required.');
+                        const result=await response.json();if(result.hbds?.namespaceId!==namespace.id)throw new Error('The server returned a different namespace.');return result;
+                    }).catch(error=>{configurations.delete(namespace.id);throw error;}));
+                }
+                configuration=await configurations.get(namespace.id);
+            }
+            if(generation!==hbdsGeneration)return;
+            state.document=new EditorDocument(JSON.stringify(model.configuration),'model');state.record={name:model.id,kind:'model',hbds:true};
+            const original=namespace.id===launchContext.hbdsNamespaceId;
+            state.context={hbdsNamespaceId:namespace.id,hbdsNamespace:namespace.namespace,hbdsTabId:tab?.id,
+                providerUrl:configuration?.data,previewState:original?launchContext.previewState:undefined,
+                dataset:original?launchContext.dataset:undefined};
+            state.valid=true;state.rawInvalid=false;state.previewCandidate=null;
+            schedulePreview(switched||force);
+        }catch(error){if(generation===hbdsGeneration){hbdsPreviewKey=null;$('preview-state').textContent='Preview unavailable: '+error.message;}}
+    }
 }
 function retireFrame(frame){if(!frame)return;try{frame.contentWindow?.disposePreview?.();}catch{ /* A frame may still be navigating. */ }if(frame.dataset.previewBlob)URL.revokeObjectURL(frame.dataset.previewBlob);frame.remove();}
 const clone=value=>structuredClone(value);
@@ -30,7 +77,7 @@ async function ask(title,label,value='',help='',password=false) {
 }
 function unsaved() {return state.rawInvalid || state.document?.dirty;}
 function canLeave() {return !unsaved() || confirm('Discard unsaved changes to this document?');}
-function canEdit(){return state.workspace?Boolean(state.modelId?state.access?.permissions?.admin:state.identity?.systemAdmin):!state.requiredModelId;}
+function canEdit(){return state.hbds|| (state.workspace?Boolean(state.modelId?state.access?.permissions?.admin:state.identity?.systemAdmin):!state.requiredModelId);}
 function requireEditor(){if(!canEdit())throw new Error('A model administrator must authorize this editor.');}
 function configureLaunch(query) {
     // Keep this mode for the editor's lifetime, even when opening a saved version
@@ -244,15 +291,16 @@ async function previewPayload() {
         const provider=state.context.providerUrl || model.params?.[0]?.data;
         if(provider)options.providerUrl=new URL(provider,appRoot).href;else options.offline=true;
     }
+    if(state.hbds)options.hbds={namespaceId:state.context.hbdsNamespaceId,namespace:state.context.hbdsNamespace};
     return {type:'ob-model-preview',model,options,modelPath,previewBlob,previewState:state.context.previewState,revision:state.revision};
 }
 function schedulePreview(force=false) {
     clearTimeout(previewTimer);
-    if(!$('hbds-editor').hidden || !state.valid || (!force && !$('live').checked))return;
+    if(!state.valid || (!force && !$('live').checked))return;
     previewTimer=setTimeout(()=>refreshPreview(),force?0:350);
 }
 async function refreshPreview() {
-    if(!$('hbds-editor').hidden || !canEdit() || (!state.valid && !state.previewCandidate))return;
+    if(!canEdit() || (!state.valid && !state.previewCandidate))return;
     const revision=++state.revision;$('preview-state').textContent='Updating preview…';
     try {
         const payload=await previewPayload();if(revision!==state.revision){if(payload.previewBlob)URL.revokeObjectURL(payload.previewBlob);return;}
@@ -545,6 +593,7 @@ function bindActions(){
 }
 async function start(){
     const query=new URLSearchParams(location.search),contextKey=query.get('context');
+    if(query.get('hbds')==='1')$('connect').hidden=true;
     if(contextKey)try{state.context=JSON.parse(sessionStorage.getItem(contextKey) || '{}');}catch{status('The originating timeline context is unavailable.');}
     configureLaunch(query);
     const responses=await Promise.all([fetchText('demos/catalog.json'),fetchText('schemas/demo-model.schema.json'),fetchText('schemas/legacy-model.schema.json').catch(()=>null)]);
@@ -552,13 +601,21 @@ async function start(){
     for(const demo of state.catalog)$('preview-data').append(new Option(demo.title,demo.id));
     bindActions();
     const path=query.get('model') || state.context.modelPath;
+    let hbds=query.get('hbds')==='1';
+    if(!hbds&&!path&&!state.requiredModelId&&!contextKey){
+        const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),5000);
+        try{const response=await fetch(new URL('openbexi_timeline/config',appRoot),{signal:controller.signal,cache:'no-store'});hbds=response.ok&&Boolean((await response.json()).hbds);}
+        catch{ /* Standalone/static editing remains available without a server. */ }
+        finally{clearTimeout(timeout);}
+    }
+    // Expose read-only diagnostics useful for browser validation, without credentials.
+    const diagnostics={get document(){return state.document;},get record(){return {...state.record};},get revision(){return state.revision;}};
+    if(hbds){await showHbdsEditor();window.modelEditor=diagnostics;return;}
     if(state.requiredModelId){state.pendingModelPath=new URL('api/v1/models/'+encodeURIComponent(state.requiredModelId),appRoot).href;openDocument(JSON.stringify(buildDefaultModel(),null,2)+'\n',{name:'Connect to open this model',kind:'model',example:true});}
     else if(state.context.model){openDocument(JSON.stringify(state.context.model,null,2)+'\n',{name:path || 'current-timeline.json',kind:'model',example:true,modelPath:path});}
     else if(path){const intent=documentOpen.begin(state.document),context=clone(state.context),url=new URL(path,appRoot);if(url.origin!==location.origin)throw new Error('Open a same-origin model or import the model file.');const entry=state.catalog.find(demo=>new URL(demo.model,appRoot).href===url.href);if(entry && !context.dataset)context.dataset=new URL(entry.dataset,appRoot).href;openDocument(await fetchText(url),{name:path,kind:documentKind(path),example:true,modelPath:url.href},intent,context);}
     else await openDemo(state.catalog[0].id);
     status(state.requiredModelId?'Connect with a model administrator session to open this protected model.':state.focused?'':'Local editing is ready. Changes refresh the preview automatically; saving is explicit.');
-    // Expose read-only diagnostics useful for browser validation, without credentials.
-    window.modelEditor={get document(){return state.document;},get record(){return {...state.record};},get revision(){return state.revision;}};
-    if(query.get('hbds')==='1')await showHbdsEditor();
+    window.modelEditor=diagnostics;
 }
 start().catch(fail);

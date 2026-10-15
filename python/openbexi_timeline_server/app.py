@@ -9,7 +9,7 @@ import logging
 import os
 import sqlite3
 import time
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlsplit
 import uuid
 
 import httpx
@@ -31,6 +31,27 @@ from .storage import Storage
 
 LOG = logging.getLogger("openbexi.timeline")
 HOP = {"host", "connection", "transfer-encoding", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "upgrade", "content-length"}
+
+
+def local_hbds_editor(request):
+    """Permit the editor served directly on loopback, never cross-origin or proxied traffic."""
+    loopback = {"127.0.0.1", "::1", "0:0:0:0:0:0:0:1"}
+    if (request.headers.get("authorization") or request.headers.get("x-openbexi-hbds") != "local-editor"
+            or not request.client or request.client.host not in loopback
+            or request.url.hostname not in loopback | {"localhost"}
+            or request.headers.get("sec-fetch-site", "same-origin") != "same-origin"
+            or any(name in request.headers for name in ("forwarded", "x-forwarded-for", "x-forwarded-host"))):
+        return False
+    origin = request.headers.get("origin")
+    if origin is None:
+        return True
+    try:
+        parsed = urlsplit(origin)
+        return (parsed.scheme == request.url.scheme and parsed.hostname == request.url.hostname
+                and (parsed.port or (443 if parsed.scheme == "https" else 80)) == (request.url.port or (443 if request.url.scheme == "https" else 80))
+                and not parsed.username and not parsed.password and not parsed.path and not parsed.query and not parsed.fragment)
+    except ValueError:
+        return False
 
 
 class RequestTrace:
@@ -271,7 +292,7 @@ def create_app(configuration, *, start_indexer=True):
         headers = {"Cache-Control": "no-store", "Vary": "Origin, Authorization"}
         try:
             supplied = request.headers.get("authorization", "")
-            if not supplied.startswith("Bearer ") or not admin_token or not hmac.compare_digest(supplied[7:].encode(), admin_token.encode()):
+            if not local_hbds_editor(request) and (not supplied.startswith("Bearer ") or not admin_token or not hmac.compare_digest(supplied[7:].encode(), admin_token.encode())):
                 known_reader = any(value and hmac.compare_digest(supplied[7:].encode(), value.encode()) for value in
                                    (os.environ.get("OPENBEXI_API_READ_TOKEN"), os.environ.get("OPENBEXI_API_WRITE_TOKEN"))) if supplied.startswith("Bearer ") else False
                 raise HBDSError(403 if known_reader else 401, "HBDS administration requires system administrator access.")

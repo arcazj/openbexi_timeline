@@ -2,12 +2,19 @@
 
 Open **Settings → Edit models → HBDS Editor** in any timeline. The editor opens
 `openbexi_timeline_model.html` with that timeline's model and data source.
-You can also open the editor directly and choose any of the seven public demos.
+Opening the editor directly uses the running server's HBDS configuration when
+available. Static/demo installations retain the public model chooser.
 See the [desktop, narrow and phone views](ui/model-editor/README.md).
 
-For an HBDS deployment, choose **Namespaces and tabs** to manage the canonical
-configuration. Connect with the system administrator token, select a namespace,
-and edit its model, sources, appearance, tabs or access definitions. **Save and
+For an HBDS deployment, the current model preview and **Namespaces and tabs**
+controls open together. The originating namespace, tab, date and view are retained.
+The editor connects automatically to the local running server without a token
+prompt or Connect button. Choose a namespace or timeline tab in the dark header;
+the property controls and preview follow that selection. Highlighted section
+buttons organize the model, sources, appearance, tabs and access definitions.
+The preview stays beside the controls on larger screens and below them on phones.
+Model edits refresh the preview after a short delay; tab labels and access edits
+do not reload preview data. Draft changes remain local until **Save and
 apply** validates the document and revision, then updates affected open timeline
 tabs. Tab rename/reorder preserves loaded frames; provider and listener changes
 report a pending restart. This workspace uses `/api/v1/hbds` on both Java and

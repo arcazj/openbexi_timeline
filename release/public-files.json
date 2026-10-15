@@ -694,6 +694,7 @@
   "docs/python-server.md",
   "docs/python-server-benchmark.json",
   "docs/release-2.8.0.md",
+  "docs/release-2.8.1.md",
   "tools/start-python-server.ps1",
   "tools/benchmark-python-server.py",
   "tests/integration/python-backend.mjs",

@@ -38,16 +38,17 @@ test('A failed HBDS save retains the draft and revision; later edits survive an 
         assert.equal(draft.value.tabs[0].title,'Later edit');assert.equal(draft.saved.tabs[0].title,'First edit');assert.equal(draft.revision,'revision-2');assert.equal(draft.dirty,true);
     }finally{harness.close();}
 });
-test('HBDS forms authenticate directly, expose stable references and retain a denied draft',async()=>{
+test('HBDS forms connect automatically without a token, expose stable references and retain a denied draft',async()=>{
     const {harness,api,document}=await setup();try{
         const schema=JSON.parse(await fs.readFile('HBDS/schema/configuration.schema.json','utf8')),requests=[];const fallback=harness.window.fetch;
         harness.window.fetch=async(url,options)=>{const path=new URL(String(url),'http://localhost').pathname;requests.push(path);
             if(path==='/api/v1/hbds/schema')return response(schema);
-            if(path==='/api/v1/hbds')return options.method==='PUT'?response({detail:'Administrator access required.'},403):response({document,revision:'revision-1'});
+            if(path==='/api/v1/hbds'){assert.equal(options.headers.Authorization,undefined);assert.equal(options.headers['X-OpenBEXI-HBDS'],'local-editor');return options.method==='PUT'?response({detail:'Administrator access required.'},403):response({document,revision:'revision-1'});}
             return fallback(url,options);
         };
         const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
-        const editor=api.mountHbdsEditor(host,{ask:async()=>'test-token'});await editor.connect();
+        const editor=api.mountHbdsEditor(host);await editor.ready;
+        assert.ok(![...host.querySelectorAll('button')].some(button=>/connect/i.test(button.textContent)));
         assert.equal(requests.some(path=>path.endsWith('/me')),false);
         const model=host.querySelector('[aria-label="namespaces.0.modelId"]');assert.equal(model.tagName,'SELECT');assert.equal(model.options.length,2);
         const tabButton=[...host.querySelectorAll('nav button')].find(button=>button.textContent==='Tabs');tabButton.click();
@@ -58,6 +59,42 @@ test('HBDS forms authenticate directly, expose stable references and retain a de
         editor.dispose();
     }finally{harness.close();}
 });
+test('An unavailable HBDS server reconnects automatically and disposal cancels retries',async()=>{
+    const {harness,api,document}=await setup();try{
+        let online=false,retry,delay,cleared=false;
+        harness.window.setTimeout=(callback,milliseconds)=>{retry=callback;delay=milliseconds;return 123;};
+        harness.window.clearTimeout=id=>{if(id===123)cleared=true;};
+        harness.window.fetch=async url=>String(url).endsWith('/api/v1/hbds')?
+            online?response({document,revision:'revision-1'}):response({detail:'Starting server'},503):response({});
+        const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
+        const editor=api.mountHbdsEditor(host);await editor.ready;
+        assert.equal(editor.document,null);assert.equal(delay,5000);assert.match(host.textContent,/Retrying automatically/);
+        online=true;await retry();assert.equal(editor.document.defaultNamespaceId,document.defaultNamespaceId);
+        assert.equal(host.querySelector('[role="alert"]').hidden,true);editor.dispose();
+        online=false;const second=api.mountHbdsEditor(host);await second.ready;cleared=false;second.dispose();
+        assert.equal(cleared,true);await retry();assert.equal(host.childElementCount,0);
+    }finally{harness.close();}
+});
+
+test('HBDS namespace and tab menus share one draft and notify the preview without changing data',async()=>{
+    const {harness,api,document}=await setup();try{
+        const previews=[];harness.window.fetch=async url=>response(String(url).endsWith('/api/v1/hbds')?{document,revision:'revision-1'}:{});
+        const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
+        const editor=api.mountHbdsEditor(host,{namespaceId:'namespace-beta',tabId:'tab-beta',onPreview:value=>previews.push(plain(value))});await editor.ready;
+        assert.equal(host.querySelector('[aria-label="defaultNamespaceId"]').tagName,'SELECT');
+        assert.equal(previews.at(-1).namespace.id,'namespace-beta');assert.equal(previews.at(-1).model.id,'model-beta');assert.equal(previews.at(-1).tab.id,'tab-beta');assert.equal(editor.dirty,false);
+        const select=host.querySelector('[aria-label="HBDS namespace"]');select.value='namespace-alpha';select.dispatchEvent(new harness.window.Event('change'));
+        assert.equal(host.querySelector('[aria-label="HBDS timeline tab"]').value,'tab-alpha');assert.equal(previews.at(-1).model.id,'model-alpha');assert.equal(editor.dirty,false);
+        [...host.querySelectorAll('nav button')].find(button=>button.textContent==='Tabs').click();
+        const field=host.querySelector('[aria-label="tabs.0.title"]');field.value='Draft label';field.dispatchEvent(new harness.window.Event('change'));
+        assert.equal(previews.at(-1).tab.title,'Draft label');assert.equal(editor.dirty,true);assert.equal(document.tabs[0].title,'Alpha timeline');
+        [...host.querySelectorAll('button')].find(button=>button.textContent==='Undo').click();assert.equal(previews.at(-1).tab.title,'Alpha timeline');
+        [...host.querySelectorAll('nav button')].find(button=>button.textContent==='Advanced JSON').click();const raw=host.querySelector('textarea');raw.value='null';raw.dispatchEvent(new harness.window.Event('input'));
+        assert.match(host.querySelector('[role="alert"]').textContent,/collections/);assert.equal(editor.document.namespaces.length,2);
+        assert.equal([...host.querySelectorAll('button')].find(button=>button.textContent==='Save and apply').disabled,true);editor.dispose();
+    }finally{harness.close();}
+});
+
 test('HBDS tabs create frames lazily and preserve unaffected frames on scoped saves',async()=>{
     const {harness,runtime,document}=await setup();try{
         let config=hbdsPublicConfiguration(document),fetches=0;const host=harness.window.document.createElement('main');harness.window.document.body.append(host);

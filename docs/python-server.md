@@ -75,11 +75,11 @@ Historical search shares the configured `max_records` and `max_query_seconds` li
 | `POST .../sessions?ob_request=addEvent` | Atomic valid JSON in enabled directory sources, followed by an index refresh |
 | `/openbexi_timeline/config` | Public model/data route and backend implementation/version |
 | `/health`, `/ready` | Index counts/readiness without private source paths; `/ready` is 503 during initial indexing |
-| `/api/v1/hbds` | Native administrator-authenticated HBDS reads and revision-checked saves; no Java bridge required |
+| `/api/v1/hbds` | Automatic same-origin local editor access; other clients require administrator authentication. Revision-checked saves; no Java bridge required |
 | Other `/api/v1/...` routes | Forwarded to configured Java; explicit 503 if Java fallback is not configured |
 | Public UI assets | Java's public asset policy; source data, deployment YAML, state and hidden files are not served |
 
-Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.8.0`. Settings displays the UI version and connected backend version separately.
+Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.8.1`. Settings displays the UI version and connected backend version separately.
 
 The modern UI's `matchProtocol=1` contract is the compatibility target. Full sessions are filtered before nested activities are scoped to the time window. Search annotates visible records; it does not silently discard nonmatching records. History queries return matching records. Original source styling and external IDs are preserved, while source occurrence keys distinguish repeated IDs. Dates are normalized to UTC, including extended years and BCE dates. Byte-for-byte key ordering, cursor tokens, revision hashes and diagnostic timings differ by backend.
 
@@ -108,7 +108,7 @@ mvn test-compile dependency:build-classpath -Dmdep.outputFile=target/python-java
 
 The benchmark launches isolated Java and Python servers on generated data, compares filter/search record results, measures actual HTTP requests and decoded bytes, samples process-tree CPU/RSS, exercises four concurrent clients and restarts Python with its saved index. It does not touch operational data or stop an existing server. “Cold” means a new process/cache/index; the operating-system file cache is not flushed. Browser responsiveness needs its own browser measurement; HTTP latency alone does not establish rendering performance.
 
-See [the recorded benchmark](python-server-benchmark.json) and [release notes](release-2.8.0.md). The persistent index improves warm navigation and restart performance. Initial indexing has a real cost, so prepare large archives with `--index-once` before switching production traffic. Choose deployment defaults from measurements on your actual data and hardware.
+See [the recorded benchmark](python-server-benchmark.json) and [release notes](release-2.8.1.md). The persistent index improves warm navigation and restart performance. Initial indexing has a real cost, so prepare large archives with `--index-once` before switching production traffic. Choose deployment defaults from measurements on your actual data and hardware.
 
 Measured for 2.8.0 on 2026-10-14 with Windows 10, Python 3.12.0, JDK 21.0.11, 1,000 files / 100,000 top-level records and a visible window returning 100 records. The OS file cache was not flushed. These synthetic results do not establish a deployment-wide speed advantage; operational archives can favor Java.
 

@@ -26,6 +26,7 @@ window.addEventListener('message',async event=>{
         timeline.modelStartup.cancel();
         timeline.layoutHost=document.getElementById('preview-workspace');
         timeline.modelPath=event.data.modelPath;
+        if(options.hbds){timeline.hbdsNamespaceId=options.hbds.namespaceId;timeline.setHbdsNamespace(options.hbds.namespace);}
         timeline.validateModel(model,'Preview model');
         const previewModel=structuredClone(model);
         const context=event.data.previewState;
