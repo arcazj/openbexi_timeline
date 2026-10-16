@@ -6,10 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $appRoot = Join-Path $PSScriptRoot 'app'
 $runtime = Join-Path $PSScriptRoot 'runtime\bin\java.exe'
-# Never attach to another process merely because it owns our default port.
-$probe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
-try { $probe.Start() } catch { throw "Port $Port is already in use. Close the other instance or launch with -Port <number>." }
-finally { $probe.Stop() }
+$runtimeService = $null
 New-Item -ItemType Directory -Force -Path $DataDirectory | Out-Null
 $DataDirectory = (Resolve-Path -LiteralPath $DataDirectory).Path
 $hbdsDirectory = Join-Path $DataDirectory 'HBDS'
@@ -49,7 +46,7 @@ sources:
 "@)
     }
     $desktopService = Join-Path $hbdsDirectory 'service.desktop.yml'
-    [IO.File]::WriteAllText($desktopService, @"
+    if (!(Test-Path -LiteralPath $desktopService)) { [IO.File]::WriteAllText($desktopService, @"
 config_version: 3
 plugins:
   roots: []
@@ -63,14 +60,37 @@ connectors:
     type: http
     host: 127.0.0.1
     port: $Port
-"@)
+"@) }
     $desktopWorkspace = Join-Path $hbdsDirectory 'workspace.json'
     if (!(Test-Path -LiteralPath $desktopWorkspace)) {
         $selection = @{schemaVersion=1; name='Demo_Workspace'; service='service.desktop.yml'; namespace_files=@('yaml/DEMO_default.yml')}
         [IO.File]::WriteAllText($desktopWorkspace, ($selection | ConvertTo-Json -Depth 4))
     }
-    $javaArgs += @('com.openbexi.timeline.server.openbexi_timeline', '--workspace', "`"$desktopWorkspace`"", '-serverconf', "`"$desktopService`"", '--hbds-root', "`"$hbdsDirectory`"", '--root', "`"$appRoot`"")
+    # Keep the workspace's selected service and plugin/state settings intact.
+    # An explicit launch port applies to an ephemeral copy of that service.
+    $runtimeService = Join-Path $hbdsDirectory ('.desktop-service-' + [guid]::NewGuid().ToString('N') + '.yml')
+    $requestedPort = if ($PSBoundParameters.ContainsKey('Port')) { $Port } else { 0 }
+    $prepareService = @'
+import json, pathlib, sys, yaml
+workspace, destination, requested = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), int(sys.argv[3])
+selection = json.loads(workspace.read_text(encoding='utf-8-sig'))
+source = workspace.parent / selection.get('service', 'service.desktop.yml')
+service = yaml.safe_load(source.read_text(encoding='utf-8-sig'))
+listener = next(item for item in service['connectors'] if item['id'] == 'desktop' and item['owner'] == 'java')
+if requested: listener['port'] = requested
+destination.write_text(yaml.safe_dump(service, sort_keys=False), encoding='utf-8')
+print(listener['port'])
+'@
+    $effectivePort = $prepareService | & (Join-Path $PSScriptRoot 'python/python.exe') - $desktopWorkspace $runtimeService $requestedPort
+    if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the selected desktop service.' }
+    $Port = [int]$effectivePort
+    $javaArgs[0] = "-Dopenbexi.api.port=$Port"
+    $javaArgs += @('com.openbexi.timeline.server.openbexi_timeline', '--workspace', "`"$desktopWorkspace`"", '-serverconf', "`"$runtimeService`"", '--hbds-root', "`"$hbdsDirectory`"", '--root', "`"$appRoot`"")
 }
+# Never attach to another process merely because it owns the selected port.
+$probe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
+try { $probe.Start() } catch { throw "Port $Port is already in use. Close the other instance or launch with -Port <number>." }
+finally { $probe.Stop() }
 $server = Start-Process -FilePath $runtime -ArgumentList $javaArgs -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $DataDirectory 'server.log') -RedirectStandardError (Join-Path $DataDirectory 'server-error.log')
 try {
     $ready = $false
@@ -89,4 +109,5 @@ try {
     if ($server.ExitCode -ne 0) { throw "Server exited with code $($server.ExitCode)." }
 } finally {
     if (!$server.HasExited) { Stop-Process -Id $server.Id -Force }
+    if ($runtimeService -and (Test-Path -LiteralPath $runtimeService)) { Remove-Item -LiteralPath $runtimeService }
 }

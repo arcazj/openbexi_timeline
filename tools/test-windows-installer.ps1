@@ -29,6 +29,26 @@ try {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'test-windows-browser.mjs') -Destination $browserTest
     & node $browserTest
     if ($LASTEXITCODE -ne 0) { throw 'Installed browser smoke test failed.' }
+    # Restart with a customized service and an explicit port. User plugin and
+    # state settings must survive, and workspace service selection must be honored.
+    & taskkill.exe /PID $launcher.Id /T /F | Out-Null
+    $customService = Join-Path $dataDir 'HBDS/service.custom.yml'
+    $settings = [IO.File]::ReadAllText((Join-Path $dataDir 'HBDS/service.desktop.yml')).Replace('roots: []','roots: [plugins]').Replace('../collector-state','../custom-collector-state')
+    New-Item -ItemType Directory -Force -Path (Join-Path $dataDir 'HBDS/plugins') | Out-Null
+    [IO.File]::WriteAllText($customService, $settings)
+    $workspaceFile = Join-Path $dataDir 'HBDS/workspace.json'
+    $selection = Get-Content -LiteralPath $workspaceFile -Raw | ConvertFrom-Json
+    $selection.service = 'service.custom.yml'
+    [IO.File]::WriteAllText($workspaceFile, ($selection | ConvertTo-Json -Depth 4))
+    $listener.Start(); $port = $listener.LocalEndpoint.Port; $listener.Stop()
+    $launcher = Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$installDir\Start-OpenBEXI.ps1`"", '-NoBrowser', '-Port', $port, '-DataDirectory', "`"$dataDir`"" -WindowStyle Hidden -PassThru
+    $ready = $false
+    for ($attempt = 0; $attempt -lt 90; $attempt++) {
+        if ($launcher.HasExited) { throw 'Customized desktop workspace exited early.' }
+        try { if (Invoke-RestMethod "http://127.0.0.1:$port/api/v1/health" -TimeoutSec 1) { $ready = $true; break } }
+        catch { Start-Sleep -Milliseconds 500 }
+    }
+    if (!$ready -or [IO.File]::ReadAllText($customService) -ne $settings) { throw 'Desktop restart changed or ignored custom service settings.' }
     $env:JAVA_HOME = Join-Path $installDir 'runtime'
     & (Join-Path $installDir 'python/python.exe') (Join-Path $ProjectRoot 'tools/test-installed-collector.py') (Join-Path $dataDir 'HBDS/workspace.json')
     if ($LASTEXITCODE -ne 0) { throw 'Installed collector conversion or stable rerun failed.' }

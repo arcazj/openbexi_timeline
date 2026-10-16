@@ -28,6 +28,8 @@ Version 2 remains readable. `tools/migrate-collector.py` previews migration,
 supports explicit plugin mappings, and saves rollback copies with `--apply`.
 Existing output paths and static `NONE` sources are preserved. The timeline
 servers read materialized JSON without loading any converter.
+Concurrent HBDS editors share a file-specific thread lock as well as the
+cross-process lock, so stale revisions are rejected on both Linux and Windows.
 
 The Windows x64 installer bundles Java, Python and all six public plugins.
 Launch the timeline first to create its desktop workspace; the Start menu also
@@ -35,6 +37,8 @@ provides Timeline Data Collector. Optional remote reader drivers are separate
 installs. User data survives upgrades and uninstall. Source ZIP and tar.gz,
 independent wheels/JARs, release notes, HBDS JSON/PNGs and SHA-256 checksums are
 provided with the release.
+Desktop restarts preserve the workspace's selected service, plugin roots and
+state settings. A launch port override uses a temporary service copy.
 
 See the [collector guide](../timeline_data_collector/README.md),
 [HBDS model and diagrams](design/2.9/README.md), and
