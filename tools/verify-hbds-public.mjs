@@ -3,6 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {parse} from 'yaml';
+import {createHash} from 'node:crypto';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicNamespace = /^(?:DEMO(?:_[A-Z0-9]+)*|EXAMPLE|SOURCE[12]|TEST_SOURCE1|earthquake|volcano|namespace|sourceId|Namespace\.namespace|data\.(?:satellite|namespace)|<namespace_for_[A-Za-z0-9_]+>)$/;
@@ -88,6 +89,15 @@ export async function verifyPublicHbds(repository = root) {
         if (resolved !== actual || !(await fs.lstat(resolved)).isFile()) throw new Error('Public HBDS assets cannot be links: ' + file);
         inspectPublicHbds(file, await fs.readFile(resolved, 'utf8'));
     }
+    const normalized = async file => (await fs.readFile(path.join(repository,file),'utf8')).replace(/\r\n/g,'\n');
+    const model = await normalized('HBDS/schema/openbexi_timeline.json');
+    const contract = JSON.parse(model).metadata.extensions.timeline;
+    if (contract.provenanceNormalization !== 'utf8-lf') throw new Error('HBDS provenance must declare portable UTF-8/LF hashes.');
+    for (const item of contract.provenance) {
+        if (!manifest.includes(item.file) || createHash('sha256').update(await normalized(item.file)).digest('hex') !== item.sha256)
+            throw new Error('HBDS model input changed; regenerate the design artifacts: ' + item.file);
+    }
+    if (model !== await normalized('docs/design/2.9/openbexi_timeline.json')) throw new Error('Published HBDS model differs from its design model.');
     return {publicFiles: permitted.size, trackedFiles: tracked.length};
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -26,7 +26,8 @@ const python = process.platform === 'win32' ? path.join(root, '.venv/Scripts/pyt
 const result = spawnSync(python, ['-B', '-c', 'import json,sys\nfrom server import validate_model_payload\ne=validate_model_payload(json.load(sys.stdin))\nprint(json.dumps(e))\nsys.exit(1 if e else 0)'],
     {cwd: reference, input: JSON.stringify(model), encoding: 'utf8'});
 assert.equal(result.status, 0, result.stderr || result.stdout);
-for (const item of contract.provenance) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root, item.file))).digest('hex'), item.sha256, item.file);
+assert.equal(contract.provenanceNormalization, 'utf8-lf');
+for (const item of contract.provenance) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root, item.file), 'utf8').replace(/\r\n/g, '\n')).digest('hex'), item.sha256, item.file);
 const nodes = new Map(graph.class.map(node => [node.id, node]));
 const classes = new Map(graph.class.map(node => [node.name, node]));
 const links = new Map(graph.link.map(link => [link.id, link]));

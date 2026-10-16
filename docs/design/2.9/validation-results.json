@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-16T21:45:15.897Z",
-  "modelSha256": "4348ccad0ae021bed4765e29f03078ff13bda5c163a61dd2efd67896d87d864b",
+  "generatedAt": "2026-10-16T22:59:35.996Z",
+  "modelSha256": "9a38fc10b4402ff00f4ddb7d28dc8e48baa09e65f9b59e7301d9b199b1dc27d0",
   "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
   "browser": {
     "name": "msedge.exe",
@@ -44,9 +44,9 @@
     "pngDimensionsMatch": true,
     "graphicsBufferMatchesCanvas": true,
     "noPageErrors": true,
-    "noFailedRequests": false
+    "noFailedRequests": true
   },
-  "passed": false,
+  "passed": true,
   "counts": {
     "nodes": 41,
     "links": 39,
@@ -144,26 +144,14 @@
     "dark": 5156
   },
   "pageErrors": [],
-  "failedRequests": [
+  "failedRequests": [],
+  "unexpectedHttpResponses": [],
+  "expectedOfflineResponses": [
     {
       "url": "http://hbds.test/api/ai/providers",
-      "error": "net::ERR_ABORTED"
-    },
-    {
-      "url": "http://hbds.test:8010/api/ai/providers",
-      "error": "net::ERR_ABORTED"
-    },
-    {
-      "url": "http://127.0.0.1:8010/api/ai/providers",
-      "error": "net::ERR_ABORTED"
-    },
-    {
-      "url": "http://localhost:8010/api/ai/providers",
-      "error": "net::ERR_CONNECTION_REFUSED"
+      "status": 404
     }
   ],
-  "unexpectedHttpResponses": [],
-  "expectedOfflineResponses": [],
   "fallbackIcons": [],
   "notes": [
     "The full PNG is an actual simulator render with editing panels hidden, captured at 1.25 physical pixels per CSS pixel to remain within the graphics buffer budget.",
