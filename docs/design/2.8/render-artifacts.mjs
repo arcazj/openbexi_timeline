@@ -180,7 +180,7 @@ try {
             effectiveInheritance
         };
     });
-    const screenshot = await page.locator('#container').screenshot({path: path.join(outputDirectory, 'openbexi_timeline.png'), animations: 'disabled', timeout: 60_000});
+    const screenshot = await page.locator('#container').screenshot({path: path.join(repository, 'HBDS/schema/openbexi_timeline.png'), animations: 'disabled', timeout: 60_000});
     // Inspect the delivered PNG, including CSS2D geometry and labels. The viewer
     // samples only its WebGL buffer, which can contain just the background in 2D.
     diagnostics.screenshotPixels = await page.evaluate(async base64 => {
@@ -225,7 +225,7 @@ try {
         modelSha256: createHash('sha256').update(modelText).digest('hex'),
         referenceCommit: model.metadata.extensions.timeline.reference.commit,
         browser: {name: path.basename(browserPath), version: browser.version(), viewport, deviceScaleFactor},
-        outputs: {simulator: {file: 'openbexi_timeline.png', width: viewport.width * deviceScaleFactor, height: viewport.height * deviceScaleFactor}},
+        outputs: {simulator: {file: '../../../HBDS/schema/openbexi_timeline.png', width: viewport.width * deviceScaleFactor, height: viewport.height * deviceScaleFactor}},
         expectedCounts, checks, passed: Object.values(checks).every(Boolean),
         ...diagnostics, pageErrors, failedRequests, unexpectedHttpResponses, expectedOfflineResponses, fallbackIcons,
         notes: [`The full PNG is an actual simulator render with editing panels hidden, captured at ${deviceScaleFactor} physical pixels per CSS pixel to remain within the graphics buffer budget.`, 'The native simulator scales attribute text to at most 9 CSS pixels at this full-model fit; class and link labels retain their configured sizes. The capture preserves native font logic. Load the JSON in HBDS to inspect nested schemas, examples and attributes at higher zoom.', 'The offline AI provider request returns 404 and uses the simulator\'s local provider definitions.', 'Missing icons use the same generated placeholder as the upstream static server.', 'Browser validation checks the proposed HBDS model, not future application enforcement.']

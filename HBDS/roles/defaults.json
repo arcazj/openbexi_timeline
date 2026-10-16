@@ -1,0 +1,4 @@
+[
+  {"id": "role_admin", "name": "Administrator", "ceiling": "admin"},
+  {"id": "role_guest", "name": "Guest", "ceiling": "r"}
+]

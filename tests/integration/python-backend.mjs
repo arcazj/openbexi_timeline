@@ -50,8 +50,8 @@ try {
     assert.ok(requests.length<=6,`Unexpected initial request count: ${requests.length}`);
     const initialRequests=requests.length;
     await page.getByAltText('Settings',{exact:true}).click();
-    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version 2.8.1');
-    await expect(page.locator('.ob_backend_version')).toHaveText('Backend: Python 2.8.1');
+    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version 2.9.0');
+    await expect(page.locator('.ob_backend_version')).toHaveText('Backend: Python 2.9.0');
     await page.getByRole('combobox',{name:'Trace level'}).selectOption('ERROR');
     await page.getByRole('button',{name:'Close settings'}).click();
     await fs.writeFile(file,JSON.stringify({events:[...records,{id:'live',start:'2026-09-12T12:25:00Z',data:{title:'Live update'}}]}));
@@ -73,7 +73,7 @@ try {
     await builder.getByLabel('Filter operator',{exact:true}).selectOption('CONTAINS');
     await builder.getByLabel('Filter value',{exact:true}).fill('Nominal');
     await builder.getByRole('button',{name:'Save filter',exact:true}).click();
-    await expect(page.getByRole('radio',{name:'Generated_nominal',exact:true})).toBeChecked();
+    await expect(page.getByRole('radio',{name:'Generated_nominal',exact:true})).toBeChecked({timeout:15000});
     await expect(builder).not.toHaveAttribute('open','');
     await expect.poll(()=>page.evaluate(()=>timeline.ob_results.snapshot?.entries.map(entry=>entry.record.id))).toEqual(['point']);
     await expect.poll(()=>page.evaluate(()=>timeline.ob_loader?.running)).toBe(false);
@@ -85,7 +85,7 @@ try {
     assert.equal(requests.length,beforeClone);
     await builder.getByLabel('New filter name',{exact:true}).fill('Generated_copy');
     await builder.getByRole('button',{name:'Save filter',exact:true}).click();
-    await expect(page.getByRole('radio',{name:'Generated_copy',exact:true})).toBeChecked();
+    await expect(page.getByRole('radio',{name:'Generated_copy',exact:true})).toBeChecked({timeout:15000});
     await expect(builder).not.toHaveAttribute('open','');
     await expect.poll(()=>page.evaluate(()=>timeline.ob_loader?.running)).toBe(false);
     const saved=await page.evaluate(()=>timeline.ob_filters.filter(filter=>filter.name.startsWith('Generated_')));

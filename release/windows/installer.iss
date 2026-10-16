@@ -27,6 +27,7 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
 Name: "{group}\OpenBEXI Timeline"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Start-OpenBEXI.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\app\favicon.ico"
+Name: "{group}\Timeline Data Collector"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Start-Data-Collector.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\app\favicon.ico"
 Name: "{group}\Release notes"; Filename: "{app}\app\docs\release-{#AppVersion}.md"
 Name: "{group}\Uninstall OpenBEXI Timeline"; Filename: "{uninstallexe}"
 

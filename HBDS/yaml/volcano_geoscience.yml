@@ -1,0 +1,17 @@
+config_version: 3
+namespace: volcano
+model: models/geoscience.json
+enable: true
+target_path: /data/volcano/yyyy/mm/dd
+connectors:
+- java_api
+- python_api
+sources:
+- id: input
+  source_plugin: volcano
+  converter_plugin: volcano
+  execution:
+    mode: once
+    resume_on_restart: false
+render: {}
+filter: {}

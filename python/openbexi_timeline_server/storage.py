@@ -110,30 +110,49 @@ class Storage:
         identities = [params.get("userName") or "guest", params.get("timelineName") or "timeline"]
         if any(not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value) for value in identities):
             raise ValueError("Invalid filter profile identity.")
-        private = self.config.root / "HBDS/private/filters"
-        directory = private if self.config.hbds_path or private.is_dir() else self.config.root / "filters"
-        if not directory.resolve().is_relative_to(self.config.root):
+        metadata = (self.config.hbds_root or self.config.root / "HBDS").resolve()
+        base = metadata / "filters"
+        directory = base
+        if self.config.workspace_path:
+            scope = self.config.workspace_path.stem
+            if scope in ("", ".", ".."):
+                raise ValueError("Invalid filter workspace identity.")
+            directory = base / "workspaces" / scope
+        if not directory.resolve().is_relative_to(metadata):
             raise ValueError("Invalid filter storage path.")
         target = directory / ("_".join(identities) + "_filter_setting.json")
-        read_path = target
-        if not target.exists() and identities[0] == "guest":
-            read_path = directory / "default_filter_setting.json"
-            if not read_path.exists():
-                template = self.config.root / "HBDS/templates/filters/default_filter_setting.json"
-                if template.is_file() and template.resolve().is_relative_to(self.config.root.resolve() / "HBDS/templates/filters"):
-                    # Read the generic default, but always save user edits privately.
-                    return target, read_json(template, 2 * 1024 * 1024), identities
-        if read_path.exists() and not read_path.resolve().is_relative_to(directory.resolve()):
-            raise ValueError("Invalid filter storage path.")
-        body = read_json(read_path, 2 * 1024 * 1024) if read_path.exists() else None
-        if body is not None:
+        candidates = [(directory, target)]
+        if directory != base:
+            candidates.append((base, base / target.name))
+        candidates.extend((legacy, legacy / target.name) for legacy in
+                          (self.config.root / "HBDS/private/filters", self.config.root / "filters"))
+        if identities[0] == "guest":
+            defaults = [directory]
+            if directory != base:
+                defaults.append(base)
+            defaults.append(self.config.root / "HBDS/templates/filters")
+            candidates.extend((folder, folder / "default_filter_setting.json") for folder in defaults)
+        for folder, candidate in candidates:
+            if not candidate.is_file():
+                continue
+            if not candidate.resolve().is_relative_to(folder.resolve()):
+                raise ValueError("Invalid filter storage path.")
+            body = read_json(candidate, 2 * 1024 * 1024)
             try:
                 timeline = body["openbexi_timeline"][0]
                 assert isinstance(timeline["filters"], list)
                 assert all(isinstance(item, dict) for item in timeline["filters"])
             except (TypeError, KeyError, IndexError, AssertionError) as error:
                 raise ValueError("Saved filter settings are invalid.") from error
-        return target, body, identities
+            if self.config.workspace_path and folder != directory:
+                # Adopt a legacy preset only for its original source workspace.
+                # Shared model names must not import another workspace's filter.
+                names = {source.get("namespace") for source in timeline.get("sources", []) if isinstance(source, dict)}
+                names.add(body.get("namespace"))
+                if not names.intersection(source.namespace for source in self.config.sources):
+                    continue
+            return target, body, identities
+        return target, None, identities
 
     def resolve(self, params):
         if "filter" in params or not params.get("timelineName") or not params.get("userName"):
@@ -157,10 +176,12 @@ class Storage:
             if body is None:
                 timeline = {key: params.get(key, "") for key in ("top", "left", "width", "height", "camera", "backgroundColor", "sortBy", "email")}
                 timeline.update(name=identities[1], user=identities[0], start="current_time", title1=params.get("title", "Timeline"),
-                                filters=[{"name": "ALL", "filter_value": "", "sortBy": "NONE", "current": "yes"}])
+                                filters=[{"name": "ALL", "filter_value": "", "sortBy": "NONE", "current": "yes"},
+                                         {"name": "by_namespace", "filter_value": "", "sortBy": "namespace", "current": "no"}])
                 body = {"dateTimeFormat": "iso8601", "scene": params.get("scene", "0"), "namespace": params.get("namespace", ""), "openbexi_timeline": [timeline]}
             timeline = body["openbexi_timeline"][0]
-            timeline.update(sources=[source.public() for source in self.config.sources], multiples="45")
+            timeline.update(name=identities[1], user=identities[0],
+                            sources=[source.public() for source in self.config.sources], multiples="45")
             if operation == "readFilters":
                 return body
             name = params.get("filterName", "")
@@ -191,6 +212,11 @@ class Storage:
         sources = sorted(self.config.sources, key=lambda source: source.namespace != requested_namespace)
         seen = set()
         for source in sources:
+            from .publication import descriptor, previous_descriptor
+            committed = descriptor(source.root, identity)
+            if committed is False: continue
+            if committed is not None and (not requested_namespace or namespace(committed, source.namespace) == requested_namespace):
+                return {'dateTimeFormat': 'iso8601', 'event_descriptor': [committed]}, 200
             path = partition(source, params["start"]) / "descriptors" / (identity + ".json")
             if path in seen or not path.exists():
                 continue
@@ -198,7 +224,9 @@ class Storage:
             if not path.resolve().is_relative_to(path.parent.resolve()):
                 raise ValueError("Invalid descriptor path.")
             try:
-                body = read_json(path, legacy=True)
+                pending, body = previous_descriptor(source.root, path)
+                if pending and body is None: continue
+                if not pending: body = read_json(path, legacy=True)
             except ValueError as error:
                 raise OSError("Cannot parse descriptor data.") from error
             if not isinstance(body, dict) or not isinstance(body.get("event_descriptor"), list):

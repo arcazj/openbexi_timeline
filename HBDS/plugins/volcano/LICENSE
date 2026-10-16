@@ -1,0 +1,121 @@
+OpenBEXI Timeline Commercial and Exempt Use License
+Version 1.0 -- October 1, 2026
+
+Copyright (c) 2026 Jean-Christophe Arcaz.
+Licensor: Jean-Christophe Arcaz, individual owner, Maryland, United States.
+Licensing contact: openbexi@gmail.com
+
+1. Scope and existing rights
+
+This license applies to OpenBEXI Timeline 2.4.0 and any later release expressly
+distributed with this license. "Software" means the first-party program code,
+model templates and accompanying documentation that the Licensor has authority
+to license and supplies under these terms.
+
+Third-party code, libraries, datasets, images and other assets retain their own
+licenses. Their notices take precedence for those materials; this license grants
+no additional rights in them. See docs/third-party-notices.md. It does not assert
+ownership of your timeline data, models, YAML documents or AI inputs and outputs.
+
+Copies previously received under the GNU GPL or another valid license retain
+the rights granted by that license, including any 2.4 copies previously
+distributed under GPL. This license does not withdraw or restrict those grants.
+The historical GPL text is in docs/licenses/GPL-3.0-legacy.txt; its inclusion
+does not offer this new distribution as an alternative GPL edition.
+
+2. No-fee use
+
+Subject to these terms, the Licensor grants you a worldwide, nonexclusive,
+royalty-free right to install, run, copy and modify the Software for:
+
+(a) Personal learning, experimentation and other personal noncommercial use.
+(b) Students' study, coursework and educational projects, including educators
+    supporting those activities.
+(c) Academic and other noncommercial research. Grants, scholarships or salaries
+    alone do not make research commercial; use to develop a commercial product
+    or deliver a paid business service requires a commercial agreement.
+(d) The operations and mission activities of charitable and other nonprofit
+    organizations legally established or recognized as such in their home
+    jurisdiction, whose profits are not distributed to private owners or
+    shareholders. Mission-related fundraising, membership fees and cost recovery
+    do not alone remove this exemption. It covers employees, volunteers and
+    contractors acting solely for the eligible organization, but does not
+    extend to independent for-profit subsidiaries or customers.
+
+You may rely on these exemptions while you meet their conditions. The Licensor
+may request reasonable evidence of eligibility. Other exceptions may be granted
+in writing by the Licensor. An exemption does not grant access to another
+person's models, data, infrastructure or AI-provider account.
+
+3. Commercial use
+
+Except for the uses permitted in section 2, using the Software to support a
+business, provide paid services, operate a hosted offering, integrate it into
+a commercial product, or distribute it commercially requires a separate paid
+commercial license from the Licensor before that use.
+
+Contact openbexi@gmail.com to agree the customer, covered version, permitted
+deployments and users, internal/hosted/OEM scope, fees, duration, renewal and
+upgrade rights. Commercial permission starts only when an agreement is accepted
+by both parties and its applicable conditions are met. A written commercial
+agreement controls its covered use where it differs from these terms.
+Support, hosting, updates and service commitments are supplied only if agreed
+in writing. No price, automatic renewal or trial period is imposed by this file.
+
+4. Redistribution and modifications
+
+You may share source or binary copies without charging for the Software,
+including your modifications, provided that you include this complete license,
+retain applicable copyright and third-party notices, and clearly identify
+modified versions. The Licensor's covered code remains subject to these terms;
+you may not grant broader rights in it. Recipients obtain permission for that
+code directly from the Licensor and must qualify under section 2 or obtain
+commercial permission under section 3 for their own use.
+
+Commercial redistribution and commercial hosted access require the agreement
+described in section 3. This license grants no trademark rights or permission
+to imply the Licensor's endorsement. Independently licensed third-party
+materials and prior GPL grants remain governed by section 1.
+
+5. User content and optional services
+
+You remain responsible for having permission to use and share your content.
+AI and other external services have their own terms, fees and availability.
+A workspace entitlement, role, feature flag or successful application login is
+an access-control setting; it is not a purchase, license certificate or waiver
+of these terms. The Software does not collect payment or verify purchases.
+
+6. Duration and termination
+
+These permissions continue while you meet their conditions. If you cease to
+qualify for an exemption, stop the affected use or obtain a commercial license.
+For a curable material breach of these terms, the Licensor may terminate this
+grant if you do not cure the breach within 30 days after written notice. After
+termination, stop exercising the terminated permissions. Termination does not
+remove rights you hold independently under section 1 or rights required by law.
+
+7. Warranty and liability
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED "AS IS"
+AND "AS AVAILABLE", WITHOUT IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE OR NON-INFRINGEMENT. NO UNINTERRUPTED OR ERROR-FREE SERVICE
+IS PROMISED. EXPRESS COMMITMENTS IN A SEPARATE WRITTEN AGREEMENT STILL APPLY.
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR IS NOT LIABLE FOR
+INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL LOSS, INCLUDING LOST PROFITS OR
+LOST DATA, ARISING FROM THE SOFTWARE. THESE EXCLUSIONS DO NOT LIMIT WARRANTIES,
+REMEDIES OR LIABILITY THAT CANNOT LAWFULLY BE EXCLUDED, INCLUDING APPLICABLE
+CONSUMER PROTECTIONS AND LIABILITY FOR FRAUD, WILLFUL MISCONDUCT, GROSS NEGLIGENCE
+OR PERSONAL INJURY WHERE SUCH LIABILITY CANNOT BE LIMITED.
+
+8. General
+
+Maryland law and applicable United States federal law govern these terms,
+subject to mandatory protections that apply in your jurisdiction. If a term
+cannot be enforced, the remaining terms continue to the extent permitted by
+law. These terms do not limit statutory rights that cannot be waived.
+
+Changes to this license govern future distributions that expressly include
+them; they do not retroactively replace the license received with an existing
+copy. Questions and requests for commercial or exempt use may be sent to
+openbexi@gmail.com.

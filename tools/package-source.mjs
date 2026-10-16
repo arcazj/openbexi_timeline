@@ -57,6 +57,11 @@ try {
     execFileSync('tar',['--uid','0','--gid','0','--uname','root','--gname','root','-czf',archive,'-C',stage,name],{stdio:'inherit'});
     const checksum=sha256(await fs.readFile(archive));
     await fs.writeFile(archive+'.sha256',checksum+'  '+path.basename(archive)+'\n');
+    const zip=path.join(dist,name+'-source.zip');
+    execFileSync(process.env.PYTHON || (process.platform==='win32'?'python':'python3'),['-c',
+        'import pathlib,sys,zipfile\nroot=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2],"w",zipfile.ZIP_DEFLATED,compresslevel=9) as archive:\n for file in sorted(root.rglob("*")):\n  if file.is_file(): archive.writestr(zipfile.ZipInfo(file.relative_to(root.parent).as_posix(),(1980,1,1,0,0,0)),file.read_bytes(),compress_type=zipfile.ZIP_DEFLATED)',
+        bundle,zip],{stdio:'inherit'});
+    await fs.writeFile(zip+'.sha256',sha256(await fs.readFile(zip))+'  '+path.basename(zip)+'\n');
     await fs.writeFile(path.join(dist,'SOURCE-MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
     console.log(path.relative(root,archive)+' ('+payload.length+' public files)');
     console.log('SHA-256: '+checksum);

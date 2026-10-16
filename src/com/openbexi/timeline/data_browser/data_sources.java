@@ -230,18 +230,19 @@ class DataSourceConfig {
     public void fromJson(JSONObject jsonObject) {
         this.namespace = (String) jsonObject.get("namespace");
         this.type = (String) jsonObject.get("type");
-        this.enable = Boolean.parseBoolean(jsonObject.get("enable").toString());
+        this.enable = Boolean.parseBoolean(jsonObject.getOrDefault("enable",true).toString());
         this.permission = (String) jsonObject.get("permission");
         this.converter2events_class = (String) jsonObject.get("converter2events_class");
-        this.dataPath = (String) jsonObject.get("data_path");
+        this.dataPath = (String) jsonObject.getOrDefault("source_path",jsonObject.get("data_path"));
         this.url = (String) jsonObject.get("url");
-        this.dataModel = (String) jsonObject.get("data_model");
-        if (jsonObject.containsKey("filter")) {
+        this.dataModel = (String) jsonObject.getOrDefault("target_path",jsonObject.get("data_model"));
+        if (jsonObject.get("filter")!=null) {
             this.filter = new Filter();
             this.filter.fromJson((JSONObject) jsonObject.get("filter"));
         }
-        this.connector = (String) jsonObject.get("connector");
-        if (jsonObject.containsKey("render")) {
+        Object connectorValue=jsonObject.get("connector");
+        this.connector = connectorValue instanceof List<?> values?String.join("|",values.stream().map(Object::toString).toList()):(String)connectorValue;
+        if (jsonObject.get("render")!=null) {
             this.render = new Render();
             this.render.fromJson((JSONObject) jsonObject.get("render"));
         }
@@ -254,8 +255,8 @@ class DataSourceConfig {
         map.put("enable", enable);
         map.put("permission", permission);
         map.put("converter2events_class", converter2events_class);
-        map.put("data_path", dataPath);
-        map.put("data_model", dataModel);
+        map.put("source_path", dataPath);
+        map.put("target_path", dataModel);
         map.put("filter", filter != null ? filter.toMap() : new LinkedHashMap<>());
         map.put("connector", connector);
         map.put("render", render != null ? render.toMap() : new LinkedHashMap<>());
@@ -282,16 +283,17 @@ public class data_sources {
             JSONArray jsonArray = (JSONArray) jsonObject.get("data_sources");
 
             // Clear the existing list to avoid duplicates
-            data_sources.clear();
+            List<DataSourceConfig> parsed=new ArrayList<>();
 
             for (Object obj : jsonArray) {
                 JSONObject dsJson = (JSONObject) obj;
                 DataSourceConfig config = new DataSourceConfig();
                 config.fromJson(dsJson);
-                data_sources.add(config);
+                parsed.add(config);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            data_sources=parsed;
+        } catch (org.json.simple.parser.ParseException e) {
+            throw new IllegalArgumentException("Invalid source configuration",e);
         }
     }
 
@@ -325,17 +327,20 @@ public class data_sources {
     }
 
     private static String yamlToJson(String yamlContent) {
-        Yaml yaml = new Yaml();
+        org.yaml.snakeyaml.LoaderOptions options=new org.yaml.snakeyaml.LoaderOptions();options.setAllowDuplicateKeys(false);
+        Yaml yaml = new Yaml(new org.yaml.snakeyaml.constructor.SafeConstructor(options));
         Map<String, Object> yamlMap = yaml.load(yamlContent);
+        for(Map<String,Object> source:(List<Map<String,Object>>)yamlMap.get("data_sources"))for(String[] keys:List.of(new String[]{"source_path","data_path"},new String[]{"target_path","data_model"}))
+            if(source.containsKey(keys[0])&&source.containsKey(keys[1])&&!Objects.equals(source.get(keys[0]),source.get(keys[1])))throw new IllegalArgumentException("Conflicting path fields");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data_sources", processList((List<Map<String, Object>>) yamlMap.get("data_sources")));
         return jsonObject.toJSONString();
     }
 
-    private static JSONArray processList(List<Map<String, Object>> list) {
+    private static JSONArray processList(List<?> list) {
         JSONArray jsonArray = new JSONArray();
-        for (Map<String, Object> item : list) {
-            jsonArray.add(processMap(item));
+        for (Object item : list) {
+            jsonArray.add(item instanceof Map?processMap((Map<String,Object>)item):item instanceof List?processList((List<?>)item):item);
         }
         return jsonArray;
     }

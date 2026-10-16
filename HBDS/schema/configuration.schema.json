@@ -248,7 +248,7 @@
             }
           ]
         },
-        "data_model": {
+        "target_path": {
           "anyOf": [
             {
               "type": "string"
@@ -261,7 +261,7 @@
             }
           ]
         },
-        "data_path": {
+        "source_path": {
           "anyOf": [
             {
               "type": "string"
@@ -273,6 +273,19 @@
               }
             }
           ]
+        },
+        "source_plugin": {
+          "type": "string"
+        },
+        "converter_plugin": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "minItems": 0
         },
         "render": {
           "$ref": "#/definitions/render"

@@ -434,7 +434,7 @@ class Store:
                     msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
                 else:
                     import fcntl
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                    fcntl.lockf(handle.fileno(), fcntl.LOCK_EX)
                 try:
                     yield
                 finally:
@@ -442,7 +442,7 @@ class Store:
                     if os.name == "nt":
                         msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
                     else:
-                        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                        fcntl.lockf(handle.fileno(), fcntl.LOCK_UN)
 
     def save(self, document, expected):
         if not expected:

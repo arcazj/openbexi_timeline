@@ -1,0 +1,29 @@
+{
+  "id": "filesources",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "python",
+  "capabilities": [
+    "source"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_file_sources:Plugin",
+  "cli": "timeline-convert-filesources",
+  "config_schema": "schemas/options.schema.json",
+  "supported_modes": [
+    "once",
+    "interval",
+    "watch"
+  ],
+  "options_schema": {
+    "type": "object",
+    "additionalProperties": true
+  },
+  "aliases": [
+    "local",
+    "json_file",
+    "sftp",
+    "s3",
+    "oracle"
+  ]
+}

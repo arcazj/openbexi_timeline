@@ -14,8 +14,8 @@
     "hyperclasses": 5,
     "attributes": 187,
     "links": 30,
-    "objects": 60,
-    "objectLinks": 73
+    "objects": 56,
+    "objectLinks": 69
   },
   "scope": "These validate the HBDS design and examples; new authorization rules are not installed in the application."
 }

@@ -189,11 +189,11 @@ function instance(key,className,values) {
     return key;
 }
 function connect(classLink,source,target) {objectLinks.push({id:id('example_link_'+classLink+'_'+source+'_'+target),classLinkId:id(classLink),sourceObjectId:id('example_'+source),targetObjectId:id('example_'+target)});}
-for(const [key,name,ceiling] of [['role_admin','Administrator','admin'],['role_editor','Editor','rw'],['role_reader','Reader','r']])instance(key,'Role',{id:key,name,ceiling});
-for(const [key,name] of [['administrators','Administrators'],['operators','Operators'],['auditors','Auditors']])instance(key,'Group',{id:key,name});
-for(const [key,name,roleId,groupId,admin] of [['admin_user','Admin Example','role_admin','administrators',true],['operator_user','Operator Example','role_editor','operators',false],['reader_user','Reader Example','role_reader','auditors',false]]) {
-    instance(key,'User',{id:key,name,email:key+'@example.invalid',admin,roleId,groupId});
-    connect('role_users',roleId,key);connect('group_users',groupId,key);
+for(const entry of read('HBDS/roles/defaults.json'))instance(entry.id,'Role',entry);
+for(const entry of read('HBDS/groups/defaults.json'))instance(entry.id,'Group',entry);
+for(const entry of read('HBDS/users/defaults.json')) {
+    instance(entry.id,'User',entry);
+    connect('role_users',entry.roleId,entry.id);connect('group_users',entry.groupId,entry.id);
 }
 instance('ui_model','Model',{id:'ui_model',path:'HBDS/templates/models/model_template.json',$schema:modelTemplate.$schema});
 instance('parameters','Parameters',modelTemplate.params[0]);connect('model_parameters','ui_model','parameters');
@@ -249,13 +249,14 @@ sourceTemplate.data_sources.forEach((source,index)=>{
         connect('source_'+provider,key,key+'_provider');
     }
 });
-const grantExamples=[['administrators','EXAMPLE','admin'],['operators','EXAMPLE','rw'],['auditors','EXAMPLE','r'],['operators','DEMO_IMPORT_A','denied'],['administrators','DEMO_IMPORT_A','admin']];
+const grantExamples=[['group_admin','EXAMPLE','admin'],['group_guest','EXAMPLE','r'],['group_guest','DEMO_IMPORT_A','denied'],['group_admin','DEMO_IMPORT_A','rw']];
 for(const [groupId,namespace,permission]of grantExamples) {
     const key='grant_'+groupId+'_'+namespace,namespaceId='namespace_'+namespace;
     instance(key,'GroupNamespaceAccess',{id:key,groupId,namespaceId,permission});connect('group_access',groupId,key);connect('namespace_access',namespaceId,key);
 }
 
-const provenance=['HBDS/templates/models/model_template.json','HBDS/templates/yaml/source_template.yml','schemas/demo-model.schema.json','schemas/legacy-model.schema.json']
+const provenance=['HBDS/templates/models/model_template.json','HBDS/templates/yaml/source_template.yml','schemas/demo-model.schema.json','schemas/legacy-model.schema.json',
+    'HBDS/users/defaults.json','HBDS/groups/defaults.json','HBDS/roles/defaults.json']
     .map(file=>({file,sha256:createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')}));
 const model={
     $schema:'https://openbexi.local/hbds/model/v2',
@@ -297,9 +298,9 @@ const model={
             legacyModelExtensions:{params:['data_default_port','data_sse_port'],bands:['subIntervalPixels','texture','defaultSessionTexture','image'],
                 sort:'Band.model[].alternateColor and provider sortBy strings',schema:legacySchema},
             examples:{modelConfiguration:modelTemplate,sourceConfiguration:sourceTemplate,
-                accessResults:[{user:'admin_user',namespace:'EXAMPLE',permission:'admin'},{user:'operator_user',namespace:'EXAMPLE',permission:'rw'},
-                    {user:'reader_user',namespace:'EXAMPLE',permission:'r'},{user:'operator_user',namespace:'DEMO_IMPORT_A',permission:'denied'},
-                    {user:'admin_user',namespace:'DEMO_IMPORT_B',permission:'denied',reason:'No grant; admin flag does not bypass namespace permissions.'}]}
+                accessResults:[{user:'admin',namespace:'EXAMPLE',permission:'admin'},{user:'guest',namespace:'EXAMPLE',permission:'r'},
+                    {user:'admin',namespace:'DEMO_IMPORT_A',permission:'rw'},{user:'guest',namespace:'DEMO_IMPORT_A',permission:'denied'},
+                    {user:'admin',namespace:'DEMO_IMPORT_B',permission:'denied',reason:'No grant; admin flag does not bypass namespace permissions.'}]}
         }}},
     hypergraph:{class:classes,link:links,membership,inheritance:[],object:objects,objectLink:objectLinks}
 };

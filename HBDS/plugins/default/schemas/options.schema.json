@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "seed": {
+      "type": "integer"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "zones": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

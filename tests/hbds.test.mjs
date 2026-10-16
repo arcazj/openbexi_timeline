@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import Ajv from 'ajv';
 import {validateHbdsDocument, resolveHbdsNamespace, hbdsChangedNamespaces, hbdsRestartReasons, hbdsPermission} from '../src/openbexi_timeline_hbds.js';
 import {importLegacyConfiguration, exportLegacyConfiguration, migrateWorkspace} from '../tools/hbds-migrate.mjs';
 import {inspectPublicHbds, verifyPublicHbds} from '../tools/verify-hbds-public.mjs';
@@ -31,14 +32,11 @@ test('HBDS rejects broken references, duplicate IDs, names and tab order', () =>
 });
 test('role ceiling and explicit denial constrain group grants including administrator users', () => {
     const document = fixture(), namespaceId = document.defaultNamespaceId;
-    document.roles.push({id: 'role_admin', name: 'Admin', ceiling: 'admin'});
-    document.groups.push({id: 'group_admin', name: 'Admins'});
-    document.users.push({id: 'user_admin', name: 'Example', email: 'admin@example.invalid', admin: true, roleId: 'role_admin', groupId: 'group_admin'});
-    assert.equal(hbdsPermission(document, 'user_admin', namespaceId), 'denied');
+    assert.equal(hbdsPermission(document, 'admin', namespaceId), 'denied');
     document.grants.push({id: 'grant_admin', groupId: 'group_admin', namespaceId, permission: 'denied'});
-    assert.equal(hbdsPermission(document, 'user_admin', namespaceId), 'denied');
+    assert.equal(hbdsPermission(document, 'admin', namespaceId), 'denied');
     document.grants[0].permission = 'rw';
-    assert.equal(hbdsPermission(document, 'user_admin', namespaceId), 'rw');
+    assert.equal(hbdsPermission(document, 'admin', namespaceId), 'rw');
     validateHbdsDocument(document);
     document.grants.push({...document.grants[0], id: 'grant_duplicate'});
     assert.throws(() => validateHbdsDocument(document), /Duplicate group/);
@@ -110,15 +108,73 @@ test('HBDS rejects prototype keys rather than allowing configuration-driven prot
 });
 test('public boundary rejects private files, operational namespaces and literal credentials', () => {
     assert.throws(() => inspectPublicHbds('HBDS/private/configurations/example.json', '{}'), /Private HBDS/);
-    assert.throws(() => inspectPublicHbds('HBDS/templates/SOC_timeline.json', '{}'), /Private HBDS/);
-    assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"namespace":"SOC"}'), /Operational namespace/);
+    assert.throws(() => inspectPublicHbds('HBDS/templates/private_timeline.json', '{}'), /Private HBDS/);
+    assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"namespace":"PRIVATE_NAMESPACE"}'), /Operational namespace/);
     assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"password":"actual-secret"}'), /Literal credential/);
     assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"password":"literal-${EXAMPLE_PASSWORD}"}'), /Literal credential/);
     assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"host":"10.0.0.5"}'), /Private endpoint/);
+    assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', '{"path":"C:/Users/example/events"}'), /Private endpoint/);
+    assert.doesNotThrow(() => inspectPublicHbds('HBDS/templates/example.json', '{"file":"HBDS/users/defaults.json"}'));
     assert.doesNotThrow(() => inspectPublicHbds('HBDS/templates/example.json', '{"namespace":"DEMO","password":"${EXAMPLE_PASSWORD}"}'));
 });
 test('all published HBDS assets satisfy the explicit allowlist', async () => {
     const result = await verifyPublicHbds(root); assert.ok(result.publicFiles > 0);
+});
+
+test('only unchanged admin and guest records may be published, including inside templates', async () => {
+    for (const key of ['users', 'groups', 'roles']) {
+        const file = `HBDS/${key}/defaults.json`;
+        const entries = JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
+        assert.deepEqual(entries, template[key]);
+        assert.doesNotThrow(() => inspectPublicHbds(file, JSON.stringify(entries)));
+        assert.throws(() => inspectPublicHbds(`HBDS/${key}/index.json`, JSON.stringify(entries)), /outside public/);
+    }
+    const defaults = template.users;
+    assert.deepEqual(defaults.map(user => user.id), ['admin', 'guest']);
+    const privateUser = {...defaults[1], id: 'local_user', name: 'Local user'};
+    for (const users of [[...defaults, privateUser], [{...defaults[0], name: 'Local administrator'}, defaults[1]],
+        [{...defaults[0], email: 'someone@example.com'}, defaults[1]], [defaults[0], defaults[0]],
+        [{...defaults[0], notes: 'Private profile'}, defaults[1]]]) {
+        assert.throws(() => inspectPublicHbds('HBDS/users/defaults.json', JSON.stringify(users)), /only|Private user/);
+        assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', JSON.stringify({...template, users})), /Private user/);
+    }
+    assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', JSON.stringify(privateUser)), /Private user/);
+    for (const key of ['user', 'username', 'userId']) {
+        assert.throws(() => inspectPublicHbds('HBDS/templates/example.json', JSON.stringify({[key]: 'local_user'})), /Private user/);
+        for (const value of ['admin', 'guest', '${EXAMPLE_USER}', '<username>'])
+            assert.doesNotThrow(() => inspectPublicHbds('HBDS/templates/example.json', JSON.stringify({[key]: value})));
+    }
+    const local = {...template, users: [...defaults, privateUser]};
+    assert.doesNotThrow(() => validateHbdsDocument(local)); // Local users remain valid HBDS metadata.
+});
+
+test('HBDS design user examples use the same public defaults and reject private identities', async () => {
+    const file = 'HBDS/schema/openbexi_timeline.json';
+    const model = JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
+    const definition = model.hypergraph.class.find(item => item.name === 'User');
+    const attributes = new Map(definition.attributes.map(item => [item.id, item.name]));
+    const objects = model.hypergraph.object.filter(item => item.classId === definition.id);
+    assert.deepEqual(objects.map(item => Object.fromEntries(item.attributeValues.map(value =>
+        [attributes.get(value.attributeId), value.value]))), template.users);
+    objects[0].attributeValues.find(item => attributes.get(item.attributeId) === 'name').value = 'Local administrator';
+    assert.throws(() => inspectPublicHbds(file, JSON.stringify(model)), /Private user/);
+});
+
+test('public workspaces cannot reference private namespaces or local service settings', async () => {
+    const schema = JSON.parse(await fs.readFile(path.join(root, 'HBDS/schema/workspace.schema.json'), 'utf8'));
+    const validateWorkspace = new Ajv().compile(schema);
+    for (const file of ['HBDS/workspace.json', 'HBDS/GEO_Workspace.json']) {
+        const value = JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
+        assert.equal(validateWorkspace(value), true, JSON.stringify(validateWorkspace.errors));
+        assert.equal(validateWorkspace({...value, namespace_files: []}), false);
+        assert.equal(validateWorkspace({...value, aliases: {'old.yml': '../other.yml'}}), false);
+        assert.doesNotThrow(() => inspectPublicHbds(file, JSON.stringify(value)));
+        assert.throws(() => inspectPublicHbds(file, JSON.stringify({...value, service: 'service.local.yml'})), /reviewed public/);
+        assert.throws(() => inspectPublicHbds(file, JSON.stringify({...value, namespace_files: ['yaml/PRIVATE_default.yml']})), /reviewed public/);
+        assert.throws(() => inspectPublicHbds(file, JSON.stringify({...value, default_namespace_id: 'PRIVATE'})), /Operational namespace/);
+        assert.throws(() => inspectPublicHbds(file, JSON.stringify({...value, aliases: {'DEMO_default.yml': 'PRIVATE_default.yml'}})), /unreviewed namespace/);
+    }
+    assert.throws(() => inspectPublicHbds('HBDS/Private_Workspace.json', '{}'), /Private HBDS/);
 });
 test('static demo server never serves HBDS private configuration', async () => {
     const server = createDemoServer();

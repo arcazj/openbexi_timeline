@@ -57,6 +57,18 @@
           {
             "file": "schemas/legacy-model.schema.json",
             "sha256": "26deae1335529ea12db3b211973a8e4e064bc37d0d5dfb12bc60fe8342f1a273"
+          },
+          {
+            "file": "HBDS/users/defaults.json",
+            "sha256": "ac3a143f4dc7aa52b8d8e07414f9826a58ca52e44d89fd9f800496391f3256a0"
+          },
+          {
+            "file": "HBDS/groups/defaults.json",
+            "sha256": "811baacb286bede0dfdb084e32695040449efef5a0c9dc99ed52e6d26bd1dec1"
+          },
+          {
+            "file": "HBDS/roles/defaults.json",
+            "sha256": "1b4d785dd17f339feb4023a6e8ad0213f6201a6d787f741544297191e9e9beca"
           }
         ],
         "cardinalityNotation": "source = sources per target; target = targets per source. Composition means ownership, not class inheritance. Cardinalities are application constraints.",
@@ -2238,27 +2250,27 @@
           },
           "accessResults": [
             {
-              "user": "admin_user",
+              "user": "admin",
               "namespace": "EXAMPLE",
               "permission": "admin"
             },
             {
-              "user": "operator_user",
-              "namespace": "EXAMPLE",
-              "permission": "rw"
-            },
-            {
-              "user": "reader_user",
+              "user": "guest",
               "namespace": "EXAMPLE",
               "permission": "r"
             },
             {
-              "user": "operator_user",
+              "user": "admin",
+              "namespace": "DEMO_IMPORT_A",
+              "permission": "rw"
+            },
+            {
+              "user": "guest",
               "namespace": "DEMO_IMPORT_A",
               "permission": "denied"
             },
             {
-              "user": "admin_user",
+              "user": "admin",
               "namespace": "DEMO_IMPORT_B",
               "permission": "denied",
               "reason": "No grant; admin flag does not bypass namespace permissions."
@@ -11109,36 +11121,17 @@
         ]
       },
       {
-        "id": "obt28_example_role_editor",
+        "id": "obt28_example_role_guest",
         "classId": "obt28_Role",
-        "name": "role_editor",
+        "name": "role_guest",
         "attributeValues": [
           {
             "attributeId": "obt28_Role_id",
-            "value": "role_editor"
+            "value": "role_guest"
           },
           {
             "attributeId": "obt28_Role_name",
-            "value": "Editor"
-          },
-          {
-            "attributeId": "obt28_Role_ceiling",
-            "value": "rw"
-          }
-        ]
-      },
-      {
-        "id": "obt28_example_role_reader",
-        "classId": "obt28_Role",
-        "name": "role_reader",
-        "attributeValues": [
-          {
-            "attributeId": "obt28_Role_id",
-            "value": "role_reader"
-          },
-          {
-            "attributeId": "obt28_Role_name",
-            "value": "Reader"
+            "value": "Guest"
           },
           {
             "attributeId": "obt28_Role_ceiling",
@@ -11147,13 +11140,13 @@
         ]
       },
       {
-        "id": "obt28_example_administrators",
+        "id": "obt28_example_group_admin",
         "classId": "obt28_Group",
-        "name": "administrators",
+        "name": "group_admin",
         "attributeValues": [
           {
             "attributeId": "obt28_Group_id",
-            "value": "administrators"
+            "value": "group_admin"
           },
           {
             "attributeId": "obt28_Group_name",
@@ -11162,51 +11155,36 @@
         ]
       },
       {
-        "id": "obt28_example_operators",
+        "id": "obt28_example_group_guest",
         "classId": "obt28_Group",
-        "name": "operators",
+        "name": "group_guest",
         "attributeValues": [
           {
             "attributeId": "obt28_Group_id",
-            "value": "operators"
+            "value": "group_guest"
           },
           {
             "attributeId": "obt28_Group_name",
-            "value": "Operators"
+            "value": "Guests"
           }
         ]
       },
       {
-        "id": "obt28_example_auditors",
-        "classId": "obt28_Group",
-        "name": "auditors",
-        "attributeValues": [
-          {
-            "attributeId": "obt28_Group_id",
-            "value": "auditors"
-          },
-          {
-            "attributeId": "obt28_Group_name",
-            "value": "Auditors"
-          }
-        ]
-      },
-      {
-        "id": "obt28_example_admin_user",
+        "id": "obt28_example_admin",
         "classId": "obt28_User",
-        "name": "admin_user",
+        "name": "admin",
         "attributeValues": [
           {
             "attributeId": "obt28_User_id",
-            "value": "admin_user"
+            "value": "admin"
           },
           {
             "attributeId": "obt28_User_name",
-            "value": "Admin Example"
+            "value": "admin"
           },
           {
             "attributeId": "obt28_User_email",
-            "value": "admin_user@example.invalid"
+            "value": "admin@example.invalid"
           },
           {
             "attributeId": "obt28_User_admin",
@@ -11218,26 +11196,26 @@
           },
           {
             "attributeId": "obt28_User_groupId",
-            "value": "administrators"
+            "value": "group_admin"
           }
         ]
       },
       {
-        "id": "obt28_example_operator_user",
+        "id": "obt28_example_guest",
         "classId": "obt28_User",
-        "name": "operator_user",
+        "name": "guest",
         "attributeValues": [
           {
             "attributeId": "obt28_User_id",
-            "value": "operator_user"
+            "value": "guest"
           },
           {
             "attributeId": "obt28_User_name",
-            "value": "Operator Example"
+            "value": "guest"
           },
           {
             "attributeId": "obt28_User_email",
-            "value": "operator_user@example.invalid"
+            "value": "guest@example.invalid"
           },
           {
             "attributeId": "obt28_User_admin",
@@ -11245,42 +11223,11 @@
           },
           {
             "attributeId": "obt28_User_roleId",
-            "value": "role_editor"
+            "value": "role_guest"
           },
           {
             "attributeId": "obt28_User_groupId",
-            "value": "operators"
-          }
-        ]
-      },
-      {
-        "id": "obt28_example_reader_user",
-        "classId": "obt28_User",
-        "name": "reader_user",
-        "attributeValues": [
-          {
-            "attributeId": "obt28_User_id",
-            "value": "reader_user"
-          },
-          {
-            "attributeId": "obt28_User_name",
-            "value": "Reader Example"
-          },
-          {
-            "attributeId": "obt28_User_email",
-            "value": "reader_user@example.invalid"
-          },
-          {
-            "attributeId": "obt28_User_admin",
-            "value": false
-          },
-          {
-            "attributeId": "obt28_User_roleId",
-            "value": "role_reader"
-          },
-          {
-            "attributeId": "obt28_User_groupId",
-            "value": "auditors"
+            "value": "group_guest"
           }
         ]
       },
@@ -13006,17 +12953,17 @@
         ]
       },
       {
-        "id": "obt28_example_grant_administrators_EXAMPLE",
+        "id": "obt28_example_grant_group_admin_EXAMPLE",
         "classId": "obt28_GroupNamespaceAccess",
-        "name": "grant_administrators_EXAMPLE",
+        "name": "grant_group_admin_EXAMPLE",
         "attributeValues": [
           {
             "attributeId": "obt28_GroupNamespaceAccess_id",
-            "value": "grant_administrators_EXAMPLE"
+            "value": "grant_group_admin_EXAMPLE"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_groupId",
-            "value": "administrators"
+            "value": "group_admin"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_namespaceId",
@@ -13029,40 +12976,17 @@
         ]
       },
       {
-        "id": "obt28_example_grant_operators_EXAMPLE",
+        "id": "obt28_example_grant_group_guest_EXAMPLE",
         "classId": "obt28_GroupNamespaceAccess",
-        "name": "grant_operators_EXAMPLE",
+        "name": "grant_group_guest_EXAMPLE",
         "attributeValues": [
           {
             "attributeId": "obt28_GroupNamespaceAccess_id",
-            "value": "grant_operators_EXAMPLE"
+            "value": "grant_group_guest_EXAMPLE"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_groupId",
-            "value": "operators"
-          },
-          {
-            "attributeId": "obt28_GroupNamespaceAccess_namespaceId",
-            "value": "namespace_EXAMPLE"
-          },
-          {
-            "attributeId": "obt28_GroupNamespaceAccess_permission",
-            "value": "rw"
-          }
-        ]
-      },
-      {
-        "id": "obt28_example_grant_auditors_EXAMPLE",
-        "classId": "obt28_GroupNamespaceAccess",
-        "name": "grant_auditors_EXAMPLE",
-        "attributeValues": [
-          {
-            "attributeId": "obt28_GroupNamespaceAccess_id",
-            "value": "grant_auditors_EXAMPLE"
-          },
-          {
-            "attributeId": "obt28_GroupNamespaceAccess_groupId",
-            "value": "auditors"
+            "value": "group_guest"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_namespaceId",
@@ -13075,17 +12999,17 @@
         ]
       },
       {
-        "id": "obt28_example_grant_operators_DEMO_IMPORT_A",
+        "id": "obt28_example_grant_group_guest_DEMO_IMPORT_A",
         "classId": "obt28_GroupNamespaceAccess",
-        "name": "grant_operators_DEMO_IMPORT_A",
+        "name": "grant_group_guest_DEMO_IMPORT_A",
         "attributeValues": [
           {
             "attributeId": "obt28_GroupNamespaceAccess_id",
-            "value": "grant_operators_DEMO_IMPORT_A"
+            "value": "grant_group_guest_DEMO_IMPORT_A"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_groupId",
-            "value": "operators"
+            "value": "group_guest"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_namespaceId",
@@ -13098,17 +13022,17 @@
         ]
       },
       {
-        "id": "obt28_example_grant_administrators_DEMO_IMPORT_A",
+        "id": "obt28_example_grant_group_admin_DEMO_IMPORT_A",
         "classId": "obt28_GroupNamespaceAccess",
-        "name": "grant_administrators_DEMO_IMPORT_A",
+        "name": "grant_group_admin_DEMO_IMPORT_A",
         "attributeValues": [
           {
             "attributeId": "obt28_GroupNamespaceAccess_id",
-            "value": "grant_administrators_DEMO_IMPORT_A"
+            "value": "grant_group_admin_DEMO_IMPORT_A"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_groupId",
-            "value": "administrators"
+            "value": "group_admin"
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_namespaceId",
@@ -13116,47 +13040,35 @@
           },
           {
             "attributeId": "obt28_GroupNamespaceAccess_permission",
-            "value": "admin"
+            "value": "rw"
           }
         ]
       }
     ],
     "objectLink": [
       {
-        "id": "obt28_example_link_role_users_role_admin_admin_user",
+        "id": "obt28_example_link_role_users_role_admin_admin",
         "classLinkId": "obt28_role_users",
         "sourceObjectId": "obt28_example_role_admin",
-        "targetObjectId": "obt28_example_admin_user"
+        "targetObjectId": "obt28_example_admin"
       },
       {
-        "id": "obt28_example_link_group_users_administrators_admin_user",
+        "id": "obt28_example_link_group_users_group_admin_admin",
         "classLinkId": "obt28_group_users",
-        "sourceObjectId": "obt28_example_administrators",
-        "targetObjectId": "obt28_example_admin_user"
+        "sourceObjectId": "obt28_example_group_admin",
+        "targetObjectId": "obt28_example_admin"
       },
       {
-        "id": "obt28_example_link_role_users_role_editor_operator_user",
+        "id": "obt28_example_link_role_users_role_guest_guest",
         "classLinkId": "obt28_role_users",
-        "sourceObjectId": "obt28_example_role_editor",
-        "targetObjectId": "obt28_example_operator_user"
+        "sourceObjectId": "obt28_example_role_guest",
+        "targetObjectId": "obt28_example_guest"
       },
       {
-        "id": "obt28_example_link_group_users_operators_operator_user",
+        "id": "obt28_example_link_group_users_group_guest_guest",
         "classLinkId": "obt28_group_users",
-        "sourceObjectId": "obt28_example_operators",
-        "targetObjectId": "obt28_example_operator_user"
-      },
-      {
-        "id": "obt28_example_link_role_users_role_reader_reader_user",
-        "classLinkId": "obt28_role_users",
-        "sourceObjectId": "obt28_example_role_reader",
-        "targetObjectId": "obt28_example_reader_user"
-      },
-      {
-        "id": "obt28_example_link_group_users_auditors_reader_user",
-        "classLinkId": "obt28_group_users",
-        "sourceObjectId": "obt28_example_auditors",
-        "targetObjectId": "obt28_example_reader_user"
+        "sourceObjectId": "obt28_example_group_guest",
+        "targetObjectId": "obt28_example_guest"
       },
       {
         "id": "obt28_example_link_model_parameters_ui_model_parameters",
@@ -13501,64 +13413,52 @@
         "targetObjectId": "obt28_example_source_6"
       },
       {
-        "id": "obt28_example_link_group_access_administrators_grant_administrators_EXAMPLE",
+        "id": "obt28_example_link_group_access_group_admin_grant_group_admin_EXAMPLE",
         "classLinkId": "obt28_group_access",
-        "sourceObjectId": "obt28_example_administrators",
-        "targetObjectId": "obt28_example_grant_administrators_EXAMPLE"
+        "sourceObjectId": "obt28_example_group_admin",
+        "targetObjectId": "obt28_example_grant_group_admin_EXAMPLE"
       },
       {
-        "id": "obt28_example_link_namespace_access_namespace_EXAMPLE_grant_administrators_EXAMPLE",
+        "id": "obt28_example_link_namespace_access_namespace_EXAMPLE_grant_group_admin_EXAMPLE",
         "classLinkId": "obt28_namespace_access",
         "sourceObjectId": "obt28_example_namespace_EXAMPLE",
-        "targetObjectId": "obt28_example_grant_administrators_EXAMPLE"
+        "targetObjectId": "obt28_example_grant_group_admin_EXAMPLE"
       },
       {
-        "id": "obt28_example_link_group_access_operators_grant_operators_EXAMPLE",
+        "id": "obt28_example_link_group_access_group_guest_grant_group_guest_EXAMPLE",
         "classLinkId": "obt28_group_access",
-        "sourceObjectId": "obt28_example_operators",
-        "targetObjectId": "obt28_example_grant_operators_EXAMPLE"
+        "sourceObjectId": "obt28_example_group_guest",
+        "targetObjectId": "obt28_example_grant_group_guest_EXAMPLE"
       },
       {
-        "id": "obt28_example_link_namespace_access_namespace_EXAMPLE_grant_operators_EXAMPLE",
+        "id": "obt28_example_link_namespace_access_namespace_EXAMPLE_grant_group_guest_EXAMPLE",
         "classLinkId": "obt28_namespace_access",
         "sourceObjectId": "obt28_example_namespace_EXAMPLE",
-        "targetObjectId": "obt28_example_grant_operators_EXAMPLE"
+        "targetObjectId": "obt28_example_grant_group_guest_EXAMPLE"
       },
       {
-        "id": "obt28_example_link_group_access_auditors_grant_auditors_EXAMPLE",
+        "id": "obt28_example_link_group_access_group_guest_grant_group_guest_DEMO_IMPORT_A",
         "classLinkId": "obt28_group_access",
-        "sourceObjectId": "obt28_example_auditors",
-        "targetObjectId": "obt28_example_grant_auditors_EXAMPLE"
+        "sourceObjectId": "obt28_example_group_guest",
+        "targetObjectId": "obt28_example_grant_group_guest_DEMO_IMPORT_A"
       },
       {
-        "id": "obt28_example_link_namespace_access_namespace_EXAMPLE_grant_auditors_EXAMPLE",
-        "classLinkId": "obt28_namespace_access",
-        "sourceObjectId": "obt28_example_namespace_EXAMPLE",
-        "targetObjectId": "obt28_example_grant_auditors_EXAMPLE"
-      },
-      {
-        "id": "obt28_example_link_group_access_operators_grant_operators_DEMO_IMPORT_A",
-        "classLinkId": "obt28_group_access",
-        "sourceObjectId": "obt28_example_operators",
-        "targetObjectId": "obt28_example_grant_operators_DEMO_IMPORT_A"
-      },
-      {
-        "id": "obt28_example_link_namespace_access_namespace_DEMO_IMPORT_A_grant_operators_DEMO_IMPORT_A",
+        "id": "obt28_example_link_namespace_access_namespace_DEMO_IMPORT_A_grant_group_guest_DEMO_IMPORT_A",
         "classLinkId": "obt28_namespace_access",
         "sourceObjectId": "obt28_example_namespace_DEMO_IMPORT_A",
-        "targetObjectId": "obt28_example_grant_operators_DEMO_IMPORT_A"
+        "targetObjectId": "obt28_example_grant_group_guest_DEMO_IMPORT_A"
       },
       {
-        "id": "obt28_example_link_group_access_administrators_grant_administrators_DEMO_IMPORT_A",
+        "id": "obt28_example_link_group_access_group_admin_grant_group_admin_DEMO_IMPORT_A",
         "classLinkId": "obt28_group_access",
-        "sourceObjectId": "obt28_example_administrators",
-        "targetObjectId": "obt28_example_grant_administrators_DEMO_IMPORT_A"
+        "sourceObjectId": "obt28_example_group_admin",
+        "targetObjectId": "obt28_example_grant_group_admin_DEMO_IMPORT_A"
       },
       {
-        "id": "obt28_example_link_namespace_access_namespace_DEMO_IMPORT_A_grant_administrators_DEMO_IMPORT_A",
+        "id": "obt28_example_link_namespace_access_namespace_DEMO_IMPORT_A_grant_group_admin_DEMO_IMPORT_A",
         "classLinkId": "obt28_namespace_access",
         "sourceObjectId": "obt28_example_namespace_DEMO_IMPORT_A",
-        "targetObjectId": "obt28_example_grant_administrators_DEMO_IMPORT_A"
+        "targetObjectId": "obt28_example_grant_group_admin_DEMO_IMPORT_A"
       }
     ]
   }

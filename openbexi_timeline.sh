@@ -27,9 +27,15 @@ if [[ ! -f "$ob_launch_root/target/classes/com/openbexi/timeline/server/openbexi
     exit 1
 fi
 if [[ $# -eq 0 ]]; then
-    ob_launch_config=${OPENBEXI_HBDS_CONFIG:-${OPENBEXI_TIMELINE_CONFIG:-${OPENBEXI_TIMELINE_DATA_PATH:-"$ob_launch_root/HBDS/templates/default.hbds.json"}}}
-    [[ $ob_launch_config = /* ]] || ob_launch_config="$ob_launch_cwd/$ob_launch_config"
-    set -- -data_conf "$ob_launch_config"
+    ob_launch_config=${OPENBEXI_HBDS_CONFIG:-${OPENBEXI_TIMELINE_CONFIG:-${OPENBEXI_TIMELINE_DATA_PATH:-}}}
+    if [[ -n $ob_launch_config ]]; then
+        [[ $ob_launch_config = /* ]] || ob_launch_config="$ob_launch_cwd/$ob_launch_config"
+        set -- -data_conf "$ob_launch_config"
+    elif [[ -f "$ob_launch_root/HBDS/workspace.json" ]]; then
+        set -- --workspace "$ob_launch_root/HBDS/workspace.json"
+    else
+        set -- -dataconf "$ob_launch_root/HBDS/yaml/DEMO_default.yml" -serverconf "$ob_launch_root/HBDS/service.yml" --hbds-root "$ob_launch_root/HBDS"
+    fi
 elif [[ $# -eq 2 && ( $1 == -data_conf || $1 == -data_path ) ]]; then
     ob_launch_config=$2
     [[ $ob_launch_config = /* ]] || ob_launch_config="$ob_launch_cwd/$ob_launch_config"

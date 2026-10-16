@@ -91,6 +91,33 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(2, meta["recordsExamined"])
         self.assertTrue(meta["complete"])
 
+    def test_collector_commit_hides_staged_exports_and_keeps_legacy_data(self):
+        self.write([event('legacy')])
+        snapshot=self.source/'.timeline-collector/publication.json'
+        pending=self.source/'.timeline-collector/pending.json'
+        export=self.file.parent/'timeline_0123456789ab_report.json'
+        atomic_json(pending,{'generation':'next','files':[]})
+        atomic_json(export,{'events':[event('staged')]})
+        self.index.refresh()
+        self.assertEqual([record['id'] for record in self.scan()[0]],['legacy'])
+        atomic_json(snapshot,{'version':1,'generation':'committed','events':[event('legacy'),event('published')],
+                              'baseline_reports':['2026/09/12/events.json']})
+        self.index.refresh()
+        self.assertEqual({record['id'] for record in self.scan()[0]},{'legacy','published'})
+        self.assertTrue(self.scan()[1]['complete'])
+        # Independent user-created files remain visible after adoption.
+        self.write([event('manual')],self.file.parent/'manual.json')
+        self.assertEqual({record['id'] for record in self.scan()[0]},{'legacy','published','manual'})
+
+    def test_collector_descriptor_reads_committed_parent_and_child(self):
+        snapshot=self.source/'.timeline-collector/publication.json'
+        record=event('session',end='2026-09-12T13:00:00Z',activities=[event('child')])
+        atomic_json(snapshot,{'version':1,'generation':'one','events':[record]})
+        for identity in ('session','child'):
+            body,status=Storage(self.index).descriptor({'event_id':identity,'start':event(identity)['start']})
+            self.assertEqual(status,200)
+            self.assertEqual(body['event_descriptor'][0]['id'],identity)
+
     def test_cursor_replay_restart_snapshot_and_identity(self):
         self.write([event(str(i)) for i in range(6)])
         first = self.queries.page(PARAMS)
@@ -204,6 +231,42 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             storage.descriptor({"event_id": "../e", "start": event("e")["start"]})
 
+    def test_workspace_filters_are_isolated_and_only_matching_legacy_profiles_are_reused(self):
+        metadata = self.root / 'HBDS'
+        first = Configuration(self.root, self.root / 'first-state', self.conf.sources,
+                              hbds_root=metadata, workspace_path=metadata / 'First_Workspace.json')
+        second = Configuration(self.root, self.root / 'second-state',
+                               [Source(1, 'volcano', str(self.source), self.source)],
+                               hbds_root=metadata, workspace_path=metadata / 'Second_Workspace.json')
+        one, two = Storage(TimelineIndex(first)), Storage(TimelineIndex(second))
+        legacy = metadata / 'filters/guest_report_filter_setting.json'
+        original = {'namespace': '0', 'openbexi_timeline': [{'name': 'old_name', 'user': 'old_user',
+                    'sources': [{'namespace': 'operations'}], 'filters': [
+                        {'name': 'Commands', 'filter_value': 'system:CMD', 'current': 'yes', 'sortBy': 'NONE'}]}]}
+        atomic_json(legacy, original)
+        atomic_json(legacy.parent / 'default_filter_setting.json', original)
+        before = legacy.read_bytes()
+        params = {'userName': 'guest', 'timelineName': 'report', 'scene': '0'}
+        self.assertEqual('system:CMD', one.resolve(params)['filter'])
+        self.assertNotIn('filter', two.resolve(params))
+        loaded = two.filters(params)['openbexi_timeline'][0]
+        self.assertEqual('ALL', loaded['filters'][0]['name'])
+        self.assertEqual({'name': 'by_namespace', 'filter_value': '', 'sortBy': 'namespace', 'current': 'no'}, loaded['filters'][1])
+        self.assertEqual('report', loaded['name'])
+        saved = {**params, 'ob_request': 'saveFilter', 'filterName': 'Volcano notices',
+                 'filter': 'expr: type = volcano', 'sortBy': 'namespace'}
+        two.filters(saved)
+        self.assertEqual(saved['filter'], two.resolve(params)['filter'])
+        self.assertEqual('system:CMD', one.resolve(params)['filter'])
+        self.assertEqual(before, legacy.read_bytes())
+        self.assertTrue((metadata / 'filters/workspaces/Second_Workspace/guest_report_filter_setting.json').is_file())
+        restored = one.filters(params)['openbexi_timeline'][0]
+        self.assertEqual(('report', 'guest'), (restored['name'], restored['user']))
+        one.filters({**saved, 'filterName': 'Commands', 'filter': 'system:CMD'})
+        self.assertEqual(saved['filter'], two.resolve(params)['filter'])
+        self.assertEqual(before, legacy.read_bytes())
+        self.assertEqual('', two.resolve({**params, 'filter': ''})['filter'])
+
     def test_root_opens_yaml_model_timeline_and_keeps_demo_route(self):
         (self.root / "demos.html").write_text("<html>Demo gallery</html>")
         (self.root / "openbexi_timeline.html").write_text("<html>Configured timeline</html>")
@@ -246,11 +309,11 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(200, client.get("/").status_code)
             self.assertEqual(404, client.get("/secret.yml").status_code)
             self.assertEqual(404, client.get("/state/timeline.sqlite3").status_code)
-            self.assertEqual("2.8.1", client.get("/openbexi_timeline/config").json()["server"]["version"])
+            self.assertEqual("2.9.0", client.get("/openbexi_timeline/config").json()["server"]["version"])
             self.assertEqual(400, client.get("/openbexi_timeline/sessions", params={**PARAMS, "startDate": "bad"}).status_code)
             response = client.get("/openbexi_timeline/sessions", params=PARAMS)
             self.assertEqual(200, response.status_code)
-            self.assertEqual("Python/2.8.1", response.headers["x-timeline-server"])
+            self.assertEqual("Python/2.9.0", response.headers["x-timeline-server"])
             self.assertEqual(304, client.get("/openbexi_timeline/sessions", params=PARAMS, headers={"If-None-Match": response.headers["etag"]}).status_code)
             self.assertEqual(503, client.get("/api/v1/models").status_code)
             self.assertEqual(200, client.get("/openbexi_timeline_sse/sessions", params=PARAMS).status_code)

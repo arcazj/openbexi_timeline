@@ -41,7 +41,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
     }
     // Visit a file once per configured source, including sources with the same namespace.
     private record FileVisit(Path path, int sourceIndex) {}
-    private record Source(int index, String namespace, Path root, java.util.function.Predicate<Path> files) {}
+    private record Source(int index, String namespace, Path root, java.util.function.Predicate<Path> files, JSONObject publication) {}
     private static final class RecordSizeLimitException extends IOException {}
     /** Date components come from data_model, never from private file names sent to the client. */
     private record Partition(List<String> parts, int depth, Integer year, Integer month, Integer day) {
@@ -200,7 +200,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         }
         for (JSONObject item : sources) {
             if ("false".equals(String.valueOf(item.get("enable")))) continue;
-            Source origin = new Source(sourceNumbers.get(item), Objects.toString(item.get("namespace"), ""), null,path->true);
+            Source origin = new Source(sourceNumbers.get(item), Objects.toString(item.get("namespace"), ""), null,path->true,null);
             if (!"json_file".equals(item.get("type"))) {
                 if (history) {
                     historySupported = false;
@@ -214,7 +214,11 @@ final class ProgressiveSourceScan implements AutoCloseable {
             var sourceFilter=FilterExpression.source(item);
             try {
                 Path root = Paths.get(model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0]).toRealPath();
-                origin = new Source(origin.index, namespace, root,SourceFileFilters.compile(item,root));
+                origin = new Source(origin.index, namespace, root,SourceFileFilters.compile(item,root),CollectorPublication.read(root));
+                if (origin.publication != null) {
+                    Directory committed = new Directory(CollectorPublication.path(root), namespace, sourceFilter, origin);
+                    if (history) historyDirectories.add(committed); else preferred.add(committed);
+                }
                 if (history) {
                     String prefix = model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0];
                     String suffix = model.substring(prefix.length()).replaceAll("^/+|/+$", "");
@@ -395,7 +399,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
             }
             Path file = walk.iterator.next(); work++;
             String name = file.getFileName().toString();
-            if (name.startsWith("descriptors") || name.contains("noises")) continue;
+            if (name.startsWith(".") || name.startsWith("descriptors") || name.contains("noises")) continue;
             diagnose(walk.directory, file);
             // One no-follow metadata read replaces separate symlink/directory/file checks.
             BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
@@ -420,7 +424,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
     }
 
     private boolean openFile(Path file, Directory directory, BasicFileAttributes attributes) throws IOException {
-        if(!directory.origin.files.test(file))return false;
+        boolean committed = file.equals(CollectorPublication.path(directory.origin.root));
+        if(!committed && (!directory.origin.files.test(file) || CollectorPublication.excluded(directory.origin.root,file,directory.origin.publication)))return false;
         diagnose(directory, file);
         // Roots are resolved with toRealPath; traversal never follows child symlinks.
         // Re-resolving every ancestor for each file is especially costly on Windows.

@@ -17,7 +17,7 @@ import java.util.function.UnaryOperator;
 
 /** Request-local, bounded inventory. Prefer requested date partitions before archives. */
 final class MatchSourceScan {
-    private record Source(String namespace, String model, Path root, java.util.function.Predicate<JSONObject> filter, java.util.function.Predicate<Path> files) {}
+    private record Source(String namespace, String model, Path root, java.util.function.Predicate<JSONObject> filter, java.util.function.Predicate<Path> files, JSONObject publication) {}
     private final long from, to, maxBytes;
     private final int maxFiles;
     private final UnaryOperator<JSONArray> filter;
@@ -50,7 +50,9 @@ final class MatchSourceScan {
             String model = String.valueOf(source.get("data_model")).replace('\\', '/');
             try {
                 Path root = Paths.get(model.split("/(?:yyyy|mm|dd)(?:/|$)", 2)[0]).toRealPath();
-                sources.add(new Source(namespace, model, root,FilterExpression.source(source),SourceFileFilters.compile(source,root)));
+                JSONObject publication = CollectorPublication.read(root, maxBytes - bytes);
+                if (publication != null) { bytes += Files.size(CollectorPublication.path(root)); seen.add(CollectorPublication.path(root)); }
+                sources.add(new Source(namespace, model, root,FilterExpression.source(source),SourceFileFilters.compile(source,root),publication));
             } catch (IOException | InvalidPathException error) {
                 warnings.add("Source unavailable: " + namespace + ".");
             }
@@ -58,6 +60,11 @@ final class MatchSourceScan {
         // Scan each source's requested partitions first. Otherwise a large old
         // archive can exhaust the budget before any current events are read.
         for (Source source : sources) {
+            if (source.publication != null) {
+                JSONArray selected = select((JSONArray)source.publication.get("events"), 0, source.namespace);
+                selected.removeIf(value -> !source.filter.test((JSONObject)value));
+                records.addAll(filter.apply(selected));
+            }
             LocalDate date = Instant.ofEpochMilli(from).atZone(ZoneOffset.UTC).toLocalDate().minusDays(1);
             LocalDate last = Instant.ofEpochMilli(to).atZone(ZoneOffset.UTC).toLocalDate().plusDays(1);
             Set<Path> partitions = new HashSet<>();
@@ -86,7 +93,7 @@ final class MatchSourceScan {
                 @Override public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attributes) {
                     if (++visited > 100000) { limited = true; return FileVisitResult.TERMINATE; }
                     String name = path.getFileName().toString();
-                    return name.startsWith("descriptors") || name.contains("noises") ? FileVisitResult.SKIP_SUBTREE : FileVisitResult.CONTINUE;
+                    return name.startsWith(".") || name.startsWith("descriptors") || name.contains("noises") ? FileVisitResult.SKIP_SUBTREE : FileVisitResult.CONTINUE;
                 }
                 @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
                     if (++visited > 100000) { limited = true; return FileVisitResult.TERMINATE; }
@@ -94,7 +101,7 @@ final class MatchSourceScan {
                     String name = file.getFileName().toString();
                     if (!attributes.isRegularFile() || !name.endsWith(".json") || name.startsWith("descriptors") || name.contains("noises"))
                         return FileVisitResult.CONTINUE;
-                    if(!source.files.test(file))return FileVisitResult.CONTINUE;
+                    if(!source.files.test(file) || CollectorPublication.excluded(source.root, file, source.publication))return FileVisitResult.CONTINUE;
                     try {
                         if (!seen.add(file.toRealPath())) return FileVisitResult.CONTINUE;
                         if (seen.size() > maxFiles || attributes.size() > maxBytes - bytes) {

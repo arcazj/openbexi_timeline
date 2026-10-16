@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timeline-plugin-volcano"
+version = "1.0.0"
+description = "OpenBEXI Timeline volcano plugin"
+requires-python = ">=3.12"
+readme = "README.md"
+license-files = ["LICENSE"]
+license = "LicenseRef-OpenBEXI-Commercial-Exempt-1.0"
+dependencies = ["timeline-data-collector>=2.9,<3"]
+
+[project.entry-points."timeline_data_collector.plugins"]
+volcano = "timeline_plugin_volcano:Plugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+timeline_plugin_volcano = ["plugin.json", "lib/*.jar"]
+
+[project.scripts]
+timeline-convert-volcano = "timeline_plugin_volcano:main"

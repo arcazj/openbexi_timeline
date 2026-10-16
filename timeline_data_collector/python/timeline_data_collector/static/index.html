@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Timeline data collector</title><link rel="stylesheet" href="/style.css"></head>
+<body><header><div><p class="eyebrow">OpenBEXI Timeline</p><h1>Data collector</h1></div><span id="connection" role="status">Connecting…</span></header>
+<main><section aria-labelledby="conversion-heading"><h2 id="conversion-heading">Convert data</h2>
+<form id="conversion"><div class="fields"><label>Workspace<select id="workspace"></select></label><label>Namespace<select id="namespace"></select></label><label>Source<select id="source"></select></label></div>
+<p id="source-info"></p><div class="fields"><label>Date or period<input id="date" placeholder="All available input · YYYY-MM-DD"></label><label>Through date<input id="end-date" type="date"></label><label class="check"><input id="offline" type="checkbox"> Use local data only</label></div>
+<div class="actions"><button id="run" type="submit">Run conversion</button><button id="again" type="button">Run again</button></div>
+<details><summary>Repeat conversion</summary><div class="fields"><label>Mode<select id="mode"><option value="interval">Interval</option><option value="watch">Watch input</option><option value="stream">Stream</option></select></label><label>Delay after completion (seconds)<input id="interval" type="number" min="1" value="300"></label><label class="check"><input id="resume" type="checkbox"> Resume when collector restarts</label></div><button id="schedule" type="button">Start repeat</button></details></form>
+<p id="error" role="alert"></p></section>
+<section><h2>Repeats</h2><div id="schedules" class="rows"></div></section>
+<section><h2>Conversion jobs</h2><p>Existing timeline data stays available while conversions run.</p><div id="jobs" class="rows" aria-live="polite"></div></section></main><script src="/app.js" defer></script></body></html>

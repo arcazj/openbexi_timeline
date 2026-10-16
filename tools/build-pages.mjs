@@ -3,8 +3,10 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {projectRoot} from './serve-demos.mjs';
 import {readDemoCatalog} from './update-demo-readme.mjs';
+import {verifyPublicHbds} from './verify-hbds-public.mjs';
 
 const root=await fs.realpath(projectRoot);
+await verifyPublicHbds(root);
 const output=path.join(root,'dist','pages');
 await fs.mkdir(output,{recursive:true});
 if(await fs.realpath(output)!==output) throw new Error('Pages output must stay in dist/pages without symlinks.');

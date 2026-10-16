@@ -17,6 +17,7 @@ import ijson
 from ijson.common import ObjectBuilder
 
 from .matching import compact, digest, instant, prepare, source_key
+from .publication import inventories
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
@@ -212,8 +213,13 @@ class TimelineIndex:
             db.execute("PRAGMA journal_mode=WAL")
             db.executescript(SCHEMA)
             signature = self.get(db, "configuration")
+            workspace = str(configuration.workspace_path) if configuration.workspace_path else None
+            stored_workspace = self.get(db, "workspace_configuration")
+            if stored_workspace is not None and stored_workspace != workspace:
+                raise ValueError("The index belongs to another workspace. Use a separate state directory.")
             if signature is not None and signature != configuration.signature:
-                if configuration.hbds_path and self.get(db, "hbds_configuration") == str(configuration.hbds_path):
+                if (workspace and stored_workspace == workspace or
+                        configuration.hbds_path and self.get(db, "hbds_configuration") == str(configuration.hbds_path)):
                     # An administrator saved new source bindings in this same HBDS
                     # workspace. Only derived index data is rebuilt on restart.
                     for table in ("cursors", "cursor_files", "records", "files"):
@@ -222,6 +228,8 @@ class TimelineIndex:
                 else:
                     raise ValueError("The index belongs to another source configuration. Use a separate state directory.")
             self.put(db, "configuration", configuration.signature)
+            if workspace:
+                self.put(db, "workspace_configuration", workspace)
             if configuration.hbds_path:
                 self.put(db, "hbds_configuration", str(configuration.hbds_path))
             if self.get(db, "status") is None:
@@ -270,16 +278,20 @@ class TimelineIndex:
                 if source.root.is_file():
                     paths = [(source.root, source.root.stat())]
                 else:
-                    paths = self.walk(source, warnings)
+                    publication, excluded = inventories(source.root)
+                    paths = [(path, stat) for path, stat in self.walk(source, warnings) if not excluded(path)]
+                    if publication is not None:
+                        committed = source.root / '.timeline-collector/publication.json'
+                        paths.append((committed, committed.stat()))
                 for path, stat in paths:
                     key = digest([source.index, str(path.resolve())])
                     if key in seen:
                         continue
                     seen.add(key)
                     relative = path.name if source.root.is_file() else path.relative_to(source.root).as_posix()
-                    if isinstance(source.include, list) and source.include and not any(fnmatch.fnmatchcase(relative, rule) or fnmatch.fnmatchcase(path.name, rule) for rule in source.include):
+                    if path.name != 'publication.json' and isinstance(source.include, list) and source.include and not any(fnmatch.fnmatchcase(relative, rule) or fnmatch.fnmatchcase(path.name, rule) for rule in source.include):
                         continue
-                    if isinstance(source.exclude, list) and any(fnmatch.fnmatchcase(relative, rule) or fnmatch.fnmatchcase(path.name, rule) for rule in source.exclude):
+                    if path.name != 'publication.json' and isinstance(source.exclude, list) and any(fnmatch.fnmatchcase(relative, rule) or fnmatch.fnmatchcase(path.name, rule) for rule in source.exclude):
                         continue
                     files.append((key, source, path, stat))
                     if len(files) >= self.config.max_files:

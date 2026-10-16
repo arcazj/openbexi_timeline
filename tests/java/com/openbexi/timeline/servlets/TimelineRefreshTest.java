@@ -139,7 +139,7 @@ class TimelineRefreshTest {
                 .put("id",title).put("start","2026-09-12T12:00:00Z").put("data",new JSONObject().put("title",title)));
         Files.writeString(data,new JSONObject().put("events",events).toString());
         String user="http_filter_"+java.util.UUID.randomUUID().toString().replace("-","");
-        Path profile=Path.of("HBDS/private/filters",user+"_sample_filter_setting.json");
+        Path profile=Path.of("HBDS/filters",user+"_sample_filter_setting.json");
         String identity="&userName="+user+"&timelineName=sample";
         String expression="expr: title CONTAINS \"A+B | ready\"";
         String encoded=URLEncoder.encode(expression,StandardCharsets.UTF_8);

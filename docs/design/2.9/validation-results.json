@@ -1,0 +1,175 @@
+{
+  "generatedAt": "2026-10-16T21:45:15.897Z",
+  "modelSha256": "4348ccad0ae021bed4765e29f03078ff13bda5c163a61dd2efd67896d87d864b",
+  "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
+  "browser": {
+    "name": "msedge.exe",
+    "version": "155.0.4283.45",
+    "viewport": {
+      "width": 4400,
+      "height": 4400
+    },
+    "deviceScaleFactor": 1.25
+  },
+  "outputs": {
+    "simulator": {
+      "file": "openbexi_timeline.png",
+      "width": 5500,
+      "height": 5500
+    }
+  },
+  "expectedCounts": {
+    "nodes": 41,
+    "classes": 35,
+    "hyperclasses": 6,
+    "links": 39,
+    "attributes": 190,
+    "memberships": 35,
+    "inheritances": 0,
+    "objects": 19,
+    "objectLinks": 21
+  },
+  "checks": {
+    "countsMatch": true,
+    "modelValid": true,
+    "semanticProfilesValid": true,
+    "allClassLabelsPresent": true,
+    "allAttributeLabelsPresent": true,
+    "allLinkLabelsPresent": true,
+    "noClippedLabels": true,
+    "noEllipsizedAttributes": true,
+    "noOverlappingAttributes": true,
+    "validRelationshipHubs": true,
+    "renderedPixels": true,
+    "pngDimensionsMatch": true,
+    "graphicsBufferMatchesCanvas": true,
+    "noPageErrors": true,
+    "noFailedRequests": false
+  },
+  "passed": false,
+  "counts": {
+    "nodes": 41,
+    "links": 39,
+    "attributes": 190,
+    "hyperclasses": 6,
+    "objects": 19,
+    "objectLinks": 21,
+    "memberships": 35,
+    "inheritances": 0
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "semanticProfiles": {
+    "valid": true,
+    "errors": [],
+    "warnings": []
+  },
+  "serverConnected": false,
+  "completedRenderCount": 9,
+  "canvas": {
+    "width": 5500,
+    "height": 5408,
+    "clientWidth": 4400,
+    "clientHeight": 4327
+  },
+  "graphics": {
+    "drawingBufferWidth": 5500,
+    "drawingBufferHeight": 5408,
+    "maxRenderbufferSize": 8192,
+    "maxTextureSize": 8192
+  },
+  "fit": {
+    "diagramWidth": 60.1577,
+    "diagramHeight": 39.81,
+    "diagramDepth": 0.175,
+    "visibleWidth": 65.0641,
+    "visibleHeight": 63.9847,
+    "subjectCount": 41,
+    "occupancyX": 0.9246,
+    "occupancyY": 0.6222,
+    "occupancy": 0.9246,
+    "centerOffsetX": 0,
+    "centerOffsetY": 0,
+    "distance": 65.594,
+    "center": {
+      "x": -0.2281,
+      "y": 0.305,
+      "z": 0.0875
+    }
+  },
+  "pixels": {
+    "width": 5500,
+    "height": 5408,
+    "step": 407,
+    "sampled": 169,
+    "nonBackground": 169,
+    "colored": 0,
+    "averageNonBackgroundLuminance": 242
+  },
+  "labels": {
+    "classes": 41,
+    "attributes": 190,
+    "links": 39,
+    "clipped": [],
+    "ellipsizedAttributes": [],
+    "attributeOverlaps": [],
+    "fontPixels": {
+      "classes": {
+        "min": 20,
+        "max": 24
+      },
+      "attributes": {
+        "min": 9,
+        "max": 9
+      },
+      "links": {
+        "min": 12,
+        "max": 12
+      }
+    }
+  },
+  "relationshipHubs": {
+    "count": 39,
+    "invalid": []
+  },
+  "effectiveInheritance": [],
+  "screenshotPixels": {
+    "width": 5500,
+    "height": 5500,
+    "sampled": 1048576,
+    "colored": 80045,
+    "dark": 5156
+  },
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "http://hbds.test/api/ai/providers",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://hbds.test:8010/api/ai/providers",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/ai/providers",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "http://localhost:8010/api/ai/providers",
+      "error": "net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "unexpectedHttpResponses": [],
+  "expectedOfflineResponses": [],
+  "fallbackIcons": [],
+  "notes": [
+    "The full PNG is an actual simulator render with editing panels hidden, captured at 1.25 physical pixels per CSS pixel to remain within the graphics buffer budget.",
+    "The native simulator scales attribute text to at most 9 CSS pixels at this full-model fit; class and link labels retain their configured sizes. The capture preserves native font logic. Load the JSON in HBDS to inspect nested schemas, examples and attributes at higher zoom.",
+    "The offline AI provider request returns 404 and uses the simulator's local provider definitions.",
+    "Missing icons use the same generated placeholder as the upstream static server.",
+    "Browser validation checks the HBDS model; application regression evidence is recorded separately."
+  ]
+}

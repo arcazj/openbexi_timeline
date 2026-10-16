@@ -1,0 +1,103 @@
+{
+  "id": "mqtt",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "python",
+  "capabilities": [
+    "source",
+    "converter"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_plugin_mqtt:Plugin",
+  "cli": "timeline-convert-mqtt",
+  "config_schema": "schemas/options.schema.json",
+  "supported_modes": [
+    "once",
+    "stream"
+  ],
+  "options_schema": {
+    "type": "object",
+    "properties": {
+      "host": {
+        "type": "string"
+      },
+      "port": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "topic": {
+        "type": "string",
+        "minLength": 1
+      },
+      "qos": {
+        "enum": [
+          1
+        ]
+      },
+      "client_id": {
+        "type": "string"
+      },
+      "max_queue": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100000
+      },
+      "batch_size": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10000
+      },
+      "max_messages": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 2147483647
+      },
+      "idle_timeout": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "version_field": {
+        "type": "string",
+        "minLength": 1
+      },
+      "max_payload_bytes": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 16777216
+      },
+      "malformed_policy": {
+        "enum": [
+          "quarantine",
+          "fail"
+        ]
+      },
+      "connect_timeout": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "keepalive": {
+        "type": "integer",
+        "minimum": 5,
+        "maximum": 65535
+      },
+      "tls": {
+        "type": "boolean"
+      },
+      "username": {
+        "type": "string"
+      },
+      "password": {
+        "type": "string"
+      },
+      "ca_file": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "host",
+      "topic"
+    ],
+    "additionalProperties": true
+  }
+}

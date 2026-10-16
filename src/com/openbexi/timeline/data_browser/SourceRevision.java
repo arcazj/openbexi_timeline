@@ -36,6 +36,11 @@ public final class SourceRevision {
             }
             files.put(root.toString(),Files.isDirectory(root)?"directory":"unavailable");
             if(!Files.isDirectory(root))continue;
+            Path publication = CollectorPublication.path(root);
+            if(Files.isRegularFile(publication)) {
+                BasicFileAttributes attributes=Files.readAttributes(publication,BasicFileAttributes.class);
+                files.put(publication.toString(),attributes.size()+":"+attributes.lastModifiedTime());
+            }
             Files.walkFileTree(root,EnumSet.noneOf(FileVisitOption.class),32,new SimpleFileVisitor<>() {
                 private int visited;
                 @Override public FileVisitResult preVisitDirectory(Path path,BasicFileAttributes attributes) throws IOException {

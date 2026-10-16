@@ -36,7 +36,7 @@
     "test:hbds": "node --experimental-vm-modules --test --test-concurrency=2 tests/hbds.test.mjs tests/hbds-editor.test.mjs"
   },
   "name": "openbexi-timeline",
-  "version": "2.8.1",
+  "version": "2.9.0",
   "private": true,
   "license": "SEE LICENSE IN LICENSE"
 }

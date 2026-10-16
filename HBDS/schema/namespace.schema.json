@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Namespace configuration",
+  "description": "One namespace per <namespace>_<model_name>.yml. Runtime validation also checks names, resolved paths and references.",
+  "type": "object",
+  "required": [
+    "config_version",
+    "namespace",
+    "model",
+    "target_path",
+    "sources"
+  ],
+  "properties": {
+    "config_version": {
+      "enum": [
+        2,
+        3
+      ]
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "model": {
+      "type": "string",
+      "pattern": "\\.json$"
+    },
+    "enable": {
+      "type": "boolean",
+      "default": true
+    },
+    "target_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allow_external_namespace_path": {
+      "type": "boolean",
+      "default": false,
+      "description": "Allow an existing local target_path without the namespace directory component. Output paths must still be unique and non-overlapping. Input exceptions are configured on each source separately."
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source_plugin",
+          "converter_plugin"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_plugin": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "converter_plugin": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "enable": {
+            "type": "boolean",
+            "default": true
+          },
+          "allow_external_namespace_path": {
+            "type": "boolean",
+            "default": false
+          },
+          "options": {
+            "type": "object"
+          },
+          "execution": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "enum": [
+                  "once",
+                  "interval",
+                  "watch",
+                  "stream"
+                ],
+                "default": "once"
+              },
+              "interval_seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 31536000
+              },
+              "overlap": {
+                "const": "skip"
+              },
+              "resume_on_restart": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "connectors": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+      }
+    },
+    "filter": {
+      "type": "object"
+    },
+    "render": {
+      "type": "object"
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "data_sources"
+        ]
+      },
+      {
+        "required": [
+          "server"
+        ]
+      },
+      {
+        "required": [
+          "timeline_server"
+        ]
+      },
+      {
+        "required": [
+          "source_path"
+        ]
+      },
+      {
+        "required": [
+          "source_plugin"
+        ]
+      },
+      {
+        "required": [
+          "converter_plugin"
+        ]
+      }
+    ]
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "config_version": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sources": {
+            "items": {
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "source_plugin": {
+                        "const": "oracle"
+                      }
+                    }
+                  },
+                  "else": {
+                    "required": [
+                      "source_path"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
