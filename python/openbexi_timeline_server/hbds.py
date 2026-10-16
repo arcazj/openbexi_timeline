@@ -10,12 +10,26 @@ import os
 from pathlib import Path
 import re
 import threading
+import weakref
 
 from .storage import atomic_json
 from .matching import compact
 
 LIMIT = 2 * 1024 * 1024
 REGISTRIES = ("namespaces", "models", "sources", "connectors", "tabs", "users", "roles", "groups", "grants")
+_path_locks = weakref.WeakValueDictionary()
+_path_locks_guard = threading.Lock()
+
+
+def path_lock(path):
+    """Share thread exclusion across stores; POSIX record locks are process-owned."""
+    key = os.path.normcase(str(Path(path).resolve()))
+    with _path_locks_guard:
+        lock = _path_locks.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _path_locks[key] = lock
+        return lock
 
 
 class HBDSError(ValueError):
@@ -402,7 +416,7 @@ class Store:
         template = path if path.is_relative_to(self.root / "HBDS/templates") else None
         if template:
             path = self.root / "HBDS/private/configurations" / path.name
-        self.path, self.lock = path, threading.RLock()
+        self.path, self.lock = path, path_lock(path)
         self._cached = None
         self._stamp = None
         if template:

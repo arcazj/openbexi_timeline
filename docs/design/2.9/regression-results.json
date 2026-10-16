@@ -1,7 +1,7 @@
 {
   "version": "2.9.0",
   "status": "passed",
-  "verifiedAt": "2026-10-16T22:46:03.379104+00:00",
+  "verifiedAt": "2026-10-16T22:55:08.509757+00:00",
   "scope": "Local Windows pre-release checks. GitHub Verify must also pass on the committed revision before tagging; its results are recorded in GitHub Actions.",
   "baselineCommit": "4d480acf4ee0fd772cf09904bb8b9248a72740ad",
   "environment": {
@@ -25,8 +25,9 @@
       "note": "Existing legacy tests requiring unavailable external fixtures/services remain skipped."
     },
     "pythonBackend": {
-      "passed": 70,
-      "failed": 0
+      "passed": 71,
+      "failed": 0,
+      "concurrentHbdsSaves": "Shared thread locks supplement cross-process record locks for legacy and namespace stores."
     },
     "publicCollector": {
       "passed": 35,
@@ -139,7 +140,9 @@
       "dashboardLauncher": "passed",
       "portableConverterLauncher": "passed",
       "privatePackagesExcluded": true,
-      "uninstallPreservesUserData": true
+      "uninstallPreservesUserData": true,
+      "customServiceSelectionAndPluginSettingsSurviveRestart": true,
+      "explicitPortOverridePreservesServiceFile": true
     },
     "hbds": {
       "classes": 35,

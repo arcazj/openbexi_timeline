@@ -3,11 +3,10 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
-import threading
 
 import yaml
 
-from .hbds import Store, HBDSError, validate, changes, decode, read_bytes
+from .hbds import Store, HBDSError, validate, changes, decode, read_bytes, path_lock
 from .namespace_config import Bundle, read_yaml, validate_namespace, resolve_namespace_files
 from .storage import atomic_json
 
@@ -31,7 +30,7 @@ class NamespaceWorkspace(Store):
         self.workspace_path=configuration.workspace_path or self.metadata/'workspace.json'
         self.bundle=Bundle(configuration.namespace_files,configuration.service_path,self.metadata,self.workspace_path)
         self.path=self.metadata/'.workspace'
-        self.lock=threading.RLock(); self._stamp=None; self._cached=None
+        self.lock=path_lock(self.path); self._stamp=None; self._cached=None
         self.model_paths={}; self._default_ids={}
 
     def describe(self):

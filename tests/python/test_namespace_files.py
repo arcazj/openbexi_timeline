@@ -1,7 +1,9 @@
 from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 from contextlib import redirect_stdout
@@ -305,6 +307,27 @@ class NamespaceFileTests(unittest.TestCase):
         store.read(copy_result=False)
         first=store.read(copy_result=False)
         self.assertIs(first,store.read(copy_result=False))
+
+    def test_two_namespace_editors_reject_a_stale_concurrent_save(self):
+        first,second=NamespaceWorkspace(self.conf),NamespaceWorkspace(self.conf)
+        original,revision=first.read()
+        gate=threading.Barrier(2)
+        unchanged=[path.read_bytes() for path in self.files]
+        def save(store,title):
+            edit=deepcopy(original);edit['tabs'][0]['title']=title
+            gate.wait(timeout=5)
+            try:
+                store.save(edit,'"'+revision+'"')
+                return 200,title
+            except HBDSError as error:
+                return error.status,title
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures=[pool.submit(save,first,'First editor'),pool.submit(save,second,'Second editor')]
+            results=[future.result() for future in futures]
+        self.assertEqual([200,412],sorted(status for status,_ in results))
+        winner=next(title for status,title in results if status==200)
+        self.assertEqual(winner,NamespaceWorkspace(self.conf).read()[0]['tabs'][0]['title'])
+        self.assertEqual(unchanged,[path.read_bytes() for path in self.files])
 
     def test_model_switch_survives_restart_and_external_edits(self):
         store=NamespaceWorkspace(self.conf);document,revision=store.read()
