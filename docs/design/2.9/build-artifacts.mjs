@@ -287,7 +287,7 @@ for (const user of read('HBDS/users/defaults.json')) {
 }
 const provenance = ['HBDS/GEO_Workspace.json', 'HBDS/workspace.json', 'HBDS/models/geoscience.json', 'schemas/demo-model.schema.json',
     'HBDS/plugins/earthquake/plugin.json', 'HBDS/plugins/volcano/plugin.json', 'HBDS/service.yml', 'demos/catalog.json', 'docs/design/2.9/build-artifacts.mjs'].map(file => ({file,
-    sha256: createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex')}));
+    sha256: createHash('sha256').update(fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n')).digest('hex')}));
 const model = {$schema: 'https://openbexi.local/hbds/model/v2', metadata: {
     id: id('openbexi_timeline'), name: 'OpenBEXI Timeline 2.9 plugin architecture', version: '2.9.0', semanticVersion: 1,
     purpose: 'HBDS structure for workspaces, reusable ingestion plugins, shared execution, durable publication and unchanged timeline display.',
@@ -295,7 +295,7 @@ const model = {$schema: 'https://openbexi.local/hbds/model/v2', metadata: {
     layout: {algorithm: 'none', fit: {padding: 1.1}}, font: {size: 15, family: 'Arial, sans-serif', classSize: 20, hyperclassSize: 24, attributeSize: 15, linkSize: 12},
     sceneSettings: {background: '#f8fafc', ambient: .9, front: .2}, extensions: {timeline: {
         status: 'Implemented 2.9 domain model. Runtime schemas validate namespace, service and plugin files independently.',
-        reference: accessModel.metadata.extensions.timeline.reference, provenance,
+        reference: accessModel.metadata.extensions.timeline.reference, provenanceNormalization: 'utf8-lf', provenance,
         cardinalityNotation: 'source = sources per target; target = targets per source. Composition declares ownership. Workspace namespace membership is a reference, so separate workspaces may reuse a namespace.',
         attributeNotation: 'Typed attributes carry full JSON Schema under extensions.timeline.jsonSchema. Plugin and job contract API version is 1.',
         accessPolicy: accessModel.metadata.extensions.timeline.accessPolicy,

@@ -104,3 +104,6 @@ The renderer serves the local reference through read-only browser routes.
 Model input hashes, reference cardinalities, public examples and rendered
 labels are checked. These commands do not run conversion jobs, alter live
 datasets or publish a release.
+Input hashes use UTF-8 with LF line endings, so Git's Windows line-ending
+conversion does not change provenance. `npm run hbds:verify` checks these hashes
+and that the published HBDS model matches the design model.

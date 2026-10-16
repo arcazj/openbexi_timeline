@@ -42,18 +42,19 @@
           "commit": "51b61998c12597cd435680158f185c81af2fa9ce",
           "schema": "schemas/hbds-semantic-profile-v2.schema.json"
         },
+        "provenanceNormalization": "utf8-lf",
         "provenance": [
           {
             "file": "HBDS/GEO_Workspace.json",
-            "sha256": "c6532730e4358bc8559c0861a0ab767571e6773f67e46b16eefdb45ce8926f1b"
+            "sha256": "135f0aede9ca0b016783df63153a41d220418bfdb06064deeb076d47a4509cd4"
           },
           {
             "file": "HBDS/workspace.json",
-            "sha256": "40e8ff20ac7f2e6712cbd786c6adcb0fa4200f7fe13aeb26d1c3e289b20a9697"
+            "sha256": "b2dd0ad55df2fa31bb9d69db833fa51b0165ba9b1fbd03918d8c9aba6537f0d3"
           },
           {
             "file": "HBDS/models/geoscience.json",
-            "sha256": "304e48c6cee66b27f8b433b26d1f6526f02f08831aa83f7759a60b4acd88b23d"
+            "sha256": "6876f540174981485d5fd5cccdcc2df320717e4bb0942ca177836b9243a2fdf0"
           },
           {
             "file": "schemas/demo-model.schema.json",
@@ -61,15 +62,15 @@
           },
           {
             "file": "HBDS/plugins/earthquake/plugin.json",
-            "sha256": "9dab3542677ff16bb3827aa6fc1389bee42f8104f8909cf6fe567d4f8c8a170a"
+            "sha256": "64098632b2a2729ecb4c197926a3f70afc76a7411f231520919d341cf00ed608"
           },
           {
             "file": "HBDS/plugins/volcano/plugin.json",
-            "sha256": "16500db167e99b3604dbd9808801295601c82a60cb691807b8e37d59f33858ba"
+            "sha256": "09e1774812fad2bc2b1a84056b669926a19d557ee51800235e0d9044f588c7d6"
           },
           {
             "file": "HBDS/service.yml",
-            "sha256": "ad16233bdc5cfc4048e1a90d45ea0b8079777a5c464390c039d7849536dc40a3"
+            "sha256": "c619460cfd4e5ebc32ac6cd73e07adb3f4d62209e1818df8dbd88d6d0defee0b"
           },
           {
             "file": "demos/catalog.json",
@@ -77,7 +78,7 @@
           },
           {
             "file": "docs/design/2.9/build-artifacts.mjs",
-            "sha256": "abec503ae8a40930a8d304951f70264d98c5e79ec7f44c99ffe9831574f29ca9"
+            "sha256": "63d78da841fee22fa382b793ab45a875bc2f9e57749bc150c6362859696789c1"
           }
         ],
         "cardinalityNotation": "source = sources per target; target = targets per source. Composition declares ownership. Workspace namespace membership is a reference, so separate workspaces may reuse a namespace.",
