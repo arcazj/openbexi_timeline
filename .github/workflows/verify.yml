@@ -42,7 +42,7 @@ jobs:
         run: |
           mvn --batch-mode --no-transfer-progress -f HBDS/plugins/earthquake/pom.xml dependency:list -DincludeScope=runtime -DoutputFile=target/runtime-dependencies.txt
           node tools/audit-java-dependencies.mjs HBDS/plugins/earthquake/target/runtime-dependencies.txt
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: public-collector-packages
           path: dist/collector/
@@ -82,7 +82,7 @@ jobs:
         run: node tests/integration/python-backend.mjs
       - name: Exercise HBDS editing, lazy tabs, scoped refresh and persistence
         run: npm run test:hbds:integration
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: python-backend-reports
@@ -134,7 +134,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --only-shell
       - run: npm run test:browser
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: browser-report
@@ -164,7 +164,7 @@ jobs:
       - name: Install software WebGL drivers
         run: sudo apt-get install -y libgl1-mesa-dri libglx-mesa0 libegl-mesa0
       - run: xvfb-run -a npm run test:browser:compat
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: browser-compatibility-report
@@ -195,7 +195,7 @@ jobs:
         run: npm run test:integration
       - run: mvn --batch-mode --no-transfer-progress dependency:list -DincludeScope=runtime -DoutputFile=target/runtime-dependencies.txt
       - run: node tools/audit-java-dependencies.mjs
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: java-test-and-security-reports
