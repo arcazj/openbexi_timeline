@@ -307,7 +307,8 @@ function localFilters(t) {
     if (t.ob_filters) return t.ob_filters;
     try { t.ob_filters=JSON.parse(localStorage.getItem(`openbexi:filters:${location.pathname}:${t.name}`)); } catch {}
     if (!Array.isArray(t.ob_filters) || !t.ob_filters.every(f=>f && typeof f.name==='string' && typeof f.filter_value==='string'))
-        t.ob_filters=[{name:'ALL',filter_value:'',sortBy:'NONE',current:'yes',backgroundColor:t.backgroundColor}];
+        t.ob_filters=[{name:'ALL',filter_value:'',sortBy:'NONE',current:'yes',backgroundColor:t.backgroundColor},
+            {name:'by_namespace',filter_value:'',sortBy:'namespace',current:'no',backgroundColor:t.backgroundColor}];
     return t.ob_filters;
 }
 

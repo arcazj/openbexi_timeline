@@ -20,7 +20,8 @@ const definitions = {
         then: reference('demoModel'), else: reference('legacyModel')}}),
     sourceConfiguration: object({
         type: {type: 'string', minLength: 1}, enable: {type: 'boolean'}, permission: string,
-        converter2events_class: string, connector: strings, data_model: strings, data_path: strings,
+        converter2events_class: string, connector: strings, target_path: strings, source_path: strings,
+        source_plugin: string, converter_plugin: string, sources: array({type: 'object'}),
         render: reference('render'), filter: reference('filter'), format: string,
         poll_seconds: {type: 'number', minimum: 0}, timezone: string,
         host: string, port: {type: 'integer', minimum: 1, maximum: 65535}, username: string,

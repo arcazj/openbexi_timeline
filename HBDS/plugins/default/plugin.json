@@ -1,0 +1,36 @@
+{
+  "id": "default",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "java",
+  "capabilities": [
+    "source",
+    "converter",
+    "generator"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_plugin_default:Plugin",
+  "cli": "timeline-convert-default",
+  "config_schema": "schemas/options.schema.json",
+  "supported_modes": [
+    "once",
+    "interval"
+  ],
+  "options_schema": {
+    "type": "object",
+    "properties": {
+      "seed": {
+        "type": "integer"
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100000
+      },
+      "zones": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": true
+  }
+}

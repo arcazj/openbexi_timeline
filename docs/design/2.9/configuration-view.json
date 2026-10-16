@@ -1,0 +1,342 @@
+{
+  "status": "Configuration view for 2.9, generated from the implemented workspace, namespace and plugin files.",
+  "workspaceFile": "HBDS/GEO_Workspace.json",
+  "workspace": {
+    "schemaVersion": 1,
+    "name": "GEO_Workspace",
+    "service": "service.yml",
+    "namespace_files": [
+      "yaml/volcano_geoscience.yml",
+      "yaml/earthquake_geoscience.yml"
+    ],
+    "tabs": [
+      {
+        "id": "tab_volcano",
+        "namespaceId": "volcano",
+        "title": "volcano",
+        "order": 0,
+        "enabled": true
+      },
+      {
+        "id": "tab_earthquake",
+        "namespaceId": "earthquake",
+        "title": "earthquake",
+        "order": 1,
+        "enabled": true
+      }
+    ],
+    "default_namespace_id": "volcano"
+  },
+  "service": {
+    "config_version": 3,
+    "plugins": {
+      "roots": [
+        "plugins"
+      ]
+    },
+    "state_root": "../.local-private/timeline-collector",
+    "collector_ui": {
+      "host": "127.0.0.1",
+      "port": 8765
+    },
+    "connectors": [
+      {
+        "id": "java_api",
+        "type": "http",
+        "owner": "java",
+        "host": "127.0.0.1",
+        "port": 8080
+      },
+      {
+        "id": "python_api",
+        "type": "http",
+        "owner": "python",
+        "host": "127.0.0.1",
+        "port": 8783
+      }
+    ]
+  },
+  "namespaceFiles": {
+    "yaml/earthquake_geoscience.yml": {
+      "config_version": 3,
+      "namespace": "earthquake",
+      "model": "models/geoscience.json",
+      "enable": true,
+      "target_path": "/data/earthquake/yyyy/mm/dd",
+      "connectors": [
+        "java_api",
+        "python_api"
+      ],
+      "sources": [
+        {
+          "id": "input",
+          "source_plugin": "earthquake",
+          "converter_plugin": "earthquake",
+          "execution": {
+            "mode": "once",
+            "resume_on_restart": false
+          }
+        }
+      ],
+      "render": {},
+      "filter": {}
+    },
+    "yaml/volcano_geoscience.yml": {
+      "config_version": 3,
+      "namespace": "volcano",
+      "model": "models/geoscience.json",
+      "enable": true,
+      "target_path": "/data/volcano/yyyy/mm/dd",
+      "connectors": [
+        "java_api",
+        "python_api"
+      ],
+      "sources": [
+        {
+          "id": "input",
+          "source_plugin": "volcano",
+          "converter_plugin": "volcano",
+          "execution": {
+            "mode": "once",
+            "resume_on_restart": false
+          }
+        }
+      ],
+      "render": {},
+      "filter": {}
+    }
+  },
+  "pluginManifests": [
+    {
+      "id": "earthquake",
+      "version": "1.0.0",
+      "api_version": "1",
+      "runtime": "java",
+      "capabilities": [
+        "source",
+        "converter"
+      ],
+      "visibility": "public",
+      "entry_point": "timeline_plugin_earthquake:Plugin",
+      "cli": "timeline-convert-earthquake",
+      "config_schema": "schemas/options.schema.json",
+      "supported_modes": [
+        "once",
+        "interval"
+      ],
+      "options_schema": {
+        "type": "object",
+        "properties": {
+          "archive": {
+            "type": "boolean"
+          },
+          "input_file": {
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "volcano",
+      "version": "1.0.0",
+      "api_version": "1",
+      "runtime": "java",
+      "capabilities": [
+        "source",
+        "converter"
+      ],
+      "visibility": "public",
+      "entry_point": "timeline_plugin_volcano:Plugin",
+      "cli": "timeline-convert-volcano",
+      "config_schema": "schemas/options.schema.json",
+      "supported_modes": [
+        "once",
+        "interval"
+      ],
+      "options_schema": {
+        "type": "object",
+        "properties": {
+          "archive": {
+            "type": "boolean"
+          },
+          "input_file": {
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "default",
+      "version": "1.0.0",
+      "api_version": "1",
+      "runtime": "java",
+      "capabilities": [
+        "source",
+        "converter",
+        "generator"
+      ],
+      "visibility": "public",
+      "entry_point": "timeline_plugin_default:Plugin",
+      "cli": "timeline-convert-default",
+      "config_schema": "schemas/options.schema.json",
+      "supported_modes": [
+        "once",
+        "interval"
+      ],
+      "options_schema": {
+        "type": "object",
+        "properties": {
+          "seed": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "zones": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  ],
+  "demo": {
+    "workspaceFile": "HBDS/workspace.json",
+    "workspace": {
+      "schemaVersion": 1,
+      "name": "Demo_Workspace",
+      "service": "service.yml",
+      "namespace_files": [
+        "yaml/volcano_geoscience_demo.yml",
+        "yaml/earthquake_geoscience_demo.yml"
+      ],
+      "tabs": [
+        {
+          "id": "tab_volcano",
+          "namespaceId": "volcano",
+          "title": "volcano",
+          "order": 0,
+          "enabled": true
+        },
+        {
+          "id": "tab_earthquake",
+          "namespaceId": "earthquake",
+          "title": "earthquake",
+          "order": 1,
+          "enabled": true
+        }
+      ],
+      "default_namespace_id": "volcano"
+    },
+    "namespaceFiles": {
+      "yaml/earthquake_geoscience_demo.yml": {
+        "config_version": 3,
+        "namespace": "earthquake",
+        "model": "models/geoscience_demo.json",
+        "enable": true,
+        "target_path": "../../examples/geoscience/earthquake/yyyy/mm/dd",
+        "connectors": [
+          "java_api",
+          "python_api"
+        ],
+        "sources": [
+          {
+            "id": "committed_sample",
+            "enable": false,
+            "source_path": "../../examples/geoscience/earthquake",
+            "source_plugin": "local",
+            "converter_plugin": "NONE"
+          }
+        ],
+        "render": {},
+        "filter": {}
+      },
+      "yaml/volcano_geoscience_demo.yml": {
+        "config_version": 3,
+        "namespace": "volcano",
+        "model": "models/geoscience_demo.json",
+        "enable": true,
+        "target_path": "../../examples/geoscience/volcano/yyyy/mm/dd",
+        "connectors": [
+          "java_api",
+          "python_api"
+        ],
+        "sources": [
+          {
+            "id": "committed_sample",
+            "enable": false,
+            "source_path": "../../examples/geoscience/volcano",
+            "source_plugin": "local",
+            "converter_plugin": "NONE"
+          }
+        ],
+        "render": {},
+        "filter": {}
+      }
+    }
+  },
+  "execution": {
+    "standalone": "timeline-convert-earthquake --workspace HBDS/GEO_Workspace.json --namespace earthquake --source input --once",
+    "collector": "timeline-data-collector run --workspace HBDS/GEO_Workspace.json --namespace earthquake --source input --once",
+    "uiRequest": {
+      "request_id": "example-request-1",
+      "workspace": "<id from GET /api/status>",
+      "namespace": "earthquake",
+      "source": "input",
+      "mode": "once",
+      "force": false,
+      "revision": "<revision from GET /api/status>"
+    },
+    "repeat": {
+      "mode": "interval",
+      "interval_seconds": 300,
+      "overlap": "skip",
+      "resume_on_restart": false
+    },
+    "runAgain": {
+      "force": true,
+      "streamingCheckpointReset": false
+    }
+  },
+  "release": {
+    "version": "2.9.0",
+    "tag": "v2.9.0",
+    "state": "planned",
+    "notes": "docs/release-2.9.0.md",
+    "required_assets": [
+      "openbexi-timeline-2.9.0-windows-x64-setup.exe",
+      "openbexi-timeline-2.9.0-source.zip",
+      "openbexi-timeline-2.9.0-source.tar.gz",
+      "SHA256SUMS",
+      "openbexi_timeline.json",
+      "openbexi_timeline.png",
+      "architecture-overview.png"
+    ],
+    "evidence": "regression-results.json"
+  },
+  "invariants": [
+    "GEO is a workspace containing earthquake and volcano namespaces, using distinct converter packages.",
+    "A namespace owns source instances and may select multiple plugin types; a plugin may serve multiple namespaces.",
+    "Existing default_namespace_id is retained as a namespace fallback; the multi-namespace UI initially shows All.",
+    "NONE serves existing materialized JSON without conversion. timeline_json validates incoming compatible JSON.",
+    "Live /data and operational outputs stay local; only reviewed static demo fixtures are public.",
+    "The core owns publication and checkpoints. CLI and UI share runtime logic and cross-process leases.",
+    "A repeated job never duplicates stable records or erases another source contribution.",
+    "New job IDs differ between runs; stable event/session IDs do not include plugin version or run ID.",
+    "Historical and numeric demo date representations remain unchanged.",
+    "A public package must work when private plugins are absent.",
+    "Architecture validation and application regression evidence are separate release checks."
+  ]
+}

@@ -1,0 +1,13 @@
+config_version: 3
+namespace: DEMO
+enable: true
+model: models/default.json
+target_path: ../../.local-private/events/DEMO/yyyy/mm/dd
+connectors:
+- java_api
+- python_api
+sources:
+- id: example_events
+  source_path: ../../examples/DEMO/input
+  source_plugin: local
+  converter_plugin: timeline_json

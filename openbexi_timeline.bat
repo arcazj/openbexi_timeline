@@ -19,6 +19,7 @@ if not exist "%OB_LAUNCH_ROOT%\target\classes\com\openbexi\timeline\server\openb
 if not exist "%OB_LAUNCH_ROOT%\target\runtime\*.jar" goto missingBuild
 set "OB_LAUNCH_CONFIG="
 if not "%~1"=="" goto explicitConfig
+if not defined OPENBEXI_TIMELINE_DATA_PATH if not defined OPENBEXI_TIMELINE_CONFIG if not defined OPENBEXI_HBDS_CONFIG goto nativeDefault
 set "OB_LAUNCH_CONFIG=%OB_LAUNCH_ROOT%\HBDS\templates\default.hbds.json"
 if defined OPENBEXI_TIMELINE_DATA_PATH set "OB_LAUNCH_CONFIG=%OPENBEXI_TIMELINE_DATA_PATH%"
 if defined OPENBEXI_TIMELINE_CONFIG set "OB_LAUNCH_CONFIG=%OPENBEXI_TIMELINE_CONFIG%"
@@ -32,6 +33,15 @@ if not defined OB_LAUNCH_CONFIG goto run
 :resolveConfig
 for %%I in ("%OB_LAUNCH_CONFIG%") do set "OB_LAUNCH_CONFIG=%%~fI"
 rem The server resolves HBDS migration aliases before checking the selected file.
+goto run
+:nativeDefault
+pushd "%OB_LAUNCH_ROOT%" || exit /b 1
+if exist "HBDS\workspace.json" goto workspaceDefault
+"%OB_LAUNCH_JAVA%" -cp "%OB_LAUNCH_ROOT%\target\classes;%OB_LAUNCH_ROOT%\target\runtime\*" com.openbexi.timeline.server.openbexi_timeline -dataconf HBDS/yaml/DEMO_default.yml -serverconf HBDS/service.yml --hbds-root HBDS
+goto finished
+:workspaceDefault
+"%OB_LAUNCH_JAVA%" -cp "%OB_LAUNCH_ROOT%\target\classes;%OB_LAUNCH_ROOT%\target\runtime\*" com.openbexi.timeline.server.openbexi_timeline --workspace HBDS/workspace.json
+goto finished
 :run
 pushd "%OB_LAUNCH_ROOT%" || exit /b 1
 if not exist tomcat mkdir tomcat

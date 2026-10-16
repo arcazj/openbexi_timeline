@@ -2,6 +2,8 @@ import {captureTimelineViewState,applyTimelineViewState} from './openbexi_timeli
 
 const root=new URL('../',import.meta.url);
 const changeChannel='openbexi-hbds-changes';
+// UI-only ID: persisted HBDS entity IDs must start with a letter.
+const allNamespacesTab='__all__';
 const modelWindow=model=>JSON.stringify([model?.params?.[0]?.date,(model?.bands||[]).map(band=>[band.name,band.range,band.context,band.focus])]);
 export function hbdsRestoredViewState(model,state){
     const restored={...state};
@@ -17,12 +19,17 @@ export async function fetchHbdsConfiguration({namespaceId,timeoutMs=5000,fetcher
 
 export function visibleHbdsTabs(configuration){
     const tabs=configuration?.hbds?.tabs;if(!Array.isArray(tabs))return [];
-    const seen=new Set();return tabs.filter(tab=>tab&&typeof tab.id==='string'&&tab.id&&!seen.has(tab.id)&&seen.add(tab.id)&&typeof tab.namespaceId==='string'&&tab.enabled!==false)
+    const seen=new Set(),visible=tabs.filter(tab=>tab&&typeof tab.id==='string'&&tab.id&&!seen.has(tab.id)&&seen.add(tab.id)&&typeof tab.namespaceId==='string'&&tab.enabled!==false)
         .sort((a,b)=>(a.order||0)-(b.order||0)||a.id.localeCompare(b.id));
+    // A provider can query all loaded namespaces using the default display model.
+    // File-backed timelines retain their individual datasets.
+    if(configuration.data&&!configuration.hbds.modelConfiguration?.dataSource&&new Set(visible.map(tab=>tab.namespaceId)).size>1)
+        visible.unshift({id:allNamespacesTab,title:'All',namespaceId:'',enabled:true});
+    return visible;
 }
 
 /** One browsing context per visited tab releases the complete renderer on a scoped update. */
-export function mountHbdsTabs(host,configuration,{fetchConfiguration=fetchHbdsConfiguration,frameURL=new URL('openbexi_timeline.html',root),onReady}={}){
+export function mountHbdsTabs(host,configuration,{fetchConfiguration=fetchHbdsConfiguration,frameURL=new URL('openbexi_timeline.html',root),initialNamespaceId,onReady}={}){
     const content=document.createElement('div');content.className='ob_hbds_tab_content';
     const notice=document.createElement('p');notice.className='ob_hbds_status';notice.setAttribute('role','status');notice.hidden=true;
     host.classList.add('ob_hbds_host');host.replaceChildren(notice,content);
@@ -36,7 +43,9 @@ export function mountHbdsTabs(host,configuration,{fetchConfiguration=fetchHbdsCo
     }
     function capture(frame){try{const timeline=frame?.contentWindow?.openbexiTimeline;if(timeline?.ob_scene?.[0])return {...captureTimelineViewState(timeline),hbdsModelWindow:modelWindow(timeline.modelDocument),hbdsFiltersOpen:Boolean(timeline.ob_timeline_right_panel?.querySelector('.ob_filter_panel'))};}catch{ /* A failed child frame may not have initialized. */ }return undefined;}
     function create(tab){
-        const frame=document.createElement('iframe'),url=new URL(frameURL);url.searchParams.set('hbdsTab',tab.id);url.searchParams.set('namespaceId',tab.namespaceId);
+        const frame=document.createElement('iframe'),url=new URL(frameURL);url.searchParams.set('hbdsTab',tab.id);
+        if(tab.id===allNamespacesTab){url.searchParams.delete('namespaceId');url.searchParams.set('hbdsScope','all');}
+        else{url.searchParams.set('namespaceId',tab.namespaceId);url.searchParams.delete('hbdsScope');}
         frame.src=url.href;frame.title=tab.title||tab.id;frame.dataset.hbdsTab=tab.id;frame.dataset.namespaceId=tab.namespaceId;frame.id='hbds-panel-'+tab.id;
         frame.addEventListener('load',()=>{const state=states.get(tab.id);if(state){frame.contentWindow?.postMessage({type:'ob-hbds-restore',state},location.origin);states.delete(tab.id);}sendNavigation(tab.id,frame);onReady?.(tab,frame);});
         frames.set(tab.id,frame);content.append(frame);return frame;
@@ -51,11 +60,13 @@ export function mountHbdsTabs(host,configuration,{fetchConfiguration=fetchHbdsCo
     function reconcile(next,changedNamespaceIds=[]){
         const tabs=visibleHbdsTabs(next),byId=new Map(tabs.map(tab=>[tab.id,tab])),changed=new Set(changedNamespaceIds);
         for(const [id,frame] of frames){const tab=byId.get(id),switched=tab&&tab.namespaceId!==frame.dataset.namespaceId;
-            if(!tab||switched||changed.has(tab.namespaceId)){if(tab&&!switched){const state=capture(frame);if(state)states.set(id,state);}else states.delete(id);frame.remove();frames.delete(id);ready.delete(id);openFilters.delete(id);}
+            if(!tab||switched||changed.has(tab.namespaceId)||(id===allNamespacesTab&&changed.size>0)){if(tab&&!switched){const state=capture(frame);if(state)states.set(id,state);}else states.delete(id);frame.remove();frames.delete(id);ready.delete(id);openFilters.delete(id);}
             else{frame.title=tab.title||tab.id;}
         }
         config=next;
-        if(tabs.length){notice.hidden=true;select(byId.has(activeId)?activeId:tabs.find(tab=>tab.namespaceId===next.hbds.namespaceId)?.id||tabs[0].id);}
+        if(tabs.length){notice.hidden=true;select(byId.has(activeId)?activeId:
+            tabs.find(tab=>tab.namespaceId===initialNamespaceId)?.id||
+            (byId.has(allNamespacesTab)?allNamespacesTab:tabs.find(tab=>tab.namespaceId===next.hbds.namespaceId)?.id||tabs[0].id));initialNamespaceId=undefined;}
         else{activeId=undefined;notice.textContent='No enabled timeline tabs. Open the HBDS Editor to add or enable a tab.';notice.hidden=false;}
     }
     async function refresh(message){
@@ -91,8 +102,10 @@ export async function bootHbdsTimeline(Timeline,{host=document.getElementById('o
         }
     };
     if(isChild){window.addEventListener('message',message);window.addEventListener('pagehide',()=>window.removeEventListener('message',message),{once:true});}
-    const configuration=await fetchConfiguration({namespaceId:query.get('namespaceId')||undefined});
-    if(configuration?.hbds&&!isChild){const tabs=mountHbdsTabs(host,configuration,{fetchConfiguration});window.hbdsTabs=tabs;window.addEventListener('pagehide',()=>tabs.dispose(),{once:true});return tabs;}
+    let configuration=await fetchConfiguration({namespaceId:query.get('namespaceId')||undefined});
+    if(configuration?.hbds&&!isChild){const tabs=mountHbdsTabs(host,configuration,{fetchConfiguration,initialNamespaceId:query.get('namespaceId')||undefined});window.hbdsTabs=tabs;window.addEventListener('pagehide',()=>tabs.dispose(),{once:true});return tabs;}
+    if(isChild&&query.get('hbdsScope')==='all'&&configuration?.hbds)
+        configuration={...configuration,hbds:{...configuration.hbds,namespace:''}};
     timeline=new Timeline({configuration,namespaceId:query.get('namespaceId')||undefined,instanceId:query.get('hbdsTab')||undefined});window.openbexiTimeline=timeline;
     if(isChild&&configuration?.hbds){
         navigationState??={items:visibleHbdsTabs(configuration).map(({id,title,namespaceId})=>({id,title:title||id,namespaceId})),activeId:query.get('hbdsTab')};

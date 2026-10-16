@@ -220,6 +220,10 @@ export class TimelineLoader {
         const initialPurpose=refresh?'refresh':r.retrying?'retry':this.started?'visible':'initial';
         this.started=true;r.retrying=false;
         try {
+            // A saved preset may change grouping while retaining the same data.
+            // Commit its cached records even when all windows are done and no
+            // response will arrive to redraw the scene and clear pending state.
+            if (r.pending && this.cache.some(entry=>entry.metadata)) this.publish(generation,count);
             for (let entry;(entry=this.next());) {
                 if (!current()) return;
                 this.activeEntry=entry;

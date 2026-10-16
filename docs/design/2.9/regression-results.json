@@ -1,0 +1,379 @@
+{
+  "version": "2.9.0",
+  "status": "passed",
+  "verifiedAt": "2026-10-16T22:46:03.379104+00:00",
+  "scope": "Local Windows pre-release checks. GitHub Verify must also pass on the committed revision before tagging; its results are recorded in GitHub Actions.",
+  "baselineCommit": "4d480acf4ee0fd772cf09904bb8b9248a72740ad",
+  "environment": {
+    "platform": "Windows x64",
+    "python": "3.12",
+    "bundledPython": "3.13.16",
+    "java": "21",
+    "browser": "Microsoft Edge 155 / Chromium",
+    "node": "24"
+  },
+  "tests": {
+    "javascript": {
+      "passed": 409,
+      "failed": 0
+    },
+    "java": {
+      "total": 207,
+      "passed": 173,
+      "skipped": 34,
+      "failed": 0,
+      "note": "Existing legacy tests requiring unavailable external fixtures/services remain skipped."
+    },
+    "pythonBackend": {
+      "passed": 70,
+      "failed": 0
+    },
+    "publicCollector": {
+      "passed": 35,
+      "failed": 0,
+      "realMqttBroker": true,
+      "coverage": [
+        "plugin compatibility and discovery",
+        "multiple sources per namespace",
+        "stable IDs and activities",
+        "migration and rollback",
+        "source and schedule process leases",
+        "cancellation and crash recovery",
+        "atomic publication and checkpoint recovery",
+        "snapshot capacity rollback",
+        "MQTT replay, reconnect, ACK failure, overflow and malformed quarantine"
+      ]
+    },
+    "privateLegacy": {
+      "passed": 164,
+      "failed": 0
+    },
+    "privateConverterParity": {
+      "scenarios": 9,
+      "passed": 9,
+      "fixturesAndDetailsPublished": false
+    },
+    "browser": {
+      "total": 344,
+      "distinctPassed": 337,
+      "skipped": 7,
+      "initialRunPassed": 335,
+      "initialRunFailed": 2,
+      "focusedRerunPassed": 4,
+      "remainingFailures": 0,
+      "note": "A resize-test visibility race was corrected without changing rendering. The Windows-theme timeout passed on rerun. Both affected cases were rerun at desktop and narrow widths."
+    },
+    "releasePublishing": {
+      "passed": 10,
+      "failed": 0
+    },
+    "originalJavaPluginSuites": "passed in independent Maven builds"
+  },
+  "integration": {
+    "sevenStaticDemos": "passed",
+    "geo": {
+      "backends": [
+        "Java",
+        "Python"
+      ],
+      "configurations": [
+        "committed demo",
+        "live generated data"
+      ],
+      "checks": [
+        "All view includes both namespaces",
+        "earthquake and volcano buttons above filters",
+        "by_namespace",
+        "namespace switching"
+      ],
+      "legacyAdoption": "Copied live archives retained identical records and original reports; live originals were read-only."
+    },
+    "hbdsWorkspaceEditing": {
+      "java": "passed",
+      "python": "passed"
+    },
+    "pythonTwoWorkers": {
+      "eventsAfterLiveUpdate": 3,
+      "savedFilters": 2,
+      "browserErrors": 0
+    },
+    "javaModelWorkspace": {
+      "checks": 6,
+      "unchangedTimelineItems": 27,
+      "browserErrors": 0
+    },
+    "collectorDashboard": {
+      "status": "passed",
+      "checks": [
+        "opening does not run jobs",
+        "NONE is disabled",
+        "missing plugin is reported",
+        "Run",
+        "Run again",
+        "repeat",
+        "Stop",
+        "stable nested records"
+      ]
+    }
+  },
+  "distribution": {
+    "publicSourceFiles": 890,
+    "publicPlugins": [
+      "filesources",
+      "timeline_json",
+      "default",
+      "earthquake",
+      "volcano",
+      "mqtt"
+    ],
+    "cleanPublicSource": {
+      "passed": 35,
+      "failed": 0,
+      "note": "All independent packages built from the public archive in a fresh environment; the final earthquake dependency update was rebuilt and retested in that isolated copy."
+    },
+    "windowsInstaller": {
+      "status": "passed",
+      "bundledRuntimesOnly": true,
+      "generatedRecords": 83,
+      "forcedRerunStable": true,
+      "dashboardLauncher": "passed",
+      "portableConverterLauncher": "passed",
+      "privatePackagesExcluded": true,
+      "uninstallPreservesUserData": true
+    },
+    "hbds": {
+      "classes": 35,
+      "hyperclasses": 6,
+      "attributes": 190,
+      "relationships": 39,
+      "objects": 19,
+      "objectLinks": 21,
+      "schemaAndNativeViewer": "passed",
+      "nativePng": [
+        5500,
+        5500
+      ],
+      "overviewPng": [
+        3000,
+        1888
+      ]
+    }
+  },
+  "security": {
+    "timelineMavenRuntime": {
+      "dependencies": 24,
+      "knownAdvisories": 0
+    },
+    "earthquakeMavenRuntime": {
+      "dependencies": 6,
+      "knownAdvisories": 0
+    },
+    "note": "Commons Compress was upgraded to 1.28.0 to remove the vulnerable Commons Lang 3.16.0 transitive dependency. OSV findings reflect the check date."
+  },
+  "measurements": {
+    "httpLegacy": {
+      "files": 80,
+      "recordsPerFile": 100,
+      "warmRepeats": 3,
+      "concurrentClients": 4,
+      "note": "Cold means a new server/cache/index; OS file cache is not flushed. Decoded bytes exclude HTTP compression.",
+      "java": {
+        "cold": {
+          "firstRecordsMs": 1263.598300050944,
+          "completeMs": 3724.1315999999642,
+          "requests": 10,
+          "decodedBytes": 30032,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        },
+        "warm": {
+          "p50Ms": 652.0249000750482,
+          "p95Ms": 1174.839099869132,
+          "requestsPerLoad": 3,
+          "decodedBytesPerLoad": 24414,
+          "firstRecordsP50Ms": 150.49340017139912,
+          "completeLoads": 3,
+          "cpuSeconds": 7.21875,
+          "rssMiB": 213.58984375,
+          "concurrent8LoadsMs": 1883.7315998971462,
+          "concurrentP95Ms": 1389.3776999320835
+        }
+      },
+      "pythonBackend": {
+        "cold": {
+          "firstRecordsMs": 178.49090020172298,
+          "completeMs": 8209.065400063992,
+          "requests": 7,
+          "decodedBytes": 26366,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        },
+        "warm": {
+          "p50Ms": 35.587199963629246,
+          "p95Ms": 43.63960004411638,
+          "requestsPerLoad": 1,
+          "decodedBytesPerLoad": 22756,
+          "firstRecordsP50Ms": 35.582799930125475,
+          "completeLoads": 3,
+          "cpuSeconds": 0.109375,
+          "rssMiB": 59.984375,
+          "concurrent8LoadsMs": 257.1597001515329,
+          "concurrentP95Ms": 217.06319996155798
+        },
+        "persistentRestart": {
+          "firstRecordsMs": 37.237999960780144,
+          "completeMs": 37.23930008709431,
+          "requests": 1,
+          "decodedBytes": 22756,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        }
+      },
+      "parityCasesPassed": 11
+    },
+    "httpCommittedPublication": {
+      "files": 80,
+      "recordsPerFile": 100,
+      "warmRepeats": 3,
+      "concurrentClients": 4,
+      "note": "Cold means a new server/cache/index; OS file cache is not flushed. Decoded bytes exclude HTTP compression.",
+      "java": {
+        "cold": {
+          "firstRecordsMs": 2479.159199865535,
+          "completeMs": 2647.2183999139816,
+          "requests": 4,
+          "decodedBytes": 25495,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        },
+        "warm": {
+          "p50Ms": 278.54020008817315,
+          "p95Ms": 535.599899943918,
+          "requestsPerLoad": 2,
+          "decodedBytesPerLoad": 23889.333333333332,
+          "firstRecordsP50Ms": 187.76430003345013,
+          "completeLoads": 3,
+          "cpuSeconds": 2.640625,
+          "rssMiB": 238.28125,
+          "concurrent8LoadsMs": 1534.722999902442,
+          "concurrentP95Ms": 909.9430998321623
+        }
+      },
+      "pythonBackend": {
+        "cold": {
+          "firstRecordsMs": 4138.935300055891,
+          "completeMs": 4138.9371999539435,
+          "requests": 4,
+          "decodedBytes": 24781,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        },
+        "warm": {
+          "p50Ms": 32.68299996852875,
+          "p95Ms": 34.05930008739233,
+          "requestsPerLoad": 1,
+          "decodedBytesPerLoad": 22967,
+          "firstRecordsP50Ms": 32.680199947208166,
+          "completeLoads": 3,
+          "cpuSeconds": 0.078125,
+          "rssMiB": 61.67578125,
+          "concurrent8LoadsMs": 363.0975999403745,
+          "concurrentP95Ms": 355.58829992078245
+        },
+        "persistentRestart": {
+          "firstRecordsMs": 34.707200014963746,
+          "completeMs": 34.70920003019273,
+          "requests": 1,
+          "decodedBytes": 22967,
+          "complete": true,
+          "records": 100,
+          "warningCount": 0,
+          "warningCodes": []
+        }
+      },
+      "parityCasesPassed": 11
+    },
+    "collectorPublication": {
+      "records": 5000,
+      "firstPublicationSeconds": 72.21513410005718,
+      "forcedRerunSeconds": 20.597555299988016,
+      "stableReports": true,
+      "checkpoint": {
+        "offset": 5000
+      },
+      "snapshotBytes": 1059903
+    },
+    "browser": [
+      {
+        "records": 1000,
+        "usableMs": 4176.799999952316,
+        "searchMs": 1520.9000000953674,
+        "groupingMs": 1344.6000001430511,
+        "filterPanelMs": 1359.5,
+        "builderOpenMs": 432.39999985694885,
+        "cachedMetadata100Ms": 0.39999985694885254,
+        "datasetRequests": 1,
+        "workerCount": 0,
+        "dragFrameP95Ms": 116.59999999999854,
+        "longTaskCount": 7,
+        "maxLongTaskMs": 1116,
+        "maxObservedInteractionMs": 1456,
+        "gpuResources": {
+          "geometries": 93,
+          "textures": 69
+        },
+        "note": "Synthetic lab measurements on this machine; interaction samples are not field INP. Compare runs on the same hardware."
+      },
+      {
+        "records": 10000,
+        "usableMs": 5153.5,
+        "searchMs": 2412.2999999523163,
+        "groupingMs": 5017.299999952316,
+        "filterPanelMs": 3066.399999856949,
+        "builderOpenMs": 217.20000004768372,
+        "cachedMetadata100Ms": 0.2999999523162842,
+        "datasetRequests": 1,
+        "workerCount": 1,
+        "dragFrameP95Ms": 116.59999999999854,
+        "longTaskCount": 30,
+        "maxLongTaskMs": 4448,
+        "maxObservedInteractionMs": 192,
+        "gpuResources": {
+          "geometries": 221,
+          "textures": 220
+        },
+        "note": "Synthetic lab measurements on this machine; interaction samples are not field INP. Compare runs on the same hardware."
+      }
+    ],
+    "note": "Workstation measurements with concurrent verification activity; not production throughput or responsiveness guarantees. Cold startup and committed snapshot indexing have different costs."
+  },
+  "limits": {
+    "namespaceSnapshotBytes": 67108864,
+    "ownershipAndCheckpointsCountTowardLimit": true,
+    "memoryScalesWithNamespace": true,
+    "oversizedOutputPreservesPreviousGeneration": true,
+    "mqttDelivery": "QoS 1, at least once; durable publication precedes ACK",
+    "additionalDrivers": "S3, SFTP and Oracle drivers are optional. MySQL and Kafka adapters are extension points, not shipped plugins."
+  },
+  "githubVerification": {
+    "requiredBeforeTag": true,
+    "workflow": ".github/workflows/verify.yml",
+    "url": "https://github.com/arcazj/openbexi_timeline/actions/workflows/verify.yml",
+    "additionalCoverage": [
+      "Linux Java and Python",
+      "Linux MQTT",
+      "Chromium/Firefox/WebKit compatibility",
+      "Windows Chromium visual regressions"
+    ]
+  }
+}

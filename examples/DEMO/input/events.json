@@ -1,0 +1,17 @@
+{
+  "events": [
+    {
+      "id": "example-event",
+      "start": "2026-09-12T12:15:00Z",
+      "end": "2026-09-12T12:45:00Z",
+      "data": {
+        "title": "Example activity",
+        "namespace": "DEMO",
+        "description": "Synthetic demonstration event"
+      },
+      "render": {
+        "color": "#77b6a3"
+      }
+    }
+  ]
+}

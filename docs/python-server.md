@@ -1,4 +1,4 @@
-# Python timeline server — 2.8.0
+# Python timeline server — 2.8.1
 
 The Python server runs the existing browser UI against a persistent SQLite index of timeline JSON files. Both Python and Java support the HBDS Editor. Java remains supported for legacy `/api/v1` administration, standalone model editing, users, permissions, AI and non-file providers.
 
@@ -11,54 +11,54 @@ py -3.12 -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.lock
 .venv/Scripts/python.exe -m pip install --no-deps -e .
 npm ci
-.venv/Scripts/python.exe -m openbexi_timeline_server -data_conf HBDS/templates/yaml/source_template.yml --check
-.venv/Scripts/python.exe -m openbexi_timeline_server -data_conf HBDS/templates/yaml/source_template.yml --index-once
-.venv/Scripts/python.exe -m openbexi_timeline_server -data_conf HBDS/templates/yaml/source_template.yml --port 8783
+./tools/start-python-server.ps1 -Check
+./tools/start-python-server.ps1 -IndexFirst
 ```
 
-Open `http://127.0.0.1:8783/openbexi_timeline.html`. `/demos.html` continues to provide local demonstration datasets. On Linux/macOS, use `python3 -m venv .venv` and `.venv/bin/python` instead.
+The launcher defaults to the public demo `HBDS/workspace.json`. Select another timeline with `-Workspace HBDS/GEO_Workspace.json` (PowerShell) or `--workspace HBDS/GEO_Workspace.json` (module). Listener addresses come from the workspace's `service` file. Public demo/GEO workspaces use `HBDS/service.yml`; the generic Python listener is `http://127.0.0.1:8783/openbexi_timeline.html`. `/demos.html` provides local demonstration datasets. On Linux/macOS, use `python3 -m venv .venv`, `.venv/bin/python` and the module command below.
 
-When the startup YAML specifies `model`, opening `/` also loads that configured timeline. Without a configured model, `/` opens the demo gallery. The startup console prints the resolved YAML filename, model, enabled source-path count and listening address so you can confirm which deployment was loaded.
+When a workspace or startup YAML model is configured, opening `/` also loads that timeline. Without either, `/` opens the demo gallery. Each workspace listener prints `Web UI ready: <URL>` after it starts; open that link in your browser. The link uses the actual listener port, HTTP/HTTPS scheme and configured context path. Legacy single-listener launches print the configuration details and browser URL before startup.
 
 Windows convenience launcher:
 
 ```powershell
-./tools/start-python-server.ps1 -DataConf HBDS/templates/yaml/source_template.yml -IndexFirst -Port 8783
+.venv/Scripts/python.exe -m openbexi_timeline_server --workspace HBDS/workspace.json --check
+.venv/Scripts/python.exe -m openbexi_timeline_server --workspace HBDS/workspace.json
+
+# Explicit namespace files are also supported, independently of a local workspace.
+./tools/start-python-server.ps1 -DataConf HBDS/yaml/DEMO_default.yml -ServerConf HBDS/service.yml -IndexFirst
 ```
 
 `--index-once` prepares or updates the saved index before accepting UI traffic. Without it, the server immediately accepts requests, publishes records as source files become available, and reports partial coverage until initial indexing finishes. The UI honors increasing retry delays up to two seconds. A completed empty window has no continuation cursor and stops loading.
 
-The example template does not include operational data. Populate its `data_model` directories through the collector/import workflow, or point a private configuration at existing timeline JSON files. Missing sources produce explicit coverage warnings.
+An index records its owning workspace. After that workspace's data paths change, restarting rebuilds the derived index automatically. A state directory owned by another workspace is rejected. For indexes created before workspace ownership was recorded, stop the server and archive the old state directory before restarting with changed paths.
+
+The generic example does not include operational data. Populate its `target_path` directories through the collector/import workflow, or point a private namespace configuration at existing timeline JSON files. Missing sources produce explicit coverage warnings.
 
 ## Configuration
 
-Relative paths resolve from `--root` (the launch directory by default). `data_model` accepts a string or list. `/yyyy/mm/dd` partitions are discovered recursively, including older partitions containing sessions that overlap the visible window. Disabled sources are skipped before resolving environment variables. `${NAME}` substitution applies to source paths and the state directory; a missing required variable is a configuration error.
+HBDS is the configuration reference for both servers. Each namespace has a file named `<namespace>_<model_name>.yml` under `HBDS/yaml`, with a model under `HBDS/models`. Input/output paths resolve relative to the namespace YAML; workspace references resolve relative to the selected workspace file. Editor tab and alias changes stay within that workspace, and each workspace has its own default Python index directory. `/yyyy/mm/dd` partitions are discovered recursively, including older partitions containing sessions that overlap the visible window. `${NAME}` substitution applies to source paths and the state directory; a missing required variable is a configuration error.
 
 ```yaml
-model: HBDS/templates/models/regular_timeline.json
-timeline_server:
-  host: 127.0.0.1
-  port: 8783
-  state: .local-private/python-timeline
-  poll_seconds: 5
-  settle_seconds: 0
-  verify_seconds: 300
-  log_level: INFO
-  page_size: 256
-  cursor_ttl: 90
-  max_cursors: 128
-  # java_url: http://127.0.0.1:8080
-data_sources:
-  - namespace: operations
-    type: json_file
-    enable: true
-    data_model: ./data/operations/yyyy/mm/dd
-    filter: {include: '', exclude: ''}
+# HBDS/yaml/DEMO_default.yml
+config_version: 2
+namespace: DEMO
+model: models/default.json
+enable: true
+target_path: ../../.local-private/events/DEMO/yyyy/mm/dd
+connectors: [java_api, python_api]
+sources:
+  - id: incoming
+    source_path: ../../examples/DEMO/input
+    source_plugin: local
+    converter_plugin: timeline_json
 ```
 
-The collector template's `server.poll_seconds`, `settle_seconds`, `verify_seconds` and `log_level` are accepted as defaults; `timeline_server` overrides them. Collector `local`, `sftp`, `s3` and `oracle` sources are read from their materialized `data_model` outputs. This service does not import remote data or connect to those systems. Their input filters and credentials remain the collector's responsibility. For `json_file` sources, scalar filters retain legacy/typed record-filter semantics; list filters select output filenames using globs. Neither source credentials nor deployment paths are exposed in startup settings.
+Listener definitions and shared `server`/`timeline_server` settings live in the service YAML. `server.poll_seconds`, `settle_seconds`, `verify_seconds` and `log_level` are accepted as defaults; `timeline_server` overrides them. Collector `local`, `sftp`, `s3` and `oracle` sources are read from their materialized `target_path` outputs. This service does not import remote data or connect to those systems. Their input filters and credentials remain the collector's responsibility. For `json_file` sources, scalar filters retain legacy/typed record-filter semantics; list filters select output filenames using globs. Neither source credentials nor deployment paths are exposed in startup settings.
 
-Use `--workers 2` to run multiple processes sharing one **local** state directory. SQLite WAL, atomic file versions, a single indexer lease and persisted cursor snapshots coordinate them. Use a separate state directory for each source configuration; incompatible reuse is rejected. Keep the state directory across restarts. It is a rebuildable cache: original source JSON remains authoritative. After a machine power failure, a recently issued cursor can require the UI's bounded retry. WAL NORMAL avoids flushing the disk for every indexed file. Do not share the SQLite directory over a network filesystem.
+Legacy combined YAML and `data_model`/`data_path` aliases remain supported for existing integrations. New deployments use the [namespace and service formats](../HBDS/README.md). A native namespace configuration starts every enabled Python listener referenced by an enabled namespace, sharing one application and index; it currently requires `--workers 1`. TLS is configured per listener in the service file.
+
+Use `--workers 2` with a legacy single-listener configuration to run multiple processes sharing one **local** state directory. SQLite WAL, atomic file versions, a single indexer lease and persisted cursor snapshots coordinate them. Use a separate state directory for each source configuration; incompatible reuse is rejected. Keep the state directory across restarts. It is a rebuildable cache: original source JSON remains authoritative. After a machine power failure, a recently issued cursor can require the UI's bounded retry. WAL NORMAL avoids flushing the disk for every indexed file. Do not share the SQLite directory over a network filesystem.
 
 Default limits are 10,000 source files, 64 MiB per source file, 2 MiB per record, 100,000 records examined per query, 15 seconds of query processing, 256 top-level records per page and a 512 KiB page target. A single permitted large record may exceed the page target. These are configurable through `max_files`, `max_file_bytes`, `max_record_bytes`, `max_records`, `max_query_seconds` and `page_size`. Partial or malformed files retain their readable prefix with warnings. Files changing during a read keep the previous snapshot and are retried. Changed/deleted files update the next scan; unchanged metadata is periodically checked by content hash.
 
@@ -79,7 +79,7 @@ Historical search shares the configured `max_records` and `max_query_seconds` li
 | Other `/api/v1/...` routes | Forwarded to configured Java; explicit 503 if Java fallback is not configured |
 | Public UI assets | Java's public asset policy; source data, deployment YAML, state and hidden files are not served |
 
-Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.8.1`. Settings displays the UI version and connected backend version separately.
+Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.9.0`. Settings displays the UI version and connected backend version separately.
 
 The modern UI's `matchProtocol=1` contract is the compatibility target. Full sessions are filtered before nested activities are scoped to the time window. Search annotates visible records; it does not silently discard nonmatching records. History queries return matching records. Original source styling and external IDs are preserved, while source occurrence keys distinguish repeated IDs. Dates are normalized to UTC, including extended years and BCE dates. Byte-for-byte key ordering, cursor tokens, revision hashes and diagnostic timings differ by backend.
 

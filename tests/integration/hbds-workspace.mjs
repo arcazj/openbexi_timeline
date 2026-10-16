@@ -10,9 +10,13 @@ import os from 'node:os';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {hbdsFixture} from '../helpers/hbds-fixture.mjs';
+import {stringify} from 'yaml';
 
 const expect=playwrightExpect.configure({timeout:45000}),root=fileURLToPath(new URL('../../',import.meta.url));
 const backend=process.argv.includes('--java')?'Java':'Python';
+const workspaceStartup=process.argv.includes('--workspace');
+const native=process.argv.includes('--namespace-files')||workspaceStartup;
+const betaModelId=native?'model_beta':'model-beta';
 await fs.mkdir(path.join(root,'target'),{recursive:true});
 const directory=await fs.mkdtemp(path.join(root,'target','.hbds-e2e-'));
 const serverDirectory=backend==='Java'?await fs.mkdtemp(path.join(os.tmpdir(),'openbexi-hbds-browser-')):directory;
@@ -21,6 +25,25 @@ const fixture=await hbdsFixture(),model=JSON.parse(await fs.readFile(path.join(r
 model.dataSource.url='json/test-data/monet.json';for(const entity of fixture.models)entity.configuration=structuredClone(model);
 await fs.writeFile(configurationFile,JSON.stringify(fixture,null,2)+'\n');
 const reservation=net.createServer();await new Promise(resolve=>reservation.listen(0,'127.0.0.1',resolve));const port=reservation.address().port;await new Promise(resolve=>reservation.close(resolve));
+const metadata=path.join(directory,'HBDS'),namespaceFiles=[];
+const selectedWorkspace=path.join(metadata,workspaceStartup?'Test_Workspace.json':'workspace.json');
+const unrelatedWorkspace=JSON.stringify({namespace_files:['yaml/unrelated.yml'],aliases:{'namespace-alpha_alpha.yml':'unrelated.yml'}});
+if(native){
+    await fs.mkdir(path.join(metadata,'yaml'),{recursive:true});await fs.mkdir(path.join(metadata,'models'));
+    for(const [index,namespace] of fixture.namespaces.entries()){
+        const modelName=index===0?'alpha':'beta';namespace.namespace=namespace.id;namespace.modelId='model_'+modelName;
+        fixture.models[index].id=namespace.modelId;
+        await fs.writeFile(path.join(metadata,'models',modelName+'.json'),JSON.stringify(fixture.models[index].configuration));
+        const file=path.join(metadata,'yaml',namespace.namespace+'_'+modelName+'.yml');namespaceFiles.push(file);
+        await fs.writeFile(file,stringify({config_version:2,namespace:namespace.namespace,model:'models/'+modelName+'.json',
+            target_path:path.join(directory,namespace.namespace,'output/yyyy/mm/dd'),connectors:['api'],
+            sources:[{id:'input',source_path:path.join(directory,namespace.namespace,'input'),source_plugin:'local',converter_plugin:'timeline_json'}]}));
+    }
+    await fs.writeFile(path.join(metadata,'service.yml'),stringify({config_version:2,connectors:[{id:'api',owner:backend.toLowerCase(),type:'http',host:'127.0.0.1',port}]}));
+    await fs.writeFile(selectedWorkspace,JSON.stringify({service:'service.yml',namespace_files:namespaceFiles.map(file=>path.relative(metadata,file)),tabs:fixture.tabs,default_namespace_id:fixture.defaultNamespaceId}));
+    if(workspaceStartup)await fs.writeFile(path.join(metadata,'workspace.json'),unrelatedWorkspace);
+}
+const originalYaml=await Promise.all(namespaceFiles.map(file=>fs.readFile(file,'utf8')));
 let base=`http://127.0.0.1:${port}`;
 const checks=[],browserErrors=[],requests=[];
 let child,browser,exitCode,log,primary,started=Date.now();
@@ -37,12 +60,17 @@ async function startServer(){
         args=['-cp',[path.join(root,'target/test-classes'),path.join(root,'target/classes'),path.join(root,'target/runtime/*')].join(path.delimiter),'com.openbexi.timeline.data_browser.PythonBaselineServer',serverDirectory,configurationFile,portFile,root];
         await fs.access(path.join(root,'target/test-classes/com/openbexi/timeline/data_browser/PythonBaselineServer.class'));
     }
+    if(native){
+        delete environment.OPENBEXI_HBDS_CONFIG;
+        const options=workspaceStartup?['--workspace',selectedWorkspace,'--root',root]:['-dataconf',...namespaceFiles,'-serverconf',path.join(metadata,'service.yml'),'--hbds-root',metadata,'--root',root];
+        args=backend==='Java'?['-cp',[path.join(root,'target/classes'),path.join(root,'target/runtime/*')].join(path.delimiter),'com.openbexi.timeline.server.openbexi_timeline',...options]:['-m','openbexi_timeline_server',...options,'--state',path.join(directory,'state')];
+    }
     log=createWriteStream(path.join(directory,'server.log'),{flags:'a'});exitCode=undefined;
     child=spawn(executable,args,{cwd:root,env:environment,windowsHide:true,stdio:['ignore','pipe','pipe']});
     child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});child.on('exit',code=>{exitCode=code;});let error;child.on('error',value=>{error=value;});
     for(let retry=0;retry<120;retry++){
         if(error)throw error;if(exitCode!==undefined)throw new Error(backend+' backend exited before readiness; see disposable server.log.');
-        if(backend==='Java')try{base='http://127.0.0.1:'+Number(await fs.readFile(portFile,'utf8'));}catch{await pause(250);continue;}
+        if(backend==='Java'&&!native)try{base='http://127.0.0.1:'+Number(await fs.readFile(portFile,'utf8'));}catch{await pause(250);continue;}
         try{const response=await fetch(base+'/openbexi_timeline/config',{signal:AbortSignal.timeout(1000)});if(response.ok&&(await response.json()).hbds)return;}catch{}
         await pause(250);
     }
@@ -80,17 +108,18 @@ try{
     await expect(betaUI.locator('.ob_filter_panel')).toBeVisible();await expect(betaUI.getByRole('tab',{name:'Beta timeline',exact:true})).toHaveAttribute('aria-selected','true');await expect(betaUI.locator('.ob_filter_build_section')).not.toHaveAttribute('open');
     await beta.evaluate(element=>{element.dataset.original='beta';element.contentWindow.openbexiTimeline.ob_views.setMode('table');});assert.equal(requests.filter(r=>!r.preview&&r.path==='/json/test-data/monet.json').length,2);checked('second tab loads its dataset only when selected');
     await betaUI.getByRole('tab',{name:'Alpha saved from browser',exact:true}).click();await expect(alphaUI.locator('.ob_filter_panel')).toBeVisible();await alphaUI.getByRole('tab',{name:'Beta timeline',exact:true}).click();await expect(beta).toHaveAttribute('data-original','beta');await expect(betaUI.locator('.ob_filter_build_section')).not.toHaveAttribute('open');assert.equal(requests.filter(r=>!r.preview&&r.path==='/json/test-data/monet.json').length,2);
-    await editor.getByRole('button',{name:'Advanced JSON',exact:true}).click();const revised=JSON.parse(await editor.getByRole('textbox',{name:'HBDS JSON'}).inputValue());revised.models.find(item=>item.id==='model-beta').configuration.params[0].title='Beta saved from browser';
+    await editor.getByRole('button',{name:'Advanced JSON',exact:true}).click();const revised=JSON.parse(await editor.getByRole('textbox',{name:'HBDS JSON'}).inputValue());revised.models.find(item=>item.id===betaModelId).configuration.params[0].title='Beta saved from browser';
     await editor.getByRole('textbox',{name:'HBDS JSON'}).fill(JSON.stringify(revised,null,2));await editor.getByRole('button',{name:'Save and apply',exact:true}).click();
     await expect(editor.locator('#hbds-editor')).toContainText('Saved and applied.');await page.bringToFront();
     await expect.poll(()=>beta.evaluate(element=>element.contentWindow?.openbexiTimeline?.params?.[0]?.title)).toBe('Beta saved from browser');await expect.poll(()=>beta.evaluate(element=>element.contentWindow?.openbexiTimeline?.ob_views?.mode)).toBe('table');await expect(frame).toHaveAttribute('data-original','alpha');await expect(beta).not.toHaveAttribute('data-original','beta');
     assert.equal(requests.filter(r=>!r.preview&&r.path==='/json/test-data/monet.json').length,3);checked('model update reloads only affected tab and restores table view');
-    const saved=JSON.parse(await fs.readFile(configurationFile,'utf8'));assert.equal(saved.models.find(item=>item.id==='model-beta').configuration.params[0].title,'Beta saved from browser');assert.equal(saved.tabs[0].title,'Alpha saved from browser');checked('browser changes persist to canonical HBDS JSON');
-    const stale=await fetch(base+'/api/v1/hbds',{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','If-Match':original.etag},body:JSON.stringify(fixture)});assert.equal(stale.status,412);assert.deepEqual(JSON.parse(await fs.readFile(configurationFile,'utf8')),saved);checked('stale revisions cannot overwrite saved configuration');
+    const saved=native?(await configuration()).document.document:JSON.parse(await fs.readFile(configurationFile,'utf8'));assert.equal(saved.models.find(item=>item.id===betaModelId).configuration.params[0].title,'Beta saved from browser');assert.equal(saved.tabs[0].title,'Alpha saved from browser');if(native){assert.deepEqual(await Promise.all(namespaceFiles.map(file=>fs.readFile(file,'utf8'))),originalYaml);assert.equal(JSON.parse(await fs.readFile(path.join(metadata,'models/beta.json'),'utf8')).params[0].title,'Beta saved from browser');}checked(native?'browser changes persist to shared models and tabs without rewriting namespace YAML':'browser changes persist to canonical HBDS JSON');
+    const stale=await fetch(base+'/api/v1/hbds',{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','If-Match':original.etag},body:JSON.stringify(fixture)});assert.equal(stale.status,412);assert.deepEqual(native?(await configuration()).document.document:JSON.parse(await fs.readFile(configurationFile,'utf8')),saved);checked('stale revisions cannot overwrite saved configuration');
     await browser.close();browser=null;await stopServer();await startServer();const restarted=await configuration();assert.deepEqual(restarted.document.document,saved);checked('saved configuration survives a complete server restart');
     assert.deepEqual(browserErrors,[]);
+    if(workspaceStartup){assert.equal(await fs.readFile(path.join(metadata,'workspace.json'),'utf8'),unrelatedWorkspace);checked('named workspace saves and restarts preserve the unrelated default workspace');}
     const report={status:'passed',backend,checks,recordsPerTab:27,datasetRequests:{initial:1,afterTabRename:1,afterSecondTab:2,afterOneModelUpdate:3},browserErrors,durationMs:Date.now()-started};
-    await fs.writeFile(path.join(root,backend==='Java'?'target/hbds-java-browser-integration.json':'target/hbds-browser-integration.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+    await fs.writeFile(path.join(root,native?'target/hbds-native-'+backend.toLowerCase()+'-browser.json':backend==='Java'?'target/hbds-java-browser-integration.json':'target/hbds-browser-integration.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
 }catch(error){
     if(primary){console.error(JSON.stringify({checks,browserErrors,requests,frames:await primary.locator('iframe').evaluateAll(frames=>frames.map(frame=>{const timeline=frame.contentWindow.openbexiTimeline;return {url:frame.src,text:frame.contentDocument?.body?.innerText?.slice(0,1600),namespace:timeline?.hbdsNamespaceId,source:timeline?.modelDocument?.dataSource,localSource:timeline?.localSource,records:timeline?.staticData?.events?.length,error:timeline?.ob_results?.error?.message,counts:timeline?.ob_results?.snapshot?.counts};})).catch(()=>[])},null,2));await primary.screenshot({path:path.join(directory,'failure.png')}).catch(()=>{});}
     throw error;

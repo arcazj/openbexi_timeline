@@ -12,8 +12,9 @@ final class SourceFileFilters {
     static Predicate<Path> compile(JSONObject source,Path root) {
         if(!(source.get("filter") instanceof Map<?,?> filter))return path->true;
         List<Pattern> include=patterns(filter.get("include")),exclude=patterns(filter.get("exclude"));
+        Path absoluteRoot=root.toAbsolutePath().normalize();
         return path->{
-            String name=path.getFileName().toString(),relative=root.relativize(path).toString().replace('\\','/');
+            String name=path.getFileName().toString(),relative=absoluteRoot.relativize(path.toAbsolutePath().normalize()).toString().replace('\\','/');
             return (include.isEmpty()||include.stream().anyMatch(pattern->matches(pattern,name,relative)))&&
                     exclude.stream().noneMatch(pattern->matches(pattern,name,relative));
         };

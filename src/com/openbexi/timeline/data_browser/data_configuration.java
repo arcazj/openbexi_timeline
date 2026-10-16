@@ -76,6 +76,13 @@ public class data_configuration {
         if(hbds==null||Objects.equals(hbdsRevision,hbds.etag()))return;
         org.json.JSONObject snapshot=hbds.providerSnapshot(),next=snapshot.getJSONObject("configuration");
         next.put("startup configuration",next.remove("data_sources"));
+        next.put("_hbds_root",hbds.metadataRoot().toString());
+        if(hbds.selectedWorkspace()!=null) {
+            next.put("_hbds_workspace",hbds.selectedWorkspace().toString());
+            org.json.JSONArray namespaces=new org.json.JSONArray();
+            for(Object source:next.getJSONArray("startup configuration"))namespaces.put(((org.json.JSONObject)source).getString("namespace"));
+            next.put("_hbds_filter_namespaces",namespaces);
+        }
         configuration=(JSONObject)new JSONParser().parse(next.toString());hbdsRevision="\""+snapshot.getString("revision")+"\"";
     }
 

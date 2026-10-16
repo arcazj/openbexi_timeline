@@ -1,0 +1,26 @@
+config_version: 3
+collector_ui:
+  host: 127.0.0.1
+  port: 8765
+server:
+  poll_seconds: 5
+  settle_seconds: 0
+  verify_seconds: 300
+  log_level: INFO
+timeline_server:
+  poll_seconds: 5
+connectors:
+- id: java_api
+  type: http
+  owner: java
+  host: 127.0.0.1
+  port: 8080
+- id: python_api
+  type: http
+  owner: python
+  host: 127.0.0.1
+  port: 8783
+plugins:
+  roots:
+  - plugins
+state_root: ../.local-private/timeline-collector

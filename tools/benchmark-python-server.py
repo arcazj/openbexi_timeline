@@ -129,6 +129,7 @@ def main():
     parser.add_argument("--records", type=int, default=100)
     parser.add_argument("--repeats", type=int, default=20)
     parser.add_argument("--output", default="target/python-java-benchmark.json")
+    parser.add_argument("--publication", action="store_true", help="Serve the same fixtures through one committed collector snapshot")
     args = parser.parse_args()
     classpath = os.pathsep.join([str(ROOT/"target/test-classes"), str(ROOT/"target/classes"), (ROOT/"target/python-java-classpath.txt").read_text().strip()])
     with tempfile.TemporaryDirectory(prefix="timeline-benchmark-") as directory, httpx.Client(timeout=45, trust_env=False) as client:
@@ -153,6 +154,12 @@ def main():
                 records[6]["zone"] = True
                 records[8]["namespace"] = " "
             file.write_text(json.dumps({"events": records}), encoding="utf-8")
+        if args.publication:
+            reports=sorted(source.rglob('events.json'))
+            publication=source/'.timeline-collector/publication.json'; publication.parent.mkdir()
+            publication.write_text(json.dumps(dict(version=1, generation='benchmark', dateTimeFormat='iso8601',
+                baseline_reports=[file.relative_to(source).as_posix() for file in reports],
+                events=[record for file in reports for record in json.loads(file.read_text())['events']])), encoding='utf-8')
         last = first + dt.timedelta(days=args.files-1)
         params = {"startDate": last.strftime("%Y-%m-%dT00:00:00Z"), "endDate": (last+dt.timedelta(days=1)).strftime("%Y-%m-%dT00:00:00Z")}
         config = root/"sources.yml"
@@ -160,6 +167,11 @@ def main():
                                                            "data_model": (source/"yyyy/mm/dd").as_posix(), "filter": {"include": "", "exclude": ""}}],
                                           "timeline_server": {"poll_seconds": 60}}), encoding="utf-8")
         port_file = root/"java-port"
+        def java_ready():
+            if not port_file.exists(): return False
+            try:
+                with socket.create_connection(('127.0.0.1', int(port_file.read_text())), timeout=.2): return True
+            except (OSError, ValueError): return False
         cases = [params, {**params, "filter": "expr: status = STARTED AND priority >= 2"},
                  {**params, "filter": 'expr: namespace = "benchmark" AND (status = "STARTED")', "sortBy": "status"},
                  {**params, "filter": "status:STARTED|priority:3"}, {**params, "search": "Record 1", "searchMode": "text"},
@@ -167,9 +179,10 @@ def main():
                  {**params, "filter": "expr: EXISTS(end)"}, {**params, "search": "CAFÉ", "searchMode": "text"},
                  {**params, "filter": "|Outside"}, {**params, "history": "backward", "search": "Nested café", "searchMode": "text"}]
         report = {"platform": platform.platform(), "python": platform.python_version(), "files": args.files, "recordsPerFile": args.records,
+                  "storage": "collector snapshot" if args.publication else "legacy dated files",
                   "warmRepeats": args.repeats, "concurrentClients": 4, "note": "Cold means a new server/cache/index; OS file cache is not flushed. Decoded bytes exclude HTTP compression."}
         with running([args.java, "-Dopenbexi.timeline.logFormat=readable", "-cp", classpath,
-                      "com.openbexi.timeline.data_browser.PythonBaselineServer", str(root), str(config), str(port_file)], ROOT/"target/benchmark-java.log", port_file.exists) as process:
+                      "com.openbexi.timeline.data_browser.PythonBaselineServer", str(root), str(config), str(port_file)], ROOT/"target/benchmark-java.log", java_ready) as process:
             java_base = "http://127.0.0.1:" + port_file.read_text()
             _, cold = scan(client, java_base, params)
             report["java"] = {"cold": cold, "warm": measure(client, java_base, params, args.repeats, process)}

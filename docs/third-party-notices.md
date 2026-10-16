@@ -54,3 +54,19 @@ presence in a public repository does not establish commercial redistribution
 rights. The owner must review provenance and permissions for the selected paid
 bundle. This document records release-review work still needed; it is not a
 claim that every dependency or asset has been cleared for commercial use.
+
+## Collector distributions in 2.9
+
+The Windows installer also bundles the Python 3.13.16 embeddable runtime,
+its PSF license, SQLite/OpenSSL notices, and installed Python distribution
+licenses. The pinned dependencies are in
+[collector-requirements.txt](../release/windows/collector-requirements.txt).
+They include PyYAML (MIT), jsonschema and its supporting libraries (MIT),
+and Paho MQTT (EPL-2.0 / EDL-1.0). Optional S3, SFTP and Oracle drivers are
+installed separately and retain their upstream terms.
+
+The independently built Java plugin JARs retain their dependency license
+and notice resources. Earthquake acquisition additionally bundles Apache
+Commons Compress (Apache-2.0) and XZ for Java (public domain). Build and runtime
+manifests record artifact checksums. The Inno Setup compiler and test MQTT
+broker are build tools and are not included in the installer.

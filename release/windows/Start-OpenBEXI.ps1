@@ -15,16 +15,62 @@ $DataDirectory = (Resolve-Path -LiteralPath $DataDirectory).Path
 $hbdsDirectory = Join-Path $DataDirectory 'HBDS'
 New-Item -ItemType Directory -Force -Path $hbdsDirectory | Out-Null
 $hbdsConfiguration = Join-Path $hbdsDirectory 'openbexi_timeline.hbds.json'
-if (!(Test-Path -LiteralPath $hbdsConfiguration)) {
-    Copy-Item -LiteralPath (Join-Path $appRoot 'HBDS/templates/default.hbds.json') -Destination $hbdsConfiguration
-}
+$namespaceConfiguration = Join-Path $hbdsDirectory 'yaml/DEMO_default.yml'
+$legacyWorkspace = (Test-Path -LiteralPath $hbdsConfiguration) -and !(Test-Path -LiteralPath $namespaceConfiguration)
 $javaArgs = @(
     "-Dopenbexi.api.port=$Port",
     "`"-Dopenbexi.api.root=$appRoot`"",
     "`"-Dopenbexi.api.dataDir=$DataDirectory`"",
-    "`"-Dopenbexi.hbds.config=$hbdsConfiguration`"",
-    '-cp', "`"$appRoot\lib\*`"", 'com.openbexi.timeline.api.ApiServer'
+    '-cp', "`"$appRoot\lib\*`""
 )
+if ($legacyWorkspace) {
+    # Keep existing desktop workspaces readable until explicitly migrated.
+    $javaArgs = @("`"-Dopenbexi.hbds.config=$hbdsConfiguration`"") + $javaArgs + @('com.openbexi.timeline.api.ApiServer')
+} else {
+    foreach ($directory in @('yaml','models','filters','users','groups','roles')) {
+        New-Item -ItemType Directory -Force -Path (Join-Path $hbdsDirectory $directory) | Out-Null
+    }
+    $modelFile = Join-Path $hbdsDirectory 'models/default.json'
+    if (!(Test-Path -LiteralPath $modelFile)) { Copy-Item -LiteralPath (Join-Path $appRoot 'HBDS/models/default.json') -Destination $modelFile }
+    if (!(Test-Path -LiteralPath $namespaceConfiguration)) {
+        $targetPath = (Join-Path $DataDirectory 'events/DEMO/yyyy/mm/dd').Replace('\','/') | ConvertTo-Json -Compress
+        $sourcePath = (Join-Path $DataDirectory 'input/DEMO').Replace('\','/') | ConvertTo-Json -Compress
+        [IO.File]::WriteAllText($namespaceConfiguration, @"
+config_version: 3
+namespace: DEMO
+model: models/default.json
+target_path: $targetPath
+connectors: [desktop]
+sources:
+  - id: input
+    source_path: $sourcePath
+    source_plugin: local
+    converter_plugin: timeline_json
+"@)
+    }
+    $desktopService = Join-Path $hbdsDirectory 'service.desktop.yml'
+    [IO.File]::WriteAllText($desktopService, @"
+config_version: 3
+plugins:
+  roots: []
+state_root: ../collector-state
+collector_ui:
+  host: 127.0.0.1
+  port: 8765
+connectors:
+  - id: desktop
+    owner: java
+    type: http
+    host: 127.0.0.1
+    port: $Port
+"@)
+    $desktopWorkspace = Join-Path $hbdsDirectory 'workspace.json'
+    if (!(Test-Path -LiteralPath $desktopWorkspace)) {
+        $selection = @{schemaVersion=1; name='Demo_Workspace'; service='service.desktop.yml'; namespace_files=@('yaml/DEMO_default.yml')}
+        [IO.File]::WriteAllText($desktopWorkspace, ($selection | ConvertTo-Json -Depth 4))
+    }
+    $javaArgs += @('com.openbexi.timeline.server.openbexi_timeline', '--workspace', "`"$desktopWorkspace`"", '-serverconf', "`"$desktopService`"", '--hbds-root', "`"$hbdsDirectory`"", '--root', "`"$appRoot`"")
+}
 $server = Start-Process -FilePath $runtime -ArgumentList $javaArgs -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $DataDirectory 'server.log') -RedirectStandardError (Join-Path $DataDirectory 'server-error.log')
 try {
     $ready = $false

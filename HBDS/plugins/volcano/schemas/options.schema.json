@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "archive": {
+      "type": "boolean"
+    },
+    "input_file": {
+      "type": "string"
+    },
+    "timeout_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "additionalProperties": true
+}

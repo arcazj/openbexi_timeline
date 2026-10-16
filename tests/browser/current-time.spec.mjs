@@ -37,6 +37,7 @@ test('Current time follows the red line and hides at date ticks and viewport edg
     const aligned=()=>page.evaluate(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady,s=t.ob_scene[0];
         const {Vector3}=await import('three'),marker=s.currentTimeMarkers.find(item=>!item.band.name.includes('overview_'));
+        if(t.ob_current_time_label.hidden)return 0; // A completed resize may legitimately hide the label.
         const x=marker.x+marker.segments[0].position.x;
         const p=marker.mesh.localToWorld(new Vector3(x,t.calculateTextYPosition(marker.band),24)).project(s.ob_camera);
         const box=t.ob_current_time_label.getBoundingClientRect(),host=t.ob_timeline_body_frame.getBoundingClientRect();
@@ -49,7 +50,13 @@ test('Current time follows the red line and hides at date ticks and viewport edg
     await page.clock.setFixedTime(new Date(times.between));await render(page);await expect(label).toBeVisible();
     for(const width of [1920,420,1440]) {
         await page.setViewportSize({width,height:800});await ready(page);await render(page);
-        if(await label.isVisible()) {await expect(label).toBeInViewport({ratio:1});expect(await aligned()).toBeLessThan(2);}
+        // Read visibility and geometry together: ResizeObserver may hide the label
+        // between a separate isVisible() check and an in-viewport assertion.
+        await expect.poll(()=>label.evaluate(node=>{
+            const box=node.getBoundingClientRect();
+            return node.hidden || box.x>=0 && box.y>=0 && box.right<=innerWidth && box.bottom<=innerHeight;
+        })).toBe(true);
+        expect(await aligned()).toBeLessThan(2);
     }
     const plot=await page.locator('.ob_paged_frame').boundingBox();
     await page.mouse.move(plot.x+plot.width*.6,plot.y+plot.height*.7);await page.mouse.down();

@@ -1,21 +1,26 @@
 # OpenBEXI Timeline HBDS design
 
 - [HBDS JSON: openbexi_timeline.json](../../../HBDS/schema/openbexi_timeline.json)
-- [HBDS diagram: openbexi_timeline.png](openbexi_timeline.png)
+- [HBDS diagram: openbexi_timeline.png](../../../HBDS/schema/openbexi_timeline.png)
 - [Schema and domain validation](schema-validation.json)
 - [Viewer and PNG validation](validation-results.json)
 
 The JSON contains 26 classes, five hyperclasses, 187 typed attributes, 30 class
-relationships, and 60 example objects. The PNG is rendered from that JSON by the
+relationships, and 56 example objects. The PNG is rendered from that JSON by the
 actual OpenBEXI HBDS viewer. Open the PNG at full size, or load the JSON into the
 viewer to inspect individual classes, nested configuration schemas, and examples.
 
-The design uses the current [UI model template](../../../HBDS/templates/models/model_template.json)
+The public user examples now come from the `admin` and `guest` default registries.
+Other parts of the artifacts preserve the existing 2.8 design and predate the named workspace,
+namespace-file and shared-service refactoring. See the [recommended model updates](../../../HBDS/README.md#hbds-design-model)
+before using them as a description of the current runtime.
+
+The design uses the [UI model template](../../../HBDS/templates/models/model_template.json)
 and [source template](../../../HBDS/templates/yaml/source_template.yml). Each attribute includes
 its full JSON Schema under `extensions.timeline.jsonSchema`, including nested
 properties, allowed values, defaults, and nullability. Model and source examples
 are embedded under `metadata.extensions.timeline.examples`. Input hashes make
-regeneration necessary when these templates change.
+regeneration necessary when these templates or default user, group and role files change.
 
 ## Relationships and ownership
 

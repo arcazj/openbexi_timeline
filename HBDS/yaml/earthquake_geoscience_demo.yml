@@ -1,0 +1,16 @@
+config_version: 3
+namespace: earthquake
+model: models/geoscience_demo.json
+enable: true
+target_path: ../../examples/geoscience/earthquake/yyyy/mm/dd
+connectors:
+- java_api
+- python_api
+sources:
+- id: committed_sample
+  enable: false
+  source_path: ../../examples/geoscience/earthquake
+  source_plugin: local
+  converter_plugin: NONE
+render: {}
+filter: {}

@@ -1,0 +1,86 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+    {
+      "data": {
+        "obs": "avo",
+        "vnum": "311120",
+        "volcanoes": "Great Sitkin",
+        "alertLevel": "WATCH",
+        "noticeType": "Weekly Update",
+        "synopsis": "Slow eruption of lava within the summit crater continues. Weak seismicity was observed daily.",
+        "title": "ORANGE - Great Sitkin",
+        "noticeIdentifier": "DOI-USGS-AVO-2024-09-13T18:55:01+00:00",
+        "notice_url": "https://volcanoes.usgs.gov/hans-public/notice/DOI-USGS-AVO-2024-09-13T18:55:01+00:00",
+        "volcanoName": "Great Sitkin",
+        "notice_data": "https://volcanoes.usgs.gov/hans-public/api/notice/getNotice/DOI-USGS-AVO-2024-09-13T18:55:01+00:00",
+        "noticeCategory": "Scheduled Update",
+        "obsFullname": "Alaska Volcano Observatory",
+        "colorCode": "ORANGE",
+        "volcanoCd": "ak111"
+      },
+      "start": "2024-09-13T16:00:04Z",
+      "namespace": "volcano",
+      "end": "",
+      "id": "1da56146-bde3-4f6d-a2ef-7a8b07a6b4f9",
+      "render": {
+        "image": "icon/ob_volcano_active.png",
+        "color": "#731616"
+      }
+    },
+    {
+      "data": {
+        "obs": "cvo",
+        "vnum": null,
+        "volcanoes": "Cascade Range",
+        "alertLevel": "NORMAL",
+        "noticeType": "Weekly Update",
+        "synopsis": "All volcanoes are at normal levels.",
+        "title": "GREEN - Cascade Range",
+        "noticeIdentifier": "DOI-USGS-CVO-2024-09-13T19:03:58+00:00",
+        "notice_url": "https://volcanoes.usgs.gov/hans-public/notice/DOI-USGS-CVO-2024-09-13T19:03:58+00:00",
+        "volcanoName": "Cascade Range",
+        "notice_data": "https://volcanoes.usgs.gov/hans-public/api/notice/getNotice/DOI-USGS-CVO-2024-09-13T19:03:58+00:00",
+        "noticeCategory": "Scheduled Update",
+        "obsFullname": "Cascades Volcano Observatory",
+        "colorCode": "GREEN",
+        "volcanoCd": "cas"
+      },
+      "start": "2024-09-13T15:08:46Z",
+      "namespace": "volcano",
+      "end": "",
+      "id": "b213d5c5-3c2f-444c-89a1-80f7a34c1645",
+      "render": {
+        "image": "icon/ob_volcano_no_active.png",
+        "color": "#731616"
+      }
+    },
+    {
+      "data": {
+        "obs": "hvo",
+        "vnum": "332010",
+        "volcanoes": "Kilauea",
+        "alertLevel": "ADVISORY",
+        "noticeType": "Daily Update",
+        "synopsis": "Kīlauea is not erupting. Activity throughout Kīlauea remains low.",
+        "title": "YELLOW - Kilauea",
+        "noticeIdentifier": "DOI-USGS-HVO-2024-09-13T18:40:43+00:00",
+        "notice_url": "https://volcanoes.usgs.gov/hans-public/notice/DOI-USGS-HVO-2024-09-13T18:40:43+00:00",
+        "volcanoName": "Kilauea",
+        "notice_data": "https://volcanoes.usgs.gov/hans-public/api/notice/getNotice/DOI-USGS-HVO-2024-09-13T18:40:43+00:00",
+        "noticeCategory": "Scheduled Update",
+        "obsFullname": "Hawaiian Volcano Observatory",
+        "colorCode": "YELLOW",
+        "volcanoCd": "hi3"
+      },
+      "start": "2024-09-13T14:45:07Z",
+      "namespace": "volcano",
+      "end": "",
+      "id": "6f0f7d07-01c6-4f3c-9104-4cfc1fc91e16",
+      "render": {
+        "image": "icon/ob_volcano.png",
+        "color": "#731616"
+      }
+    }
+  ]
+}

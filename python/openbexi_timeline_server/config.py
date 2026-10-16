@@ -9,6 +9,7 @@ import re
 import yaml
 
 from .matching import compile_filter, digest
+from .namespace_config import load_bundle, rename_fields, read_yaml
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -80,16 +81,55 @@ class Configuration:
     max_records: int = 100000
     max_query_seconds: float = 15
     hbds_path: Path | None = None
+    namespace_files: tuple = ()
+    service_path: Path | None = None
+    hbds_root: Path | None = None
+    workspace_path: Path | None = None
+    connectors: list = field(default_factory=list)
 
     @property
     def signature(self):
         return digest([[s.index, s.namespace, s.model, s.include, s.exclude] for s in self.sources])
 
 
-def load_configuration(path, root=None, state=None, **overrides):
+def workspace_files(path):
+    """Read the startup selection; relative filenames are rooted in HBDS."""
+    path = Path(path).resolve()
+    files = read_yaml(path).get('namespace_files')
+    if not isinstance(files, list) or not files or any(not isinstance(item, str) or not item.strip() for item in files):
+        raise ValueError('Workspace requires a nonempty namespace_files list of filenames')
+    return tuple((path.parent / item).resolve() for item in files)
+
+
+def workspace_service(path):
+    path = Path(path).resolve()
+    document = read_yaml(path)
+    if 'service' in document:
+        if not isinstance(document['service'], str) or not document['service'].strip():
+            raise ValueError('Workspace service must be a filename')
+        return (path.parent / document['service']).resolve()
+    local = path.parent / 'service.local.yml'
+    return local if local.is_file() else path.parent / 'service.yml'
+
+
+def load_configuration(path, root=None, state=None, service_path=None, hbds_root=None, workspace_path=None, **overrides):
     root = Path(root or Path.cwd()).resolve()
+    paths = list(path) if isinstance(path, (list, tuple)) else [path]
+    if len(paths)>1 or service_path or (Path(paths[0]).is_file() and 'namespace' in read_yaml(paths[0])):
+        document=load_bundle(paths,service_path,hbds_root,workspace_path)
+        files=tuple(Path(p).resolve() for p in paths)
+        metadata=Path(hbds_root).resolve() if hbds_root else (files[0].parent.parent if files[0].parent.name=='yaml' else files[0].parent)
+        if workspace_path is not None:
+            workspace_path = Path(workspace_path).resolve()
+            if state is None:
+                state = root / '.local-private' / ('python-' + workspace_path.stem)
+        conf=configuration_from_document(document,root,state,namespace_files=files,service_path=service_path,workspace_path=workspace_path,
+                                         hbds_root=metadata,connectors=document.get('connectors',[]),**overrides)
+        from .namespace_workspace import NamespaceWorkspace
+        NamespaceWorkspace(conf).read()  # Validate display models before starting listeners.
+        return conf
     from .hbds import Store, legacy_configuration, resolve_alias
-    path = resolve_alias(os.environ.get("OPENBEXI_HBDS_CONFIG") or path, root)
+    path = resolve_alias(os.environ.get("OPENBEXI_HBDS_CONFIG") or paths[0], root)
     hbds_path = None
     if path.stat().st_size > 2 * 1024 * 1024:
         raise ValueError("Configuration exceeds 2 MiB.")
@@ -104,6 +144,7 @@ def load_configuration(path, root=None, state=None, **overrides):
 
 def configuration_from_document(document, root, state=None, **overrides):
     root = Path(root).resolve()
+    document=rename_fields(document)
     if not isinstance(document, dict) or not isinstance(document.get("data_sources"), list):
         raise ValueError("Configuration requires a data_sources list.")
     server = document.get("timeline_server", {})
@@ -131,11 +172,11 @@ def configuration_from_document(document, root, state=None, **overrides):
         if kind not in ("json_file", "local", "sftp", "s3", "oracle"):
             unsupported.append(str(kind))
             continue
-        models = source.get("data_model")
+        models = source.get("target_path")
         if isinstance(models, str):
             models = [models]
         if not isinstance(models, list) or not models or any(not isinstance(m, str) or not m.strip() for m in models):
-            raise ValueError(f"data_sources[{index}].data_model must be a path or nonempty path list.")
+            raise ValueError(f"data_sources[{index}].target_path must be a path or nonempty path list.")
         rules = source.get("filter") or {}
         if not isinstance(rules, dict):
             raise ValueError(f"data_sources[{index}].filter must be a mapping.")

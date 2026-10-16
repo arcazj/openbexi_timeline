@@ -63,12 +63,35 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
         expected.set(name, {bytes, hash});
         expected.set(name + '.sha256', {bytes: checksum, hash: createHash('sha256').update(checksum).digest('hex')});
     }
+    if (compareTags(tag, 'v2.9.0') >= 0) {
+        const manifest=JSON.parse(await fs.readFile(path.join(root,'dist/release-assets.json'),'utf8'));
+        const required=[`openbexi-timeline-${version}-source.zip`, 'SHA256SUMS', 'openbexi_timeline.json',
+            'openbexi_timeline.png', 'architecture-overview.png', 'regression-results.json', `release-${version}.md`];
+        if(manifest.version!==version || required.some(name=>!manifest.files.includes(name))) throw new Error('Incomplete 2.9 release manifest');
+        for(const name of manifest.files) {
+            if(path.basename(name)!==name || !/^[A-Za-z0-9_.-]+$/.test(name)) throw new Error('Invalid release asset path');
+            const bytes=await fs.readFile(path.join(root,'dist',name));
+            const hash=createHash('sha256').update(bytes).digest('hex');
+            if(!bytes.length) throw new Error('Empty release asset: '+name);
+            if(!name.endsWith('.sha256') && name!=='SHA256SUMS') {
+                const checksum=await fs.readFile(path.join(root,'dist',name+'.sha256'),'utf8');
+                if(checksum.trim()!==`${hash}  ${name}`) throw new Error('Checksum mismatch: '+name);
+            }
+            expected.set(name,{bytes,hash});
+        }
+        const sums=expected.get('SHA256SUMS').bytes.toString();
+        for(const name of manifest.files.filter(name=>!name.endsWith('.sha256') && name!=='SHA256SUMS'))
+            if(!sums.split('\n').includes(`${expected.get(name).hash}  ${name}`)) throw new Error('Incomplete SHA256SUMS');
+        const evidence=JSON.parse(expected.get('regression-results.json').bytes.toString());
+        if(evidence.version!==version || evidence.status!=='passed') throw new Error('Release regressions must pass before publication');
+    }
     let notes = await fs.readFile(path.join(root, `docs/release-${version}.md`), 'utf8');
     if (notes.trim().length < 100) throw new Error('Release notes are required.');
     notes = notes.replace(/\]\((?![a-z]+:|#|\/)([^)]+)\)/gi,
         (_, target) => `](https://github.com/${env.GITHUB_REPOSITORY}/blob/${tag}/docs/${target})`);
     notes += `\n## Windows installer\n\nDownload **openbexi-timeline-${version}-windows-x64-setup.exe** below. ` +
         'The per-user installer includes Java and browser dependencies; Node.js, Maven and a separate Java installation are not required. ' +
+        (compareTags(tag,'v2.9.0')>=0 ? 'It also bundles Python and the six public collector plugins. Launch Timeline Data Collector from the Start menu after creating the desktop workspace. ' : '') +
         'Launch OpenBEXI Timeline from the Start menu and keep its console open while using the application. Press Ctrl+C to stop. ' +
         'Windows 10/11 x64 is supported. The installer is unsigned. ' +
         'Local data is stored in `%LOCALAPPDATA%\\OpenBEXI Timeline\\data` and retained when uninstalling.\n\n' +

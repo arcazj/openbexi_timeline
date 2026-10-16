@@ -20,7 +20,7 @@ concurrency:
 jobs:
   release:
     runs-on: windows-2025
-    timeout-minutes: 35
+    timeout-minutes: 55
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
@@ -47,6 +47,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
       - name: Check version and release notes
         working-directory: source
         shell: pwsh
@@ -73,6 +76,12 @@ jobs:
           mvn --batch-mode --no-transfer-progress verify
       - run: npm run release:source
         working-directory: source
+      - name: Build independent public collector plugins
+        working-directory: source
+        shell: pwsh
+        run: |
+          python -m pip install 'setuptools>=77' build
+          python tools/build-collector.py
       - run: npm run pages:build
         working-directory: source
       - name: Build installer with bundled Java
@@ -83,6 +92,8 @@ jobs:
       - name: Install, launch, check browser and uninstall
         shell: pwsh
         run: ./automation/tools/test-windows-installer.ps1 -ProjectRoot ./source
+      - name: Prepare diagrams, plugins, notes and complete checksums
+        run: node source/tools/prepare-release-assets.mjs source
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ env.RELEASE_TAG }}
@@ -90,6 +101,15 @@ jobs:
             source/dist/*-windows-x64-setup.exe
             source/dist/*.sha256
             source/dist/*-source.tar.gz
+            source/dist/*-source.zip
+            source/dist/*.whl
+            source/dist/*.jar
+            source/dist/*.png
+            source/dist/openbexi_timeline.json
+            source/dist/regression-results.json
+            source/dist/release-*.md
+            source/dist/release-assets.json
+            source/dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 14
       - name: Publish complete release and retain historical tags

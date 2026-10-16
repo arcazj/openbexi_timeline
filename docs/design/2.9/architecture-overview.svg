@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1510" viewBox="0 0 2400 1510" role="img" aria-label="HBDS architecture for OpenBEXI Timeline 2.9"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8092aa"/></marker></defs><g font-family="Segoe UI, Arial, sans-serif">
+<rect x="0" y="0" width="2400" height="1510" rx="0" fill="#edf2f8" stroke="#edf2f8" stroke-width="2"/>
+<text x="64" y="82" font-size="48" fill="#102239" font-weight="700">OpenBEXI Timeline</text>
+<text x="64" y="131" font-size="30" fill="#52657e" font-weight="400">HBDS architecture  /  plugins, execution and publication</text>
+<rect x="1900" y="52" width="436" height="58" rx="29" fill="#e5e7ff" stroke="#c7cdf7" stroke-width="2"/>
+<text x="1933" y="91" font-size="25" fill="#373e93" font-weight="650">2.9  ·  PLUGIN ARCHITECTURE</text>
+<rect x="64" y="190" width="550" height="630" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="88" y="216" width="7" height="32" rx="3" fill="#0369a1" stroke="#0369a1" stroke-width="2"/>
+<text x="111" y="241" font-size="28" fill="#122238" font-weight="650">01  Workspace configuration</text>
+<rect x="96" y="280" width="486" height="106" rx="18" fill="#f0f9ff" stroke="#0369a1" stroke-width="2"/>
+<text x="118" y="317" font-size="26" fill="#0369a1" font-weight="650">GEO_Workspace</text>
+<text x="118" y="352" font-size="22" fill="#34445b" font-weight="400">Two separate namespaces</text>
+<path d="M217 388 L217 424" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M461 388 L461 424" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="96" y="428" width="230" height="128" rx="18" fill="#f0f9ff" stroke="#0369a1" stroke-width="2"/>
+<text x="118" y="465" font-size="26" fill="#0369a1" font-weight="650">earthquake</text>
+<text x="118" y="500" font-size="22" fill="#34445b" font-weight="400">source instance</text>
+<text x="118" y="534" font-size="22" fill="#34445b" font-weight="400">earthquake plugin</text>
+<rect x="352" y="428" width="230" height="128" rx="18" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="374" y="465" font-size="26" fill="#7c3aed" font-weight="650">volcano</text>
+<text x="374" y="500" font-size="22" fill="#34445b" font-weight="400">source instance</text>
+<text x="374" y="534" font-size="22" fill="#34445b" font-weight="400">volcano plugin</text>
+<text x="96" y="613" font-size="23" fill="#34445b" font-weight="400">Each namespace selects a display model</text>
+<text x="96" y="650" font-size="23" fill="#34445b" font-weight="400">and owns its sources and output target.</text>
+<text x="96" y="687" font-size="23" fill="#34445b" font-weight="400">A namespace may use several plugins.</text>
+<text x="96" y="724" font-size="23" fill="#34445b" font-weight="400">A plugin may serve several namespaces.</text>
+<text x="96" y="787" font-size="21" fill="#52657e" font-weight="400">Service settings and plugin registry are shared.</text>
+<rect x="650" y="190" width="1080" height="630" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="674" y="216" width="7" height="32" rx="3" fill="#b45309" stroke="#b45309" stroke-width="2"/>
+<text x="697" y="241" font-size="28" fill="#122238" font-weight="650">02  Shared execution path</text>
+<rect x="684" y="280" width="484" height="110" rx="18" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="706" y="317" font-size="26" fill="#b45309" font-weight="650">Standalone converter</text>
+<text x="706" y="352" font-size="22" fill="#34445b" font-weight="400">--workspace  [--namespace]  [--source]</text>
+<rect x="1200" y="280" width="496" height="110" rx="18" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="1222" y="317" font-size="26" fill="#b45309" font-weight="650">Collector UI</text>
+<text x="1222" y="352" font-size="22" fill="#34445b" font-weight="400">Start  ·  Cancel  ·  Run again  ·  Repeat</text>
+<path d="M926 392 L926 437" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M1448 392 L1448 437" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="784" y="442" width="812" height="111" rx="18" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+<text x="806" y="479" font-size="26" fill="#b45309" font-weight="650">timeline_data_collector runtime</text>
+<text x="806" y="514" font-size="22" fill="#34445b" font-weight="400">One runner  ·  validated requests  ·  shared leases and state</text>
+<path d="M1190 555 L1190 599" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="684" y="604" width="316" height="135" rx="18" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="706" y="641" font-size="26" fill="#7c3aed" font-weight="650">Source adapters</text>
+<text x="706" y="676" font-size="22" fill="#34445b" font-weight="400">File / HTTP / S3 / SQL</text>
+<text x="706" y="710" font-size="22" fill="#34445b" font-weight="400">MQTT / new adapters</text>
+<rect x="1032" y="604" width="316" height="135" rx="18" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="1054" y="641" font-size="26" fill="#7c3aed" font-weight="650">Converters</text>
+<text x="1054" y="676" font-size="22" fill="#34445b" font-weight="400">earthquake / volcano</text>
+<text x="1054" y="710" font-size="22" fill="#34445b" font-weight="400">default / other plugins</text>
+<rect x="1380" y="604" width="316" height="135" rx="18" fill="#ecfdf5" stroke="#047857" stroke-width="2"/>
+<text x="1402" y="641" font-size="26" fill="#047857" font-weight="650">Record batches</text>
+<text x="1402" y="676" font-size="22" fill="#34445b" font-weight="400">Compatible timeline JSON</text>
+<text x="1402" y="710" font-size="22" fill="#34445b" font-weight="400">Stable IDs + provenance</text>
+<path d="M1003 671 L1027 671" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M1351 671 L1375 671" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<text x="684" y="787" font-size="24" fill="#52657e" font-weight="400">Independent plugin builds; new plugins require no collector rebuild.</text>
+<rect x="1766" y="190" width="570" height="630" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="1790" y="216" width="7" height="32" rx="3" fill="#047857" stroke="#047857" stroke-width="2"/>
+<text x="1813" y="241" font-size="28" fill="#122238" font-weight="650">03  Publish and display</text>
+<rect x="1800" y="280" width="502" height="132" rx="18" fill="#ecfdf5" stroke="#047857" stroke-width="2"/>
+<text x="1822" y="317" font-size="26" fill="#047857" font-weight="650">Common publisher</text>
+<text x="1822" y="352" font-size="22" fill="#34445b" font-weight="400">Validate, merge and publish atomically</text>
+<text x="1822" y="386" font-size="22" fill="#34445b" font-weight="400">Advance checkpoints after durable output</text>
+<path d="M1740 671 L1750 671" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M1750 671 L1750 347 L1794 347" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M2051 415 L2051 454" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="1800" y="460" width="502" height="112" rx="18" fill="#ecfdf5" stroke="#047857" stroke-width="2"/>
+<text x="1822" y="497" font-size="26" fill="#047857" font-weight="650">Materialized JSON</text>
+<text x="1822" y="532" font-size="22" fill="#34445b" font-weight="400">/data/&lt;namespace&gt;/yyyy/mm/dd</text>
+<path d="M2051 575 L2051 614" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="1800" y="620" width="502" height="155" rx="18" fill="#fff1f6" stroke="#be185d" stroke-width="2"/>
+<text x="1822" y="657" font-size="26" fill="#be185d" font-weight="650">Timeline  ·  Java and Python</text>
+<text x="1822" y="692" font-size="22" fill="#34445b" font-weight="400">Sessions, events, activities and zones</text>
+<text x="1822" y="726" font-size="22" fill="#34445b" font-weight="400">Default: All  |  earthquake  |  volcano</text>
+<text x="1822" y="760" font-size="22" fill="#34445b" font-weight="400">Keep by_namespace and existing controls</text>
+<rect x="64" y="854" width="720" height="250" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="88" y="880" width="7" height="32" rx="3" fill="#b45309" stroke="#b45309" stroke-width="2"/>
+<text x="111" y="905" font-size="28" fill="#122238" font-weight="650">Repeat and recovery</text>
+<text x="98" y="951" font-size="23" fill="#34445b" font-weight="400">Run again reprocesses the selected inputs.</text>
+<text x="98" y="985" font-size="23" fill="#34445b" font-weight="400">Interval runs wait for completion and never overlap.</text>
+<text x="98" y="1019" font-size="23" fill="#34445b" font-weight="400">Streaming keeps one active subscription.</text>
+<text x="98" y="1053" font-size="23" fill="#34445b" font-weight="400">Failures preserve the last valid published generation.</text>
+<rect x="812" y="854" width="720" height="250" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="836" y="880" width="7" height="32" rx="3" fill="#7c3aed" stroke="#7c3aed" stroke-width="2"/>
+<text x="859" y="905" font-size="28" fill="#122238" font-weight="650">Public and private packages</text>
+<text x="846" y="951" font-size="23" fill="#34445b" font-weight="400">Public: core, generators and geoscience plugins.</text>
+<text x="846" y="985" font-size="23" fill="#34445b" font-weight="400">Private: operational converters and mappings.</text>
+<text x="846" y="1019" font-size="23" fill="#34445b" font-weight="400">Private code, state and live data stay out of releases.</text>
+<text x="846" y="1053" font-size="23" fill="#34445b" font-weight="400">Public installations work without private plugins.</text>
+<rect x="1560" y="854" width="776" height="250" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="1584" y="880" width="7" height="32" rx="3" fill="#be185d" stroke="#be185d" stroke-width="2"/>
+<text x="1607" y="905" font-size="28" fill="#122238" font-weight="650">Static demos</text>
+<text x="1594" y="951" font-size="23" fill="#34445b" font-weight="400">NONE reads committed samples without conversion.</text>
+<text x="1594" y="985" font-size="23" fill="#34445b" font-weight="400">Demo and live workspace configurations stay separate.</text>
+<text x="1594" y="1019" font-size="23" fill="#34445b" font-weight="400">The seven existing catalog demos remain compatible.</text>
+<text x="1594" y="1053" font-size="23" fill="#34445b" font-weight="400">Historical and numeric date formats are preserved.</text>
+<rect x="64" y="1140" width="2272" height="282" rx="18" fill="#ffffff" stroke="#dbe3ee" stroke-width="2"/>
+<rect x="88" y="1166" width="7" height="32" rx="3" fill="#475569" stroke="#475569" stroke-width="2"/>
+<text x="111" y="1191" font-size="28" fill="#122238" font-weight="650">Release 2.9  ·  publication follows implementation and passing regression tests</text>
+<rect x="98" y="1235" width="526" height="145" rx="18" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+<text x="120" y="1272" font-size="26" fill="#475569" font-weight="650">Implement and migrate</text>
+<text x="120" y="1307" font-size="22" fill="#34445b" font-weight="400">Plugin contracts + CLI + UI</text>
+<text x="120" y="1341" font-size="22" fill="#34445b" font-weight="400">Preserve paths and record identities</text>
+<path d="M628 1307 L652 1307" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="658" y="1235" width="526" height="145" rx="18" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+<text x="680" y="1272" font-size="26" fill="#475569" font-weight="650">Prove compatibility</text>
+<text x="680" y="1307" font-size="22" fill="#34445b" font-weight="400">Both APIs, browser and private suites</text>
+<text x="680" y="1341" font-size="22" fill="#34445b" font-weight="400">Replay, recovery, fixtures and counts</text>
+<path d="M1188 1307 L1212 1307" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="1218" y="1235" width="526" height="145" rx="18" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+<text x="1240" y="1272" font-size="26" fill="#475569" font-weight="650">Build and verify assets</text>
+<text x="1240" y="1307" font-size="22" fill="#34445b" font-weight="400">Windows installer + ZIP + tar.gz</text>
+<text x="1240" y="1341" font-size="22" fill="#34445b" font-weight="400">Notes, checksums and HBDS diagrams</text>
+<path d="M1748 1307 L1772 1307" stroke="#8092aa" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="1778" y="1235" width="526" height="145" rx="18" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+<text x="1800" y="1272" font-size="26" fill="#475569" font-weight="650">Publish v2.9.0</text>
+<text x="1800" y="1307" font-size="22" fill="#34445b" font-weight="400">Verify uploaded asset hashes</text>
+<text x="1800" y="1341" font-size="22" fill="#34445b" font-weight="400">Retain historical release tags</text>
+<text x="64" y="1470" font-size="22" fill="#52657e" font-weight="400">Derived from openbexi_timeline.json  ·  35 classes  ·  39 relationships  ·  Full HBDS model available for inspection</text>
+</g></svg>

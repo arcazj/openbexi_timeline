@@ -25,6 +25,8 @@ public final class TimelineHbds {
     private String revision;
     private FileTime modified;
     private long length;
+    private NamespaceConfiguration namespaceWorkspace;
+    private long namespaceGeneration;
 
     private TimelineHbds(Path root, Path file) throws IOException {
         this.root=root.toRealPath(); this.file=file.toAbsolutePath().normalize();
@@ -32,6 +34,10 @@ public final class TimelineHbds {
         legacyModelSchema=SchemaLoader.builder().schemaJson(new JSONObject(Files.readString(this.root.resolve("schemas/legacy-model.schema.json"))))
                 .draftV7Support().build().load().build();
         modelValidator=new TimelineModels(this.root);
+        namespaceWorkspace=NamespaceConfiguration.find(this.file);
+        if(namespaceWorkspace!=null) {
+            document=namespaceWorkspace.read();validate(document);revision=digest(document.toString().getBytes(StandardCharsets.UTF_8));providerBaseline=copy(document);namespaceGeneration=namespaceWorkspace.generation();return;
+        }
         if(!Files.isRegularFile(this.file))throw new ApiException(503,"The active HBDS configuration file is unavailable.");
         byte[] bytes=readBytes(this.file);
         document=parse(bytes); validate(document); revision=digest(bytes); providerBaseline=copy(document);
@@ -60,6 +66,11 @@ public final class TimelineHbds {
         }
     }
     public static Path selected(Path root, String dataConfiguration) {
+        // Explicit namespace startup wins over a legacy environment default.
+        if(dataConfiguration!=null&&!dataConfiguration.isBlank()) {
+            Path explicit=resolve(root,dataConfiguration);
+            if(NamespaceConfiguration.find(explicit)!=null)return explicit;
+        }
         String configured=System.getProperty("openbexi.hbds.config",System.getenv("OPENBEXI_HBDS_CONFIG"));
         if(configured!=null&&!configured.isBlank())return resolve(root,configured);
         if(dataConfiguration!=null&&!dataConfiguration.isBlank()) {
@@ -114,10 +125,20 @@ public final class TimelineHbds {
         catch(NoSuchAlgorithmException error){throw new IllegalStateException(error);}
     }
     public JSONObject schema() throws IOException {return new JSONObject(Files.readString(root.resolve("HBDS/schema/configuration.schema.json")));}
+    public Path metadataRoot(){return namespaceWorkspace==null?root.resolve("HBDS"):namespaceWorkspace.metadataRoot();}
+    public Path selectedWorkspace(){return namespaceWorkspace==null?null:namespaceWorkspace.selectedWorkspace();}
     private void stamp() throws IOException {BasicFileAttributes attributes=Files.readAttributes(file,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);modified=attributes.lastModifiedTime();length=attributes.size();}
     /** Each request performs one metadata check; JSON is reparsed only after an external edit. */
     private void refresh() {
         try {
+            if(namespaceWorkspace!=null) {
+                long generation=namespaceWorkspace.generation();if(generation==namespaceGeneration)return;
+                JSONObject candidate=namespaceWorkspace.read();
+                String next=digest(candidate.toString().getBytes(StandardCharsets.UTF_8));
+                if(!next.equals(revision)){validate(candidate);document=candidate;revision=next;}
+                namespaceGeneration=generation;
+                return;
+            }
             BasicFileAttributes attributes=Files.readAttributes(file,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
             if(Objects.equals(modified,attributes.lastModifiedTime())&&length==attributes.size())return;
             modified=attributes.lastModifiedTime();length=attributes.size();
@@ -127,7 +148,7 @@ public final class TimelineHbds {
     }
     public synchronized String etag() {refresh();return "\""+revision+"\"";}
     public synchronized JSONObject read() {refresh();JSONArray reasons=restartReasons(document);return new JSONObject().put("document",copy(document)).put("revision",revision)
-            .put("restartRequired",!reasons.isEmpty()).put("restartReasons",reasons);}
+            .put("restartRequired",!reasons.isEmpty()).put("restartReasons",reasons).put("storage",namespaceWorkspace==null?new JSONObject().put("kind","legacy-document"):namespaceWorkspace.describe());}
     private static Map<String,JSONObject> index(JSONObject value,String key) {
         Map<String,JSONObject> result=new LinkedHashMap<>();
         for(Object item:value.getJSONArray(key)) {
@@ -226,6 +247,15 @@ public final class TimelineHbds {
         byte[] bytes=(input.toString(2)+"\n").getBytes(StandardCharsets.UTF_8);
         if(bytes.length>MAX_BYTES)throw new ApiException(413,"HBDS configuration exceeds 2 MiB.");
         if(expected==null||expected.isBlank())throw new ApiException(428,"Send the HBDS ETag in If-Match before editing.");
+        if(namespaceWorkspace!=null) {
+            Path lockPath=namespaceWorkspace.lockPath();Files.createDirectories(lockPath.getParent());
+            try(FileChannel channel=FileChannel.open(lockPath,StandardOpenOption.CREATE,StandardOpenOption.WRITE);FileLock ignored=channel.lock()) {
+                JSONObject actual=namespaceWorkspace.read();String disk=digest(actual.toString().getBytes(StandardCharsets.UTF_8));
+                if(!expected.equals("\""+disk+"\""))throw new ApiException(412,"Configuration changed; reload before saving");
+                JSONArray changed=changedNamespaces(document,input);
+                namespaceWorkspace.save(input);refresh();return read().put("changedNamespaceIds",changed);
+            }
+        }
         Files.createDirectories(file.getParent());
         Path lockPath=file.resolveSibling(file.getFileName()+".lock");
         if(Files.isSymbolicLink(file)||Files.isSymbolicLink(file.getParent())||Files.isSymbolicLink(lockPath))throw new IOException("HBDS storage cannot be a symbolic link.");
@@ -265,6 +295,9 @@ public final class TimelineHbds {
         for(JSONObject source:sorted) {
             String namespaceId=source.getString("namespaceId");JSONObject namespace=namespaces.getOrDefault(namespaceId,initial.get(namespaceId));
             JSONObject config=copy(source.getJSONObject("configuration"));
+            // Compatibility projection for existing provider implementations.
+            if(config.has("target_path"))config.put("data_model",config.get("target_path"));
+            if(config.has("source_path"))config.put("data_path",config.get("source_path"));
             for(String field:List.of("render","filter")) {
                 JSONObject defaults=namespace.getJSONObject(field);
                 if(field.equals("filter")&&(filePatterns(defaults)||filePatterns(initial.get(namespaceId).getJSONObject(field))))defaults=initial.get(namespaceId).getJSONObject(field);

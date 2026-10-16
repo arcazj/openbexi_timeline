@@ -1,0 +1,27 @@
+{
+  "id": "timeline_json",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "python",
+  "capabilities": [
+    "converter"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_plugin_json:Plugin",
+  "cli": "timeline-convert-timeline_json",
+  "config_schema": "schemas/options.schema.json",
+  "supported_modes": [
+    "once",
+    "interval",
+    "watch"
+  ],
+  "options_schema": {
+    "type": "object",
+    "properties": {
+      "snapshot": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": true
+  }
+}

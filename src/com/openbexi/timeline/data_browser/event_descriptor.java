@@ -136,13 +136,23 @@ public class event_descriptor {
         for (JSONObject source : sources) {
             if ("false".equals(String.valueOf(source.get("enable"))) ||
                     source.get("type") != null && !"json_file".equals(source.get("type"))) continue;
+            Path outputRoot = CollectorPublication.root(Objects.toString(source.get("data_model"), ""));
+            JSONObject publication = CollectorPublication.read(outputRoot);
+            if (publication != null && publication.get("retired_ids") instanceof JSONArray retired && retired.contains(_event_id)) continue;
+            JSONObject committed = publication == null ? null : CollectorPublication.find((JSONArray)publication.get("events"), _event_id);
+            if (committed != null && (_namespace == null || _namespace.isBlank() || MatchResults.namespace(committed, Objects.toString(source.get("namespace"), "")).equals(_namespace))) {
+                JSONArray entries = new JSONArray(); entries.add(committed);
+                return new JSONObject(Map.of("dateTimeFormat", "iso8601", "event_descriptor", entries));
+            }
             Path file = descriptorPath(source);
             if (!seen.add(file) || !Files.exists(file)) continue;
             if (!file.toRealPath().startsWith(file.getParent().toRealPath()))
                 throw new IOException("Descriptor path leaves its configured directory.");
             if (Files.size(file) > 8L * 1024 * 1024) throw new IOException("Descriptor exceeds the size limit.");
             try (Reader reader = Files.newBufferedReader(file)) {
-                JSONObject body = (JSONObject)new JSONParser().parse(reader);
+                JSONObject body = CollectorPublication.pendingDescriptor(outputRoot, file, publication);
+                if (body != null && body.isEmpty()) continue;
+                if (body == null) body = (JSONObject)new JSONParser().parse(reader);
                 if (!(body.get("event_descriptor") instanceof JSONArray entries))
                     throw new IOException("Invalid descriptor response.");
                 JSONArray selected = new JSONArray();

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 const base = process.env.OPENBEXI_INSTALL_TEST_URL;
 if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(base || '')) throw new Error('A local installer test URL is required.');
-const browser = await chromium.launch({args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
+const browser = await chromium.launch({executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
 try {
     const page = await browser.newPage();
     const errors = [];

@@ -790,6 +790,49 @@ test('Saved preset restoration and equivalent regrouping retain partial records,
     } finally {f.close();}
 });
 
+for (const [label,ids,complete] of [['complete',['first','second'],true],['partial',['first','second'],false],['empty',[],true]])
+test(`Equivalent saved presets regroup an idle ${label} cache without waiting for another response`,async()=>{
+    const f=await connected(),{h,t,r,requests,settings}=f;
+    try {
+        const plain='Exclude_NOMINAL_RNG',grouped='NAMESPACE_Exclude_Nominal_RNG';
+        const expression='|system:RNG+status:FINISHED;description:(90% used);system:CRON';
+        settings.filters=[{name:plain,current:'yes',filter_value:expression,sortBy:'NONE'},
+            {name:grouped,current:'no',filter_value:expression,sortBy:'namespace'}];
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[structuredClone(settings)]})});
+        await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,ids,null,complete));
+        const keys=Array.from(r.snapshot.entries,entry=>entry.key).sort();
+        r.selectedKey=keys[0] || null;
+        r.captureRanges();const range=JSON.stringify([...r.ranges.values()][0]);
+        t.ob_filter.click();
+        for (const [name,sortBy] of [[grouped,'namespace'],[plain,'NONE']]) {
+            const offset=requests.length;
+            h.window.document.querySelector(`input[aria-label="${name}"]`).click();
+            const control=requests[offset],url=new URL(control.url);
+            assert.equal(url.searchParams.get('ob_request'),'updateFilter');
+            assert.equal(url.searchParams.get('filterName'),name);
+            assert.equal(url.searchParams.get('sortBy'),sortBy);
+            // Both servers return the newly selected preset first.
+            const selected=settings.filters.find(filter=>filter.name===name);
+            settings.filters=[selected,...settings.filters.filter(filter=>filter!==selected)];
+            settings.filters.forEach(filter=>{filter.current=filter===selected?'yes':'no';});
+            settings.sortBy=sortBy;
+            control.resolve({ok:true,json:async()=>({openbexi_timeline:[structuredClone(settings)]})});
+            await waitFor(()=>t.ob_sortBy===sortBy && !r.pending && !r.fetching && !r.loading);
+            assert.equal(requests.length,offset+1,'Cached records need no additional data request');
+            assert.deepEqual(Array.from(r.snapshot.entries,entry=>entry.key).sort(),keys);
+            assert.equal(r.selectedKey,keys[0] || null);
+            assert.equal(JSON.stringify([...r.ranges.values()][0]),range);
+            assert.equal(r.complete,complete);
+            assert.equal(r.error,'');assert.doesNotMatch(r.status.textContent,/Loading/);
+            assert.equal(h.window.document.querySelector(`input[aria-label="${name}"]`).checked,true);
+            assert.equal(h.window.document.getElementById('ob_sort_by').value,sortBy);
+            assert.equal(t.ob_timeline_body_frame.getAttribute('aria-busy'),'false');
+            if (ids.length) assert.equal(t.ob_viewport.fullBands.some(band=>band.groupBy==='namespace'),sortBy==='namespace');
+        }
+    } finally {f.close();}
+});
+
 test('A saved profile with no active preset starts unfiltered without a stale preset name',async()=>{
     const f=await connected();const {t,r,requests,settings}=f;
     try {

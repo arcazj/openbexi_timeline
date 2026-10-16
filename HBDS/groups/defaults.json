@@ -1,0 +1,4 @@
+[
+  {"id": "group_admin", "name": "Administrators"},
+  {"id": "group_guest", "name": "Guests"}
+]

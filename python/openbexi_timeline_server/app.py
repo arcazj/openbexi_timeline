@@ -91,7 +91,8 @@ class RequestTrace:
 def create_app(configuration, *, start_indexer=True):
     index = TimelineIndex(configuration)
     queries, storage = Queries(index), Storage(index)
-    hbds_store = Store(configuration.hbds_path, configuration.root) if configuration.hbds_path else None
+    from .namespace_workspace import NamespaceWorkspace
+    hbds_store = NamespaceWorkspace(configuration) if configuration.namespace_files else Store(configuration.hbds_path, configuration.root) if configuration.hbds_path else None
     hbds_snapshot = hbds_store.read() if hbds_store else None
     hbds_started = deepcopy(hbds_snapshot[0]) if hbds_snapshot else None
     admin_token = os.environ.get("OPENBEXI_API_TOKEN")
@@ -324,6 +325,7 @@ def create_app(configuration, *, start_indexer=True):
                 pending = hbds_changes(hbds_started, result["document"])
                 result.update({key: pending[key] for key in ("restartRequired", "restartReasons")})
                 await run_in_threadpool(update_hbds_snapshot)
+            if configuration.namespace_files: result['storage']=hbds_store.describe()
             headers["ETag"] = '"' + result["revision"] + '"'
             return JSONResponse(result, headers=headers)
         except HBDSError as error:

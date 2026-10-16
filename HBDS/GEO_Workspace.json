@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "name": "GEO_Workspace",
+  "service": "service.yml",
+  "namespace_files": [
+    "yaml/volcano_geoscience.yml",
+    "yaml/earthquake_geoscience.yml"
+  ],
+  "tabs": [
+    {
+      "id": "tab_volcano",
+      "namespaceId": "volcano",
+      "title": "volcano",
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "tab_earthquake",
+      "namespaceId": "earthquake",
+      "title": "earthquake",
+      "order": 1,
+      "enabled": true
+    }
+  ],
+  "default_namespace_id": "volcano"
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared service configuration",
+  "type": "object",
+  "required": [
+    "config_version"
+  ],
+  "properties": {
+    "config_version": {
+      "enum": [
+        2,
+        3
+      ]
+    },
+    "connectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "owner",
+          "type",
+          "port"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "owner": {
+            "enum": [
+              "java",
+              "python"
+            ]
+          },
+          "type": {
+            "enum": [
+              "http",
+              "https",
+              "no_secure",
+              "secure",
+              "secure_sse"
+            ]
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "default": "127.0.0.1"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "enable": {
+            "type": "boolean",
+            "default": true
+          },
+          "tls": {
+            "type": "object",
+            "properties": {
+              "keystore": {
+                "type": "string",
+                "minLength": 1
+              },
+              "password_env": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key_alias": {
+                "type": "string",
+                "minLength": 1
+              },
+              "certfile": {
+                "type": "string",
+                "minLength": 1
+              },
+              "keyfile": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "https",
+                    "secure",
+                    "secure_sse"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "tls"
+              ],
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "owner": {
+                        "const": "java"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "tls": {
+                        "required": [
+                          "keystore",
+                          "password_env"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "tls": {
+                        "required": [
+                          "certfile",
+                          "keyfile"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "server": {
+      "type": "object"
+    },
+    "timeline_server": {
+      "type": "object"
+    },
+    "collector_ui": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "enable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "plugins": {
+      "type": "object",
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "state_root": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "namespace"
+        ]
+      },
+      {
+        "required": [
+          "sources"
+        ]
+      },
+      {
+        "required": [
+          "data_sources"
+        ]
+      }
+    ]
+  },
+  "additionalProperties": true
+}

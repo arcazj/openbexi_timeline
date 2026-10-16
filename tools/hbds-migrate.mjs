@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {parse, stringify} from 'yaml';
 import {validateHbdsDocument, resolveHbdsNamespace} from '../src/openbexi_timeline_hbds.js';
+import {inspectPublicHbds} from './verify-hbds-public.mjs';
 
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const clone = value => structuredClone(value);
@@ -93,8 +94,6 @@ async function listFiles(root, relative) {
     }
     return result;
 }
-const sanitizeExample = text => text.replace(/\b(?:GCS|GNS|E?SOC|MCC|POC|POV|MWO|GAR|SCR|SRC|DAP)\b/g,
-    token => ({GAR: 'DEMO_IMPORT_A', SCR: 'DEMO_IMPORT_B', MWO: 'DEMO_IMPORT_C'}[token] || 'DEMO'));
 
 export async function migrateWorkspace(root = project) {
     root = await fs.realpath(root);
@@ -114,7 +113,7 @@ export async function migrateWorkspace(root = project) {
         const isPublic = publicFiles.has(file);
         const target = isPublic ? 'HBDS/templates/' + file : 'HBDS/private/' + (file.startsWith('filters/') ? file : 'imports/' + file);
         let publishedBytes = bytes;
-        if (isPublic && /\.(json|ya?ml)$/i.test(file)) publishedBytes = Buffer.from(sanitizeExample(bytes.toString('utf8')));
+        if (isPublic && /\.(json|ya?ml)$/i.test(file)) inspectPublicHbds(target,bytes.toString('utf8'));
         moves.push({file, target, source, bytes, publishedBytes, isPublic});
         if (isPublic) publicAliases[file] = target;
         else privateAliases[file] = target;

@@ -1,0 +1,34 @@
+{
+  "id": "volcano",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "java",
+  "capabilities": [
+    "source",
+    "converter"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_plugin_volcano:Plugin",
+  "cli": "timeline-convert-volcano",
+  "config_schema": "schemas/options.schema.json",
+  "supported_modes": [
+    "once",
+    "interval"
+  ],
+  "options_schema": {
+    "type": "object",
+    "properties": {
+      "archive": {
+        "type": "boolean"
+      },
+      "input_file": {
+        "type": "string"
+      },
+      "timeout_seconds": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "additionalProperties": true
+  }
+}

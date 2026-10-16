@@ -46,10 +46,12 @@ const references={namespaceId:'namespaces',defaultNamespaceId:'namespaces',model
 /** Compact namespace workspace; object forms are built only when their section opens. */
 export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPreview,askProperty=async()=>window.prompt('Property name'),baseURL=new URL('../api/v1/hbds',import.meta.url).href,onSaved}={}){
     let client,draft,schema={},modelSchema={},selection=namespaceId,selectedTab=tabId,area='namespace',busy=false,invalidText=false,disposed=false;
-    let retryTimer;
+    let retryTimer,storage={};
     const heading=element('div',undefined,{class:'hbds-toolbar'});
     const context=element('div',undefined,{class:'hbds-context'}),modelLabel=element('span','',{class:'hbds-model-label'});
     heading.append(element('h2','Namespaces and tabs'),modelLabel);
+    const collectorLink=element('a','Data collector',{href:'http://127.0.0.1:8765/',target:'_blank',rel:'noopener',class:'hbds-collector-link'});
+    heading.append(collectorLink);
     const notice=element('p','Connecting to the running server…',{role:'status','aria-live':'polite',class:'hbds-notice'});
     const errors=element('p','',{role:'alert',class:'hbds-errors'});errors.hidden=true;
     const controls=element('div',undefined,{class:'hbds-toolbar'}),select=element('select',undefined,{'aria-label':'HBDS namespace'});
@@ -80,7 +82,7 @@ export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPre
         const next=new HbdsEditorClient(baseURL);busy=true;update();
         try{const result=await next.request();if(!result.document||!result.revision)throw new Error('The server did not provide an HBDS document and revision.');validateHbdsDocument(result.document);
             const [fields,models]=await Promise.all([next.request({resource:'/schema'}).catch(()=>({})),fetch(new URL('../schemas/demo-model.schema.json',import.meta.url)).then(r=>r.ok?r.json():{}).catch(()=>({}))]);
-            if(disposed)return;schema=fields.schema||fields;modelSchema=models;client=next;draft=new HbdsEditorDraft(result.document,result.revision);workspace.hidden=false;errors.hidden=true;notice.textContent='Connected · Preview your edits, then Save and apply.';render();
+            if(disposed)return;schema=fields.schema||fields;modelSchema=models;client=next;storage=result.storage||{};draft=new HbdsEditorDraft(result.document,result.revision);workspace.hidden=false;errors.hidden=true;notice.textContent='Connected · Preview your edits, then Save and apply.';render();
         }catch(error){
             if(disposed)return;fail(error);
             const retry=!error.status||error.status>=500;
@@ -88,10 +90,10 @@ export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPre
             if(retry)retryTimer=setTimeout(connectServer,5000);
         }finally{busy=false;update();}
     }
-    async function load(){busy=true;update();try{const result=await client.request();validateHbdsDocument(result.document);draft=new HbdsEditorDraft(result.document,result.revision);invalidText=false;errors.hidden=true;render();}finally{busy=false;update();}}
+    async function load(){busy=true;update();try{const result=await client.request();validateHbdsDocument(result.document);storage=result.storage||{};draft=new HbdsEditorDraft(result.document,result.revision);invalidText=false;errors.hidden=true;render();}finally{busy=false;update();}}
     async function saveDraft(){
         busy=true;update();errors.hidden=true;
-        try{const result=await client.save(draft);render();notice.textContent=result.restartRequired?`Saved. Restart required: ${(result.restartReasons||[]).join('; ')||'source or server settings changed'}. Supported UI changes are applied now.`:'Saved and applied. Only affected timeline tabs refresh.';
+        try{const result=await client.save(draft);storage=result.storage||storage;render();notice.textContent=result.restartRequired?`Saved. Restart required: ${(result.restartReasons||[]).join('; ')||'source or server settings changed'}. Supported UI changes are applied now.`:'Saved and applied. Only affected timeline tabs refresh.';
             const message={type:'ob-hbds-saved',revision:result.revision,changedNamespaceIds:result.changedNamespaceIds||[],restartRequired:Boolean(result.restartRequired)};
             if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel(HBDS_CHANGE_CHANNEL);channel.postMessage(message);channel.close();}
             try{window.opener?.postMessage(message,location.origin);}catch{ /* Other open HBDS hosts receive the broadcast. */ }onSaved?.(result);
@@ -102,12 +104,14 @@ export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPre
         const value=schemaDefault(schema.properties?.[kind]?.items||{type:'object'},schema);const item=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
         item.id='hbds-'+crypto.randomUUID();
         if(kind==='tabs')Object.assign(item,{namespaceId:selection,title:'New timeline',order:Math.max(-1,...draft.value.tabs.map(tab=>tab.order))+1,enabled:true});
-        if(kind==='sources')Object.assign(item,{namespaceId:selection,order:Math.max(-1,...draft.value.sources.filter(source=>source.namespaceId===selection).map(source=>source.order))+1,configuration:{type:'json_file',enable:false,data_path:''}});
+        if(kind==='sources')Object.assign(item,{namespaceId:selection,order:Math.max(-1,...draft.value.sources.filter(source=>source.namespaceId===selection).map(source=>source.order))+1,configuration:{type:'json_file',enable:false,source_path:''}});
         if(kind==='models')Object.assign(item,{configuration:clone(draft.value.models[0]?.configuration||{params:[],bands:[]})});
         if(kind==='namespaces')Object.assign(item,{namespace:'NEW_NAMESPACE',modelId:draft.value.models[0]?.id||'',render:{},filter:{},connectorIds:[]});
         if(kind==='roles')Object.assign(item,{name:'New role',ceiling:'denied'});
         if(kind==='groups')item.name='New group';
-        if(kind==='users')Object.assign(item,{name:'New user',email:'',admin:false,roleId:draft.value.roles[0]?.id||'',groupId:draft.value.groups[0]?.id||''});
+        if(kind==='users')Object.assign(item,{name:'New user',email:'',admin:false,
+            roleId:draft.value.roles.find(role=>role.id==='role_guest')?.id||draft.value.roles.find(role=>role.ceiling!=='admin')?.id||'',
+            groupId:draft.value.groups.find(group=>group.id==='group_guest')?.id||draft.value.groups[0]?.id||''});
         if(kind==='grants')Object.assign(item,{groupId:draft.value.groups[0]?.id||'',namespaceId:selection,permission:'denied'});
         return item;
     }
@@ -122,7 +126,11 @@ export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPre
         modelLabel.textContent=model?`Model: ${model.configuration?.params?.[0]?.title||model.id}`:'No model selected';
         onPreview?.({namespace:clone(namespace),model:clone(model),tab:clone(tab)});
     }
-    function render(){syncSelection();renderBody();}
+    function render(){
+        const port=draft?.value?.deployment?.collector_ui?.port||8765;
+        collectorLink.href=`http://127.0.0.1:${Number.isInteger(port)&&port>0&&port<=65535?port:8765}/`;
+        syncSelection();renderBody();
+    }
     function field(value,definition,path,name,required=false){
         const root=path[0]==='models'&&path.includes('configuration')?modelSchema:schema;
         definition=resolveSchema(definition||{},root,value);
@@ -152,28 +160,35 @@ export function mountHbdsEditor(host,{namespaceId='',tabId='',previewPanel,onPre
         if(choices){input=element('select');if(!choices.some(item=>item.value===value))input.append(new Option(String(value),String(value)));for(const choice of choices)input.append(new Option(choice.label,String(choice.value)));input.value=String(value);}
         else if(typeof value==='boolean'){input=element('input',undefined,{type:'checkbox'});input.checked=value;}
         else{input=element('input',undefined,{type:typeof value==='number'?'number':/password|secret|token|credential/i.test(name)?'password':'text'});input.value=value===null?'null':String(value??'');if(input.type==='number'){input.step=definition.type==='integer'?'1':'any';if(definition.minimum!==undefined)input.min=definition.minimum;if(definition.maximum!==undefined)input.max=definition.maximum;}}
-        input.setAttribute('aria-label',path.join('.'));if(name==='id'||name==='$schema')input.readOnly=true;
+        input.setAttribute('aria-label',path.join('.'));if(name==='id'||name==='$schema'||storage.kind==='namespace-files'&&path[0]==='namespaces'&&name==='namespace')input.readOnly=true;
         input.addEventListener('change',()=>{if(input.type==='number'&&(input.value===''||!Number.isFinite(Number(input.value)))){fail(new Error(`${path.join('.')} requires a finite number.`));return;}changed(path,input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value==='null'&&(value===null||definition.type?.includes?.('null'))?null:choices?.find(item=>String(item.value)===input.value)?.value??input.value);});
         row.append(caption,input);if(!required&&name!=='id'&&typeof path.at(-1)!=='number')row.append(button('Remove',()=>{changed(path,undefined,true);render();}));return row;
     }
     function collection(key,filter=()=>true){
         const section=element('section',undefined,{class:'hbds-collection'});section.append(element('h3',title(key)));
+        const fixed=storage.kind==='namespace-files'&&['namespaces','sources','models','connectors'].includes(key);
+        if(storage.kind==='namespace-files'&&key==='connectors')section.inert=true;
         draft.value[key].forEach((item,index)=>{if(!filter(item))return;const row=element('div',undefined,{class:'hbds-entity'}),actions=element('div',undefined,{class:'group-actions'});
             const remove=button('Remove '+(item.title||item.name||item.namespace||key),()=>{changed([key,index],undefined,true);render();});actions.append(remove);
+            remove.disabled=fixed||Boolean(storage.defaultIds?.[key]?.includes(item.id));
             if(key==='tabs'){const up=button('Move up',()=>{draft.move([key],index,index-1);render();});up.disabled=index===0;const down=button('Move down',()=>{draft.move([key],index,index+1);render();});down.disabled=index===draft.value[key].length-1;actions.prepend(up,down);}
             row.append(field(item,schema.properties?.[key]?.items,[key,index],item.title||item.name||item.namespace||item.id,true),actions);section.append(row);
         });
-        section.append(button('Add '+key.replace(/s$/,''),()=>{const item=entityDefault(key);changed([key,draft.value[key].length],item);if(key==='namespaces')selection=item.id;render();}));body.append(section);
+        const add=button('Add '+key.replace(/s$/,''),()=>{const item=entityDefault(key);changed([key,draft.value[key].length],item);if(key==='namespaces')selection=item.id;render();});add.disabled=fixed;section.append(add);body.append(section);
     }
     function renderBody(){
         body.replaceChildren();for(const [index,id] of Object.keys(areas).entries())navigation.children[index].setAttribute('aria-pressed',String(area===id));if(!draft)return;
-        if(area==='namespace'||area==='sources')body.append(element('p','Source render defaults are applied during ingestion. Export YAML and reload the collector; use Model for live timeline appearance.',{class:'property-description'}));
+        if(area==='namespace'||area==='sources')body.append(element('p',storage.kind==='namespace-files'?'Save updates the namespace YAML. Edit inputs within its sources list. Add or remove namespaces through the server startup file list; restart after ingestion changes.':'Source render defaults are applied during ingestion. Export YAML and reload the collector; use Model for live timeline appearance.',{class:'property-description'}));
+        if(storage.kind==='namespace-files'&&area==='model')body.append(element('p','Select the namespace model on the Namespace page. To add a model, place its JSON in HBDS/models and reload saved configuration.',{class:'property-description'}));
         if(area==='namespace'){body.append(field(draft.value.defaultNamespaceId,schema.properties?.defaultNamespaceId,['defaultNamespaceId'],'Default namespace',true));collection('namespaces',item=>item.id===selection);}
         if(area==='model'){const namespace=draft.value.namespaces.find(n=>n.id===selection);collection('models',model=>model.id===namespace?.modelId);}
         if(area==='sources'){collection('sources',source=>source.namespaceId===selection);collection('connectors');}
         if(area==='tabs'){body.append(element('p','Tabs reference a namespace and use its model. Tabs load only when opened.',{class:'property-description'}));collection('tabs');}
-        if(area==='access')for(const key of ['users','groups','roles','grants'])collection(key);
-        if(area==='deployment'){body.append(element('p','Server and ingestion settings require a restart. Changes are validated before saving.',{class:'property-description'}),field(draft.value.deployment,schema.properties?.deployment,['deployment'],'Deployment',true));}
+        if(area==='access'){
+            body.append(element('p','Admin and guest are the public defaults. Changes and additional users remain private to this installation.',{class:'property-description'}));
+            for(const key of ['users','groups','roles','grants'])collection(key);
+        }
+        if(area==='deployment'){const settings=field(draft.value.deployment,schema.properties?.deployment,['deployment'],'Deployment',true);settings.inert=storage.kind==='namespace-files';body.append(element('p',storage.kind==='namespace-files'?`Edit HBDS/${storage.service||'service.yml'} and restart to change listeners or service settings.`:'Server and ingestion settings require a restart. Changes are validated before saving.',{class:'property-description'}),settings);}
         if(area==='advanced'){const label=element('label','Complete HBDS document'),text=element('textarea',JSON.stringify(draft.value,null,2),{'aria-label':'HBDS JSON',spellcheck:'false'});label.append(text);body.append(label);text.addEventListener('input',()=>{try{const value=JSON.parse(text.value);if(!value||!['namespaces','models','tabs'].every(key=>Array.isArray(value[key])))throw new Error('HBDS requires namespaces, models and tabs collections.');draft.replace(value);invalidText=false;errors.hidden=true;syncSelection();}catch(error){invalidText=true;fail(error);}update();});}
         update();
     }

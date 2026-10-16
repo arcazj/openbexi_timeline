@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-10-14T19:48:38.864Z",
-  "modelSha256": "fab15391810579a07139b25e409fadca57116a7ad7e609239529c4aad1843dd8",
+  "generatedAt": "2026-10-16T18:38:15.854Z",
+  "modelSha256": "cf3d27d6ea5d4481c503653d25e7880e1563ccd0eae161cf7f673ee64f73881e",
   "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
   "browser": {
-    "name": "msedge.exe",
-    "version": "155.0.4283.45",
+    "name": "chrome.exe",
+    "version": "155.0.8059.80",
     "viewport": {
       "width": 4400,
       "height": 4400
@@ -13,7 +13,7 @@
   },
   "outputs": {
     "simulator": {
-      "file": "openbexi_timeline.png",
+      "file": "../../../HBDS/schema/openbexi_timeline.png",
       "width": 5500,
       "height": 5500
     }
@@ -26,8 +26,8 @@
     "attributes": 187,
     "memberships": 26,
     "inheritances": 0,
-    "objects": 60,
-    "objectLinks": 73
+    "objects": 56,
+    "objectLinks": 69
   },
   "checks": {
     "countsMatch": true,
@@ -52,8 +52,8 @@
     "links": 30,
     "attributes": 187,
     "hyperclasses": 5,
-    "objects": 60,
-    "objectLinks": 73,
+    "objects": 56,
+    "objectLinks": 69,
     "memberships": 26,
     "inheritances": 0
   },
@@ -140,7 +140,7 @@
     "width": 5500,
     "height": 5500,
     "sampled": 1048576,
-    "colored": 248144,
+    "colored": 248143,
     "dark": 4986
   },
   "pageErrors": [],

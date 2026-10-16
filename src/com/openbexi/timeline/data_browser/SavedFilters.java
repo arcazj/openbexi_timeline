@@ -15,18 +15,52 @@ public final class SavedFilters {
         if(!result.matches("[A-Za-z0-9_-]{1,128}"))throw new IllegalArgumentException("Invalid filter profile identity.");
         return result;
     }
+    private static Path directory(JSONObject configuration) {
+        Path base=Path.of(Objects.toString(configuration.get("_hbds_root"),"HBDS"),"filters");
+        Object workspace=configuration.get("_hbds_workspace");
+        if(workspace==null)return base;
+        String scope=Path.of(workspace.toString()).getFileName().toString().replaceFirst("\\.[^.]+$","");
+        if(scope.isBlank()||scope.equals(".")||scope.equals(".."))throw new IllegalArgumentException("Invalid filter workspace identity.");
+        return base.resolve("workspaces").resolve(scope);
+    }
     private static Path path(JSONObject configuration) {
-        return Path.of("HBDS/private/filters",identity((String)configuration.get("userName"),"guest")+"_"+
+        return directory(configuration).resolve(identity((String)configuration.get("userName"),"guest")+"_"+
                 identity((String)configuration.get("timelineName"),"timeline")+"_filter_setting.json");
     }
+    private static boolean belongs(JSONObject document,JSONObject configuration) {
+        Set<Object> names=new HashSet<>();
+        Object configured=configuration.get("_hbds_filter_namespaces");
+        if(configured instanceof JSONArray values)names.addAll(values);
+        else if(configuration.get("startup configuration") instanceof JSONArray sources)
+            for(Object value:sources)if(value instanceof JSONObject source)names.add(source.get("namespace"));
+        names.remove(null);names.remove("");
+        if(names.contains(document.get("namespace")))return true;
+        JSONObject timeline=(JSONObject)((JSONArray)document.get("openbexi_timeline")).get(0);
+        if(timeline.get("sources") instanceof JSONArray sources)
+            for(Object value:sources)if(value instanceof JSONObject source&&names.contains(source.get("namespace")))return true;
+        return false;
+    }
     private static JSONObject read(JSONObject configuration) throws IOException {
-        Path path=path(configuration);
-        if(!Files.exists(path))path=Path.of("filters").resolve(path.getFileName());
-        if(!Files.exists(path) && "guest".equals(Objects.toString(configuration.get("userName"),"guest")))
-            path=com.openbexi.timeline.api.TimelineHbds.resolve(Path.of(""),"filters/default_filter_setting.json");
-        if(!Files.exists(path))return null;
-        try(Reader reader=Files.newBufferedReader(path)) {return (JSONObject)new JSONParser().parse(reader);}
-        catch(org.json.simple.parser.ParseException | ClassCastException error) {throw new IOException("Saved filter settings are invalid.",error);}
+        Path target=path(configuration),folder=target.getParent(),base=Path.of(Objects.toString(configuration.get("_hbds_root"),"HBDS"),"filters");
+        List<Path> candidates=new ArrayList<>();candidates.add(target);
+        if(!folder.equals(base))candidates.add(base.resolve(target.getFileName()));
+        candidates.add(Path.of("HBDS/private/filters").resolve(target.getFileName()));
+        candidates.add(Path.of("filters").resolve(target.getFileName()));
+        if("guest".equals(identity((String)configuration.get("userName"),"guest"))) {
+            candidates.add(folder.resolve("default_filter_setting.json"));
+            if(!folder.equals(base))candidates.add(base.resolve("default_filter_setting.json"));
+            candidates.add(com.openbexi.timeline.api.TimelineHbds.resolve(Path.of(""),"filters/default_filter_setting.json"));
+        }
+        for(Path candidate:candidates) {
+            if(!Files.isRegularFile(candidate))continue;
+            try(Reader reader=Files.newBufferedReader(candidate)) {
+                JSONObject document=(JSONObject)new JSONParser().parse(reader);
+                // Preserve legacy presets only when their sources belong to this workspace.
+                if(configuration.get("_hbds_workspace")!=null&&!candidate.getParent().equals(folder)&&!belongs(document,configuration))continue;
+                return document;
+            } catch(org.json.simple.parser.ParseException | ClassCastException error) {throw new IOException("Saved filter settings are invalid.",error);}
+        }
+        return null;
     }
     public static void resolve(JSONObject configuration) {
         // An explicit expression (including empty) overrides the saved active preset.
@@ -61,8 +95,11 @@ public final class SavedFilters {
                 timeline.put("user",identity((String)query.get("userName"),"guest"));
                 timeline.put("start","current_time");timeline.put("title1",Objects.toString(query.get("title"),"Timeline"));
                 JSONArray initial=new JSONArray();initial.add(new JSONObject(Map.of("name","ALL","filter_value","","sortBy","NONE","current","yes")));
+                initial.add(new JSONObject(Map.of("name","by_namespace","filter_value","","sortBy","namespace","current","no")));
                 timeline.put("filters",initial);
             } else timeline=(JSONObject)((JSONArray)document.get("openbexi_timeline")).get(0);
+            timeline.put("name",identity((String)query.get("timelineName"),"timeline"));
+            timeline.put("user",identity((String)query.get("userName"),"guest"));
             timeline.put("sources",query.get("startup configuration"));timeline.put("multiples","45");
             if(operation.equals("readFilters"))return document;
             JSONArray filters=(JSONArray)timeline.get("filters");

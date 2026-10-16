@@ -1,0 +1,25 @@
+{
+  "scope": "HBDS architecture artifacts. Application regression evidence and release asset hashes are recorded separately.",
+  "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
+  "passed": true,
+  "checks": [
+    "HBDS JSON Schema",
+    "HBDS semantic validator",
+    "HBDS server validator",
+    "input hashes",
+    "typed examples",
+    "references and cardinalities",
+    "GEO workspace and distinct plugins",
+    "static NONE and live separation",
+    "repeat semantics",
+    "planned release assets"
+  ],
+  "counts": {
+    "classes": 35,
+    "hyperclasses": 6,
+    "attributes": 190,
+    "links": 39,
+    "objects": 19,
+    "objectLinks": 21
+  }
+}

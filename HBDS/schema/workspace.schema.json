@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Timeline workspace selection and tab state",
+  "type": "object",
+  "required": ["namespace_files"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "name": {"type": "string", "minLength": 1},
+    "service": {"type": "string", "minLength": 1},
+    "namespace_files": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "pattern": "\\.yml$"}},
+    "default_namespace_id": {"type": "string", "minLength": 1},
+    "tabs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "namespaceId", "title", "order", "enabled"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "namespaceId": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "order": {"type": "integer", "minimum": 0},
+          "enabled": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "aliases": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[^/\\\\]+\\.yml$"}}
+  },
+  "additionalProperties": true
+}

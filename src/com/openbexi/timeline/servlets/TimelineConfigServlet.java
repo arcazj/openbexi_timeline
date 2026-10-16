@@ -44,7 +44,7 @@ public final class TimelineConfigServlet extends HttpServlet {
         response.setHeader("Cache-Control","no-store");response.setHeader("X-Content-Type-Options","nosniff");
         JSONObject result=new JSONObject().put("model",model==null?JSONObject.NULL:model)
                 .put("data",request.getContextPath()+dataRoute)
-                .put("server",new JSONObject().put("implementation","Java").put("version","2.8.1"));
+                .put("server",new JSONObject().put("implementation","Java").put("version","2.9.0"));
         if(hbds!=null) {
             try {result.put("hbds",hbds.publicConfiguration(request.getParameter("namespaceId")));}
             catch(ApiException error){response.setStatus(error.status);response.getWriter().write(new JSONObject().put("detail",error.getMessage()).toString());return;}

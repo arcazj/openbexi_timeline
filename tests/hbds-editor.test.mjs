@@ -76,6 +76,29 @@ test('An unavailable HBDS server reconnects automatically and disposal cancels r
     }finally{harness.close();}
 });
 
+test('HBDS new users start as guests while shared default identities cannot be removed',async()=>{
+    const {harness,api,document}=await setup();try{
+        const defaultIds={};
+        for(const key of ['users','groups','roles']){
+            document[key]=JSON.parse(await fs.readFile(`HBDS/${key}/defaults.json`,'utf8'));
+            defaultIds[key]=document[key].map(item=>item.id);
+        }
+        const schema=JSON.parse(await fs.readFile('HBDS/schema/configuration.schema.json','utf8'));
+        harness.window.fetch=async url=>response(String(url).endsWith('/api/v1/hbds')?
+            {document,revision:'revision-1',storage:{kind:'namespace-files',defaultIds}}:schema);
+        const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
+        const editor=api.mountHbdsEditor(host);await editor.ready;
+        [...host.querySelectorAll('nav button')].find(button=>button.textContent==='Access').click();
+        const button=name=>[...host.querySelectorAll('button')].find(button=>button.textContent===name);
+        assert.equal(button('Remove admin').disabled,true);assert.equal(button('Remove guest').disabled,true);
+        button('Add user').click();
+        const added=editor.document.users.at(-1);
+        assert.equal(added.roleId,'role_guest');assert.equal(added.groupId,'group_guest');assert.equal(added.admin,false);
+        assert.equal(button('Remove New user').disabled,false);button('Remove New user').click();
+        assert.deepEqual(plain(editor.document.users),document.users);editor.dispose();
+    }finally{harness.close();}
+});
+
 test('HBDS namespace and tab menus share one draft and notify the preview without changing data',async()=>{
     const {harness,api,document}=await setup();try{
         const previews=[];harness.window.fetch=async url=>response(String(url).endsWith('/api/v1/hbds')?{document,revision:'revision-1'}:{});
@@ -106,6 +129,44 @@ test('HBDS tabs create frames lazily and preserve unaffected frames on scoped sa
         config=hbdsPublicConfiguration(document,'revision-3');await tabs.refresh({type:'ob-hbds-saved',revision:'revision-3',changedNamespaceIds:['namespace-alpha']});
         assert.notEqual(tabs.frames.get('tab-alpha'),alpha);assert.equal(tabs.frames.get('tab-beta'),beta);assert.equal(alpha.isConnected,false);
         await tabs.refresh({type:'ob-hbds-saved',revision:'revision-3',changedNamespaceIds:['namespace-alpha']});assert.equal(fetches,2,'duplicate channels do not request configuration again');tabs.dispose();
+    }finally{harness.close();}
+});
+
+test('provider workspaces open All namespaces and refresh the aggregate after either source changes',async()=>{
+    const {harness,runtime,document}=await setup();try{
+        for(const model of document.models)delete model.configuration.dataSource;
+        let config={...hbdsPublicConfiguration(document),data:'/openbexi_timeline/sessions'};
+        const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
+        const tabs=runtime.mountHbdsTabs(host,config,{fetchConfiguration:async()=>config});
+        assert.deepEqual(plain(tabs.getState().items).map(item=>item.title),['All','Alpha timeline','Beta timeline']);
+        assert.equal(tabs.activeId,'__all__');const all=tabs.frames.get('__all__');
+        assert.equal(new URL(all.src).searchParams.get('hbdsScope'),'all');assert.equal(new URL(all.src).searchParams.has('namespaceId'),false);
+        tabs.select('tab-beta');const beta=tabs.frames.get('tab-beta');
+        assert.equal(new URL(beta.src).searchParams.get('namespaceId'),'namespace-beta');
+        tabs.select('__all__');assert.equal(tabs.frames.get('__all__'),all);
+        config={...hbdsPublicConfiguration(document,'revision-2'),data:config.data};
+        await tabs.refresh({type:'ob-hbds-saved',revision:'revision-2',changedNamespaceIds:['namespace-alpha']});
+        assert.equal(all.isConnected,false);assert.notEqual(tabs.frames.get('__all__'),all);assert.equal(tabs.frames.get('tab-beta'),beta);
+        tabs.dispose();
+        const linked=runtime.mountHbdsTabs(host,config,{initialNamespaceId:'namespace-beta'});
+        assert.equal(linked.activeId,'tab-beta');linked.dispose();
+    }finally{harness.close();}
+});
+
+test('All namespace child queries the provider without a namespace restriction',async()=>{
+    const harness=await createTimelineHarness({calendar:true,url:'http://localhost/openbexi_timeline.html?hbdsTab=__all__&hbdsScope=all'});try{
+        const document=await hbdsFixture(),configuration=hbdsPublicConfiguration(document);
+        delete configuration.hbds.modelConfiguration.dataSource;configuration.data='/openbexi_timeline/sessions';
+        const requests=[];harness.window.fetch=async url=>{requests.push(new URL(String(url),'http://localhost/'));return response({events:[]});};
+        const {OB_TIMELINE}=await harness.importModule('src/openbexi_timeline.js');
+        const runtime=await harness.importModule('src/openbexi_timeline_hbds_runtime.js');
+        const timeline=await runtime.bootHbdsTimeline(OB_TIMELINE,{fetchConfiguration:async()=>configuration});
+        await new Promise(resolve=>setTimeout(resolve,40));
+        const sessions=requests.filter(url=>url.pathname==='/openbexi_timeline/sessions');
+        assert.ok(sessions.length);assert.ok(sessions.every(url=>!url.searchParams.get('namespace')));
+        assert.equal(timeline.hbdsNamespace,'');assert.equal(configuration.hbds.namespace,'EXAMPLE_ALPHA');
+        assert.deepEqual(plain(timeline.namespaceNavigation.getState().items).map(item=>item.title),['All','Alpha timeline','Beta timeline']);
+        timeline.modelStartup.cancel();timeline.ob_loader?.cancel();
     }finally{harness.close();}
 });
 

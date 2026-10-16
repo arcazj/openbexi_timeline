@@ -381,6 +381,13 @@ public class json_files_manager extends data_manager {
         JSONArray configurations = (JSONArray) _data_configuration.getConfiguration().get("startup configuration");
         for (int d = 0; d < configurations.size(); d++) {
             currentPathModel = (String) _data_configuration.getConfiguration(d).get("data_model");
+            Path collectorRoot = CollectorPublication.root(currentPathModel);
+            JSONObject publication;
+            try {
+                publication = CollectorPublication.read(collectorRoot);
+                if (publication != null) _files.put(CollectorPublication.path(collectorRoot).toFile(),
+                        String.valueOf(_data_configuration.getConfiguration(d).get("namespace")));
+            } catch (IOException error) { throw new IllegalStateException("Cannot read committed publication", error); }
 
             if (currentPathModel.contains("dd"))
                 step = 86400000;
@@ -409,7 +416,9 @@ public class json_files_manager extends data_manager {
                     @Override
                     public boolean accept(File dir, String name) {
                         File candidate=new File(dir,name);
-                        return !name.startsWith("descriptors") && !name.contains("noises")&&(candidate.isDirectory()||filenameRules.test(candidate.toPath()));
+                        return !name.startsWith(".") && !name.startsWith("descriptors") && !name.contains("noises")
+                                && !CollectorPublication.excluded(collectorRoot,candidate.toPath(),publication)
+                                && (candidate.isDirectory()||filenameRules.test(candidate.toPath()));
                     }
                 };
                 File[] file_list = new File(buildFile).listFiles(filter);

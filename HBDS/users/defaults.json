@@ -1,0 +1,18 @@
+[
+  {
+    "id": "admin",
+    "name": "admin",
+    "email": "admin@example.invalid",
+    "admin": true,
+    "roleId": "role_admin",
+    "groupId": "group_admin"
+  },
+  {
+    "id": "guest",
+    "name": "guest",
+    "email": "guest@example.invalid",
+    "admin": false,
+    "roleId": "role_guest",
+    "groupId": "group_guest"
+  }
+]

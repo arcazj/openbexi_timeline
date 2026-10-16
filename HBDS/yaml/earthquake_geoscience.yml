@@ -1,0 +1,17 @@
+config_version: 3
+namespace: earthquake
+model: models/geoscience.json
+enable: true
+target_path: /data/earthquake/yyyy/mm/dd
+connectors:
+- java_api
+- python_api
+sources:
+- id: input
+  source_plugin: earthquake
+  converter_plugin: earthquake
+  execution:
+    mode: once
+    resume_on_restart: false
+render: {}
+filter: {}

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 
 // Generate this file with Maven dependency:list -DincludeScope=runtime
 // -DoutputFile=target/runtime-dependencies.txt before invoking this script.
@@ -22,6 +22,7 @@ const findings = results.flatMap((result, index) => (result.vulns || []).map(vul
     advisory: vulnerability.id,
     url: `https://osv.dev/vulnerability/${encodeURIComponent(vulnerability.id)}`
 })));
+await mkdir('target', {recursive:true});
 await writeFile('target/dependency-audit-osv.json', JSON.stringify({
     checkedAt: new Date().toISOString(), source: 'https://api.osv.dev', scope: 'Maven runtime',
     packages: coordinates.length, findings
