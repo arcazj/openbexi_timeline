@@ -48,9 +48,11 @@ mvn --batch-mode --no-transfer-progress -f HBDS/plugins/earthquake/pom.xml verif
 mvn --batch-mode --no-transfer-progress -f HBDS/plugins/volcano/pom.xml verify
 ```
 
-In **Project Structure > SDKs**, add the existing `.venv/Scripts/python.exe`
-interpreter and name it **Timeline Python**. The Python configurations select
-this SDK explicitly, so they do not change the Java module's SDK.
+The Python configurations select the registered project `.venv/Scripts/python.exe`
+interpreter. IntelliJ also requires its SDK name to match the registered entry.
+If yours has a different name, select your existing project interpreter in each
+Python configuration under **Run > Edit Configurations**. Keep the Java module
+on JDK 21; changing its module SDK to Python would break the Java launchers.
 Collector and generator entries read `JAVA_HOME` from the ignored local file
 `.local-private/intellij.env`. Create it with your JDK location, for example:
 
@@ -64,3 +66,31 @@ building the timeline server alone does not build plugins.
 
 On Linux/macOS, select the environment's `bin/python` interpreter instead of
 `Scripts/python.exe` in your local run configuration.
+
+## Collector launch troubleshooting
+
+The current module is `timeline_data_collector`. An older local configuration
+such as **Collector - Help** may still select `gcs_collector.data2json` or
+`gcs_collector.server`. Use **Help - Collector** from `.run`, or update the local
+configuration's module to `timeline_data_collector` and its interpreter to
+`.venv/Scripts/python.exe`. Dashboard arguments start with `serve`, conversion
+arguments with `run`, and checks with `validate`; each uses `--workspace`.
+
+Verify the installation from the project root:
+
+```powershell
+.venv/Scripts/python.exe -m pip install -e timeline_data_collector
+.venv/Scripts/python.exe -m timeline_data_collector --help
+.venv/Scripts/python.exe -m timeline_data_collector serve --help
+.venv/Scripts/python.exe -m timeline_data_collector run --help
+.venv/Scripts/python.exe -m timeline_data_collector validate --workspace HBDS/GEO_Workspace.json
+```
+
+`No module named timeline_data_collector.__main__` means the collector has not
+been installed in that interpreter; a missing `jsonschema` means its dependencies
+are incomplete. The editable install above supplies both. For Java converter
+launches, also create `.local-private/intellij.env` as described above.
+
+For an operational workspace, install its private converter packages and their
+dependencies in this same interpreter, following their local README files.
+Help and configuration validation do not import every conversion dependency.
