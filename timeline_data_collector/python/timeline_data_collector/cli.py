@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse
 import json
+import logging
 import sys
 import threading
 from . import __version__
@@ -28,11 +29,12 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--plugin', default=plugin)
             selected.add_argument('--offline', action='store_true')
         if command == 'run':
-            selected.add_argument('--once', action='store_true', help='Explicit one-shot conversion (the default)')
+            selected.add_argument('--once', action='store_true', help='Complete one conversion pass, then exit (the default; does not restrict dates)')
             selected.add_argument('--mode', choices=('once', 'interval', 'watch', 'stream'), default='once')
             selected.add_argument('--interval-seconds', type=float, default=300)
             selected.add_argument('--resume-on-restart', action='store_true')
-            selected.add_argument('--date'); selected.add_argument('--end-date')
+            selected.add_argument('--date', help='Select today (UTC), YYYY, YYYY-MM or YYYY-MM-DD; a single day selects only that day unless --end-date is supplied')
+            selected.add_argument('--end-date', help='Inclusive last day (YYYY-MM-DD) of the range beginning at --date')
             selected.add_argument('--force', action='store_true', help='Reprocess without deleting other source contributions')
             selected.add_argument('--validate-only', action='store_true')
             selected.add_argument('--request-id')
@@ -40,6 +42,7 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--host'); selected.add_argument('--port', type=int)
             selected.add_argument('--allow-workspace', action='append', default=[], help='Additional workspace available in the UI')
     args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
     runner = scheduler = None
     try:
         config = load(args.workspace, dataconf=args.dataconf, service=args.service, hbds_root=args.hbds_root)

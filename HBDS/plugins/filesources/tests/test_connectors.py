@@ -17,6 +17,17 @@ class ConnectorTests(unittest.TestCase):
         self.pool=ConnectorPool(self.root/'cache')
     def tearDown(self):self.temp.cleanup()
 
+    def test_local_traversal_errors_are_not_treated_as_missing_input(self):
+        import os
+        scan = os.scandir
+        child = self.root / 'logs'; child.mkdir()
+        def unreadable(path):
+            if Path(path) == child: raise PermissionError('input directory is unreadable')
+            return scan(path)
+        with patch('timeline_file_sources.connectors.os.scandir', side_effect=unreadable):
+            with self.assertRaises(PermissionError):
+                self.pool.prepare({'type': 'local', 'source_path': str(self.root)})
+
     def test_s3_paginates_downloads_changes_and_reuses_metadata_after_restart(self):
         source={'type':'s3','bucket':'example','prefix':'logs','format':'timeline_json','poll_seconds':0}
         client=MagicMock();session=MagicMock();session.client.return_value=client

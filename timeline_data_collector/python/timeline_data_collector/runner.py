@@ -3,15 +3,21 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from pathlib import Path
+import logging
 import threading
+import time
 import uuid
 from .configuration import load, source_key
 from .contracts import Cancelled, Context
 from .io import model_root
 from .locking import SourceLock
 from .publisher import Publisher
+from .progress import activity
 from .registry import Registry
 from .state import State
+
+
+LOG = logging.getLogger('timeline_data_collector')
 
 
 class Runner:
@@ -47,6 +53,11 @@ class Runner:
         configuration = self.refresh()
         if revision and revision != configuration.revision: raise ValueError('Configuration changed; reload before starting conversion')
         pairs = configuration.sources(namespace, source, plugin, include_disabled=True)
+        LOG.info('Workspace %s: %d selected sources; mode=%s', configuration.workspace.name, len(pairs), mode)
+        for group, entry in pairs:
+            reason = self._skip_reason(group, entry)
+            LOG.info('%s/%s: %s; reader=%s; converter=%s', group['namespace'], entry['id'],
+                     'will skip (' + reason + ')' if reason else 'queued', entry['source_plugin'], entry['converter_plugin'])
         request_id = request_id or uuid.uuid4().hex
         jobs = []
         for group, entry in pairs:
@@ -63,18 +74,32 @@ class Runner:
             jobs.append(self.state.get(job['id']))
         return jobs
 
+    @staticmethod
+    def _skip_reason(group, source):
+        if not group.get('enable', True): return 'namespace disabled in configuration'
+        if not source.get('enable', True): return 'source disabled in configuration'
+        if source['converter_plugin'] == 'NONE': return 'static NONE source; no conversion configured'
+        return None
+
     def _execute(self, ident, group, source, cancel, configuration):
         request = self.state.get(ident)['request']
         key = request['source_key']
         lease = SourceLock(model_root(group['target_path']) / '.timeline-collector/jobs' / (key + '.lock'))
         acquired = False
         result = {'records_written': 0, 'batches': 0}
+        label = group['namespace'] + '/' + source['id']
+        started = time.monotonic()
         try:
-            if not group.get('enable', True) or not source.get('enable', True) or source['converter_plugin'] == 'NONE':
-                self.state.update(ident, 'succeeded', {'skipped': True, 'reason': 'disabled or static NONE source'})
+            reason = self._skip_reason(group, source)
+            if reason:
+                LOG.info('Skipping %s: %s', label, reason)
+                self.state.update(ident, 'succeeded', {'skipped': True, 'reason': reason})
                 return
+            LOG.info('Starting %s: reader=%s; converter=%s; target=%s', label,
+                     source['source_plugin'], source['converter_plugin'], group['target_path'])
             self.validate(group, source, request['mode'])
             if not lease.acquire():
+                LOG.info('Skipping %s: source is already running', label)
                 self.state.update(ident, 'succeeded', {'skipped': True, 'reason': 'source is already running'})
                 return
             acquired = True
@@ -94,14 +119,16 @@ class Runner:
                 def converted():
                     for incoming in reader.read(context):
                         context.check_cancelled()
-                        outgoing = converter.convert(incoming, context)
+                        with activity(LOG, label, 'converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
+                            outgoing = converter.convert(incoming, context)
                         if not outgoing.checkpoint: outgoing.checkpoint = incoming.checkpoint
                         if outgoing.acknowledge is None: outgoing.acknowledge = incoming.acknowledge
                         yield outgoing
                 batches = converted()
             for batch in batches:
                 context.check_cancelled()
-                outcome = publisher.publish(key, source['id'], dict(id=source['converter_plugin'], version=self.registry.metadata(source['converter_plugin'])['version']), batch, run_id=ident)
+                with activity(LOG, label, 'publishing %d records to %s' % (len(batch.records), group['target_path'])):
+                    outcome = publisher.publish(key, source['id'], dict(id=source['converter_plugin'], version=self.registry.metadata(source['converter_plugin'])['version']), batch, run_id=ident)
                 context.checkpoint = dict(batch.checkpoint)
                 result.update({k: v for k, v in outcome.items() if k != 'records_written'})
                 result['records_written'] += outcome['records_written']; result['batches'] += 1
@@ -109,13 +136,18 @@ class Runner:
                 if batch.acknowledge: batch.acknowledge()
             context.check_cancelled()
             self.state.update(ident, 'succeeded', result)
+            LOG.info('Completed %s: %d records published in %d batches (%ds elapsed)',
+                     label, result['records_written'], result['batches'], time.monotonic() - started)
         except Cancelled as exc:
+            LOG.warning('Cancelled %s: %s', label, exc)
             self.state.update(ident, 'cancelled', dict(result, reason=str(exc)))
         except KeyboardInterrupt:
+            LOG.warning('Cancelled %s: interrupted from the command line', label)
             cancel.set()
             self.state.update(ident, 'cancelled', dict(result, reason='Interrupted from the command line'))
             raise
         except Exception as exc:
+            LOG.error('Failed %s: %s: %s', label, type(exc).__name__, exc)
             self.state.update(ident, 'failed', dict(result, error=str(exc), error_type=type(exc).__name__))
         finally:
             if acquired: lease.release()
