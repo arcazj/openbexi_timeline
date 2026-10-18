@@ -1,0 +1,17 @@
+config_version: 3
+namespace: DEMO_GENERATOR
+model: models/default.json
+enable: true
+target_path: ../../.local-private/events/DEMO_GENERATOR/yyyy/mm/dd
+connectors: [java_api, python_api]
+sources:
+  - id: generated
+    source_plugin: default
+    converter_plugin: default
+    options:
+      seed: 0
+      count: 20
+      zones: true
+    execution:
+      mode: once
+      resume_on_restart: false

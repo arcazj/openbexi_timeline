@@ -115,6 +115,7 @@ aliases. The included public workspaces are:
 | --- | --- | --- |
 | `workspace.json` (demo default) | `yaml/volcano_geoscience_demo.yml`, `yaml/earthquake_geoscience_demo.yml` | `service.yml` |
 | `GEO_Workspace.json` | `yaml/volcano_geoscience.yml`, `yaml/earthquake_geoscience.yml` | `service.yml` |
+| `Generator_Workspace.json` | `yaml/DEMO_GENERATOR_default.yml` | `service.yml` |
 
 Use `<timeline>_Workspace.json` for additional local timelines. For example:
 
@@ -128,6 +129,21 @@ its `service` field. Older workspace files without `service` select
 `service.local.yml` when present, otherwise `service.yml`. Public workspaces
 explicitly select `service.yml` to remain independent of private deployments.
 Use either `--workspace` or `-dataconf`.
+
+In IntelliJ, use the shared configurations in [`.run`](../.run/README.md):
+**Timeline Java - Default** serves the committed samples; **Timeline Java - GEO**
+serves collected earthquake and volcano data. Both use `service.yml` and the
+default browser address `http://127.0.0.1:8080/openbexi_timeline.html`.
+The obsolete `openbexi_timeline*` launches using `-data_conf yaml/sources_*.yml`
+can be removed. Those legacy templates request TLS listeners and require
+`TIMELINE_KEYSTORE` and `TIMELINE_KEYSTORE_PASSWORD`.
+
+**Generator - Demo** replaces the old `event_generator` and
+`event_generator_zone` launches. It runs the `default` collector plugin once,
+offline, with a fixed seed, and writes sessions and zones under
+`.local-private/events/DEMO_GENERATOR`. To view them, launch either server with
+`--workspace HBDS/Generator_Workspace.json`. The collector dashboard also offers
+this workspace alongside the demo and GEO workspaces.
 
 The namespace YAML remains authoritative for data paths, models, connectors and
 enable flags. Editor saves update the selected workspace, leaving other workspace

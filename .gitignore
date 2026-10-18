@@ -116,9 +116,11 @@ __pycache__/
 !/HBDS/service.yml
 !/HBDS/workspace.json
 !/HBDS/GEO_Workspace.json
+!/HBDS/Generator_Workspace.json
 !/HBDS/yaml/
 /HBDS/yaml/*
 !/HBDS/yaml/DEMO_default.yml
+!/HBDS/yaml/DEMO_GENERATOR_default.yml
 !/HBDS/yaml/volcano_geoscience.yml
 !/HBDS/yaml/earthquake_geoscience.yml
 !/HBDS/yaml/earthquake_geoscience_demo.yml
