@@ -66,10 +66,36 @@ public class openbexi_timeline implements Runnable {
     /**
      * Main method.
      *
-     * @param args command line arguments passed to the application. Currently
-     *             unused.
+     * @param args startup configuration options, or --help for usage.
      */
     public static void main(String[] args) {
+        if (Arrays.stream(args).anyMatch(arg -> arg.equals("--help") || arg.equals("-h"))) {
+            System.out.println("""
+                    Usage: openbexi_timeline --workspace <workspace.json> [options]
+                           openbexi_timeline -dataconf <namespace.yml> [namespace.yml ...] [options]
+
+                    OpenBEXI Timeline Java server
+
+                    Options:
+                      -h, --help                    Show this help and exit.
+                      --workspace <file>            Select an HBDS workspace and its service configuration.
+                      -dataconf <file> [...]         Select HBDS namespace files instead of a workspace.
+                        Aliases: -data_conf, --data-conf
+                      -serverconf, --server-conf <file>
+                                                    Override the service configuration.
+                      --hbds-root <directory>       Override the HBDS metadata directory.
+                      --root <directory>            Override the application and web asset root.
+                      --check                       Validate configuration and exit without starting listeners.
+
+                    Listener addresses and TLS settings come from the service configuration.
+                    Legacy startup: -data_conf <sources.yml> (alias: -data_path).
+
+                    Examples:
+                      openbexi_timeline --workspace HBDS/workspace.json
+                      openbexi_timeline --workspace HBDS/GEO_Workspace.json --check
+                    """);
+            return;
+        }
         boolean nativeFile=false;
         if(args.length==2&&Set.of("-data_conf","--data-conf").contains(args[0]))try{
             nativeFile=Files.isRegularFile(Path.of(args[1]))&&NamespaceConfiguration.yaml(Path.of(args[1])).has("namespace");
@@ -83,7 +109,7 @@ public class openbexi_timeline implements Runnable {
 
         if (args.length != 2) {
             System.err.println("openBEXI Timeline not started because of bad usage:");
-            System.err.println("Argument -data_conf <file> ");
+            System.err.println("Use --workspace <workspace.json> or -dataconf <namespace.yml>; see --help.");
             System.exit(1);
         }
         if (args[0].equals("-data_conf") || args[0].equals("-data_path")) {
@@ -112,12 +138,23 @@ public class openbexi_timeline implements Runnable {
         // Monitoring is opt-in through JVM launch options; no unauthenticated JMX port is opened here.
 
 
-        for (String connector : connectors) {
-            if(connector.isBlank())continue;
-            String[] parts=connector.split(":",2);
-            if(parts.length!=2)throw new IllegalArgumentException("Connector requires a protocol and port.");
-            new openbexi_timeline(connectorMode(parts[0]),data_conf,parts[1]).run();
+        List<openbexi_timeline> started = new ArrayList<>();
+        try {
+            for (String connector : connectors) {
+                if(connector.isBlank())continue;
+                String[] parts=connector.split(":",2);
+                if(parts.length!=2)throw new IllegalArgumentException("Connector requires a protocol and port.");
+                openbexi_timeline server = new openbexi_timeline(connectorMode(parts[0]), data_conf, parts[1]);
+                started.add(server);
+                server.run();
+            }
+        } catch (RuntimeException error) {
+            for (openbexi_timeline server : started) server.stop();
+            throw error;
         }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (openbexi_timeline server : started) server.stop();
+        }));
     }
     private static boolean startConfigured(String[] args) throws Exception {
         List<Path> files=new ArrayList<>();Path service=null,metadata=null,root=null,selection=null;boolean check=false;
@@ -179,7 +216,8 @@ public class openbexi_timeline implements Runnable {
         try {
             start(this._ob_mode);
         } catch (LifecycleException e) {
-            _logger.severe(e.getMessage());
+            stop();
+            throw new IllegalStateException("Cannot start timeline listener " + _ob_mode + ":" + _port + ": " + e.getMessage(), e);
         }
 
     }

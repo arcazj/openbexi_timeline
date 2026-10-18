@@ -1,0 +1,22 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Help - Generator" type="PythonConfigurationType" factoryName="Python">
+    <module name="openbexi_timeline" />
+    <option name="ENV_FILES" value="" />
+    <option name="INTERPRETER_OPTIONS" value="-u" />
+    <option name="PARENT_ENVS" value="true" />
+    <option name="SDK_NAME" value="Timeline Python" />
+    <option name="SDK_HOME" value="$PROJECT_DIR$/.venv/Scripts/python.exe" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="timeline_data_collector" />
+    <option name="PARAMETERS" value="run --help" />
+    <option name="MODULE_MODE" value="true" />
+    <envs>
+      <env name="PYTHONPATH" value="$PROJECT_DIR$/timeline_data_collector/python" />
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

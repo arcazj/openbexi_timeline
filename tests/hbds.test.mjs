@@ -163,7 +163,7 @@ test('HBDS design user examples use the same public defaults and reject private 
 test('public workspaces cannot reference private namespaces or local service settings', async () => {
     const schema = JSON.parse(await fs.readFile(path.join(root, 'HBDS/schema/workspace.schema.json'), 'utf8'));
     const validateWorkspace = new Ajv().compile(schema);
-    for (const file of ['HBDS/workspace.json', 'HBDS/GEO_Workspace.json']) {
+    for (const file of ['HBDS/workspace.json', 'HBDS/GEO_Workspace.json', 'HBDS/Generator_Workspace.json']) {
         const value = JSON.parse(await fs.readFile(path.join(root, file), 'utf8'));
         assert.equal(validateWorkspace(value), true, JSON.stringify(validateWorkspace.errors));
         assert.equal(validateWorkspace({...value, namespace_files: []}), false);

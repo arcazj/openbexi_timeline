@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "Generator_Workspace",
+  "service": "service.yml",
+  "namespace_files": ["yaml/DEMO_GENERATOR_default.yml"],
+  "tabs": [
+    {"id": "tab_generator", "namespaceId": "DEMO_GENERATOR", "title": "Generated events", "order": 0, "enabled": true}
+  ],
+  "default_namespace_id": "DEMO_GENERATOR"
+}

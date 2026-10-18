@@ -8,6 +8,10 @@ Set both plugin roles to `default`. Options: `seed` (integer, default 0), `count
 timeline-convert-default --workspace HBDS/Generator_Workspace.json --date 2026-10-16 --once
 ```
 
-Create that workspace with a namespace source selecting this plugin; it is not installed as an active demo source. Repeating a seed/date range preserves IDs and output; Run again reprocesses it without duplicating records.
+The supplied `HBDS/Generator_Workspace.json` selects this plugin in the isolated
+`DEMO_GENERATOR` namespace. IntelliJ's **Generator - Demo** configuration runs it
+offline once and writes to `.local-private/events/DEMO_GENERATOR`. The committed
+earthquake/volcano samples remain independent. Repeating a seed/date range
+preserves IDs and output; Run again reprocesses it without duplicating records.
 
 See [collector setup and API contracts](../../../timeline_data_collector/README.md) for installation, UI execution, repeat policies and recovery.

@@ -3,6 +3,7 @@
     <option name="MAIN_CLASS_NAME" value="com.openbexi.timeline.server.openbexi_timeline" />
     <module name="openbexi_timeline" />
     <option name="PROGRAM_PARAMETERS" value="--workspace HBDS/GEO_Workspace.json" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
