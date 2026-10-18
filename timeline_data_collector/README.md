@@ -147,6 +147,12 @@ from different sources fail publication. Existing stable IDs are preserved;
 missing IDs derive from the source key and normalized content. Plugin versions
 and job IDs are provenance, not event identity.
 
+Converters can publish progressive batches, such as completed days, before the
+whole input finishes. Each batch uses the same atomic publication and rollback
+mechanism. Intermediate batches retain the prior input checkpoint; only the
+final batch accepts the input and acknowledges its source. A failed or cancelled
+run keeps its published records and retries unfinished input using stable IDs.
+
 The publisher stages and validates reports and descriptors, then atomically
 replaces `.timeline-collector/publication.json` with the new namespace snapshot
 and checkpoints. Both timeline backends read that committed snapshot. Dated JSON

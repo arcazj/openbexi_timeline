@@ -6,6 +6,11 @@ For local inputs, a missing path or a folder with no matching input files logs a
 
 On Windows, staged inputs use extended absolute paths so adding the snapshot directory does not make a valid source filename exceed the legacy 260-character path limit. No system registry changes are needed.
 
+The first ingestion hashes and copies each source in one pass, then verifies the
+staged bytes before conversion. Unchanged later runs hash without recopying the
+archive. Directory scanning uses cached filesystem entry metadata and preserves
+input filters, output exclusions and symlink avoidance.
+
 Install optional drivers with `pip install "timeline-plugin-filesources[s3,sftp,oracle]"`. SFTP requires known-host verification. Oracle requires a SELECT query with a `:watermark` bind, key/watermark columns and field mapping. Store credentials in environment references or provider profiles. Reader metadata caches are private; the core commits conversion progress only after publication.
 
 See [collector setup and API contracts](../../../timeline_data_collector/README.md) for installation, UI execution, repeat policies and recovery.

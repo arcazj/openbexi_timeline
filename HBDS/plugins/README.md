@@ -32,6 +32,14 @@ class Plugin:
 ```
 
 A source-only package implements `read`; a converter implements `convert`.
+A converter may additionally implement `convert_batches(batch, context)` to
+yield progressive `RecordBatch` results. Set `commit_input=False` on intermediate
+upserts: they are published atomically while retaining the previous input
+checkpoint and withholding acknowledgement. The final batch must use
+`commit_input=True` (the default); emit it only after all input is processed.
+On failure or cancellation, published upserts remain visible and the incomplete
+input is retried. Use stable IDs so replay updates records without duplication.
+The runner closes the iterator on failure/cancellation to release plugin resources.
 A package providing both roles may implement `collect(context)` yielding
 `RecordBatch` directly. The runner selects it only when both configured plugin
 IDs match. All variants share validation, publication, leases and checkpoints.

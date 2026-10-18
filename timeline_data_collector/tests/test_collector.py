@@ -192,6 +192,84 @@ class CollectorTests(unittest.TestCase):
         self.assertIn('DEMO/input: converting', logs.output[0])
         self.assertTrue(any('still working' in message for message in logs.output))
 
+    def test_progressive_failure_retains_output_without_accepting_unfinished_input(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        runner = self.runner(); original_load = runner.registry.load
+        publisher = Publisher(self.ws.target, 'DEMO')
+        key = source_key(*runner.configuration.sources()[0])
+        closed = []
+        class Progressive:
+            fail = True
+            def convert_batches(plugin, batch, context):
+                try:
+                    yield RecordBatch([event('first')], commit_input=False)
+                    self.assertEqual([record['id'] for record in self.ws.records()], ['first'])
+                    self.assertEqual(publisher.checkpoint(key), {})
+                    if plugin.fail: raise OSError('later day failed')
+                    yield RecordBatch([event('second', '2026-01-02')], batch.checkpoint)
+                finally: closed.append(True)
+        plugin = Progressive()
+        def load_plugin(name, *args, **kwargs):
+            return plugin if name == 'timeline_json' else original_load(name, *args, **kwargs)
+        with patch.object(runner.registry, 'load', side_effect=load_plugin):
+            failed = runner.submit()[0]
+            self.assertEqual(failed['state'], 'failed', failed)
+            self.assertEqual(failed['result']['batches'], 1)
+            self.assertEqual(publisher.checkpoint(key), {})
+            self.assertEqual(closed, [True])
+            plugin.fail = False
+            retried = runner.submit()[0]
+            self.assertEqual(retried['state'], 'succeeded', retried)
+            self.assertEqual({record['id'] for record in self.ws.records()}, {'first', 'second'})
+            self.assertTrue(publisher.checkpoint(key)['files'])
+            self.assertEqual(closed, [True, True])
+
+    def test_progressive_cancellation_keeps_last_published_batch(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        runner = self.runner(); original_load = runner.registry.load
+        closed = []
+        class Progressive:
+            def convert_batches(plugin, batch, context):
+                try:
+                    yield RecordBatch([event('first')], commit_input=False)
+                    context.cancel.set()
+                    yield RecordBatch([event('second')], batch.checkpoint)
+                finally: closed.append(True)
+        with patch.object(runner.registry, 'load', side_effect=lambda name, *a, **kw: Progressive() if name == 'timeline_json' else original_load(name, *a, **kw)):
+            job = runner.submit()[0]
+        self.assertEqual(job['state'], 'cancelled', job)
+        self.assertEqual([record['id'] for record in self.ws.records()], ['first'])
+        key = source_key(*runner.configuration.sources()[0])
+        self.assertEqual(Publisher(self.ws.target, 'DEMO').checkpoint(key), {})
+        self.assertEqual(closed, [True])
+
+    def test_first_ingestion_reads_original_file_once_and_verifies_copy(self):
+        input_file = self.ws.input / 'events.json'; write_json(input_file, [event()])
+        runner = self.runner(); original_open = Path.open
+        reads = []
+        def opened(path, mode='r', *args, **kwargs):
+            if path == input_file and mode == 'rb': reads.append(path)
+            return original_open(path, mode, *args, **kwargs)
+        with patch.object(Path, 'open', opened):
+            job = runner.submit()[0]
+        self.assertEqual(job['state'], 'succeeded', job)
+        self.assertEqual(reads, [input_file])
+        self.assertEqual(len(self.ws.records()), 1)
+        self.assertEqual(list((self.ws.root / 'state/plugins').glob('*/preparing/*')), [])
+
+    def test_corrupted_first_input_copy_never_reaches_publication(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        runner = self.runner(); replace = os.replace
+        def corrupted(source, destination):
+            replace(source, destination)
+            if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json':
+                Path(destination).write_bytes(b'corrupted copy')
+        with patch('timeline_file_sources.os.replace', side_effect=corrupted):
+            job = runner.submit()[0]
+        self.assertEqual(job['state'], 'failed', job)
+        self.assertIn('Input changed while staging', job['result']['error'])
+        self.assertFalse((self.ws.output / '.timeline-collector/publication.json').exists())
+
     def test_unavailable_plugin_is_visible_failure_and_retains_data(self):
         write_json(self.ws.input / 'events.json', [event()])
         runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')

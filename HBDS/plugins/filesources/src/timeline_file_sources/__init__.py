@@ -5,6 +5,8 @@ import os
 from urllib.parse import urlsplit
 import shutil
 import time
+import tempfile
+from contextlib import nullcontext
 from timeline_data_collector.contracts import InputBatch
 from timeline_data_collector.io import identity
 from timeline_data_collector.plugin import manifest_for
@@ -70,45 +72,69 @@ class Plugin:
                                    context.namespace, context.source['id'], root)
             return
         context.logger.info('%s: discovered %d matching input files', label, len(files))
-        checksums = {}
-        bytes_read = 0
-        progress('checking', 0, len(files), 0, force=True)
-        for index, path in enumerate(files):
-            context.check_cancelled()
-            digest = hashlib.sha256()
-            before = path.stat()
-            with path.open('rb') as stream:
-                while chunk := stream.read(1024 * 1024):
-                    digest.update(chunk); bytes_read += len(chunk)
-                    progress('checking', index, len(files), bytes_read)
-            after = path.stat()
-            if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns): raise OSError('Input changed while reading: ' + path.name)
-            checksums[str(path)] = digest.hexdigest()
-        progress('checked', len(files), len(files), bytes_read, force=True)
-        checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
-        if checkpoint == context.checkpoint and not context.force:
-            context.logger.info('Skipping %s: inputs and configuration unchanged', label)
-            return
-        # Converters read an immutable input snapshot, even if an upstream log rotates.
-        snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])
-        copies = []
-        progress('preparing input copies', 0, len(files), force=True)
-        for index, path in enumerate(files):
-            progress('preparing input copies', index, len(files))
-            relative = path.relative_to(root) if root.is_dir() else Path(path.name)
-            destination = snapshot / relative
-            if not destination.exists():
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(path, destination)
-            digest = hashlib.sha256()
-            with destination.open('rb') as stream:
-                while chunk := stream.read(1024 * 1024):
-                    digest.update(chunk)
-                    progress('preparing input copies', index, len(files))
-            if digest.hexdigest() != checksums[str(path)]:
-                destination.unlink(missing_ok=True)
-                raise OSError('Input changed while staging: ' + path.name)
-            copies.append(destination)
-        progress('prepared input copies', len(files), len(files), force=True)
-        context.source['_prepared_root'] = str(snapshot)
-        yield InputBatch(copies, checkpoint)
+        # On first ingestion, hash and copy the same byte stream. Subsequent
+        # unchanged runs only hash, avoiding unnecessary writes of the archive.
+        temporary = None
+        if not context.checkpoint.get('files'):
+            parent = snapshot_path(context.workdir / 'preparing')
+            parent.mkdir(parents=True, exist_ok=True)
+            temporary = tempfile.TemporaryDirectory(dir=parent)
+        try:
+            checksums = {}
+            bytes_read = 0
+            root_is_directory = root.is_dir()
+            relative_paths = [path.relative_to(root) if root_is_directory else Path(path.name) for path in files]
+            progress('checking', 0, len(files), 0, force=True)
+            if temporary: context.logger.info('%s: copying while checking; no second read of original inputs', label)
+            for index, (path, relative) in enumerate(zip(files, relative_paths)):
+                context.check_cancelled()
+                digest = hashlib.sha256()
+                before = path.stat()
+                candidate = Path(temporary.name) / relative if temporary else None
+                if candidate: candidate.parent.mkdir(parents=True, exist_ok=True)
+                with path.open('rb') as stream, candidate.open('wb') if candidate else nullcontext() as copied:
+                    opened = os.fstat(stream.fileno())
+                    fields = ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns')
+                    if any(getattr(before, key) != getattr(opened, key) for key in fields):
+                        raise OSError('Input changed before reading: ' + path.name)
+                    while chunk := stream.read(1024 * 1024):
+                        digest.update(chunk); bytes_read += len(chunk)
+                        if copied: copied.write(chunk)
+                        progress('checking', index, len(files), bytes_read)
+                    after_open = os.fstat(stream.fileno())
+                after = path.stat()
+                if any(getattr(before, key) != getattr(after, key) or getattr(before, key) != getattr(after_open, key) for key in fields):
+                    raise OSError('Input changed while reading: ' + path.name)
+                checksums[str(path)] = digest.hexdigest()
+            progress('checked', len(files), len(files), bytes_read, force=True)
+            checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
+            if checkpoint == context.checkpoint and not context.force:
+                context.logger.info('Skipping %s: inputs and configuration unchanged', label)
+                return
+            # Verify staged bytes before handing the immutable tree to a converter.
+            snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])
+            copies = []
+            progress('preparing input copies', 0, len(files), force=True)
+            for index, (path, relative) in enumerate(zip(files, relative_paths)):
+                progress('preparing input copies', index, len(files))
+                destination = snapshot / relative
+                if temporary:
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(Path(temporary.name) / relative, destination)
+                elif not destination.exists():
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(path, destination)
+                digest = hashlib.sha256()
+                with destination.open('rb') as stream:
+                    while chunk := stream.read(1024 * 1024):
+                        digest.update(chunk)
+                        progress('preparing input copies', index, len(files))
+                if digest.hexdigest() != checksums[str(path)]:
+                    destination.unlink(missing_ok=True)
+                    raise OSError('Input changed while staging: ' + path.name)
+                copies.append(destination)
+            progress('prepared input copies', len(files), len(files), force=True)
+            context.source['_prepared_root'] = str(snapshot)
+            yield InputBatch(copies, checkpoint)
+        finally:
+            if temporary: temporary.cleanup()

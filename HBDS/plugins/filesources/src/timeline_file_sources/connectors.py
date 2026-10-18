@@ -54,18 +54,24 @@ def local_files(root, source, excluded=(), model=None, progress=None):
     if stat.S_ISREG(mode): return [root] if accepted(root.name, source) else []
     found = []
     output_pattern = output_directory_pattern(model) if model else None
-    def scan_error(error):
-        raise error
-    for directory, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
+    excluded = [os.path.normcase(str(Path(path).resolve())).rstrip(os.sep) for path in excluded]
+    hidden = {'.timeline-state', '.timeline-collector', '.gcs-state', '.gcs-collector', 'descriptors'}
+    pending = [root]
+    while pending:
+        directory = pending.pop()
         if progress: progress(len(found))
-        dirs[:] = [d for d in dirs if d not in {'.timeline-state', '.timeline-collector', '.gcs-state', '.gcs-collector', 'descriptors'}
-                   and not d.startswith('.') and not (Path(directory) / d).is_symlink()
-                   and not (output_pattern and output_pattern.fullmatch(os.path.normcase(str(Path(directory) / d))))
-                   and not any((Path(directory) / d).resolve().is_relative_to(p) for p in excluded)]
-        for name in files:
-            path = Path(directory) / name
-            if name.endswith(('.part', '.tmp', '.swp')) or path.is_symlink(): continue
-            if accepted(path.relative_to(root).as_posix(), source): found.append(path)
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                if entry.is_symlink() or getattr(entry, 'is_junction', lambda: False)(): continue
+                path = Path(entry.path)
+                if entry.is_dir(follow_symlinks=False):
+                    normalized = os.path.normcase(str(path))
+                    if entry.name in hidden or entry.name.startswith('.'): continue
+                    if output_pattern and output_pattern.fullmatch(normalized): continue
+                    if any(normalized == excluded_path or normalized.startswith(excluded_path + os.sep) for excluded_path in excluded): continue
+                    pending.append(path)
+                elif entry.is_file(follow_symlinks=False) and not entry.name.endswith(('.part', '.tmp', '.swp')):
+                    if accepted(path.relative_to(root).as_posix(), source): found.append(path)
     return sorted(found)
 
 
