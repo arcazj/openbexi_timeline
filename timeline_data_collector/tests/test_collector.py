@@ -92,6 +92,106 @@ class CollectorTests(unittest.TestCase):
             self.assertTrue(runner.submit()[0]['result']['skipped'])
         self.assertFalse(self.ws.output.exists())
 
+    def test_missing_local_input_warns_and_skips_all_local_aliases(self):
+        self.ws.input.rmdir()
+        for alias in ('local', 'json_file', 'filesources'):
+            with self.subTest(alias=alias):
+                self.ws.source['source_plugin'] = alias; self.ws.save()
+                runner = self.runner()
+                with self.assertLogs('timeline_data_collector', level='WARNING') as logs:
+                    job = runner.submit()[0]
+                self.assertEqual(job['state'], 'succeeded', job)
+                self.assertEqual(job['result']['batches'], 0)
+                self.assertIn('DEMO/input', logs.output[0])
+                self.assertIn(str(self.ws.input), logs.output[0])
+                self.assertIn('Input path does not exist', logs.output[0])
+                self.assertFalse((self.ws.output / '.timeline-collector/publication.json').exists())
+
+    def test_missing_and_empty_input_preserve_publication_then_recover(self):
+        input_file = self.ws.input / 'events.json'
+        write_json(input_file, [event()])
+        self.ws.source['options'] = {'snapshot': True}; self.ws.save()
+        runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
+        before = {path: path.read_bytes() for path in self.ws.output.rglob('*.json')}
+        input_file.unlink(); self.ws.input.rmdir()
+        for missing in (True, False):
+            with self.subTest(missing=missing):
+                if not missing: self.ws.input.mkdir()
+                with self.assertLogs('timeline_data_collector', level='WARNING'):
+                    job = runner.submit(force=True)[0]
+                self.assertEqual(job['state'], 'succeeded', job)
+                self.assertEqual(job['result']['batches'], 0)
+                self.assertEqual({path: path.read_bytes() for path in self.ws.output.rglob('*.json')}, before)
+        write_json(input_file, [event('new')])
+        job = runner.submit()[0]
+        self.assertEqual(job['state'], 'succeeded', job)
+        self.assertEqual([record['id'] for record in self.ws.records()], ['new'])
+
+    def test_empty_input_does_not_read_existing_legacy_reports(self):
+        self.ws.document['target_path'] = str(self.ws.input / 'output/yyyy/mm/dd'); self.ws.save()
+        report = self.ws.input / 'output/2026/09/29/legacy.json'
+        report.parent.mkdir(parents=True); report.write_bytes(b'{malformed legacy report')
+        runner = self.runner()
+        with self.assertLogs('timeline_data_collector', level='WARNING') as logs:
+            job = runner.submit()[0]
+        self.assertEqual(job['state'], 'succeeded', job)
+        self.assertEqual(job['result']['batches'], 0)
+        self.assertIn('no matching input files', logs.output[0])
+        self.assertEqual(report.read_bytes(), b'{malformed legacy report')
+        self.assertFalse((self.ws.input / 'output/.timeline-collector/publication.json').exists())
+
+    def test_missing_source_does_not_block_another_source(self):
+        self.ws.document['sources'].insert(0, dict(self.ws.source, id='missing', source_path=str(self.ws.root / 'absent/DEMO')))
+        self.ws.save(); write_json(self.ws.input / 'events.json', [event()])
+        runner = self.runner()
+        with self.assertLogs('timeline_data_collector', level='WARNING'):
+            jobs = runner.submit()
+        self.assertEqual([job['state'] for job in jobs], ['succeeded', 'succeeded'], jobs)
+        self.assertEqual([job['result']['batches'] for job in jobs], [0, 1])
+        self.assertEqual([record['id'] for record in self.ws.records()], ['one'])
+
+    def test_malformed_input_still_fails_and_preserves_data(self):
+        input_file = self.ws.input / 'events.json'; write_json(input_file, [event()])
+        runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
+        publication = self.ws.output / '.timeline-collector/publication.json'
+        before = publication.read_bytes(); input_file.write_bytes(b'{malformed')
+        job = runner.submit()[0]
+        self.assertEqual(job['state'], 'failed', job)
+        self.assertEqual(job['result']['error_type'], 'JSONDecodeError')
+        self.assertEqual(publication.read_bytes(), before)
+
+    def test_cli_reports_sources_and_progress_without_polluting_json(self):
+        self.ws.document['sources'].extend([
+            dict(self.ws.source, id='disabled', enable=False),
+            dict(self.ws.source, id='missing', source_path=str(self.ws.root / 'absent/DEMO')),
+        ])
+        self.ws.save(); write_json(self.ws.input / 'events.json', [event()])
+        command = [sys.executable, '-m', 'timeline_data_collector', 'run', '--workspace', str(self.ws.path), '--once']
+        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([job['state'] for job in json.loads(result.stdout)], ['succeeded'] * 3)
+        for message in ('3 selected sources', 'DEMO/disabled: will skip (source disabled',
+                        'Starting DEMO/input', 'scanning local input', 'discovered 1 matching input files',
+                        'checked 1/1 files', 'prepared input copies 1/1 files', 'converting 1 input items',
+                        'publishing 1 records', 'Completed DEMO/input', 'Skipping DEMO/missing'):
+            self.assertIn(message, result.stderr)
+        self.assertLess(result.stderr.index('DEMO/missing: queued'), result.stderr.index('Starting DEMO/input'))
+        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Skipping DEMO/input: inputs and configuration unchanged', result.stderr)
+
+    def test_conversion_progress_is_visible_before_completion(self):
+        import logging
+        from timeline_data_collector.progress import activity
+        with self.assertLogs('timeline_data_collector', level='INFO') as logs:
+            with activity(logging.getLogger('timeline_data_collector'), 'DEMO/input', 'converting', interval_seconds=.01):
+                deadline = time.monotonic() + 2
+                while not any('still working' in message for message in logs.output):
+                    if time.monotonic() >= deadline: self.fail('No progress message while conversion was running')
+                    time.sleep(.01)
+        self.assertIn('DEMO/input: converting', logs.output[0])
+        self.assertTrue(any('still working' in message for message in logs.output))
+
     def test_unavailable_plugin_is_visible_failure_and_retains_data(self):
         write_json(self.ws.input / 'events.json', [event()])
         runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
@@ -216,6 +316,23 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         self.assertEqual(job['state'], 'succeeded', job)
         self.assertEqual(len(self.ws.records()), 2)
         self.assertTrue(list((self.ws.root / 'state/plugins').glob('*/inputs/*/events.jsonl')))
+
+    def test_long_snapshot_path_can_be_staged_and_converted(self):
+        from timeline_file_sources import snapshot_path
+        import shutil
+        # Windows cleanup also needs the extended path for the staged long filename.
+        self.addCleanup(shutil.rmtree, snapshot_path(self.ws.root))
+        self.ws.service['state_root'] = str(self.ws.root / 'state' / ('nested_' + 'x' * 45)); self.ws.save()
+        name = 'log_' + 'x' * 160 + '.json'
+        write_json(self.ws.input / name, [event()])
+        runner = self.runner(); job = runner.submit()[0]
+        self.assertEqual(job['state'], 'succeeded', job)
+        self.assertEqual([record['id'] for record in self.ws.records()], ['one'])
+        staged = list(snapshot_path(Path(self.ws.service['state_root']) / 'plugins').glob('*/inputs/*/' + name))
+        self.assertEqual(len(staged), 1)
+        self.assertGreater(len(str(staged[0])), 260)
+        self.assertEqual(staged[0].read_bytes(), (self.ws.input / name).read_bytes())
+        self.assertEqual(runner.submit()[0]['result']['batches'], 0)
 
     def test_registry_rejects_duplicate_and_incompatible_plugins(self):
         registry = Registry([PLUGINS], installed=False)

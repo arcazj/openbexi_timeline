@@ -18,6 +18,10 @@ from .helpers import fingerprint, FileChangedError
 LOG = logging.getLogger(__name__)
 
 
+class MissingSource(FileNotFoundError):
+    """The configured local input root is not available yet."""
+
+
 def identity(source):
     # Credential references remain references here; never persist resolved secrets.
     return hashlib.sha256(json.dumps(source, sort_keys=True).encode()).hexdigest()
@@ -41,13 +45,19 @@ def safe_remote_path(root, name):
     return target
 
 
-def local_files(root, source, excluded=(), model=None):
+def local_files(root, source, excluded=(), model=None, progress=None):
     root = Path(root).resolve()
-    if not root.exists(): raise FileNotFoundError(f'Source directory missing: {root}')
-    if root.is_file(): return [root] if accepted(root.name, source) else []
+    try:
+        mode = root.stat().st_mode
+    except FileNotFoundError as error:
+        raise MissingSource(f'Input path does not exist: {root}') from error
+    if stat.S_ISREG(mode): return [root] if accepted(root.name, source) else []
     found = []
     output_pattern = output_directory_pattern(model) if model else None
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    def scan_error(error):
+        raise error
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=scan_error):
+        if progress: progress(len(found))
         dirs[:] = [d for d in dirs if d not in {'.timeline-state', '.timeline-collector', '.gcs-state', '.gcs-collector', 'descriptors'}
                    and not d.startswith('.') and not (Path(directory) / d).is_symlink()
                    and not (output_pattern and output_pattern.fullmatch(os.path.normcase(str(Path(directory) / d))))
@@ -64,14 +74,14 @@ class ConnectorPool:
         self.root = Path(root).resolve()
         self.last_poll = {}
 
-    def prepare(self, source, model=None):
+    def prepare(self, source, model=None, progress=None):
         key = identity(source); kind = source.get('type', 'local')
         settings = expand_env(source)
         if kind in {'local', 'json_file'}:
             root = Path(settings['source_path']).resolve()
             excluded = [self.root]
             if model and model_root(model) != root and model_root(model).is_relative_to(root): excluded.append(model_root(model))
-            return root, local_files(root, settings, excluded, model)
+            return root, local_files(root, settings, excluded, model, progress)
         directory = self.root / key[:16]
         directory.mkdir(parents=True, exist_ok=True)
         manifest_path = directory / 'manifest.json'

@@ -1,11 +1,23 @@
 """Incremental local, SFTP, S3 and Oracle readers packaged independently."""
 from pathlib import Path
 import hashlib
+import os
 from urllib.parse import urlsplit
 import shutil
+import time
 from timeline_data_collector.contracts import InputBatch
 from timeline_data_collector.io import identity
 from timeline_data_collector.plugin import manifest_for
+
+
+def snapshot_path(path):
+    """Keep staged filenames usable when Windows has legacy path limits enabled."""
+    path = Path(path).resolve()
+    if os.name != 'nt': return path
+    value = str(path)
+    if value.startswith('\\\\?\\'): return path
+    if value.startswith('\\\\'): return Path('\\\\?\\UNC\\' + value[2:])
+    return Path('\\\\?\\' + value)
 
 
 class Plugin:
@@ -13,7 +25,7 @@ class Plugin:
     def manifest(): return manifest_for(__file__)
 
     def read(self, context):
-        from .connectors import ConnectorPool
+        from .connectors import ConnectorPool, MissingSource
         options = dict(context.source.get('options', {}))
         kind = context.source['source_plugin']
         if kind == 'filesources': kind = options.pop('type', 'local')
@@ -31,31 +43,72 @@ class Plugin:
             if not settings['query'].lstrip().lower().startswith('select '): raise ValueError('Oracle ingestion requires a SELECT query')
             if ':watermark' not in settings['query']: raise ValueError('Oracle query requires a :watermark bind')
         pool = ConnectorPool(context.workdir / 'downloads')
-        root, files = pool.prepare(settings, context.source.get('_target_path'))
+        label = context.namespace + '/' + context.source['id']
+        last_report = time.monotonic()
+        def progress(phase, completed, total=None, byte_count=None, force=False):
+            nonlocal last_report
+            context.check_cancelled()
+            now = time.monotonic()
+            if force or now - last_report >= 10:
+                count = str(completed) if total is None else '%d/%d' % (completed, total)
+                size = '' if byte_count is None else '; %.2f GiB read' % (byte_count / 1024**3)
+                context.logger.info('%s: %s %s files%s', label, phase, count, size)
+                last_report = now
+        if kind in {'local', 'json_file'}:
+            context.logger.info('%s: scanning local input %s (including subdirectories)', label, settings['source_path'])
+        else:
+            context.logger.info('%s: acquiring input with %s', label, kind)
+        try:
+            root, files = pool.prepare(settings, context.source.get('_target_path'),
+                                       progress=lambda count: progress('scanning; discovered', count))
+        except MissingSource as error:
+            context.logger.warning('Skipping %s/%s: %s; retry on the next conversion pass.',
+                                   context.namespace, context.source['id'], error)
+            return
+        if kind in {'local', 'json_file'} and not files:
+            context.logger.warning('Skipping %s/%s: no matching input files in %s; retry on the next conversion pass.',
+                                   context.namespace, context.source['id'], root)
+            return
+        context.logger.info('%s: discovered %d matching input files', label, len(files))
         checksums = {}
-        for path in files:
+        bytes_read = 0
+        progress('checking', 0, len(files), 0, force=True)
+        for index, path in enumerate(files):
             context.check_cancelled()
             digest = hashlib.sha256()
             before = path.stat()
             with path.open('rb') as stream:
-                while chunk := stream.read(1024 * 1024): digest.update(chunk)
+                while chunk := stream.read(1024 * 1024):
+                    digest.update(chunk); bytes_read += len(chunk)
+                    progress('checking', index, len(files), bytes_read)
             after = path.stat()
             if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns): raise OSError('Input changed while reading: ' + path.name)
             checksums[str(path)] = digest.hexdigest()
+        progress('checked', len(files), len(files), bytes_read, force=True)
         checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
-        if checkpoint == context.checkpoint and not context.force: return
+        if checkpoint == context.checkpoint and not context.force:
+            context.logger.info('Skipping %s: inputs and configuration unchanged', label)
+            return
         # Converters read an immutable input snapshot, even if an upstream log rotates.
-        snapshot = context.workdir / 'inputs' / identity(checkpoint)[:24]
+        snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])
         copies = []
-        for path in files:
+        progress('preparing input copies', 0, len(files), force=True)
+        for index, path in enumerate(files):
+            progress('preparing input copies', index, len(files))
             relative = path.relative_to(root) if root.is_dir() else Path(path.name)
             destination = snapshot / relative
             if not destination.exists():
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, destination)
-            if hashlib.sha256(destination.read_bytes()).hexdigest() != checksums[str(path)]:
+            digest = hashlib.sha256()
+            with destination.open('rb') as stream:
+                while chunk := stream.read(1024 * 1024):
+                    digest.update(chunk)
+                    progress('preparing input copies', index, len(files))
+            if digest.hexdigest() != checksums[str(path)]:
                 destination.unlink(missing_ok=True)
                 raise OSError('Input changed while staging: ' + path.name)
             copies.append(destination)
+        progress('prepared input copies', len(files), len(files), force=True)
         context.source['_prepared_root'] = str(snapshot)
         yield InputBatch(copies, checkpoint)

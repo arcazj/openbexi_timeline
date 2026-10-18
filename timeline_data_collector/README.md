@@ -35,6 +35,15 @@ timeline-data-collector run --workspace HBDS/GEO_Workspace.json --plugin volcano
 ```
 
 The plugin-specific command is installed with its wheel or editable package.
+`--once` finishes one conversion pass and exits; it does not restrict the input
+dates or keep watching for new files. Omitting date options leaves date selection
+to the converter. A single `--date YYYY-MM-DD` selects only that day; add
+`--end-date YYYY-MM-DD` to process through a later day.
+The console lists selected sources before starting, reports disabled or missing
+inputs, and shows scanning, checksum, input-copy, conversion and publication
+progress. Long conversion/publication calls report that they are still working
+every 10 seconds. Progress goes to stderr; the final JSON result stays on stdout.
+Only namespaces included in the selected workspace are considered.
 `--date` accepts `today`, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; ranges are inclusive
 UTC calendar dates. `--offline` forbids remote acquisition. `--validate-only`
 checks the selected configuration and plugin capabilities. `--force` reprocesses
