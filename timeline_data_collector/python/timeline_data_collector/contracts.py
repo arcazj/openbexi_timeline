@@ -26,6 +26,8 @@ class RecordBatch:
     snapshot: bool = False
     deleted_ids: list[str] = field(default_factory=list)
     acknowledge: Callable[[], None] | None = None
+    # Progressive converters publish intermediate results without accepting input.
+    commit_input: bool = True
 
 
 @dataclass

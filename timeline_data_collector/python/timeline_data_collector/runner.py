@@ -87,6 +87,7 @@ class Runner:
         lease = SourceLock(model_root(group['target_path']) / '.timeline-collector/jobs' / (key + '.lock'))
         acquired = False
         result = {'records_written': 0, 'batches': 0}
+        batches = None
         label = group['namespace'] + '/' + source['id']
         started = time.monotonic()
         try:
@@ -120,10 +121,25 @@ class Runner:
                     for incoming in reader.read(context):
                         context.check_cancelled()
                         with activity(LOG, label, 'converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
-                            outgoing = converter.convert(incoming, context)
-                        if not outgoing.checkpoint: outgoing.checkpoint = incoming.checkpoint
-                        if outgoing.acknowledge is None: outgoing.acknowledge = incoming.acknowledge
-                        yield outgoing
+                            progressive = getattr(converter, 'convert_batches', None)
+                            outputs = iter(progressive(incoming, context)) if progressive else iter([converter.convert(incoming, context)])
+                            committed = False
+                            try:
+                                for outgoing in outputs:
+                                    context.check_cancelled()
+                                    if committed: raise ValueError('Converter emitted results after its final input checkpoint')
+                                    if outgoing.commit_input:
+                                        committed = True
+                                        if not outgoing.checkpoint: outgoing.checkpoint = incoming.checkpoint
+                                        if outgoing.acknowledge is None: outgoing.acknowledge = incoming.acknowledge
+                                    else:
+                                        outgoing.checkpoint = dict(context.checkpoint)
+                                        outgoing.acknowledge = None
+                                    yield outgoing
+                                if not committed: raise ValueError('Converter stopped before completing its input batch')
+                            finally:
+                                close = getattr(outputs, 'close', None)
+                                if close: close()
                 batches = converted()
             for batch in batches:
                 context.check_cancelled()
@@ -150,8 +166,13 @@ class Runner:
             LOG.error('Failed %s: %s: %s', label, type(exc).__name__, exc)
             self.state.update(ident, 'failed', dict(result, error=str(exc), error_type=type(exc).__name__))
         finally:
-            if acquired: lease.release()
-            with self.guard: self.active.pop(ident, None)
+            try:
+                if batches is not None:
+                    close = getattr(batches, 'close', None)
+                    if close: close()
+            finally:
+                if acquired: lease.release()
+                with self.guard: self.active.pop(ident, None)
 
     def cancel(self, ident):
         self.state.get(ident)
