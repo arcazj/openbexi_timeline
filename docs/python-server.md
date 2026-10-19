@@ -79,7 +79,7 @@ Historical search shares the configured `max_records` and `max_query_seconds` li
 | Other `/api/v1/...` routes | Forwarded to configured Java; explicit 503 if Java fallback is not configured |
 | Public UI assets | Java's public asset policy; source data, deployment YAML, state and hidden files are not served |
 
-Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.9.0`. Settings displays the UI version and connected backend version separately.
+Startup advertises the SSE route so the existing UI uses one live revision subscription alongside finite JSON reads. The REST route supports explicit refresh. Responses include `X-Request-ID`, `X-Timeline-Revision` and `X-Timeline-Server: Python/2.9.1`. Settings displays the UI version and connected backend version separately.
 
 The modern UI's `matchProtocol=1` contract is the compatibility target. Full sessions are filtered before nested activities are scoped to the time window. Search annotates visible records; it does not silently discard nonmatching records. History queries return matching records. Original source styling and external IDs are preserved, while source occurrence keys distinguish repeated IDs. Dates are normalized to UTC, including extended years and BCE dates. Byte-for-byte key ordering, cursor tokens, revision hashes and diagnostic timings differ by backend.
 

@@ -1,0 +1,70 @@
+{
+  "version": "2.9.1",
+  "status": "passed",
+  "verifiedAt": "2026-10-19T18:44:37.055482+00:00",
+  "scope": "Public local Windows release checks. GitHub Verify and the Windows release workflow validate the tagged source separately; installer validation is recorded by that workflow.",
+  "changeBaseline": "366e33857256f2940aa376753eefb35e2c8ea3af",
+  "baselineCI": {
+    "status": "passed",
+    "url": "https://github.com/arcazj/openbexi_timeline/actions/runs/39300865498"
+  },
+  "tests": {
+    "javascript": {
+      "passed": 409,
+      "failed": 0
+    },
+    "pythonBackend": {
+      "passed": 73,
+      "failed": 0
+    },
+    "publicCollector": {
+      "total": 66,
+      "distinctPassed": 66,
+      "initialPassed": 65,
+      "initialErrors": 1,
+      "focusedRerunPassed": 1,
+      "remainingFailures": 0,
+      "realMqttBroker": true,
+      "note": "One CLI subprocess reached its 30-second timeout during concurrent local test runs; the unchanged case passed on a focused rerun using JDK 21."
+    },
+    "java": {
+      "total": 209,
+      "passed": 175,
+      "skipped": 34,
+      "failed": 0,
+      "note": "JDK 21, with test data in a temporary directory outside the web root. Existing unavailable legacy integrations remain explicitly skipped."
+    },
+    "releasePublishing": {
+      "passed": 11,
+      "failed": 0
+    },
+    "publicConfiguration": {
+      "hbdsFiles": 119,
+      "demoModels": 7,
+      "schemaGeneration": "passed",
+      "apiSpecification": "passed"
+    }
+  },
+  "distribution": {
+    "applicationVersion": "2.9.1",
+    "filesourcesVersion": "1.0.1",
+    "independentWheels": [
+      {
+        "artifact": "timeline_data_collector-2.9.1-py3-none-any.whl",
+        "version": "2.9.1",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_filesources-1.0.1-py3-none-any.whl",
+        "version": "1.0.1",
+        "privateEntries": 0
+      }
+    ],
+    "privateToolsAndDataExcluded": true,
+    "architecture": "Shared 2.9 HBDS model and diagrams"
+  },
+  "ci": {
+    "verify": "https://github.com/arcazj/openbexi_timeline/actions/workflows/verify.yml",
+    "installer": "https://github.com/arcazj/openbexi_timeline/actions/workflows/release.yml"
+  }
+}

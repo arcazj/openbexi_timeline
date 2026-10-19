@@ -46,7 +46,7 @@ def factory():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.0")
+    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.1")
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("-dataconf", "-data_conf", "--data-conf", nargs='+', help="HBDS namespace files or legacy configuration")
     selection.add_argument("--workspace", help="HBDS workspace.json containing the namespace_files startup list")

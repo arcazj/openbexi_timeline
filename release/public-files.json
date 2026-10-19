@@ -251,6 +251,8 @@
   "docs/release-2.8.0.md",
   "docs/release-2.8.1.md",
   "docs/release-2.9.0.md",
+  "docs/release-2.9.1.md",
+  "docs/release-2.9.1-regressions.json",
   "docs/rest-api.md",
   "docs/security.md",
   "docs/third-party-notices.md",

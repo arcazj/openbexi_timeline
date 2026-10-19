@@ -110,6 +110,11 @@ test('2.9 publishes ZIP, diagrams and verified regression evidence', async t => 
 test('2.9 rejects an incomplete manifest before creating a release', async t => {
     const f=await fixture(t,{version:'2.9.0'});await assert.rejects(f.run());assert.deepEqual(f.mutations,[]);
 });
+test('patch releases publish their own versioned assets and evidence', async t => {
+    const f=await fixture(t,{version:'2.9.1',extended:true});await f.run();
+    assert.deepEqual(f.tags(),['v2.9.1','v2.6.0','v2.5.2']);
+    assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,17);
+});
 test('2.9 requires passing regression evidence even when hashes match', async t => {
     const f=await fixture(t,{version:'2.9.0',extended:true,pending:true});
     await assert.rejects(f.run(),/regressions must pass/);assert.deepEqual(f.mutations,[]);
