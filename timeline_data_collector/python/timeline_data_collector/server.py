@@ -105,7 +105,9 @@ class Dashboard:
                     if route == '/api/cancel': self.respond({'cancelled': selected.cancel(body['job_id'])}); return
                     if route == '/api/schedules':
                         if body.get('revision') != selected.refresh().revision: raise ValueError('Configuration changed; reload before scheduling')
-                        ident = scheduler.start(body['namespace'], body['source'], body['policy'], offline=body.get('offline', False))
+                        ident = scheduler.start(body['namespace'], body['source'], body['policy'], offline=body.get('offline', False),
+                                                date=body.get('date') or None, end_date=body.get('end_date') or None,
+                                                lookback_hours=body.get('lookback_hours', 48))
                         self.respond({'id': ident}, 201); return
                     if route == '/api/schedules/stop': scheduler.stop(body['id']); self.respond({'stopped': True}); return
                     self.respond({'error': 'Not found'}, 404)

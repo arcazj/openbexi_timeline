@@ -38,6 +38,7 @@ class CollectorPublicationTest {
     @Test void committedSnapshotIsIndependentOfPartiallyWrittenCompatibilityExports() throws Exception {
         write("2026/09/12/events.json",new JSONObject(Map.of("events",array(event("legacy")))));
         write("2026/09/12/timeline_0123456789ab_report.json",new JSONObject(Map.of("events",array(event("uncommitted")))));
+        write("2026/09/12/EXAMPLE_0_1_2026-09-12T12Z.json",new JSONObject(Map.of("events",array(event("hourly-uncommitted")))));
         write(".timeline-collector/pending.json",new JSONObject(Map.of("generation","next","files",new JSONArray())));
         for(boolean progressive:List.of(false,true))assertEquals(Set.of("legacy"),read(progressive));
         JSONArray baseline=new JSONArray();baseline.add("2026/09/12/events.json");
@@ -55,5 +56,9 @@ class CollectorPublicationTest {
             JSONObject body=(JSONObject)descriptor.read(identity);
             assertEquals(identity,((JSONObject)((JSONArray)body.get("event_descriptor")).get(0)).get("id"));
         }
+    }
+    @Test void hourlyFilesAreReadableWithoutCollectorState() throws Exception {
+        write("2026/09/12/EXAMPLE_0_1_2026-09-12T12Z.json", new JSONObject(Map.of("events", array(event("hourly")))));
+        for (boolean progressive: List.of(false,true)) assertEquals(Set.of("hourly"),read(progressive));
     }
 }

@@ -35,7 +35,7 @@ public final class CollectorPublication {
     }
     public static boolean excluded(Path root, Path file, JSONObject publication) {
         if (publication == null && !Files.exists(root.resolve(".timeline-collector/pending.json"))) return false;
-        if (file.getFileName().toString().matches("timeline_[a-f0-9]{12}_report\\.json")) return true;
+        if (file.getFileName().toString().matches("(?:timeline_[a-f0-9]{12}_report|[^/\\\\]+_\\d+_\\d+_\\d{4}-\\d{2}-\\d{2}T\\d{2}Z)\\.json")) return true;
         if (publication == null) return false;
         String relative = root.relativize(file.toAbsolutePath().normalize()).toString().replace('\\','/');
         Object reports = publication.get("baseline_reports");

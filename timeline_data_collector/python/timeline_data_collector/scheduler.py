@@ -5,6 +5,7 @@ import uuid
 import logging
 from .configuration import execution_policy
 from .locking import SourceLock
+from .dates import repeat_range
 
 
 class Scheduler:
@@ -13,8 +14,9 @@ class Scheduler:
         self.running = {}
         self.guard = threading.RLock()
 
-    def start(self, namespace, source, policy, *, offline=False, force=False, ident=None):
+    def start(self, namespace, source, policy, *, offline=False, force=False, ident=None, date=None, end_date=None, lookback_hours=48):
         policy = execution_policy(policy)
+        repeat_range(date, end_date, lookback_hours)
         self.runner.refresh()
         ident = ident or uuid.uuid4().hex
         pairs = self.runner.configuration.sources(namespace, source)
@@ -26,7 +28,8 @@ class Scheduler:
             if any(item['namespace'] == namespace and item['source'] == source for item in self.running.values()):
                 raise ValueError('This source already has an active schedule')
             stop = threading.Event()
-            value = dict(namespace=namespace, source=source, policy=policy, offline=offline, force=force, enabled=True)
+            value = dict(namespace=namespace, source=source, policy=policy, offline=offline, force=force, enabled=True,
+                         date=date, end_date=end_date, lookback_hours=lookback_hours)
             self.runner.state.save_schedule(ident, value)
             thread = threading.Thread(target=self._loop, args=(ident, stop, value), name='timeline-schedule', daemon=True)
             self.running[ident] = dict(value, stop=stop, thread=thread)
@@ -40,8 +43,10 @@ class Scheduler:
         try:
             if not acquired: return
             while not stop.is_set():
+                first, last = repeat_range(value.get('date'), value.get('end_date'), value.get('lookback_hours', 48))
                 jobs = self.runner.submit(namespace=value['namespace'], source=value['source'], mode=policy['mode'],
-                                          offline=value['offline'], force=value['force'], trigger='scheduler', asynchronous=True)
+                                          offline=value['offline'], force=value['force'], date=first, end_date=last,
+                                          trigger='scheduler', asynchronous=True)
                 while any(self.runner.state.get(job['id'])['state'] in {'queued', 'running'} for job in jobs):
                     if stop.wait(.1):
                         for job in jobs: self.runner.cancel(job['id'])
@@ -59,7 +64,8 @@ class Scheduler:
         saved = self.runner.state.schedules()
         for ident, value in saved.items():
             if value.get('enabled') and value['policy'].get('resume_on_restart'):
-                try: self.start(value['namespace'], value['source'], value['policy'], offline=value.get('offline', False), force=value.get('force', False), ident=ident)
+                try: self.start(value['namespace'], value['source'], value['policy'], offline=value.get('offline', False), force=value.get('force', False), ident=ident,
+                                date=value.get('date'), end_date=value.get('end_date'), lookback_hours=value.get('lookback_hours', 48))
                 except (ValueError, OSError, ImportError) as error:
                     self.runner.state.save_schedule(ident, dict(value, error=str(error)))
         for group, source in self.runner.configuration.sources():

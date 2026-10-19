@@ -1,5 +1,5 @@
 """Inclusive calendar selectors resolved once at the job boundary, in UTC."""
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 import calendar
 import re
 
@@ -20,3 +20,14 @@ def date_range(selector=None, end=None):
     if end: last = date.fromisoformat(end.replace('_', '-'))
     if last < first: raise ValueError('End date precedes start date')
     return first.isoformat(), last.isoformat()
+
+
+def repeat_range(selector=None, end=None, lookback_hours=0):
+    """Resolve a moving UTC window for each pass, including midnight rollover."""
+    if isinstance(lookback_hours, bool) or not isinstance(lookback_hours, (int, float)) or not 0 <= lookback_hours <= 87600:
+        raise ValueError('lookback_hours must be between 0 and 87600')
+    if selector and selector.lower() == 'today':
+        if end: raise ValueError('A moving today window cannot have a fixed end date')
+        now = datetime.now(timezone.utc)
+        return (now-timedelta(hours=lookback_hours)).date().isoformat(), now.date().isoformat()
+    return date_range(selector, end)

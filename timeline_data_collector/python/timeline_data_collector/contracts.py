@@ -45,6 +45,19 @@ class Context:
     mode: str = 'once'
     cancel: threading.Event = field(default_factory=threading.Event)
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger('timeline_data_collector'))
+    metrics: dict = field(default_factory=dict)
+    notices: dict = field(default_factory=dict)
+
+    def notice(self, key, message=None, level=logging.WARNING):
+        """Report availability changes once, sharing state between repeat passes."""
+        previous = self.notices.get(key)
+        if message is None:
+            if previous:
+                self.logger.info('%s/%s: %s available again', self.namespace, self.source['id'], key)
+                self.notices.pop(key, None)
+        elif previous != message:
+            self.logger.log(level, message)
+            self.notices[key] = message
 
     @property
     def options(self):
