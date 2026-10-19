@@ -147,20 +147,33 @@ from different sources fail publication. Existing stable IDs are preserved;
 missing IDs derive from the source key and normalized content. Plugin versions
 and job IDs are provenance, not event identity.
 
-Converters can publish progressive batches, such as completed days, before the
+Converters can publish progressive batches, including individual records, before the
 whole input finishes. Each batch uses the same atomic publication and rollback
 mechanism. Intermediate batches retain the prior input checkpoint; only the
 final batch accepts the input and acknowledges its source. A failed or cancelled
 run keeps its published records and retries unfinished input using stable IDs.
 
-The publisher stages and validates reports and descriptors, then atomically
+The publisher validates each batch and writes directly to the configured target,
+using temporary files beside their final destinations for atomic replacement. It
+updates only changed reports and descriptors, then atomically
 replaces `.timeline-collector/publication.json` with the new namespace snapshot
 and checkpoints. Both timeline backends read that committed snapshot. Dated JSON
 exports remain available for existing consumers; a pending journal restores
 their previous bytes after a failed or interrupted write. On first adoption,
 existing materialized records and descriptors are retained in the snapshot;
 legacy report files are kept. New independently written files remain readable.
+Directories ending in `_legacy`, `_backup`, or `.bak` are comparison/rollback
+copies. They are excluded from adoption and from the committed reader inventory;
+their JSON is never parsed or changed by publication.
 The snapshot and acquisition cache are local operational data and never ship.
+
+Converters that own local archive discovery may implement `read_local(context)`
+to yield `InputBatch` values without first copying the entire input. The runner
+uses it only for the `local` source plugin; other connectors keep their reader.
+Such converters must pin file revisions, honor configured selection rules,
+exclude generated output, and advance the checkpoint only after the selected
+input succeeds. The source lease and shared publisher still apply. Standalone
+commands, UI actions and scheduled runs all use this same path.
 
 Publication currently materializes a namespace snapshot in memory, with a
 64 MiB serialized snapshot limit matching the timeline backends' default read

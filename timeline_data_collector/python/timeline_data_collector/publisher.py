@@ -14,6 +14,21 @@ from .io import atomic_write, day_path, identity, model_root, normalize, read_js
 from .locking import SourceLock
 
 
+def legacy_document(path):
+    """Read historical JSON extensions without rewriting the original file."""
+    raw = Path(path).read_text(encoding='utf-8-sig')
+    def repair(match):
+        value = match[1]
+        if value is None: return ''
+        if raw[match.end():match.end()+1] == '"': value += ','
+        return re.sub(r'\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4})|\\',
+                      lambda escape: '\\\\' if escape[0] == '\\' else escape[0], value)
+    try:
+        return json.loads(re.sub(r'("(?:\\.|[^"\\])*"\s*)|,\s*(?=[}\]])', repair, raw, flags=re.S), strict=False)
+    except ValueError as error:
+        raise ValueError('Cannot adopt legacy JSON ' + str(path) + ': ' + str(error)) from error
+
+
 class Publisher:
     # Matches the timeline backends' default materialized-file budget.
     MAX_SNAPSHOT_BYTES = 64 * 1024 * 1024
@@ -69,25 +84,26 @@ class Publisher:
         for path in sorted(self.root.rglob('*.json')):
             relative = path.relative_to(self.root)
             if any(part.startswith('.') or part.startswith('descriptors') or 'noises' in part for part in relative.parts): continue
+            # Comparison/rollback copies are inventories to hide from readers,
+            # never contributions to the production namespace.
+            if any(part.lower().endswith(('_legacy', '_backup', '.bak')) for part in relative.parts[:-1]):
+                reports.append(relative.as_posix())
+                continue
             if re.fullmatch(r'timeline_[a-f0-9]{12}_report.json', path.name): continue
             scanned_bytes += path.stat().st_size
             if scanned_bytes > self.MAX_SNAPSHOT_BYTES: raise ValueError('Existing namespace exceeds the 64 MiB collector snapshot budget; materialized data is preserved')
             # Legacy Java JSON permits literal controls and trailing separators.
-            raw = path.read_text(encoding='utf-8-sig')
-            raw = re.sub(r'("(?:\\.|[^"\\])*"\s*)|,\s*(?=[}\]])', lambda match: match[1] or '', raw, flags=re.S)
-            document = json.loads(raw, strict=False)
+            document = legacy_document(path)
             if not isinstance(document, dict) or not isinstance(document.get('events'), list): continue
             reports.append(relative.as_posix())
             for ordinal, record in enumerate(document['events']):
                 record = deepcopy(record)
                 key = str(record.get('id', record.get('ID', '')) or identity([str(relative), ordinal, record]))
-                record.setdefault('id', key)
+                record['id'] = key
                 def merge_details(item):
                     descriptor = path.parent / 'descriptors' / (str(item.get('id', item.get('ID', ''))) + '.json')
                     if descriptor.is_file():
-                        details = descriptor.read_text(encoding='utf-8-sig')
-                        details = re.sub(r'("(?:\\.|[^"\\])*"\s*)|,\s*(?=[}\]])', lambda match: match[1] or '', details, flags=re.S)
-                        values = json.loads(details, strict=False).get('event_descriptor', [])
+                        values = legacy_document(descriptor).get('event_descriptor', [])
                         if values: item['data'] = dict(item.get('data', {}), **values[0].get('data', {}))
                     for child in item.get('activities', []): merge_details(child)
                 merge_details(record)
@@ -112,8 +128,23 @@ class Publisher:
                 for key, record in contribution['records'].items():
                     if key in merged and merged[key] != record: raise ValueError('Conflicting record ID across sources: ' + key)
                     merged[key] = record
+            old_records = {item['id']: item for item in previous.get('events', [])}
+            changed = {key for key, value in merged.items() if old_records.get(key) != value}
+            removed = old_records.keys() - merged.keys()
+            instants, directories = {}, {}
+            def instant(start):
+                if start not in instants: instants[start] = timestamp(start)
+                return instants[start]
+            def output_directory(start):
+                day = instant(start).date()
+                # Resolving Windows paths performs filesystem calls. All records
+                # on a UTC day share the same directory; resolve it once per batch.
+                if day not in directories: directories[day] = day_path(self.target, start)
+                return directories[day]
+            dirty_days = {output_directory(merged[key]['start']) for key in changed}
+            dirty_days.update(output_directory(old_records[key]['start']) for key in changed | removed if key in old_records)
             days = defaultdict(list)
-            ordered_records = sorted(merged.values(), key=lambda item: (timestamp(item['start']), item['id']))
+            ordered_records = sorted(merged.values(), key=lambda item: (instant(item['start']), item['id']))
             all_ids = {}
             def verify_ids(values):
                 for value in values:
@@ -123,21 +154,23 @@ class Publisher:
                     verify_ids(value.get('activities', []))
             verify_ids(ordered_records)
             for record in ordered_records:
-                days[day_path(self.target, record['start'])].append(record)
+                days[output_directory(record['start'])].append(record)
             report_name = 'timeline_' + identity(self.namespace)[:12] + '_report.json'
             outputs = {}
             for directory, values in days.items():
-                outputs[directory / report_name] = {'dateTimeFormat': 'iso8601', 'events': values}
+                if directory in dirty_days:
+                    outputs[directory / report_name] = {'dateTimeFormat': 'iso8601', 'events': values}
                 for record in values:
+                    if record['id'] not in changed: continue
                     outputs[directory / 'descriptors' / (record['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [record]}
                     def child_descriptors(parent):
                         for child in parent.get('activities', []):
                             normalized = normalize([child], self.namespace, source_key)[0]
-                            child_dir = day_path(self.target, normalized['start'])
+                            child_dir = output_directory(normalized['start'])
                             outputs[child_dir / 'descriptors' / (normalized['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [normalized]}
                             child_descriptors(child)
                     child_descriptors(record)
-            reports = [path.relative_to(self.root).as_posix() for path in outputs if path.name == report_name]
+            reports = [(directory / report_name).relative_to(self.root).as_posix() for directory in days]
             for path in previous.get('reports', []):
                 if path not in reports: outputs[self._owned_path(path)] = {'dateTimeFormat': 'iso8601', 'events': []}
             generation = uuid.uuid4().hex
@@ -174,7 +207,7 @@ class Publisher:
             try:
                 for path, raw in prepared.items(): atomic_write(path, raw)
                 # Publication state and checkpoint move together, after every output file.
-                write_json(self.state_path, candidate)
+                atomic_write(self.state_path, snapshot)
                 self.pending.unlink()
             except BaseException:
                 self._recover()

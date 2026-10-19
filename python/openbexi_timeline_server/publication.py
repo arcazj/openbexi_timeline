@@ -16,7 +16,11 @@ def snapshot(root):
         if path.stat().st_size > 64 * 1024 * 1024: raise ValueError('Collector publication exceeds the 64 MiB read budget')
         for attempt in range(6):
             try:
-                with path.open('rb') as handle: value = json.load(handle)
+                # Close the Windows handle before parsing the potentially large
+                # snapshot so a collector can atomically replace it meanwhile.
+                raw = path.read_bytes()
+                if len(raw) > 64 * 1024 * 1024: raise ValueError('Collector publication exceeds its read budget')
+                value = json.loads(raw)
                 break
             except PermissionError:
                 if os.name != 'nt' or attempt == 5: raise

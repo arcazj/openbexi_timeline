@@ -118,7 +118,9 @@ class Runner:
             else:
                 reader = self.registry.load(source['source_plugin'], 'source', request['mode'], source.get('options', {}))
                 def converted():
-                    for incoming in reader.read(context):
+                    local_reader = getattr(converter, 'read_local', None)
+                    inputs = local_reader(context) if local_reader and source['source_plugin'] == 'local' else reader.read(context)
+                    for incoming in inputs:
                         context.check_cancelled()
                         with activity(LOG, label, 'converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
                             progressive = getattr(converter, 'convert_batches', None)
@@ -148,6 +150,9 @@ class Runner:
                 context.checkpoint = dict(batch.checkpoint)
                 result.update({k: v for k, v in outcome.items() if k != 'records_written'})
                 result['records_written'] += outcome['records_written']; result['batches'] += 1
+                if outcome['records_written'] and 'first_publication_seconds' not in result:
+                    result['first_publication_seconds'] = round(time.monotonic() - started, 3)
+                    LOG.info('%s: first output published after %.3fs', label, result['first_publication_seconds'])
                 self.state.update(ident, 'running', result)
                 if batch.acknowledge: batch.acknowledge()
             context.check_cancelled()

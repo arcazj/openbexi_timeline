@@ -303,11 +303,11 @@ class CollectorTests(unittest.TestCase):
         import timeline_data_collector.publisher as module
         publisher = Publisher(self.ws.target, 'DEMO')
         publisher.publish('a', 'input', '1', RecordBatch([event()], {'offset': 1}))
-        original = module.write_json
+        original = module.atomic_write
         def fail(path, value):
             if path == publisher.state_path: raise OSError('injected commit failure')
             return original(path, value)
-        with patch.object(module, 'write_json', side_effect=fail):
+        with patch.object(module, 'atomic_write', side_effect=fail):
             with self.assertRaises(OSError): publisher.publish('a', 'input', '1', RecordBatch([event('two')], {'offset': 2}))
         self.assertEqual([item['id'] for item in self.ws.records()], ['one'])
         self.assertEqual(publisher.checkpoint('a'), {'offset': 1})
@@ -321,13 +321,13 @@ class CollectorTests(unittest.TestCase):
 import timeline_data_collector.publisher as m
 from timeline_data_collector.contracts import RecordBatch
 p=m.Publisher(sys.argv[1], 'DEMO')
-original=m.write_json
+original=m.atomic_write
 def commit(path, value):
     if path==p.state_path:
         if sys.argv[2]=='after': original(path,value)
         os._exit(73)
     return original(path,value)
-m.write_json=commit
+m.atomic_write=commit
 p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z','data':{'title':'two'}}],{'offset':2}))
 '''
             result = subprocess.run([sys.executable, '-c', code, self.ws.target, phase], capture_output=True)

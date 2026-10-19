@@ -51,6 +51,24 @@ class MatchingTests(unittest.TestCase):
 
 
 class ServerTests(unittest.TestCase):
+    def test_atomic_collector_generation_can_change_while_previous_is_indexed(self):
+        from unittest.mock import patch
+        snapshot=self.source/'.timeline-collector/publication.json'
+        atomic_json(snapshot,{'version':1,'generation':'one','events':[event('one')]})
+        def replacing(reader, limit):
+            for value in event_stream(reader,limit):
+                # This replacement must work while the old generation is being
+                # parsed, including on Windows. Both generations are complete.
+                atomic_json(snapshot,{'version':1,'generation':'two','events':[event('two')]})
+                yield value
+        with patch('openbexi_timeline_server.index.event_stream',replacing):
+            self.index.refresh()
+        records,metadata=self.scan()
+        self.assertEqual([r['id'] for r in records],['one'])
+        self.assertTrue(metadata['complete'])
+        self.index.refresh()
+        self.assertEqual([r['id'] for r in self.scan()[0]],['two'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
