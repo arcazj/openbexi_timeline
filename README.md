@@ -1,6 +1,6 @@
 # OpenBEXI Timeline
 
-Version **2.9.0** · [Release notes](docs/release-2.9.0.md).
+Version **2.9.1** · [Release notes](docs/release-2.9.1.md).
 
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their

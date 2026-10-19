@@ -4,6 +4,10 @@ import {createHash} from 'node:crypto';
 const root=path.resolve(process.argv[2] || '.');
 const {version}=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
 const dist=path.join(root,'dist');
+const patchEvidence=`docs/release-${version}-regressions.json`;
+const evidencePath=await fs.access(path.join(root,patchEvidence)).then(()=>patchEvidence,()=> 'docs/design/2.9/regression-results.json');
+const evidence=JSON.parse(await fs.readFile(path.join(root,evidencePath),'utf8'));
+if(evidence.version!==version || evidence.status!=='passed') throw new Error('Passing regression evidence for this release version is required');
 const publicPackages=new Set(['timeline_data_collector','filesources','timeline_json','default','earthquake','volcano','mqtt']);
 const names=['windows-x64-setup.exe','source.zip','source.tar.gz'].map(suffix=>`openbexi-timeline-${version}-${suffix}`);
 for(const [from,to] of [
@@ -11,7 +15,7 @@ for(const [from,to] of [
     ['docs/design/2.9/openbexi_timeline.png','openbexi_timeline.png'],
     ['docs/design/2.9/architecture-overview.png','architecture-overview.png'],
     [`docs/release-${version}.md`,`release-${version}.md`],
-    ['docs/design/2.9/regression-results.json','regression-results.json']]) {
+    [evidencePath,'regression-results.json']]) {
     await fs.copyFile(path.join(root,from),path.join(dist,to)); names.push(to);
 }
 const manifest=JSON.parse(await fs.readFile(path.join(dist,'collector/manifest.json'),'utf8'));
