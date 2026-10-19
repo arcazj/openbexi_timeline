@@ -405,7 +405,20 @@ class TimelineIndex:
                     db.executemany("INSERT INTO records(file_key,version,start,end,payload,created) VALUES(?,?,?,?,?,?)", pending)
                 pending.clear()
         try:
-            with path.open("rb") as handle:
+            committed = path.name == 'publication.json' and path.parent.name == '.timeline-collector'
+            if committed:
+                # Atomic publication guarantees immutable complete bytes. Release
+                # the disk handle before parsing/indexing; a newer generation
+                # may arrive during this work and will be indexed on the next poll.
+                with path.open('rb') as stream:
+                    selected = os.fstat(stream.fileno())
+                    stamp = f'{selected.st_size}:{selected.st_mtime_ns}'
+                    raw = stream.read(min(self.config.max_file_bytes, 64*1024*1024)+1)
+                if len(raw) > min(self.config.max_file_bytes,64*1024*1024): raise ValueError('Collector snapshot exceeds size limit')
+                handle_source = io.BytesIO(raw)
+            else:
+                handle_source = path.open('rb')
+            with handle_source as handle:
                 identity = source_key(path.resolve(), source.namespace, "")
                 reader = BoundedReader(handle, self.config.max_file_bytes)
                 for ordinal, value in enumerate(event_stream(reader, self.config.max_record_bytes)):
@@ -436,7 +449,7 @@ class TimelineIndex:
             after = f"{stat.st_size}:{stat.st_mtime_ns}"
         except OSError:
             after = "unavailable"
-        if stamp != after:
+        if stamp != after and not committed:
             with self.connect() as db:
                 db.execute("DELETE FROM records WHERE file_key=? AND version=?", (key, version))
                 if previous:

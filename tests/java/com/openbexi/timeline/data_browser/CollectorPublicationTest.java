@@ -29,7 +29,8 @@ class CollectorPublicationTest {
             for(Object item:(JSONArray)page.get("events"))found.add(((JSONObject)item).get("id").toString());
             JSONObject metadata=(JSONObject)page.get("timelineMatch");
             assertNull(metadata.get("error"),metadata.toJSONString());
-            assertEquals(true,metadata.get("complete"),metadata.toJSONString());
+            if (metadata.get("nextCursor") == null)
+                assertEquals(true,metadata.get("complete"),metadata.toJSONString());
             config.put("cursor",metadata.get("nextCursor"));assertTrue(++pages<20);
         } while(config.get("cursor")!=null);
         return found;

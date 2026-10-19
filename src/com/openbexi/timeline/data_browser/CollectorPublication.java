@@ -22,8 +22,12 @@ public final class CollectorPublication {
         if (!Files.exists(path)) return null;
         if (!path.toRealPath().startsWith(root.toRealPath())) throw new IOException("Publication escapes its source");
         if (Files.size(path) > maxBytes) throw new IOException("Collector publication exceeds its read budget");
-        try (Reader reader = Files.newBufferedReader(path)) {
-            JSONObject value = (JSONObject)new JSONParser().parse(reader);
+        // Close the file before parsing; Windows readers must not hold up the
+        // collector's atomic replacement while processing a large snapshot.
+        byte[] bytes = Files.readAllBytes(path);
+        if (bytes.length > maxBytes) throw new IOException("Collector publication exceeds its read budget");
+        try {
+            JSONObject value = (JSONObject)new JSONParser().parse(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
             if (!Long.valueOf(1).equals(value.get("version")) || !(value.get("events") instanceof JSONArray))
                 throw new IOException("Invalid collector publication");
             return value;

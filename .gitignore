@@ -143,6 +143,7 @@ __pycache__/
 /HBDS/roles/*
 !/HBDS/roles/defaults.json
 /GCS_data_collector/
+/tools/com/openbexi/intelsat/
 **/.venv/
 **/target/
 **/build/

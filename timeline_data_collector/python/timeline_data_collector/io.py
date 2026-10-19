@@ -28,11 +28,14 @@ def expand_env(value):
 
 
 def atomic_replace(source, destination):
-    for attempt in range(6):
+    deadline = time.monotonic() + 10
+    attempt = 0
+    while True:
         try: os.replace(source, destination); return
         except PermissionError:
-            if os.name != 'nt' or attempt == 5: raise
-            time.sleep(.02 * (attempt + 1))
+            if os.name != 'nt' or time.monotonic() >= deadline: raise
+            time.sleep(min(.05 * (attempt + 1), .5))
+            attempt += 1
 
 
 def atomic_write(path, value):

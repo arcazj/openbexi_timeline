@@ -878,6 +878,7 @@
   "timeline_data_collector/python/timeline_data_collector/static/style.css",
   "timeline_data_collector/requirements-test.txt",
   "timeline_data_collector/tests/test_collector.py",
+  "timeline_data_collector/tests/test_progressive_publication.py",
   "tools/audit-java-dependencies.mjs",
   "tools/benchmark-python-server.py",
   "tools/build-api-spec.mjs",
