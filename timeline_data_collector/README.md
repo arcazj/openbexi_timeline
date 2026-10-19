@@ -151,6 +151,36 @@ dashboard's date fields apply to repeats as well as one-shot conversions.
 active work and availability changes; polling and parser details use
 `--log-level DEBUG`. Use `--json` for machine-readable one-shot job results.
 
+For automatic server startup, put the window and quiet period on each source:
+```yaml
+execution:
+  mode: watch
+  date: today
+  lookback_hours: 24
+  interval_seconds: 2
+  settle_seconds: 10
+  overlap: skip
+  resume_on_restart: true
+```
+Start `serve --workspace <workspace.json> --log-level INFO --log-file <local-log>`.
+This watches today and yesterday UTC. Saved UI schedules retain their own date
+selection and an explicitly stopped schedule stays stopped after restart.
+The file readers persist metadata observations and wait for the configured quiet
+period before reading a new revision. Writes reset only that file's timer.
+Snapshot sources wait for the complete input group to settle to avoid deleting
+records from a file still being uploaded. A one-shot run retains its immediate
+processing behavior. Content checksums are cached by verified file revision and
+periodically audited; unchanged polling does not reread the entire archive.
+
+`GET /api/health` reports active sources, settling/missing inputs, failures,
+stalled publication and snapshot capacity. Run the independent watchdog with
+`python tools/monitor-collector.py --url http://127.0.0.1:8765`. It samples every
+60 seconds, writes `latest.json` and daily JSONL history under
+`.local-private/timeline-collector/monitor`, and records an unreachable server
+if the collector exits. INFO reports health transitions; both processes keep
+running until stopped. Monitoring requires the computer to remain awake.
+`--log-file` retains three 10 MiB backups of the collector log.
+
 Plugins return source-owned upserts, explicit deletions, or an explicit complete
 snapshot. Absence from a partial feed never implies deletion. Conflicting IDs
 from different sources fail publication. Existing stable IDs are preserved;

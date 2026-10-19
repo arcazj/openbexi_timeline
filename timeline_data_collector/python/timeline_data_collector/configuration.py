@@ -6,6 +6,7 @@ import json
 import os
 from .io import identity, expand_env, model_root
 from .namespace_config import load_bundle
+from .dates import repeat_range
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,13 @@ def execution_policy(value):
     if policy['overlap'] != 'skip': raise ValueError('Overlapping runs are not supported')
     policy.setdefault('resume_on_restart', False)
     if not isinstance(policy['resume_on_restart'], bool): raise ValueError('resume_on_restart must be boolean')
+    for name in ('date', 'end_date'):
+        if policy.get(name) is not None and not isinstance(policy[name], str):
+            raise ValueError(name + ' must be a string; quote fixed dates in YAML')
+    repeat_range(policy.get('date'), policy.get('end_date'), policy.get('lookback_hours', 48))
+    seconds = policy.get('settle_seconds', 0)
+    if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 86400:
+        raise ValueError('settle_seconds must be between 0 and 86400')
     if mode in {'interval', 'watch'}:
         seconds = policy.setdefault('interval_seconds', 2 if mode == 'watch' else 300)
         if isinstance(seconds, bool) or not isinstance(seconds, (float, int)) or not 0 < seconds <= 31536000:

@@ -93,6 +93,27 @@
                 "exclusiveMinimum": 0,
                 "maximum": 31536000
               },
+              "date": {
+                "type": "string",
+                "minLength": 1,
+                "description": "today (UTC), or a quoted YYYY, YYYY-MM or YYYY-MM-DD selector"
+              },
+              "end_date": {
+                "type": "string",
+                "description": "Inclusive quoted YYYY-MM-DD end of a fixed date range"
+              },
+              "lookback_hours": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 87600,
+                "description": "Calendar days covering this lookback for date: today; 24 selects today and yesterday"
+              },
+              "settle_seconds": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 86400,
+                "description": "Required quiet period before reading a changed file in watch or interval mode"
+              },
               "overlap": {
                 "const": "skip"
               },

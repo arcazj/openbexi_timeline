@@ -6,11 +6,15 @@ from urllib.parse import urlsplit, parse_qs
 import json
 import secrets
 import threading
+import os
+from datetime import datetime, timezone
 from .configuration import load
 from .dates import date_range
 from .io import identity
 from .runner import Runner
 from .scheduler import Scheduler
+from .io import model_root
+from .publisher import Publisher
 
 
 class Dashboard:
@@ -58,6 +62,8 @@ class Dashboard:
                         filename = {'/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css'}[url.path]
                         mime = {'/': 'text/html', '/app.js': 'text/javascript', '/style.css': 'text/css'}[url.path]
                         self.respond((Path(__file__).parent / 'static' / filename).read_bytes(), content_type=mime + '; charset=utf-8'); return
+                    if url.path == '/api/health':
+                        self.respond(app.health()); return
                     if url.path == '/api/status':
                         workspace = parse_qs(url.query).get('workspace', [app.initial])[0]
                         selected, scheduler = app.selected(workspace)
@@ -115,6 +121,57 @@ class Dashboard:
 
         self.http = ThreadingHTTPServer((host, port), Handler)
         self.url = f'http://127.0.0.1:{self.http.server_port}'
+
+    def health(self):
+        now = datetime.now(timezone.utc)
+        sources, alerts = [], []
+        with self.guard: selected = list(self.runners.items())
+        for workspace, runner in selected:
+            scheduler = self.schedulers[workspace]
+            with scheduler.guard: schedules = list(scheduler.running.values())
+            jobs = runner.state.jobs(200)
+            with runner.guard: active = list(runner.active)
+            running = [runner.state.get(ident) for ident in active]
+            for group, source in runner.configuration.sources(include_disabled=True):
+                namespace, ident = group['namespace'], source['id']
+                matches = lambda job: job['request']['namespace'] == namespace and job['request']['source'] == ident
+                job = next((job for job in running if matches(job)), None) or next((job for job in jobs if matches(job)), None)
+                schedule = next((entry for entry in schedules if entry['namespace'] == namespace and entry['source'] == ident), None)
+                entry = dict(workspace=workspace, namespace=namespace, source=ident, scheduled=schedule is not None, status='idle')
+                enabled = group.get('enable', True) and source.get('enable', True)
+                if not enabled: entry['status'] = 'disabled'
+                elif source['converter_plugin'] == 'NONE': entry['status'] = 'static'
+                elif job:
+                    entry.update(job_id=job['id'], last_checked_utc=job['updated_at'], result=job['result'],
+                                 date=job['request']['date'], end_date=job['request']['end_date'])
+                    state = job['state']
+                    entry['status'] = state if state in {'running', 'queued', 'failed'} else 'watching' if schedule else 'idle'
+                    if state == 'failed': alerts.append(namespace+'/'+ident+': '+job['result'].get('error', 'conversion failed'))
+                    if state == 'running':
+                        elapsed = (now-datetime.fromisoformat(job['updated_at'])).total_seconds()
+                        entry['seconds_without_progress'] = round(elapsed, 1)
+                        if elapsed > 900:
+                            entry['status'] = 'stalled'
+                            alerts.append(namespace+'/'+ident+': no publication progress for more than 15 minutes')
+                    if state == 'succeeded' and job['result'].get('metrics', {}).get('waiting_files'):
+                        entry['status'] = 'settling'
+                    notices = runner.notices.get(job['request']['source_key'], {})
+                    if state == 'succeeded' and notices.get('input'): entry['status'] = 'waiting_input'
+                if enabled and not schedule:
+                    saved = [value for value in runner.state.schedules().values() if value['namespace'] == namespace and value['source'] == ident]
+                    if any(value.get('enabled') and value['policy'].get('resume_on_restart') for value in saved):
+                        alerts.append(namespace+'/'+ident+': configured schedule is not running')
+                root = model_root(group['target_path'])
+                try:
+                    stat = (root/'.timeline-collector/publication.json').stat()
+                    entry['publication_bytes'] = stat.st_size
+                    entry['publication_limit_bytes'] = Publisher.MAX_SNAPSHOT_BYTES
+                    entry['last_publication_utc'] = datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()
+                    if enabled and stat.st_size >= Publisher.MAX_SNAPSHOT_BYTES * .85:
+                        alerts.append(namespace+': publication is approaching its snapshot size limit')
+                except FileNotFoundError: pass
+                sources.append(entry)
+        return dict(status='degraded' if alerts else 'ok', checked_at=now.isoformat(), server_pid=os.getpid(), sources=sources, alerts=alerts)
 
     def selected(self, key):
         if key not in self.workspaces: raise ValueError('Workspace is not available in this dashboard')

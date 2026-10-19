@@ -5,6 +5,8 @@ import json
 import logging
 import sys
 import threading
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
 from . import __version__
 from .configuration import load
 from .dates import date_range
@@ -22,6 +24,7 @@ def main(arguments=None, *, plugin=None):
         selected = commands.add_parser(command)
         selected.add_argument('--workspace', required=True)
         selected.add_argument('--log-level', choices=('DEBUG', 'INFO', 'WARNING', 'ERROR'), default='INFO')
+        selected.add_argument('--log-file', type=Path, help='Also keep a rotating local log (10 MiB, three backups)')
         selected.add_argument('--dataconf', action='append', help='Legacy namespace file selection; repeat for multiple namespaces')
         selected.add_argument('--service')
         selected.add_argument('--hbds-root')
@@ -45,7 +48,11 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--host'); selected.add_argument('--port', type=int)
             selected.add_argument('--allow-workspace', action='append', default=[], help='Additional workspace available in the UI')
     args = parser.parse_args(argv)
-    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
+    handlers = [logging.StreamHandler()]
+    if args.log_file:
+        args.log_file.parent.mkdir(parents=True, exist_ok=True)
+        handlers.append(RotatingFileHandler(args.log_file, maxBytes=10*1024*1024, backupCount=3, encoding='utf-8'))
+    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', handlers=handlers)
     runner = scheduler = None
     try:
         config = load(args.workspace, dataconf=args.dataconf, service=args.service, hbds_root=args.hbds_root)
