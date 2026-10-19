@@ -44,11 +44,15 @@ try {
     const publication=path.join(temporary,'output/DEMO/.timeline-collector/publication.json');
     const committed=JSON.parse(await fs.readFile(publication,'utf8')).events;
     assert.equal(committed.length,2);assert.equal(committed[0].activities?.length || committed[1].activities?.length,1);
+    const hourly=JSON.parse(await fs.readFile(path.join(temporary,'output/DEMO/2026/10/16/DEMO_1_1_2026-10-16T12Z.json'),'utf8'));
+    assert.deepEqual(hourly.events,committed);
     await page.locator('#again').click();await expect.poll(async()=>(await status()).jobs.filter(job=>job.state==='succeeded').length).toBe(2);
     assert.deepEqual(JSON.parse(await fs.readFile(publication,'utf8')).events,committed);
     await page.getByText('Repeat conversion',{exact:true}).click();
+    await page.locator('#date').fill('2026-10-16');await page.locator('#lookback').fill('0');
     await page.locator('#mode').selectOption('interval');await page.locator('#interval').fill('1');await page.locator('#schedule').click();
     await expect.poll(async()=>(await status()).jobs.filter(job=>job.state==='succeeded').length).toBeGreaterThan(3);
+    assert.ok((await status()).jobs.filter(job=>job.request.trigger==='scheduler').every(job=>job.request.date==='2026-10-16'&&job.request.end_date==='2026-10-16'));
     await page.locator('#schedules').getByRole('button',{name:'Stop',exact:true}).click();
     await expect.poll(async()=>(await status()).active_schedules.length).toBe(0);
     await page.screenshot({path:path.join(root,'target/collector-dashboard.png'),fullPage:true});

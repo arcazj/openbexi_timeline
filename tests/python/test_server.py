@@ -116,6 +116,7 @@ class ServerTests(unittest.TestCase):
         export=self.file.parent/'timeline_0123456789ab_report.json'
         atomic_json(pending,{'generation':'next','files':[]})
         atomic_json(export,{'events':[event('staged')]})
+        atomic_json(self.file.parent/'operations_0_1_2026-09-12T12Z.json',{'events':[event('hourly-staged')]})
         self.index.refresh()
         self.assertEqual([record['id'] for record in self.scan()[0]],['legacy'])
         atomic_json(snapshot,{'version':1,'generation':'committed','events':[event('legacy'),event('published')],
@@ -126,6 +127,10 @@ class ServerTests(unittest.TestCase):
         # Independent user-created files remain visible after adoption.
         self.write([event('manual')],self.file.parent/'manual.json')
         self.assertEqual({record['id'] for record in self.scan()[0]},{'legacy','published','manual'})
+
+    def test_hourly_exports_read_without_collector_state(self):
+        self.write([event('hourly')],self.file.parent/'operations_0_1_2026-09-12T12Z.json')
+        self.assertEqual([record['id'] for record in self.scan()[0]],['hourly'])
 
     def test_collector_descriptor_reads_committed_parent_and_child(self):
         snapshot=self.source/'.timeline-collector/publication.json'

@@ -6,7 +6,7 @@ import re
 import os
 import time
 
-REPORT = re.compile(r'timeline_[a-f0-9]{12}_report\.json$')
+REPORT = re.compile(r'(?:timeline_[a-f0-9]{12}_report|[^/\\]+_\d+_\d+_\d{4}-\d{2}-\d{2}T\d{2}Z)\.json$')
 
 
 def snapshot(root):

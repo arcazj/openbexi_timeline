@@ -141,6 +141,16 @@ Overlapping work is skipped, not queued indefinitely. Cancelling a job retains
 already committed batches. A running job keeps its original configuration;
 subsequent submissions reload configuration and reject stale UI revisions.
 
+For a moving UTC day, use `run --workspace HBDS/workspace.json --date today
+--mode watch --interval-seconds 2 --lookback-hours 48`. The day is resolved at
+each pass, including after midnight. The lookback includes calendar days covering
+the preceding 48 hours so late data can update earlier reports. Use zero for a
+strict current-day window. Fixed dates and ranges also work with repeats. The
+dashboard's date fields apply to repeats as well as one-shot conversions.
+`--once` retains its one-pass behavior. INFO contains a measured summary for
+active work and availability changes; polling and parser details use
+`--log-level DEBUG`. Use `--json` for machine-readable one-shot job results.
+
 Plugins return source-owned upserts, explicit deletions, or an explicit complete
 snapshot. Absence from a partial feed never implies deletion. Conflicting IDs
 from different sources fail publication. Existing stable IDs are preserved;
@@ -159,13 +169,27 @@ updates only changed reports and descriptors, then atomically
 replaces `.timeline-collector/publication.json` with the new namespace snapshot
 and checkpoints. Both timeline backends read that committed snapshot. Dated JSON
 exports remain available for existing consumers; a pending journal restores
-their previous bytes after a failed or interrupted write. On first adoption,
+their previous bytes after a failed or interrupted write. Reports are partitioned
+by namespace and UTC start hour, named
+`<namespace>_<sessions>_<events>_<YYYY-MM-DDTHHZ>.json`; for example,
+`EXAMPLE_2_10_2026-10-19T14Z.json`. Session counts follow the timeline's
+classification (`activities` array or `data.kind: session`); counts include only
+top-level records and exclude zones and nested activities. Cross-hour sessions
+stay in their start hour. Only affected hours and descriptors change. Old count
+filenames are retired in the same recoverable publication transaction. Both
+servers exclude active exports from indexing and read the atomic snapshot, so
+filename changes cannot duplicate data. Exports remain readable without collector
+state, and old daily collector reports migrate on the next publication.
+On first adoption,
 existing materialized records and descriptors are retained in the snapshot;
-legacy report files are kept. New independently written files remain readable.
+ordinary legacy report files are kept. New independently written files remain readable.
 Directories ending in `_legacy`, `_backup`, or `.bak` are comparison/rollback
 copies. They are excluded from adoption and from the committed reader inventory;
 their JSON is never parsed or changed by publication.
 The snapshot and acquisition cache are local operational data and never ship.
+Snapshot ownership is stored as record IDs; each event payload appears only once.
+Older snapshots containing per-source payload copies are upgraded automatically,
+preserving their IDs, checkpoints and ordinary timeline reader compatibility.
 
 Converters that own local archive discovery may implement `read_local(context)`
 to yield `InputBatch` values without first copying the entire input. The runner

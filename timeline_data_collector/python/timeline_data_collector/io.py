@@ -56,6 +56,16 @@ def atomic_write(path, value):
         if temporary and os.path.exists(temporary): os.unlink(temporary)
 
 
+def remove_file(path):
+    """Retire an owned export once Windows readers release their handles."""
+    deadline = time.monotonic() + 10
+    while True:
+        try: Path(path).unlink(missing_ok=True); return
+        except PermissionError:
+            if os.name != 'nt' or time.monotonic() >= deadline: raise
+            time.sleep(.05)
+
+
 def write_json(path, value):
     atomic_write(path, json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False))
 

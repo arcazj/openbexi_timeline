@@ -10,7 +10,8 @@ import os
 import re
 import time
 import uuid
-from .io import atomic_write, day_path, identity, model_root, normalize, read_json, write_json, utc_now, timestamp
+from urllib.parse import quote
+from .io import atomic_write, day_path, identity, model_root, normalize, read_json, write_json, utc_now, timestamp, remove_file
 from .locking import SourceLock
 
 
@@ -67,16 +68,37 @@ class Publisher:
             for item in journal['files']:
                 destination = self._owned_path(item['path'])
                 if item['previous'] is None:
-                    if destination.exists(): destination.unlink()
+                    remove_file(destination)
                 else: atomic_write(destination, base64.b64decode(item['previous']))
         self.pending.unlink()
 
     def read_state(self):
         with self.locked():
-            return read_json(self.state_path, {'version': 1, 'sources': {}, 'reports': []})
+            return self.expand_state(read_json(self.state_path, {'version': 1, 'sources': {}, 'reports': []}))
+
+    @staticmethod
+    def expand_state(state):
+        """Ownership stores IDs; event payloads occur once in the atomic snapshot."""
+        if state.get('ownership_format') == 'ids-v1':
+            records = {item['id']: item for item in state['events']}
+            for source in state['sources'].values():
+                source['records'] = {key: records[key] for key in source.get('record_ids', [])}
+            state['retained'] = {key: records[key] for key in state.get('retained_ids', [])}
+        return state
 
     def checkpoint(self, source_key):
         return self.read_state()['sources'].get(source_key, {}).get('checkpoint', {})
+
+    def stamp(self):
+        try:
+            stat = self.state_path.stat()
+            return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+        except FileNotFoundError: return None
+
+    def checkpoint_snapshot(self, source_key):
+        with self.locked():
+            state = read_json(self.state_path, {'sources': {}})
+            return state['sources'].get(source_key, {}).get('checkpoint', {}), self.stamp()
 
     def _baseline(self):
         """Retain materialized data during first adoption; never delete legacy files."""
@@ -89,7 +111,6 @@ class Publisher:
             if any(part.lower().endswith(('_legacy', '_backup', '.bak')) for part in relative.parts[:-1]):
                 reports.append(relative.as_posix())
                 continue
-            if re.fullmatch(r'timeline_[a-f0-9]{12}_report.json', path.name): continue
             scanned_bytes += path.stat().st_size
             if scanned_bytes > self.MAX_SNAPSHOT_BYTES: raise ValueError('Existing namespace exceeds the 64 MiB collector snapshot budget; materialized data is preserved')
             # Legacy Java JSON permits literal controls and trailing separators.
@@ -115,6 +136,7 @@ class Publisher:
         with self.locked():
             previous = read_json(self.state_path)
             if previous is None: previous = self._baseline()
+            else: previous = self.expand_state(previous)
             candidate = deepcopy(previous)
             source = candidate['sources'].setdefault(source_key, {'records': {}, 'checkpoint': {}})
             if batch.snapshot: source['records'] = {}
@@ -141,9 +163,12 @@ class Publisher:
                 # on a UTC day share the same directory; resolve it once per batch.
                 if day not in directories: directories[day] = day_path(self.target, start)
                 return directories[day]
-            dirty_days = {output_directory(merged[key]['start']) for key in changed}
-            dirty_days.update(output_directory(old_records[key]['start']) for key in changed | removed if key in old_records)
-            days = defaultdict(list)
+            def partition(record):
+                start = record['start']
+                return output_directory(start), record.get('data', {}).get('namespace', self.namespace), instant(start).strftime('%Y-%m-%dT%HZ')
+            dirty_hours = {partition(merged[key]) for key in changed}
+            dirty_hours.update(partition(old_records[key]) for key in changed | removed if key in old_records)
+            hours = defaultdict(list)
             ordered_records = sorted(merged.values(), key=lambda item: (instant(item['start']), item['id']))
             all_ids = {}
             def verify_ids(values):
@@ -154,12 +179,20 @@ class Publisher:
                     verify_ids(value.get('activities', []))
             verify_ids(ordered_records)
             for record in ordered_records:
-                days[output_directory(record['start'])].append(record)
-            report_name = 'timeline_' + identity(self.namespace)[:12] + '_report.json'
-            outputs = {}
-            for directory, values in days.items():
-                if directory in dirty_days:
-                    outputs[directory / report_name] = {'dateTimeFormat': 'iso8601', 'events': values}
+                hours[partition(record)].append(record)
+            outputs, reports = {}, []
+            for (directory, namespace, hour), values in hours.items():
+                # Match timeline session classification, counting top-level items
+                # only. Child activities have their own descriptors, not counts.
+                countable = [item for item in values if item.get('zone') not in (True, 'zone')]
+                sessions = sum(isinstance(item.get('activities'), list) or item.get('data', {}).get('kind') == 'session'
+                               for item in countable)
+                report_name = '%s_%d_%d_%s.json' % (quote(namespace, safe=''), sessions, len(countable)-sessions, hour)
+                report = directory / report_name
+                relative = report.relative_to(self.root).as_posix()
+                reports.append(relative)
+                if (directory, namespace, hour) in dirty_hours or relative not in previous.get('reports', []):
+                    outputs[report] = {'dateTimeFormat': 'iso8601', 'events': values}
                 for record in values:
                     if record['id'] not in changed: continue
                     outputs[directory / 'descriptors' / (record['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [record]}
@@ -170,9 +203,14 @@ class Publisher:
                             outputs[child_dir / 'descriptors' / (normalized['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [normalized]}
                             child_descriptors(child)
                     child_descriptors(record)
-            reports = [(directory / report_name).relative_to(self.root).as_posix() for directory in days]
             for path in previous.get('reports', []):
-                if path not in reports: outputs[self._owned_path(path)] = {'dateTimeFormat': 'iso8601', 'events': []}
+                if path not in reports: outputs[self._owned_path(path)] = None
+            # Adopt existing daily collector reports even if their state file was
+            # lost; retain ordinary legacy/manual reports for rollback/reference.
+            for path in candidate.get('baseline_reports', []):
+                if re.fullmatch(r'timeline_[a-f0-9]{12}_report\.json', Path(path).name) and not any(
+                        part.lower().endswith(('_legacy', '_backup', '.bak')) for part in Path(path).parts[:-1]):
+                    outputs[self._owned_path(path)] = None
             generation = uuid.uuid4().hex
             def identities(values):
                 result = set()
@@ -184,13 +222,17 @@ class Publisher:
             retired.difference_update(identities(merged.values()))
             # Both timeline servers read this single atomic snapshot. Dated files remain
             # compatible exports; readers never observe a partially written generation.
-            candidate.update(generation=generation, reports=reports, record_count=len(merged), updated_at=utc_now(),
+            candidate.update(generation=generation, reports=sorted(reports), report_layout='namespace-hour-v1', record_count=len(merged), updated_at=utc_now(),
                              dateTimeFormat='iso8601', events=ordered_records, retired_ids=sorted(retired))
-            snapshot = json.dumps(candidate, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
+            compact = dict(candidate, ownership_format='ids-v1')
+            compact['sources'] = {key: dict({k:v for k,v in value.items() if k != 'records'}, record_ids=sorted(value['records']))
+                                  for key,value in candidate['sources'].items()}
+            compact['retained_ids'] = sorted(compact.pop('retained', {}))
+            snapshot = json.dumps(compact, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
             if len(snapshot) > self.MAX_SNAPSHOT_BYTES:
                 raise ValueError('Namespace snapshot exceeds the 64 MiB budget; the last committed output and checkpoint are preserved')
             # Validate and stage all bytes before touching any visible output.
-            prepared = {path: json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
+            prepared = {path: None if value is None else json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
                         for path, value in outputs.items()}
             journal = {'generation': generation, 'files': []}
             unchanged = []
@@ -205,11 +247,16 @@ class Publisher:
             for path in unchanged: del prepared[path]
             write_json(self.pending, journal)
             try:
-                for path, raw in prepared.items(): atomic_write(path, raw)
+                for path, raw in prepared.items():
+                    if raw is None: remove_file(path)
+                    else: atomic_write(path, raw)
                 # Publication state and checkpoint move together, after every output file.
                 atomic_write(self.state_path, snapshot)
                 self.pending.unlink()
             except BaseException:
                 self._recover()
                 raise
-            return {'generation_id': generation, 'records_written': len(records), 'namespace_records': len(merged), 'reports': reports}
+            return {'generation_id': generation, 'records_written': len(records),
+                    '_checkpoint_stamp': self.stamp(),
+                    'records_created': len(changed - old_records.keys()), 'records_updated': len(changed & old_records.keys()),
+                    'namespace_records': len(merged), 'reports': sorted(reports)}

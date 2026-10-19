@@ -54,24 +54,23 @@ class Plugin:
             if force or now - last_report >= 10:
                 count = str(completed) if total is None else '%d/%d' % (completed, total)
                 size = '' if byte_count is None else '; %.2f GiB read' % (byte_count / 1024**3)
-                context.logger.info('%s: %s %s files%s', label, phase, count, size)
+                context.logger.debug('%s: %s %s files%s', label, phase, count, size)
                 last_report = now
         if kind in {'local', 'json_file'}:
-            context.logger.info('%s: scanning local input %s (including subdirectories)', label, settings['source_path'])
+            context.logger.debug('%s: scanning local input %s (including subdirectories)', label, settings['source_path'])
         else:
-            context.logger.info('%s: acquiring input with %s', label, kind)
+            context.logger.debug('%s: acquiring input with %s', label, kind)
         try:
             root, files = pool.prepare(settings, context.source.get('_target_path'),
                                        progress=lambda count: progress('scanning; discovered', count))
         except MissingSource as error:
-            context.logger.warning('Skipping %s/%s: %s; retry on the next conversion pass.',
-                                   context.namespace, context.source['id'], error)
+            context.notice('input', 'Skipping %s: %s; retry on the next conversion pass.' % (label, error))
             return
         if kind in {'local', 'json_file'} and not files:
-            context.logger.warning('Skipping %s/%s: no matching input files in %s; retry on the next conversion pass.',
-                                   context.namespace, context.source['id'], root)
+            context.notice('input', 'Skipping %s: no matching input files in %s; retry on the next conversion pass.' % (label, root))
             return
-        context.logger.info('%s: discovered %d matching input files', label, len(files))
+        context.notice('input')
+        context.logger.debug('%s: discovered %d matching input files', label, len(files))
         # On first ingestion, hash and copy the same byte stream. Subsequent
         # unchanged runs only hash, avoiding unnecessary writes of the archive.
         temporary = None
@@ -85,7 +84,7 @@ class Plugin:
             root_is_directory = root.is_dir()
             relative_paths = [path.relative_to(root) if root_is_directory else Path(path.name) for path in files]
             progress('checking', 0, len(files), 0, force=True)
-            if temporary: context.logger.info('%s: copying while checking; no second read of original inputs', label)
+            if temporary: context.logger.debug('%s: copying while checking; no second read of original inputs', label)
             for index, (path, relative) in enumerate(zip(files, relative_paths)):
                 context.check_cancelled()
                 digest = hashlib.sha256()
@@ -109,7 +108,7 @@ class Plugin:
             progress('checked', len(files), len(files), bytes_read, force=True)
             checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
             if checkpoint == context.checkpoint and not context.force:
-                context.logger.info('Skipping %s: inputs and configuration unchanged', label)
+                context.logger.debug('Skipping %s: inputs and configuration unchanged', label)
                 return
             # Verify staged bytes before handing the immutable tree to a converter.
             snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])

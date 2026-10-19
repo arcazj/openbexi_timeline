@@ -52,7 +52,7 @@ const selection = () => ({namespace:$('namespace').value, source:$('source').val
 const run = force => perform(() => post('/api/jobs',{...selection(), force, date:$('date').value, end_date:$('end-date').value, request_id:crypto.randomUUID()}));
 $('conversion').onsubmit = event => { event.preventDefault(); run(false); };
 $('again').onclick = () => run(true);
-$('schedule').onclick = () => perform(() => post('/api/schedules',{...selection(),policy:{mode:$('mode').value, interval_seconds:Number($('interval').value),resume_on_restart:$('resume').checked}}));
+$('schedule').onclick = () => perform(() => post('/api/schedules',{...selection(),date:$('date').value,end_date:$('end-date').value,lookback_hours:Number($('lookback').value),policy:{mode:$('mode').value, interval_seconds:Number($('interval').value),resume_on_restart:$('resume').checked}}));
 $('workspace').onchange = () => perform(() => refresh($('workspace').value));
 $('namespace').onchange = sources; $('source').onchange = sources;
 refresh().catch(error => { $('error').textContent = error.message; });

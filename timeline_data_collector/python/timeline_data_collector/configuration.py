@@ -43,7 +43,7 @@ def execution_policy(value):
     policy.setdefault('resume_on_restart', False)
     if not isinstance(policy['resume_on_restart'], bool): raise ValueError('resume_on_restart must be boolean')
     if mode in {'interval', 'watch'}:
-        seconds = policy.setdefault('interval_seconds', 5 if mode == 'watch' else 300)
+        seconds = policy.setdefault('interval_seconds', 2 if mode == 'watch' else 300)
         if isinstance(seconds, bool) or not isinstance(seconds, (float, int)) or not 0 < seconds <= 31536000:
             raise ValueError('interval_seconds must be a positive number no greater than one year')
     return policy

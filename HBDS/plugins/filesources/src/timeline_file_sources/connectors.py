@@ -129,7 +129,7 @@ class ConnectorPool:
                         body = response['Body']
                         try: self._download(target, body.read)
                         finally: body.close()
-                        LOG.info('Downloaded S3 source file %s', name)
+                        LOG.debug('Downloaded S3 source file %s', name)
                     current['files'][name] = revision
         finally: client.close()
         return current
@@ -177,7 +177,7 @@ class ConnectorPool:
                             after = remote.stat(root + '/' + name)
                             if [after.st_size, after.st_mtime] != revision:
                                 raise FileChangedError('SFTP file changed during download')
-                            LOG.info('Downloaded SFTP source file %s', name)
+                            LOG.debug('Downloaded SFTP source file %s', name)
                         current['files'][name] = revision
         finally: client.close()
         return current
@@ -233,6 +233,6 @@ class ConnectorPool:
         if previous['files'].get('oracle.json') != digest or not target.exists():
             atomic_write(target, payload)
             write_json(snapshot, rows)
-            LOG.info('Retrieved Oracle records: %d', len(rows))
+            LOG.debug('Retrieved Oracle records: %d', len(rows))
         # Snapshot and payload commit first; a crash before this manifest replays rows by key.
         return {'files': {'oracle.json': digest}, 'watermark': maximum}

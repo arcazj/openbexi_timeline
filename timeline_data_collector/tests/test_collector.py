@@ -75,7 +75,7 @@ class CollectorTests(unittest.TestCase):
         runner = self.runner()
         first = runner.submit()[0]; self.assertEqual(first['state'], 'succeeded', first)
         self.assertEqual(len(self.ws.records()), 1)
-        report = next(self.ws.output.glob('*/*/*/timeline*'))
+        report = next(self.ws.output.glob('*/*/*/DEMO_*Z.json'))
         before = report.stat().st_mtime_ns
         second = runner.submit()[0]; self.assertEqual(second['result']['batches'], 0)
         forced = runner.submit(force=True)[0]; self.assertEqual(forced['result']['records_written'], 1)
@@ -91,6 +91,21 @@ class CollectorTests(unittest.TestCase):
         with patch.object(runner.registry, 'load', side_effect=AssertionError('must bypass discovery')):
             self.assertTrue(runner.submit()[0]['result']['skipped'])
         self.assertFalse(self.ws.output.exists())
+
+    def test_repeat_reuses_checkpoint_until_publication_changes(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
+        with patch.object(Publisher, 'checkpoint_snapshot', side_effect=AssertionError('unchanged snapshot must not be decoded')):
+            self.assertEqual(runner.submit()[0]['result']['batches'], 0)
+        publisher = Publisher(self.ws.target, 'DEMO')
+        publisher.publish('another', 'input', 'test', RecordBatch([event('external')]))
+        original = Publisher.checkpoint_snapshot
+        observed = []
+        def checkpoint(instance, key): observed.append(key); return original(instance, key)
+        with patch.object(Publisher, 'checkpoint_snapshot', checkpoint):
+            self.assertEqual(runner.submit()[0]['state'], 'succeeded')
+        self.assertEqual(len(observed), 1)
+        self.assertEqual({r['id'] for r in self.ws.records()}, {'one', 'external'})
 
     def test_missing_local_input_warns_and_skips_all_local_aliases(self):
         self.ws.input.rmdir()
@@ -122,8 +137,12 @@ class CollectorTests(unittest.TestCase):
                 self.assertEqual(job['state'], 'succeeded', job)
                 self.assertEqual(job['result']['batches'], 0)
                 self.assertEqual({path: path.read_bytes() for path in self.ws.output.rglob('*.json')}, before)
+                with self.assertNoLogs('timeline_data_collector', level='INFO'):
+                    self.assertEqual(runner.submit()[0]['state'], 'succeeded')
         write_json(input_file, [event('new')])
-        job = runner.submit()[0]
+        with self.assertLogs('timeline_data_collector', level='INFO') as logs:
+            job = runner.submit()[0]
+        self.assertTrue(any('input available again' in message for message in logs.output))
         self.assertEqual(job['state'], 'succeeded', job)
         self.assertEqual([record['id'] for record in self.ws.records()], ['new'])
 
@@ -166,14 +185,14 @@ class CollectorTests(unittest.TestCase):
             dict(self.ws.source, id='missing', source_path=str(self.ws.root / 'absent/DEMO')),
         ])
         self.ws.save(); write_json(self.ws.input / 'events.json', [event()])
-        command = [sys.executable, '-m', 'timeline_data_collector', 'run', '--workspace', str(self.ws.path), '--once']
+        command = [sys.executable, '-m', 'timeline_data_collector', 'run', '--workspace', str(self.ws.path), '--once', '--json', '--log-level', 'DEBUG']
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([job['state'] for job in json.loads(result.stdout)], ['succeeded'] * 3)
         for message in ('3 selected sources', 'DEMO/disabled: will skip (source disabled',
                         'Starting DEMO/input', 'scanning local input', 'discovered 1 matching input files',
                         'checked 1/1 files', 'prepared input copies 1/1 files', 'converting 1 input items',
-                        'publishing 1 records', 'Completed DEMO/input', 'Skipping DEMO/missing'):
+                        'publishing 1 records', 'DEMO/input: Parsed', 'Skipping DEMO/missing'):
             self.assertIn(message, result.stderr)
         self.assertLess(result.stderr.index('DEMO/missing: queued'), result.stderr.index('Starting DEMO/input'))
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
@@ -183,7 +202,7 @@ class CollectorTests(unittest.TestCase):
     def test_conversion_progress_is_visible_before_completion(self):
         import logging
         from timeline_data_collector.progress import activity
-        with self.assertLogs('timeline_data_collector', level='INFO') as logs:
+        with self.assertLogs('timeline_data_collector', level='DEBUG') as logs:
             with activity(logging.getLogger('timeline_data_collector'), 'DEMO/input', 'converting', interval_seconds=.01):
                 deadline = time.monotonic() + 2
                 while not any('still working' in message for message in logs.output):

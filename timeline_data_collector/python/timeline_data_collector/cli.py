@@ -21,6 +21,7 @@ def main(arguments=None, *, plugin=None):
     for command in ('run', 'serve', 'validate', 'plugins'):
         selected = commands.add_parser(command)
         selected.add_argument('--workspace', required=True)
+        selected.add_argument('--log-level', choices=('DEBUG', 'INFO', 'WARNING', 'ERROR'), default='INFO')
         selected.add_argument('--dataconf', action='append', help='Legacy namespace file selection; repeat for multiple namespaces')
         selected.add_argument('--service')
         selected.add_argument('--hbds-root')
@@ -31,7 +32,9 @@ def main(arguments=None, *, plugin=None):
         if command == 'run':
             selected.add_argument('--once', action='store_true', help='Complete one conversion pass, then exit (the default; does not restrict dates)')
             selected.add_argument('--mode', choices=('once', 'interval', 'watch', 'stream'), default='once')
-            selected.add_argument('--interval-seconds', type=float, default=300)
+            selected.add_argument('--interval-seconds', type=float, help='Delay between passes; watch defaults to 2 seconds, interval to 300')
+            selected.add_argument('--lookback-hours', type=float, default=48, help='Late-arrival window for repeating --date today (UTC; default 48)')
+            selected.add_argument('--json', action='store_true', help='Also print machine-readable job results to stdout')
             selected.add_argument('--resume-on-restart', action='store_true')
             selected.add_argument('--date', help='Select today (UTC), YYYY, YYYY-MM or YYYY-MM-DD; a single day selects only that day unless --end-date is supplied')
             selected.add_argument('--end-date', help='Inclusive last day (YYYY-MM-DD) of the range beginning at --date')
@@ -42,7 +45,7 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--host'); selected.add_argument('--port', type=int)
             selected.add_argument('--allow-workspace', action='append', default=[], help='Additional workspace available in the UI')
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
+    logging.basicConfig(level=getattr(logging, args.log_level), format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
     runner = scheduler = None
     try:
         config = load(args.workspace, dataconf=args.dataconf, service=args.service, hbds_root=args.hbds_root)
@@ -59,15 +62,15 @@ def main(arguments=None, *, plugin=None):
         if args.once and args.mode != 'once': raise ValueError('--once conflicts with a repeating/streaming mode')
         first, last = date_range(args.date, args.end_date)
         if args.mode in {'interval', 'watch'}:
-            if first or last: raise ValueError('Date ranges apply to one-shot runs; repeats discover the current inputs')
             scheduler = Scheduler(runner)
             for group, source in config.sources(args.namespace, args.source, args.plugin):
-                scheduler.start(group['namespace'], source['id'], dict(mode=args.mode, interval_seconds=args.interval_seconds,
-                                resume_on_restart=args.resume_on_restart), offline=args.offline, force=args.force)
+                scheduler.start(group['namespace'], source['id'], dict(mode=args.mode, interval_seconds=args.interval_seconds if args.interval_seconds is not None else (2 if args.mode == 'watch' else 300),
+                                resume_on_restart=args.resume_on_restart), offline=args.offline, force=args.force,
+                                date=args.date, end_date=args.end_date, lookback_hours=args.lookback_hours)
             threading.Event().wait()
         jobs = runner.submit(namespace=args.namespace, source=args.source, plugin=args.plugin, mode=args.mode,
                              force=args.force, offline=args.offline, date=first, end_date=last, request_id=args.request_id)
-        print(json.dumps(jobs, indent=2))
+        if args.json: print(json.dumps(jobs, indent=2))
         return 1 if any(job['state'] != 'succeeded' for job in jobs) else 0
     except KeyboardInterrupt: return 130
     except (ValueError, OSError, KeyError) as error:
