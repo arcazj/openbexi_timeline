@@ -14,8 +14,11 @@ class Scheduler:
         self.running = {}
         self.guard = threading.RLock()
 
-    def start(self, namespace, source, policy, *, offline=False, force=False, ident=None, date=None, end_date=None, lookback_hours=48):
+    def start(self, namespace, source, policy, *, offline=False, force=False, ident=None, date=None, end_date=None, lookback_hours=None):
         policy = execution_policy(policy)
+        date = policy.get('date') if date is None else date
+        end_date = policy.get('end_date') if end_date is None else end_date
+        lookback_hours = policy.get('lookback_hours', 48) if lookback_hours is None else lookback_hours
         repeat_range(date, end_date, lookback_hours)
         self.runner.refresh()
         ident = ident or uuid.uuid4().hex
@@ -61,6 +64,7 @@ class Scheduler:
             with self.guard: self.running.pop(ident, None)
 
     def resume(self):
+        self.runner.refresh()
         saved = self.runner.state.schedules()
         for ident, value in saved.items():
             if value.get('enabled') and value['policy'].get('resume_on_restart'):
