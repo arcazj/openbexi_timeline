@@ -50,8 +50,8 @@ try {
     assert.ok(requests.length<=6,`Unexpected initial request count: ${requests.length}`);
     const initialRequests=requests.length;
     await page.getByAltText('Settings',{exact:true}).click();
-    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version 2.9.1');
-    await expect(page.locator('.ob_backend_version')).toHaveText('Backend: Python 2.9.1');
+    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version 2.9.2');
+    await expect(page.locator('.ob_backend_version')).toHaveText('Backend: Python 2.9.2');
     await page.getByRole('combobox',{name:'Trace level'}).selectOption('ERROR');
     await page.getByRole('button',{name:'Close settings'}).click();
     await fs.writeFile(file,JSON.stringify({events:[...records,{id:'live',start:'2026-09-12T12:25:00Z',data:{title:'Live update'}}]}));

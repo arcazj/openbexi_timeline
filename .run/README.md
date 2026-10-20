@@ -35,17 +35,14 @@ their supported replacements. Private converters remain independent plugins.
 
 ## Python and collector setup on Windows
 
-The Python server and collector share a Python 3.12+ environment. From the
-project root, with a Python 3.12+ executable on PATH:
+The Python server and collector share the repository-root Python 3.12+
+environment. Follow the [collector setup guide](../timeline_data_collector/README.md)
+to create or reuse `.venv` and install the core and plugins. Install the timeline
+server into that same environment from the project root:
 
 ```powershell
-python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.lock
 .venv/Scripts/python.exe -m pip install --no-deps -e .
-.venv/Scripts/python.exe -m pip install -e timeline_data_collector
-mvn --batch-mode --no-transfer-progress -f HBDS/plugins/default/pom.xml verify
-mvn --batch-mode --no-transfer-progress -f HBDS/plugins/earthquake/pom.xml verify
-mvn --batch-mode --no-transfer-progress -f HBDS/plugins/volcano/pom.xml verify
 ```
 
 The Python configurations select the registered project `.venv/Scripts/python.exe`
@@ -69,10 +66,9 @@ On Linux/macOS, select the environment's `bin/python` interpreter instead of
 
 ## Collector launch troubleshooting
 
-The current module is `timeline_data_collector`. An older local configuration
-such as **Collector - Help** may still select `gcs_collector.data2json` or
-`gcs_collector.server`. Use **Help - Collector** from `.run`, or update the local
-configuration's module to `timeline_data_collector` and its interpreter to
+The current module is `timeline_data_collector`. Use **Help - Collector** from
+`.run`, or update an older local configuration's module to
+`timeline_data_collector` and its interpreter to
 `.venv/Scripts/python.exe`. Dashboard arguments start with `serve`, conversion
 arguments with `run`, and checks with `validate`; each uses `--workspace`.
 

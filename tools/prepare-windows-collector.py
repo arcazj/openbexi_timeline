@@ -12,7 +12,7 @@ import zipfile
 
 VERSION = '3.13.16'
 PYTHON_SHA256 = '97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297'
-PUBLIC = {'timeline_data_collector', 'filesources', 'timeline_json', 'default', 'earthquake', 'volcano', 'mqtt'}
+PUBLIC = {'timeline_data_collector', 'filesources', 'timeline_json', 'default', 'earthquake', 'volcano', 'mqtt', 'loki'}
 
 
 def prepare(root, payload):

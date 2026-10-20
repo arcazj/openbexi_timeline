@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timeline-plugin-loki"
+version = "1.0.0"
+description = "Recoverable daily Loki acquisition for OpenBEXI Timeline"
+requires-python = ">=3.12"
+readme = "README.md"
+license-files = ["LICENSE"]
+license = "LicenseRef-OpenBEXI-Commercial-Exempt-1.0"
+dependencies = ["timeline-data-collector>=2.9.2,<3"]
+
+[project.entry-points."timeline_data_collector.plugins"]
+loki = "timeline_source_loki:Plugin"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+timeline_source_loki = ["plugin.json"]

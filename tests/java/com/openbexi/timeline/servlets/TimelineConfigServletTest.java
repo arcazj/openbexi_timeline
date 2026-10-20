@@ -41,7 +41,7 @@ class TimelineConfigServletTest {
         assertEquals("no-store",response.headers().firstValue("Cache-Control").orElse(""));
         JSONObject body=new JSONObject(response.body());assertEquals(3,body.length());
         assertEquals("Java",body.getJSONObject("server").getString("implementation"));
-        assertEquals("2.9.1",body.getJSONObject("server").getString("version"));
+        assertEquals("2.9.2",body.getJSONObject("server").getString("version"));
         assertEquals("HBDS/templates/models/regular_timeline_earthquake.json",body.getString("model"));
         assertEquals("/openbexi_timeline/sessions",body.getString("data"));
         assertFalse(response.body().contains("private"));assertEquals(404,get("yaml/sources.yml").statusCode());

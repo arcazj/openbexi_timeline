@@ -21,13 +21,14 @@ openbexi_timeline/
     GEO_Workspace.json      Live earthquake and volcano data under /data
     *_Workspace.json        Other local timeline workspaces
     templates/              Reviewed demos and legacy compatibility examples
-  GCS_data_collector/        Local collector module with its own dependencies
+  timeline_data_collector/   Public ingestion core; converters live in HBDS/plugins
 ```
 
 Metadata belongs in HBDS. Raw input and generated events remain at the configured
 data paths. Backups belong outside HBDS and outside published source trees.
-The collector module remains a separate private repository and is excluded from
-the parent repository and source releases.
+The [collector core](../timeline_data_collector/README.md) is included in this
+repository. Private operational plugins and configuration remain local and are
+excluded from source releases.
 
 ## Namespace files
 
@@ -97,15 +98,16 @@ From the timeline project root:
 # Java: after Maven compilation and runtime dependency copying; default port 8080
 java -cp "target/classes;target/runtime/*" com.openbexi.timeline.server.openbexi_timeline -dataconf HBDS/yaml/DEMO_default.yml -serverconf HBDS/service.yml --hbds-root HBDS
 
-# Collector: generate the supplied synthetic event.
-GCS_data_collector/.venv/Scripts/python.exe -m gcs_collector.data2json -dataconf HBDS/yaml/DEMO_default.yml -serverconf HBDS/service.yml --hbds-root HBDS --date 2026-09-12 --end-date 2026-09-12 --offline
+# Collector: open the dashboard for the live geoscience workspace.
+# Install the core and plugins as described in timeline_data_collector/README.md.
+.venv/Scripts/python.exe -m timeline_data_collector serve --workspace HBDS/GEO_Workspace.json
 ```
 
-Pass additional namespace filenames after `-dataconf`, before the next option.
+For the timeline servers, pass additional namespace filenames after `-dataconf`, before the next option.
 `-data_conf` and `--data-conf` remain accepted aliases. Use `-serverconf
 HBDS/service.local.yml` for private deployment settings. The PowerShell launcher
 accepts an array of filenames; IntelliJ configurations include default examples.
-Install both Python packages in their own environments before module commands.
+Install both Python packages in the shared repository-root `.venv` before module commands.
 
 Each timeline has its own workspace file in HBDS. A workspace selects namespace
 files and a service file, and owns its tab state, default namespace and filename

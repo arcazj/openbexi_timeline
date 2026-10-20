@@ -10,7 +10,8 @@ loader=unittest.TestLoader()
 suite=loader.discover(str(root/'timeline_data_collector/tests'))
 for name,module in [('filesources','timeline_file_sources'),('timeline_json','timeline_plugin_json'),
                     ('default','timeline_plugin_default'),('earthquake','timeline_plugin_earthquake'),
-                    ('volcano','timeline_plugin_volcano'),('mqtt','timeline_plugin_mqtt')]:
+                    ('volcano','timeline_plugin_volcano'),('mqtt','timeline_plugin_mqtt'),
+                    ('loki','timeline_source_loki')]:
     source=root/'HBDS/plugins'/name
     sys.path.insert(0,str(source/'src'))
     for path in sorted((source/'tests').glob('test_*.py')):

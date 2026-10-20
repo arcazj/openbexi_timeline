@@ -1,9 +1,9 @@
 # Timeline UI/server (this repository):
 #   .venv/Scripts/python.exe -m openbexi_timeline_server -data_conf HBDS/templates/yaml/source_template.yml
-# Optional collector (separate GCS_data_collector project):
-#   .venv/Scripts/python.exe -m gcs_collector.server HBDS/templates/yaml/source_template.yml
+# Optional collector: see timeline_data_collector/README.md for workspace setup.
+# This legacy template must be migrated before use with timeline_data_collector.
 # Relative local paths resolve from the server's launch directory.
-# Collector optional drivers: pip install -e ".[connectors,images]"
+# Collector dependencies are installed with the selected HBDS/plugins packages.
 # For multiple inputs, use a data_path list or repeated namespace entries
 # sharing one output model. data_path: [] keeps a namespace import-only.
 # Python timeline settings, installation and Java fallback: docs/python-server.md
@@ -63,7 +63,7 @@ data_sources:
     key_filename: '${SFTP_KEY_FILE}'
     # password: '${SFTP_PASSWORD}'
     known_hosts: '${SFTP_KNOWN_HOSTS}'
-    data_path: /fdc_logs/DEMO
+    data_path: /var/log/example
     poll_seconds: 30
     # Retain the original year/day/host/subsystem layout for legacy logs.
 

@@ -7,5 +7,9 @@
 <div class="actions"><button id="run" type="submit">Run conversion</button><button id="again" type="button">Run again</button></div>
 <details><summary>Repeat conversion</summary><div class="fields"><label>Mode<select id="mode"><option value="interval">Interval</option><option value="watch">Watch input</option><option value="stream">Stream</option></select></label><label>Delay after completion (seconds)<input id="interval" type="number" min="1" value="300"></label><label>Late-arrival lookback for today (hours)<input id="lookback" type="number" min="0" max="87600" value="48"></label><label class="check"><input id="resume" type="checkbox"> Resume when collector restarts</label></div><button id="schedule" type="button">Start repeat</button></details></form>
 <p id="error" role="alert"></p></section>
+<section id="acquisition-section" hidden><h2>Loki acquisition</h2><div id="acquisition" class="rows"></div>
+<details><summary>Source settings</summary><p>Stop repeat conversion before saving. Credentials use environment-variable names.</p>
+<label for="source-options">Loki and archive settings (JSON)</label><textarea id="source-options" rows="16"></textarea>
+<button id="save-source-options" type="button">Save settings</button></details></section>
 <section><h2>Repeats</h2><div id="schedules" class="rows"></div></section>
 <section><h2>Conversion jobs</h2><p>Existing timeline data stays available while conversions run.</p><div id="jobs" class="rows" aria-live="polite"></div></section></main><script src="/app.js" defer></script></body></html>

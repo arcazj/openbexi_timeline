@@ -32,6 +32,11 @@ class Plugin:
 ```
 
 A source-only package implements `read`; a converter implements `convert`.
+A reader may also expose `acquire(context)` to commit remote raw-file revisions
+under `source_path`. When the converter exposes `read_local(context)`, the runner
+calls acquisition first and then uses that local reader. Other pairings continue
+through `read(context)`, which must perform its own acquisition. This optional
+API-1 extension keeps converter-specific file discovery out of transport plugins.
 A converter may additionally implement `convert_batches(batch, context)` to
 yield progressive `RecordBatch` results. Set `commit_input=False` on intermediate
 upserts: they are published atomically while retaining the previous input

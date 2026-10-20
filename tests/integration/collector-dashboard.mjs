@@ -25,7 +25,7 @@ await fs.writeFile(path.join(hbds,'yaml/DEMO_default.yml'),stringify({config_ver
 await fs.writeFile(path.join(hbds,'service.yml'),stringify({config_version:3,plugins:{roots:[path.join(root,'HBDS/plugins')]},state_root:path.join(temporary,'state')}));
 const workspace=path.join(hbds,'workspace.json');
 await fs.writeFile(workspace,JSON.stringify({schemaVersion:1,name:'Example',service:'service.yml',namespace_files:['yaml/DEMO_default.yml']}));
-const python=process.env.COLLECTOR_PYTHON || path.join(root,'timeline_data_collector/.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
+const python=process.env.COLLECTOR_PYTHON || path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
 const child=spawn(python,['-m','timeline_data_collector','serve','--workspace',workspace,'--port',String(port)],
     {cwd:root,env:{...process.env,PYTHONPATH:path.join(root,'timeline_data_collector/python')},windowsHide:true,stdio:['ignore','pipe','pipe']});
 const log=createWriteStream(path.join(root,'target/collector-dashboard.log'));child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});

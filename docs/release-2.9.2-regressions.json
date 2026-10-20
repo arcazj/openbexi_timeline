@@ -1,0 +1,112 @@
+{
+  "version": "2.9.2",
+  "status": "passed",
+  "verifiedAt": "2026-10-20T17:54:53.425087+00:00",
+  "scope": "Public local Windows source and package checks. GitHub Verify and the Windows release workflow validate the committed source separately; installer validation is recorded by that workflow.",
+  "changeBaseline": "6607bbd7bd231f84f6bf4f6c9f2410a19c1ffd7a",
+  "tests": {
+    "javascript": {
+      "passed": 409,
+      "failed": 0
+    },
+    "pythonBackend": {
+      "passed": 73,
+      "failed": 0
+    },
+    "publicCollector": {
+      "passed": 87,
+      "failed": 0,
+      "lokiTests": 21,
+      "realMqttBroker": true
+    },
+    "java": {
+      "total": 209,
+      "passed": 175,
+      "skipped": 34,
+      "failed": 0,
+      "note": "JDK 21; existing unavailable legacy integrations are explicitly skipped."
+    },
+    "releasePublishing": {
+      "passed": 11,
+      "failed": 0
+    },
+    "collectorDashboard": {
+      "passed": true,
+      "browserErrors": 0,
+      "checks": [
+        "no implicit conversion",
+        "disabled and unavailable converters",
+        "Run",
+        "Run again",
+        "stable nested records",
+        "interval scheduling",
+        "Stop"
+      ]
+    },
+    "publicConfiguration": {
+      "hbdsFiles": 130,
+      "demoModels": 7,
+      "schemaGeneration": "passed",
+      "apiSpecification": "passed",
+      "demoReadme": "passed"
+    }
+  },
+  "distribution": {
+    "applicationVersion": "2.9.2",
+    "lokiVersion": "1.0.0",
+    "publicSourceFiles": 929,
+    "publicPlugins": 7,
+    "independentArtifacts": [
+      {
+        "artifact": "timeline_data_collector-2.9.2-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_filesources-1.0.1-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_timeline_json-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline-plugin-default-1.0.0.jar",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_default-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline-plugin-earthquake-1.0.0.jar",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_earthquake-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline-plugin-volcano-1.0.0.jar",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_volcano-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_mqtt-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      },
+      {
+        "artifact": "timeline_plugin_loki-1.0.0-py3-none-any.whl",
+        "privateEntries": 0
+      }
+    ],
+    "privateToolsAndDataExcluded": true,
+    "architecture": "Shared 2.9 HBDS model and diagrams"
+  },
+  "ci": {
+    "verify": "https://github.com/arcazj/openbexi_timeline/actions/workflows/verify.yml",
+    "installer": "https://github.com/arcazj/openbexi_timeline/actions/workflows/release.yml"
+  }
+}

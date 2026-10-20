@@ -1,0 +1,207 @@
+{
+  "id": "loki",
+  "version": "1.0.0",
+  "api_version": "1",
+  "runtime": "python",
+  "capabilities": [
+    "source"
+  ],
+  "visibility": "public",
+  "entry_point": "timeline_source_loki:Plugin",
+  "requires_source_path": true,
+  "supported_modes": [
+    "once",
+    "interval",
+    "watch"
+  ],
+  "config_schema": "schemas/options.schema.json",
+  "options_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": [
+      "loki"
+    ],
+    "properties": {
+      "loki": {
+        "type": "object",
+        "required": [
+          "base_url"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "type": "string",
+            "pattern": "^https?://",
+            "minLength": 8
+          },
+          "fallback_base_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^https?://"
+            },
+            "uniqueItems": true
+          },
+          "discovery": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "const": "all"
+              },
+              "refresh_seconds": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 86400,
+                "default": 60
+              }
+            }
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 300,
+            "default": 30
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "default": 5000
+          },
+          "query_window_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 86400,
+            "default": 3600
+          },
+          "max_concurrency": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "default": 2
+          },
+          "max_requests_per_pass": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2048,
+            "default": 64
+          },
+          "retries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5,
+            "default": 2
+          },
+          "ingestion_delay_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 86400,
+            "default": 60
+          },
+          "late_arrival_rescan_seconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 86400,
+            "default": 300
+          },
+          "unavailable_retry_seconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 86400,
+            "default": 3600
+          },
+          "gap_rescan_seconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 86400,
+            "default": 3600
+          },
+          "tenant_env": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "bearer_token_env": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "headers_env": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            }
+          },
+          "routing": {
+            "type": "object",
+            "required": [
+              "namespace_label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "namespace_label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "archive": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "directory_template": {
+            "type": "string",
+            "minLength": 1
+          },
+          "filename_label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preserve_basename": {
+            "type": "boolean"
+          },
+          "date_from": {
+            "enum": [
+              "auto",
+              "loki_timestamp"
+            ]
+          },
+          "fallback_filename_template": {
+            "type": "string",
+            "minLength": 1
+          },
+          "encoding": {
+            "enum": [
+              "utf-8"
+            ]
+          },
+          "label_mapping": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "hostname": {
+                "type": "string"
+              },
+              "app": {
+                "type": "string"
+              }
+            }
+          },
+          "preserve_app_subdirectories": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "additionalProperties": true
+  }
+}

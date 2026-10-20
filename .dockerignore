@@ -98,6 +98,7 @@ HBDS/**
 !HBDS/plugins/filesources/**
 !HBDS/plugins/timeline_json/**
 !HBDS/plugins/mqtt/**
+!HBDS/plugins/loki/**
 !HBDS/schema/plugin.schema.json
 **/.venv
 **/target
@@ -108,3 +109,6 @@ HBDS/**
 **/.timeline-collector
 **/.timeline-state
 **/lib/*.jar
+MCC_COLLECTOR_RESTART.md
+PROJECT_ARCHITECTURE.png
+PROJECT_ARCHITECTURE.svg

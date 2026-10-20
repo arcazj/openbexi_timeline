@@ -1,6 +1,6 @@
 # OpenBEXI Timeline
 
-Version **2.9.1** · [Release notes](docs/release-2.9.1.md).
+Version **2.9.2** · [Release notes](docs/release-2.9.2.md).
 
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their
@@ -37,8 +37,9 @@ Open [the local demo](http://localhost:8780/demos.html). The supplied datasets r
 without a Java server. For connected data, see [server setup](docs/connected-diagnostics.md)
 and [the REST API guide](docs/rest-api.md).
 
-The local collector module lives in `GCS_data_collector/` and shares the namespace
-YAML and models in `HBDS/`. See the [namespace setup and startup commands](HBDS/README.md).
+The collector lives in [`timeline_data_collector/`](timeline_data_collector/README.md)
+and shares the namespace YAML and models in `HBDS/`. Converters are installed
+independently under `HBDS/plugins/`. See the [namespace setup and startup commands](HBDS/README.md).
 The default workspace loads the committed earthquake and volcano samples with
 `HBDS/models/geoscience_demo.json`.
 Each timeline has its own HBDS workspace selecting namespace files, a service and

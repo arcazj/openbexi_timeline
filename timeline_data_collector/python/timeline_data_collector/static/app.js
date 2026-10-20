@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
 let state, pending = false;
+let sourceOptionsIdentity;
 const option = (value, label) => Object.assign(document.createElement('option'), {value, textContent: label});
 function options(id, values, preferred) {
     const selected = preferred ?? $(id).value;
@@ -15,6 +16,23 @@ function sources() {
     for (const id of ['run', 'again', 'schedule']) $(id).disabled = Boolean(disabled || pending);
     options('mode', (selected?.modes ?? []).filter(mode => mode !== 'once').map(mode => [mode, {interval:'Interval', watch:'Watch input', stream:'Stream'}[mode]]));
     if (!$('mode').value) $('schedule').disabled = true;
+    $('acquisition-section').hidden = selected?.reader !== 'loki';
+    if (selected?.reader === 'loki') {
+        const current = selected.acquisition || {}, key = [state.workspace,selected.namespace,selected.id,state.revision].join(':');
+        const job = state.jobs.find(item => item.request.namespace === selected.namespace && item.request.source === selected.id && item.result.metrics);
+        if (key !== sourceOptionsIdentity) {
+            $('source-options').value = JSON.stringify(selected.source_options, null, 2);
+            sourceOptionsIdentity = key;
+        }
+        const retry = current.next_retry_utc ? new Date(current.next_retry_utc * 1000).toISOString() : 'No retry pending';
+        $('acquisition').replaceChildren(
+            row('Remote source', `${current.availability || 'Not queried'} · ${current.active_endpoint || 'No active endpoint'} · ${retry}`),
+            row('Daily coverage', `${current.streams || 0} streams · ${current.pending_windows || 0} pending windows · ${current.pending_discovery_days || 0} days awaiting discovery`),
+            row('Raw archive', `${current.entries || 0} entries · ${current.archive_files || 0} files · ${current.changed_files || 0} changed on last pass · ${current.archive_conflicts || 0} adoption conflicts`),
+            row('Discovery', `Last: ${current.last_discovery_utc || 'Pending'} · ${(current.log_families || []).join(', ')}`),
+            row('Progress', `Last successful query: ${current.last_success_utc || 'Pending'} · ${current.unrouted_files || 0} files awaiting namespace mapping`),
+            row('Conversion', `${job?.state || 'Pending'} · Last pass: ${job?.updated_at || 'Pending'} · Retained without parser support: ${(job?.result.metrics.unsupported_log_families || []).join(', ') || 'None reported'}`));
+    }
 }
 async function post(route, body) {
     const response = await fetch(route, {method:'POST', headers:{'Content-Type':'application/json', 'X-Timeline-CSRF':state.csrf}, body:JSON.stringify({workspace:state.workspace, revision:state.revision, ...body})});
@@ -55,5 +73,8 @@ $('again').onclick = () => run(true);
 $('schedule').onclick = () => perform(() => post('/api/schedules',{...selection(),date:$('date').value,end_date:$('end-date').value,lookback_hours:Number($('lookback').value),policy:{mode:$('mode').value, interval_seconds:Number($('interval').value),resume_on_restart:$('resume').checked}}));
 $('workspace').onchange = () => perform(() => refresh($('workspace').value));
 $('namespace').onchange = sources; $('source').onchange = sources;
+$('save-source-options').onclick = () => perform(() => post('/api/source-options', {
+    ...selection(), options:JSON.parse($('source-options').value)
+}));
 refresh().catch(error => { $('error').textContent = error.message; });
 setInterval(() => { if(!pending) refresh().catch(() => { $('connection').textContent = 'Disconnected'; }); }, 2000);
