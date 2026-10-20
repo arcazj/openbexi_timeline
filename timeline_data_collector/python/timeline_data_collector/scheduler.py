@@ -66,7 +66,11 @@ class Scheduler:
     def resume(self):
         self.runner.refresh()
         saved = self.runner.state.schedules()
+        configured = {(group['namespace'], source['id']) for group, source in
+                      self.runner.configuration.sources(include_disabled=True)}
         for ident, value in saved.items():
+            if (value['namespace'], value['source']) not in configured:
+                continue
             if value.get('enabled') and value['policy'].get('resume_on_restart'):
                 try: self.start(value['namespace'], value['source'], value['policy'], offline=value.get('offline', False), force=value.get('force', False), ident=ident,
                                 date=value.get('date'), end_date=value.get('end_date'), lookback_hours=value.get('lookback_hours', 48))

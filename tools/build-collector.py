@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
-PUBLIC=('filesources','timeline_json','default','earthquake','volcano','mqtt')
+PUBLIC=('filesources','timeline_json','default','earthquake','volcano','mqtt','loki')
 JAVA={'default':'timeline_plugin_default','earthquake':'timeline_plugin_earthquake','volcano':'timeline_plugin_volcano'}
 
 

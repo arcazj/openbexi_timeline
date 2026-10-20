@@ -126,7 +126,14 @@ class Runner:
                 reader = self.registry.load(source['source_plugin'], 'source', request['mode'], source.get('options', {}))
                 def converted():
                     local_reader = getattr(converter, 'read_local', None)
-                    inputs = local_reader(context) if local_reader and source['source_plugin'] == 'local' else reader.read(context)
+                    acquisition = getattr(reader, 'acquire', None)
+                    if local_reader and acquisition:
+                        # Optional API-1 extension: commit remote raw-file revisions before
+                        # using a converter's optimized, incremental local reader.
+                        acquisition(context)
+                        inputs = local_reader(context)
+                    else:
+                        inputs = local_reader(context) if local_reader and source['source_plugin'] == 'local' else reader.read(context)
                     for incoming in inputs:
                         context.check_cancelled()
                         with activity(LOG, label, 'converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):

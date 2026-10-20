@@ -91,7 +91,7 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
         (_, target) => `](https://github.com/${env.GITHUB_REPOSITORY}/blob/${tag}/docs/${target})`);
     notes += `\n## Windows installer\n\nDownload **openbexi-timeline-${version}-windows-x64-setup.exe** below. ` +
         'The per-user installer includes Java and browser dependencies; Node.js, Maven and a separate Java installation are not required. ' +
-        (compareTags(tag,'v2.9.0')>=0 ? 'It also bundles Python and the six public collector plugins. Launch Timeline Data Collector from the Start menu after creating the desktop workspace. ' : '') +
+        (compareTags(tag,'v2.9.0')>=0 ? 'It also bundles Python and all public collector plugins. Launch Timeline Data Collector from the Start menu after creating the desktop workspace. ' : '') +
         'Launch OpenBEXI Timeline from the Start menu and keep its console open while using the application. Press Ctrl+C to stop. ' +
         'Windows 10/11 x64 is supported. The installer is unsigned. ' +
         'Local data is stored in `%LOCALAPPDATA%\\OpenBEXI Timeline\\data` and retained when uninstalling.\n\n' +

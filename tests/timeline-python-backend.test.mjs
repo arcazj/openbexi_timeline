@@ -7,10 +7,10 @@ test('Settings reports the connected backend version without exposing request pa
     try {
         const {showBackendVersion}=await h.importModule('src/openbexi_timeline_settings.js');
         const panel=h.window.document.createElement('section');let address;
-        h.window.fetch=async input=>{address=String(input);return new Response(JSON.stringify({server:{implementation:'Python',version:'2.9.1'}}));};
+        h.window.fetch=async input=>{address=String(input);return new Response(JSON.stringify({server:{implementation:'Python',version:'2.9.2'}}));};
         await showBackendVersion(panel,{data:'https://localhost:8783/context/openbexi_timeline_sse/sessions?filter=private&cursor=private'});
         assert.equal(address,'https://localhost:8783/context/openbexi_timeline/config');
-        assert.equal(panel.textContent,'Backend: Python 2.9.1');
+        assert.equal(panel.textContent,'Backend: Python 2.9.2');
         h.window.fetch=async()=>new Response('{}');panel.textContent='';
         await showBackendVersion(panel,{data:'/openbexi_timeline/sessions'});
         assert.equal(panel.textContent,'Backend: version unavailable');

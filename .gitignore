@@ -143,6 +143,9 @@ __pycache__/
 /HBDS/roles/*
 !/HBDS/roles/defaults.json
 /GCS_data_collector/
+/.run/Collector - MCC - Loki Backfill.run.xml
+/.run/Collector - MCC - Loki Server.run.xml
+/.run/Timeline Python - MCC.run.xml
 /tools/com/openbexi/intelsat/
 **/.venv/
 **/target/
@@ -161,6 +164,7 @@ __pycache__/
 !/HBDS/plugins/filesources/
 !/HBDS/plugins/timeline_json/
 !/HBDS/plugins/mqtt/
+!/HBDS/plugins/loki/
 !/HBDS/plugins/README.md
 !/HBDS/schema/plugin.schema.json
 
@@ -174,3 +178,8 @@ __pycache__/
 
 # Explicit migration rollback copies are local.
 *.pre-v3.bak
+
+# Private deployment restart instructions.
+/MCC_COLLECTOR_RESTART.md
+/PROJECT_ARCHITECTURE.png
+/PROJECT_ARCHITECTURE.svg

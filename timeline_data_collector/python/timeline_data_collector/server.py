@@ -8,9 +8,9 @@ import secrets
 import threading
 import os
 from datetime import datetime, timezone
-from .configuration import load
+from .configuration import load, source_key
 from .dates import date_range
-from .io import identity
+from .io import identity, read_json, atomic_write
 from .runner import Runner
 from .scheduler import Scheduler
 from .io import model_root
@@ -68,6 +68,7 @@ class Dashboard:
                         workspace = parse_qs(url.query).get('workspace', [app.initial])[0]
                         selected, scheduler = app.selected(workspace)
                         config = selected.refresh()
+                        pairs = {(group['namespace'], source['id']) for group, source in config.sources(include_disabled=True)}
                         sources = []
                         for group, source in config.sources(include_disabled=True):
                             error = None
@@ -80,10 +81,16 @@ class Dashboard:
                             sources.append(dict(namespace=group['namespace'], id=source['id'], plugin=source['converter_plugin'],
                                                 enabled=bool(group.get('enable', True) and source.get('enable', True)),
                                                 static=source['converter_plugin'] == 'NONE', error=error,
-                                                modes=modes))
+                                                modes=modes, reader=source['source_plugin'],
+                                                acquisition=read_json(config.state_root / 'plugins' / source_key(group, source)[:24] / 'loki/status.json', {})
+                                                if source['source_plugin'] == 'loki' else None,
+                                                source_options={key: value for key, value in source.get('options', {}).items() if key in {'loki', 'archive'}}
+                                                if source['source_plugin'] == 'loki' else None))
                         self.respond(dict(csrf=app.csrf, workspace=workspace, revision=config.revision,
                                           workspaces=[dict(id=key, name=path.stem) for key, path in app.workspaces.items()],
-                                          sources=sources, jobs=selected.state.jobs(), schedules=selected.state.schedules(),
+                                          sources=sources,
+                                          jobs=[job for job in selected.state.jobs() if (job['request']['namespace'], job['request']['source']) in pairs],
+                                          schedules={key: value for key, value in selected.state.schedules().items() if (value['namespace'], value['source']) in pairs},
                                           active_schedules=list(scheduler.running))); return
                     self.respond({'error': 'Not found'}, 404)
                 except (ValueError, KeyError, OSError) as exc: self.respond({'error': str(exc)}, 400)
@@ -100,6 +107,9 @@ class Dashboard:
                         if flag in body and not isinstance(body[flag], bool): raise ValueError(flag + ' must be boolean')
                     selected, scheduler = app.selected(body.get('workspace', app.initial))
                     route = urlsplit(self.path).path
+                    if route == '/api/source-options':
+                        app.save_source_options(selected, scheduler, body)
+                        self.respond({'saved': True}); return
                     if route == '/api/jobs':
                         if not isinstance(body.get('request_id'), str) or not body['request_id']: raise ValueError('request_id is required')
                         if not body.get('revision'): raise ValueError('Configuration revision is required')
@@ -138,6 +148,12 @@ class Dashboard:
                 job = next((job for job in running if matches(job)), None) or next((job for job in jobs if matches(job)), None)
                 schedule = next((entry for entry in schedules if entry['namespace'] == namespace and entry['source'] == ident), None)
                 entry = dict(workspace=workspace, namespace=namespace, source=ident, scheduled=schedule is not None, status='idle')
+                if source['source_plugin'] == 'loki':
+                    entry['acquisition'] = read_json(runner.configuration.state_root / 'plugins' /
+                                                     source_key(group, source)[:24] / 'loki/status.json', {})
+                    acquisition = entry['acquisition']
+                    if acquisition.get('availability') == 'unavailable':
+                        alerts.append(namespace+'/'+ident+': Loki unavailable; local conversion continues')
                 enabled = group.get('enable', True) and source.get('enable', True)
                 if not enabled: entry['status'] = 'disabled'
                 elif source['converter_plugin'] == 'NONE': entry['status'] = 'static'
@@ -172,6 +188,65 @@ class Dashboard:
                 except FileNotFoundError: pass
                 sources.append(entry)
         return dict(status='degraded' if alerts else 'ok', checked_at=now.isoformat(), server_pid=os.getpid(), sources=sources, alerts=alerts)
+
+    def save_source_options(self, runner, scheduler, body):
+        """Save only the selected Loki source's transport settings, with revision checks."""
+        from copy import deepcopy
+        import yaml
+        from .locking import SourceLock
+        from .namespace_config import validate_namespace
+        config = runner.refresh()
+        if body.get('revision') != config.revision:
+            raise ValueError('Configuration changed; reload before saving')
+        group, source = config.sources(body['namespace'], body['source'])[0]
+        if source['source_plugin'] != 'loki':
+            raise ValueError('This editor configures Loki sources only')
+        options = body.get('options')
+        if not isinstance(options, dict) or set(options) - {'loki', 'archive'}:
+            raise ValueError('Provide loki and archive option objects')
+        with runner.guard:
+            if runner.active:
+                raise ValueError('Wait for active conversions to finish before editing')
+        with scheduler.guard:
+            if scheduler.running:
+                raise ValueError('Stop repeat conversion before editing')
+        # Configuration identities with acquired data need a deliberate migration,
+        # not a silent reset from the editor.
+        previous = source.get('options', {})
+        identity_keys = ('base_url', 'fallback_base_urls', 'tenant_env', 'routing', 'headers_env', 'bearer_token_env')
+        state = config.state_root / 'plugins' / source_key(group, source)[:24] / 'loki/acquisition.sqlite3'
+        if state.exists() and (previous.get('archive', {}) != options.get('archive', {}) or any(
+                previous.get('loki', {}).get(key) != options.get('loki', {}).get(key) for key in identity_keys)):
+            raise ValueError('Archive identity changes require explicit state migration; timing and limits may be edited here')
+        workspace = json.loads(config.workspace.read_text(encoding='utf-8-sig'))
+        paths = [config.workspace.parent / name for name in workspace['namespace_files']]
+        for path in paths:
+            document = yaml.safe_load(path.read_text(encoding='utf-8-sig'))
+            if document.get('namespace') != group['namespace']:
+                continue
+            lease = SourceLock(path.with_suffix('.edit.lock'))
+            if not lease.acquire():
+                raise ValueError('Namespace configuration is being edited')
+            try:
+                if runner.refresh().revision != body['revision']:
+                    raise ValueError('Configuration changed; reload before saving')
+                candidate = deepcopy(document)
+                entry = next(item for item in candidate['sources'] if item['id'] == source['id'])
+                entry.setdefault('options', {}).update(options)
+                from jsonschema import ValidationError
+                try:
+                    runner.registry.load('loki', 'source', 'once', entry['options'])
+                except ValidationError as error:
+                    raise ValueError(error.message) from None
+                raw = yaml.safe_dump(candidate, sort_keys=False)
+                validated = validate_namespace(candidate, path, config.hbds_root)
+                runner.validate(validated, next(item for item in validated['sources'] if item['id'] == source['id']))
+                atomic_write(path, raw)
+                runner.refresh()
+                return
+            finally:
+                lease.release()
+        raise ValueError('Selected namespace file was not found')
 
     def selected(self, key):
         if key not in self.workspaces: raise ValueError('Workspace is not available in this dashboard')

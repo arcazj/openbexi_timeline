@@ -5,21 +5,25 @@ built packages in `HBDS/plugins/<name>` or installed Python entry points. The
 timeline servers read existing JSON without running the collector or installing
 converters.
 
-Install Python 3.12+ and Java 17+ for the Java plugins. From the repository root:
+Install Python 3.12+ and Java 17+ for the Java plugins. The collector and timeline
+server share the repository-root `.venv`. Reuse it if it already exists.
+From the repository root:
 
 ```powershell
-python -m venv timeline_data_collector/.venv
-timeline_data_collector/.venv/Scripts/python -m pip install -e timeline_data_collector
+python -m venv .venv
+.venv/Scripts/python -m pip install -e timeline_data_collector
 # Build Java packages independently before installing their wheels.
 mvn -f HBDS/plugins/earthquake/pom.xml verify
 mvn -f HBDS/plugins/volcano/pom.xml verify
 mvn -f HBDS/plugins/default/pom.xml verify
-timeline_data_collector/.venv/Scripts/python -m pip install -e HBDS/plugins/mqtt
-timeline_data_collector/.venv/Scripts/timeline-data-collector validate --workspace HBDS/GEO_Workspace.json
-timeline_data_collector/.venv/Scripts/timeline-data-collector serve --workspace HBDS/GEO_Workspace.json --allow-workspace HBDS/workspace.json
+.venv/Scripts/python -m pip install -e HBDS/plugins/mqtt
+.venv/Scripts/python -m timeline_data_collector validate --workspace HBDS/GEO_Workspace.json
+.venv/Scripts/python -m timeline_data_collector serve --workspace HBDS/GEO_Workspace.json --allow-workspace HBDS/workspace.json
 ```
 
-On Unix, use `bin/python` and `bin/timeline-data-collector` in the environment.
+On Unix, use `.venv/bin/python`. Activate the environment before using the
+standalone commands below. See [IntelliJ setup](../.run/README.md) for shared
+run configurations and Java settings.
 The dashboard defaults to `http://127.0.0.1:8765`. The HBDS editor has a **Data
 collector** link. Opening either page does not start ingestion. Select an
 enabled namespace/source and choose Run conversion, Run again, or Start repeat.

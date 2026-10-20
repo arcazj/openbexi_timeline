@@ -31,7 +31,7 @@ function inspectAccess(name, entries, file, complete = false) {
 export function inspectPublicHbds(file, text) {
     if (!file.startsWith('HBDS/')) return;
     if (privatePath.test(file) || /^(?:private|operational)[_.-]/i.test(path.basename(file))) throw new Error('Private HBDS file cannot be published: ' + file);
-    if (!/^HBDS\/(?:plugins\/(?:README\.md$|(?:default|earthquake|volcano|filesources|timeline_json|mqtt)\/)|schema\/|templates\/|README\.md$|aliases\.json$|service\.yml$|(?:workspace|GEO_Workspace|Generator_Workspace)\.json$|yaml\/(?:DEMO_default|DEMO_GENERATOR_default|(?:volcano|earthquake)_geoscience(?:_demo)?)\.yml$|models\/(?:default|geoscience(?:_demo)?)\.json$|filters\/default\.json$|(?:users|groups|roles)\/defaults\.json$)/.test(file)) throw new Error('HBDS file is outside public areas: ' + file);
+    if (!/^HBDS\/(?:plugins\/(?:README\.md$|(?:default|earthquake|volcano|filesources|timeline_json|mqtt|loki)\/)|schema\/|templates\/|README\.md$|aliases\.json$|service\.yml$|(?:workspace|GEO_Workspace|Generator_Workspace)\.json$|yaml\/(?:DEMO_default|DEMO_GENERATOR_default|(?:volcano|earthquake)_geoscience(?:_demo)?)\.yml$|models\/(?:default|geoscience(?:_demo)?)\.json$|filters\/default\.json$|(?:users|groups|roles)\/defaults\.json$)/.test(file)) throw new Error('HBDS file is outside public areas: ' + file);
     if (!/\.(json|ya?ml)$/i.test(file)) return;
     const value = /\.json$/i.test(file) ? JSON.parse(text) : parse(text, {uniqueKeys: true});
     const accessFile = /^HBDS\/(users|groups|roles)\/defaults\.json$/.exec(file);

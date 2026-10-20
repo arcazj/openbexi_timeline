@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openbexi-timeline-server"
-version = "2.9.1"
+version = "2.9.2"
 description = "Indexed Python backend for the OpenBEXI Timeline browser"
 requires-python = ">=3.12"
 license = "LicenseRef-OpenBEXI-Commercial-Exempt-1.0"
