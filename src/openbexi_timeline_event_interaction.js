@@ -1,7 +1,7 @@
-/** Event text is part of its marker, including when it extends past the shape. */
-export function bindEventTextHitTarget(sprite, marker) {
-    const raycast = sprite.raycast;
-    sprite.raycast = function (raycaster, intersections) {
+/** Text and record decorations resolve to the same draggable marker. */
+export function bindRecordHitTarget(object, marker) {
+    const raycast = object.raycast;
+    object.raycast = function (raycaster, intersections) {
         // Three.js raycasting also visits invisible sprites. Selected/3D titles
         // use DOM buttons, so their hidden canvas text must not intercept hits.
         for (let object = this; object; object = object.parent) if (!object.visible) return;
@@ -12,6 +12,55 @@ export function bindEventTextHitTarget(sprite, marker) {
 }
 
 const titleOf = record => String(record?.data?.title || record?.title || 'Untitled activity');
+export const POINTER_CLICK_SLOP = 5;
+
+// Use screen pixels: world-space distances change with zoom and perspective.
+class ActivityPointerGesture {
+    constructor(event) {
+        this.pointerId = event.pointerId;
+        this.x = event.clientX; this.y = event.clientY;
+        this.primary = event.button === 0 && event.isPrimary !== false;
+        this.moved = false;
+    }
+
+    update(event) {
+        if (event.pointerId !== this.pointerId) return;
+        // Releasing capture can emit leave/lost-capture before the browser's
+        // click, especially when a responsive rebuild moved the title. The
+        // completed pointerup still belongs to the original button.
+        if (this.ended === 'pointerup' && (event.type === 'pointerleave' || event.type === 'lostpointercapture')) return;
+        if (Math.hypot(event.clientX - this.x, event.clientY - this.y) > POINTER_CLICK_SLOP) this.moved = true;
+        if (event.type === 'pointerleave' || event.type === 'pointercancel' || event.type === 'lostpointercapture') this.cancelled = true;
+        if (event.type !== 'pointermove') this.ended = event.type;
+    }
+
+    get clicked() { return this.primary && !this.moved && !this.cancelled && this.ended === 'pointerup'; }
+}
+
+/** DOM titles use the same click tolerance as their canvas markers. */
+export function bindActivityTitle(label, open) {
+    let gesture;
+    label.addEventListener('pointerdown', event => {
+        gesture = new ActivityPointerGesture(event);
+        // A queued layout or camera resize must not move the native pointerup
+        // onto the canvas and lose the user's first click on this title.
+        if (gesture.primary) try { label.setPointerCapture?.(event.pointerId); } catch { /* Synthetic/older pointer implementations. */ }
+        event.stopPropagation();
+    });
+    label.addEventListener('mousedown', event => event.stopPropagation());
+    for (const type of ['pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'lostpointercapture'])
+        label.addEventListener(type, event => {
+            gesture?.update(event);
+            if (type === 'pointerup' || type === 'pointercancel') {
+                try { label.releasePointerCapture?.(event.pointerId); } catch { /* Capture may already have been released. */ }
+            }
+        });
+    label.addEventListener('click', event => {
+        // Keyboard and assistive-technology activation has no pointer gesture.
+        if (event.detail === 0 || gesture?.clicked) open();
+        gesture = null;
+    });
+}
 
 /** One caption per timeline, shared by canvas markers and accessible DOM titles. */
 export class TimelineEventInteraction {
@@ -30,6 +79,13 @@ export class TimelineEventInteraction {
             target.addEventListener(type, listener, options);
             this.listeners.push(() => target.removeEventListener(type, listener, options));
         };
+        listen(this.canvas, 'pointerdown', event => {
+            this.gesture = new ActivityPointerGesture(event);
+        }, true);
+        for (const type of ['pointermove', 'pointerup', 'pointerleave', 'pointercancel'])
+            listen(this.canvas, type, event => this.gesture?.update(event), true);
+        // Three.js binds this release handler to pointerup/leave, but omits cancel.
+        listen(this.canvas, 'pointercancel', controls._onPointerCancel);
         listen(this.canvas, 'pointermove', event => {
             this.pointer = {clientX: event.clientX, clientY: event.clientY};
             if (event.pointerType === 'touch' || event.buttons) this.hide();

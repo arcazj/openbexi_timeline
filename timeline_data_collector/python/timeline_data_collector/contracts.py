@@ -47,6 +47,14 @@ class Context:
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger('timeline_data_collector'))
     metrics: dict = field(default_factory=dict)
     notices: dict = field(default_factory=dict)
+    trace: Any = None
+
+    def progress(self, message, *arguments):
+        """First-pass diagnostics at INFO; unchanged polling remains at DEBUG."""
+        from .tracing import safe_text
+        message = message % arguments if arguments else message
+        if self.trace: self.trace.note(message)
+        else: self.logger.debug('%s', safe_text(message))
 
     def notice(self, key, message=None, level=logging.WARNING):
         """Report availability changes once, sharing state between repeat passes."""

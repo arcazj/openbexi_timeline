@@ -5,7 +5,8 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 export const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const types = {'.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
-    '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.md': 'text/plain', '.ico': 'image/x-icon'};
+    '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.md': 'text/plain', '.ico': 'image/x-icon',
+    '.webp': 'image/webp', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.glb': 'model/gltf-binary', '.gltf':'model/gltf+json'};
 
 export function createDemoServer(root = projectRoot, basePath = '/') {
     if (!basePath.startsWith('/') || !basePath.endsWith('/')) throw new Error('Base path must start and end with /.');

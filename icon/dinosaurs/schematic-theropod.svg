@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Schematic theropod clade pictogram</title>
+  <desc id="description">Original simplified clade symbol based on the source classification. This is not a reconstruction of an individual genus or species.</desc>
+  <path fill="#83937d" stroke="#eff3eb" stroke-width=".7" stroke-linejoin="round" d="M9 74Q37 58 69 56L93 43 101 22Q105 17 117 17L141 24Q148 29 145 36L123 40 116 51 129 57 130 63 111 58 105 72 96 82 103 105 119 108 118 113 95 113 85 87 76 81 68 105 82 108 81 113 61 113 57 80Q32 80 9 74Z"/>
+  <path d="M126 28h2M124 38l13-2" fill="none" stroke="#53664f" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

@@ -3,11 +3,37 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {packPages,pageBands,pageForAnchor,recordKey,configureDateAxes,dateAxisHeight} from '../src/openbexi_timeline_paging.js';
 import {createTimelineHarness} from './helpers/timeline-dom.mjs';
+import {Raycaster,Vector3} from 'three';
 
 const band=(name,rows,step=24)=>({name,occupiedRows:rows,trackIncrement:step,fontSizeInt:12,sessionHeight:7,
     sessions:Array.from({length:rows},(_,row)=>({id:name+row,activities:[{id:name+row,row}]}))});
 const keys=bands=>bands.flatMap(b=>b.sessions.flatMap(s=>s.activities.map(recordKey)));
 const settle=()=>new Promise(resolve=>setTimeout(resolve,120));
+
+for(const model of ['default-dataset','dinausaurs'])test(model+': decorative zones pass pointer hits through to the native band',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
+        const t=new OB_TIMELINE();
+        await t.loadModel('HBDS/templates/models/demos/'+model+'.json',{dataset:'json/test-data/'+model+'.json'});
+        const scene=t.ob_scene[0];scene.updateMatrixWorld(true);
+        const labels=[];scene.traverse(object=>{if(object.userData.zoneLabel)labels.push(object);});
+        assert.ok(labels.length>0);
+        const raycaster=new Raycaster();raycaster.camera=scene.ob_camera;
+        for(const label of labels) {
+            const zone=label.parent,band=zone.parent;
+            for(const target of [zone,label]) {
+                const origin=target.getWorldPosition(new Vector3());origin.z+=10000;
+                raycaster.set(origin,new Vector3(0,0,-1));
+                assert.equal(raycaster.intersectObject(zone,true).length,0,'Zone images and labels never intercept navigation');
+            }
+            const center=zone.getWorldPosition(new Vector3());center.z+=10000;
+            raycaster.set(center,new Vector3(0,0,-1));
+            assert.ok(raycaster.intersectObject(band,false).length>0,'The underlying native drag plane remains hit-testable');
+            assert.ok([zone.position.x,zone.position.y,zone.position.z].every(Number.isFinite));
+        }
+    } finally {h.close();}
+});
 
 test('Shared date axes stay at the top of every page, including pages starting in another group',()=>{
     const bands=[band('first',3),band('second',7),band('third',2)];

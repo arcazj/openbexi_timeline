@@ -279,6 +279,7 @@ class CollectorTests(unittest.TestCase):
     def test_corrupted_first_input_copy_never_reaches_publication(self):
         write_json(self.ws.input / 'events.json', [event()])
         runner = self.runner(); replace = os.replace
+        runner.registry.load('local', 'source')
         def corrupted(source, destination):
             replace(source, destination)
             if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json':
@@ -367,7 +368,7 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         publisher = Publisher(self.ws.target, 'DEMO')
         publisher.publish('a', 'input', '1', RecordBatch([record], {}))
         child = read_json(self.ws.output / '2026/01/01/descriptors/child.json')
-        self.assertEqual(child['event_descriptor'][0]['data']['namespace'], 'DEMO')
+        self.assertEqual(child['event_descriptor'][0]['namespace'], 'DEMO')
         self.assertEqual(self.ws.records()[0]['activities'][0]['id'], 'child')
         self.assertEqual(self.ws.records()[0]['activities'][0]['data']['namespace'], 'DEMO')
         with self.assertRaisesRegex(ValueError, 'Conflicting'):

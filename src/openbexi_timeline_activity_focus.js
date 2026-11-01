@@ -1,10 +1,14 @@
-import {renderingFor, bandRendering, RENDERING_DEFAULTS, PERSPECTIVE_PRESET} from './openbexi_timeline_rendering.js';
+import {renderingFor, bandRendering, RENDERING_DEFAULTS, PERSPECTIVE_PRESET, usesRecordStage} from './openbexi_timeline_rendering.js';
 import * as THREE from 'three';
 import {recordKey} from './openbexi_timeline_paging.js';
+import {bindActivityTitle} from './openbexi_timeline_event_interaction.js';
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 export const activityLabelWidth=(width,settings=RENDERING_DEFAULTS.activity)=>Math.max(settings.labelMinWidth,Math.min(settings.labelMaxWidth,width-settings.labelHorizontalPadding));
+const boundedLabelWidth=(width,settings,visuals)=>visuals?Math.min(activityLabelWidth(width,settings),Math.max(1,width-16)):activityLabelWidth(width,settings);
+export const activityLabelText=record=>String(record.data?.title || 'Untitled activity')+
+    (record.cluster?.representative?' · +'+(record.cluster.count-1)+' records':'');
 const defaultOrbit=timeline=>({yaw:renderingFor(timeline).camera.yaw,pitch:renderingFor(timeline).camera.pitch});
 
 // Use the model's typography for every activity, including the selected one.
@@ -14,7 +18,8 @@ export function activityLabelMetrics(record,band,width,measure) {
     const fontWeight=record.searchMatch?'bold':record.render?.fontWeight || band.fontWeight || 'normal';
     const fontStyle=record.render?.fontStyle || band.fontStyle || 'normal';
     const font=`${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-    const title=String(record.data?.title || ''),maxWidth=activityLabelWidth(width,bandRendering(band).activity);
+    const settings=bandRendering(band),visuals=settings.recordVisuals.enabled;
+    const title=visuals?activityLabelText(record):String(record.data?.title || ''),maxWidth=boundedLabelWidth(width,settings.activity,visuals);
     const textWidth=measure(title,font,0),lineHeight=Math.ceil(fontSize*bandRendering(band).activity.lineHeight);
     let lines=1,line='';
     if(textWidth>maxWidth) for(const word of title.split(/\s+/)) {
@@ -27,21 +32,64 @@ export function activityLabelMetrics(record,band,width,measure) {
     return {fontSize,fontFamily,fontWeight,fontStyle,lineHeight,width:Math.min(maxWidth,Math.ceil(textWidth)),height:lines*lineHeight};
 }
 
+export function activityCameraFrame(timeline,index) {
+    const scene=timeline.ob_scene[index],visuals=renderingFor(timeline).recordVisuals;
+    let bottom=0,top=scene.ob_height,depth=24;
+    if(usesRecordStage(timeline,index)) {
+        const positions=(timeline.recordVisuals?.items || []).map(item=>item.marker.getWorldPosition(new THREE.Vector3()).y);
+        const bands=scene.bands?.filter(band=>!band.name.includes('overview_')) || [];
+        top=bands.length?Math.max(...bands.map(band=>band.y+band.height/2)):top;
+        bottom=positions.length?Math.min(...positions)-visuals.stageLaneDepth/2-20:bottom;
+        depth=visuals.height*visuals.stageScale+64;
+    }
+    return {center:new THREE.Vector3(0,(bottom+top)/2,usesRecordStage(timeline,index)?depth*.35:0),
+        scale:Math.max(1,scene.width,top-bottom),bottom,top,depth};
+}
+
 export function positionActivityCamera(timeline,index) {
     const scene=timeline.ob_scene[index],camera=scene.ob_camera;
     const {yaw,pitch}=timeline.ob_activity_focus?.orbit || defaultOrbit(timeline);
-    const target=new THREE.Vector3(0,scene.ob_height/2,0);
-    const direction=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+    const stage=usesRecordStage(timeline,index);
+    const frame=activityCameraFrame(timeline,index),target=frame.center;
+    const direction=stage?new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),-Math.cos(yaw)*Math.cos(pitch),Math.sin(pitch)):
+        new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+    if(stage)camera.up.set(0,0,1);
     camera.position.copy(target).add(direction);camera.lookAt(target);camera.rotateZ(renderingFor(timeline).camera.roll);
-    const inverse=camera.quaternion.clone().invert(),tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),tanH=tanV*camera.aspect;
+    const inverse=camera.quaternion.clone().invert(),fullTanV=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),tanH=fullTanV*camera.aspect;
+    const detailHeight=stage?Math.min(scene.ob_height,timeline.ob_viewport?.detailHeight || scene.ob_height):scene.ob_height;
+    const tanV=fullTanV*detailHeight/scene.ob_height;
+    if(stage)camera.setViewOffset(scene.width,scene.ob_height,0,(scene.ob_height-detailHeight)/2,scene.width,scene.ob_height);
     const preset=PERSPECTIVE_PRESET;
-    let distance=Math.hypot(...preset.position.map((v,i)=>v-preset.target[i]))*scene.ob_height/(2*preset.target[1]);
+    let distance=stage?0:Math.hypot(...preset.position.map((v,i)=>v-preset.target[i]))*scene.ob_height/(2*preset.target[1]);
     // Fit the board at its oblique angle without changing the time scale.
-    for(const x of [-scene.width/2,scene.width/2])for(const y of [0,scene.ob_height])for(const z of [0,24]) {
+    for(const x of [-scene.width/2,scene.width/2])for(const y of [frame.bottom,frame.top])for(const z of [0,frame.depth]) {
         const p=new THREE.Vector3(x,y,z).sub(target).applyQuaternion(inverse);
         distance=Math.max(distance,p.z+Math.max(Math.abs(p.x)/tanH,Math.abs(p.y)/tanV));
     }
     camera.position.copy(target).addScaledVector(direction,distance+16);
+    if(stage)scene.fog=new THREE.Fog(renderingFor(timeline).theme.sceneBackground,distance*1.35,distance*4);
+}
+
+/** Visible portion of a native activity in the actual camera viewport.
+ * Clip homogeneous coordinates before dividing by w, so intervals crossing
+ * either side, the near plane, or the docked overview remain well defined.
+ * The returned world positions never modify the source dates or bar geometry.
+ */
+export function visibleActivitySegment(mesh,camera,heightFraction=1) {
+    const half=(mesh.geometry?.parameters?.width || 0)/2;
+    const start=mesh.localToWorld(new THREE.Vector3(-half,0,0));
+    const end=mesh.localToWorld(new THREE.Vector3(half,0,0));
+    const project=p=>new THREE.Vector4(p.x,p.y,p.z,1).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+    const a=project(start),b=project(end),bottom=1-2*clamp(heightFraction,0,1);
+    let from=0,to=1;
+    for(const distance of [p=>p.x+p.w,p=>p.w-p.x,p=>p.w-p.y,p=>p.y-bottom*p.w,p=>p.z+p.w,p=>p.w-p.z]) {
+        const low=distance(a),high=distance(b);
+        if(low<0 && high<0)return null;
+        if(low<0)from=Math.max(from,low/(low-high));
+        if(high<0)to=Math.min(to,low/(low-high));
+        if(from>to)return null;
+    }
+    return {from:start.clone().lerp(end,from),to:start.clone().lerp(end,to),point:start.clone().lerp(end,(from+to)/2)};
 }
 
 /** Full titles live above the canvas so perspective and geometry cannot obscure them. */
@@ -63,7 +111,7 @@ export class TimelineActivityFocus {
         const t=this.timeline,scene=t.ob_scene[this.index],track=t.track[this.index],record=mesh.data;
         const style=renderingFor(t).activity;
         const key=recordKey(record),base=mesh.position.z;
-        const parent=scene.getObjectByName(band.name),perspective=scene.ob_camera_type==='Perspective';
+        const parent=scene.getObjectByName(band.name),perspective=scene.ob_camera_type==='Perspective',stage=usesRecordStage(t,this.index);
         const size=mesh.geometry.parameters;
         const width=Math.max(1,record.width || size.width || record.size*2 || 10),height=Math.max(1,size.height || record.size*2 || record.height || 10);
         if(perspective) {
@@ -86,9 +134,18 @@ export class TimelineActivityFocus {
             const row=band.name+'|'+record.row;
             if(!this.rows.has(row)) {
                 this.rows.add(row);
-                const lane=track(new THREE.Mesh(track(new THREE.PlaneGeometry(band.width,Math.max(height+4,band.trackIncrement*.55))),
-                    track(new THREE.MeshBasicMaterial({color:record.render?.color || band.eventColor || '#5899bd',transparent:true,opacity:style.laneOpacity,depthWrite:false}))));
-                lane.position.set(0,record.y,1);lane.raycast=()=>{};lane.userData.activityTrack=true;parent?.add(lane);
+                const visuals=renderingFor(t).recordVisuals;
+                const lane=track(new THREE.Mesh(track(stage?new THREE.BoxGeometry(band.width,visuals.stageLaneDepth,6):
+                    new THREE.PlaneGeometry(band.width,Math.max(height+4,band.trackIncrement*.55))),
+                    track(stage?new THREE.MeshStandardMaterial({color:'#e3edf1',transparent:true,opacity:visuals.stageSurfaceOpacity,
+                        roughness:.34,metalness:.16,depthWrite:false}):
+                        new THREE.MeshBasicMaterial({color:record.render?.color || band.eventColor || '#5899bd',transparent:true,opacity:style.laneOpacity,depthWrite:false}))));
+                lane.position.set(0,record.y,stage?-4:1);lane.raycast=()=>{};lane.userData.activityTrack=true;parent?.add(lane);
+                if(stage) {
+                    const edge=track(new THREE.LineSegments(track(new THREE.EdgesGeometry(lane.geometry)),
+                        track(new THREE.LineBasicMaterial({color:'#aebfc7',transparent:true,opacity:.55}))));
+                    edge.raycast=()=>{};lane.add(edge);
+                }
             }
         }
         const glow=track(new THREE.Mesh(track(new THREE.PlaneGeometry(width+6,height+6)),
@@ -110,17 +167,16 @@ export class TimelineActivityFocus {
         if(!label) {
             label=document.createElement('button');label.type='button';label.className='ob_activity_label';
             label.dataset.activityKey=item.key;
-            for(const type of ['pointerdown','mousedown'])label.addEventListener(type,event=>event.stopPropagation());
             const interaction=()=>this.timeline.ob_scene[this.index]?.eventInteraction;
             label.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch')interaction()?.show(label.record,event,label);});
             label.addEventListener('pointermove',event=>{if(event.pointerType!=='touch')interaction()?.position(event);});
             label.addEventListener('focus',()=>interaction()?.show(label.record,null,label));
             for(const type of ['pointerleave','pointerdown','blur'])label.addEventListener(type,()=>interaction()?.hide());
-            label.onclick=()=>{interaction()?.hide();this.timeline.ob_open_descriptor(this.index,label.record);};
+            bindActivityTitle(label,()=>{interaction()?.hide();this.timeline.ob_open_descriptor(this.index,label.record);});
             this.layer.append(label);this.labels.set(item.id,label);
         }
         label.record=item.record;
-        const title=String(item.record.data?.title || 'Untitled activity');
+        const title=activityLabelText(item.record);
         if(label.textContent!==title)label.textContent=title;
         label.setAttribute('aria-label','Activity: '+title);
         return label;
@@ -137,30 +193,37 @@ export class TimelineActivityFocus {
         const height=t.ob_viewport?.detailHeight || t.ob_timeline_body_frame.clientHeight || canvasHeight;
         this.layer.style.width=width+'px';this.layer.style.height=height+'px';
         this.layer.dataset.perspective=String(perspective);
+        this.layer.dataset.recordVisuals=String(Boolean(t.recordVisuals));
         this.leaders.setAttribute('viewBox',`0 0 ${width} ${height}`);
         const shown=new Set(),placements=[];
         for(const item of this.items) {
             const active=selected===item.key;
             // Selection changes brightness only: geometry and depth stay fixed.
             item.glow.visible=active;item.glow.material.opacity=Math.min(1,style.glowOpacity+(active && progress<1?style.glowPulse*Math.sin(progress*Math.PI):0));
-            for(const sprite of item.sprites)sprite.visible=!(perspective || active);
+            for(const sprite of item.sprites)sprite.visible=!(perspective || active || t.recordVisuals);
         }
         scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
         for(const item of this.items) {
             const active=selected===item.key;
-            if(!perspective && !active)continue;
-            const world=item.mesh.getWorldPosition(new THREE.Vector3());
+            if(!perspective && !active && !t.recordVisuals)continue;
+            let world=item.mesh.getWorldPosition(new THREE.Vector3());
             // Perspective can move an activity beyond the canvas edge even
             // when its timestamp is inside the visible interval. Keep its
             // complete title inside the plot and attach it at the edge.
-            const halfWidth=(item.record.width || 0)/2;
-            if(world.x+halfWidth<-width/2 || world.x-halfWidth>width/2 || world.y<0 || world.y>canvasHeight)continue;
-            world.x=clamp(world.x,-width/2,width/2);
+            if(perspective) {
+                const visible=visibleActivitySegment(item.mesh,camera,height/canvasHeight);
+                if(!visible)continue;
+                world=visible.point;
+            } else {
+                const halfWidth=(item.record.width || 0)/2;
+                if(world.x+halfWidth<-width/2 || world.x-halfWidth>width/2 || world.y<0 || world.y>canvasHeight)continue;
+                world.x=clamp(world.x,-width/2,width/2);
+            }
             const point=world.project(camera);
             if(point.z<-1 || point.z>1)continue;
             const x=clamp((point.x+1)*width/2,8,width-8),y=clamp((1-point.y)*canvasHeight/2,8,height-8);
             const label=this.label(item);shown.add(item.id);
-            label.hidden=false;label.style.maxWidth=perspective?activityLabelWidth(width,style)+'px':'none';
+            label.hidden=false;label.style.maxWidth=perspective || t.recordVisuals?boundedLabelWidth(width,style,Boolean(t.recordVisuals))+'px':'none';
             const {fontSize,fontFamily,fontWeight,fontStyle,lineHeight}=item.metrics;
             Object.assign(label.style,{fontSize:fontSize+'px',fontFamily,fontWeight,fontStyle,lineHeight:lineHeight+'px'});
             label.style.color=item.textColor;
@@ -183,17 +246,17 @@ export class TimelineActivityFocus {
             const textPoint=sprite?.getWorldPosition(new THREE.Vector3()).project(camera);
             const textX=textPoint?(textPoint.x+1)*width/2-boxWidth/2:x+10;
             const textY=textPoint?(1-textPoint.y)*canvasHeight/2-boxHeight/2:y-boxHeight/2;
-            placements.push({label,x,y,textX,textY,width:boxWidth,height:boxHeight,active});
+            placements.push({label,x,y,textX,textY,width:boxWidth,height:boxHeight,active,visual:Boolean(t.recordVisuals)});
         }
         for(const [id,label] of this.labels)if(!shown.has(id)) {label.remove();this.labels.delete(id);}
         // Label placement is independent of selection, so a glow never moves
         // or enlarges the text. The ordinary 2D label keeps its model position.
-        const placed=[];this.leaders.replaceChildren();
+        const placed=[...(t.recordVisuals?.boxes || [])];this.leaders.replaceChildren();
         for(const item of placements.sort((a,b)=>a.y-b.y || a.x-b.x)) {
-            let left=perspective?clamp(item.x+10,8,width-item.width-8):item.textX;
-            let top=perspective?clamp(item.y-item.height/2,32,height-item.height-8):item.textY;
+            let left=item.visual?clamp(item.textX,8,width-item.width-8):perspective?clamp(item.x+10,8,width-item.width-8):item.textX;
+            let top=item.visual?clamp(item.textY,32,height-item.height-8):perspective?clamp(item.y-item.height/2,32,height-item.height-8):item.textY;
             const overlaps=y=>placed.some(box=>left<box.right+6 && left+item.width+6>box.left && y<box.bottom+6 && y+item.height+6>box.top);
-            if(perspective && overlaps(top)) {
+            if((perspective || item.visual) && overlaps(top)) {
                 const alternatives=placed.flatMap(box=>[box.bottom+8,box.top-item.height-8])
                     .filter(y=>y>=32 && y+item.height<=height-8).sort((a,b)=>Math.abs(a-top)-Math.abs(b-top));
                 top=alternatives.find(y=>!overlaps(y)) ?? top;

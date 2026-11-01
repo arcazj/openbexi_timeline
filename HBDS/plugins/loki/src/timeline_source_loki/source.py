@@ -131,6 +131,11 @@ class Acquisition:
         first = date.fromisoformat(context.start_date) if context.start_date else now.date()
         last = date.fromisoformat(context.end_date) if context.end_date else first
         upper = int((now.timestamp() - settings.get('ingestion_delay_seconds', 60)) * NS)
+        context.progress('Loki acquisition plan; start_utc=%s; end_utc=%s; offline=%s; discovery=all; '
+                         'query_window_seconds=%s; max_concurrency=%s; max_requests_per_pass=%s; retry_pending=%s',
+                         first, last, context.offline, settings.get('query_window_seconds', 3600),
+                         settings.get('max_concurrency', 2), settings.get('max_requests_per_pass', 64),
+                         archive.get('next_retry', 0) > time.time())
         day = first
         while day <= last:
             archive.db.execute('INSERT OR IGNORE INTO discoveries(day) VALUES (?)', (str(day),))
@@ -223,6 +228,7 @@ class Acquisition:
 
 
 def acquire(context):
+    context.progress('Initializing Loki archive ownership, acquisition lock and saved discovery state')
     root = Path(context.source['source_path']).resolve()
     root.mkdir(parents=True, exist_ok=True)
     # Cross-workspace ownership is enforced at the archive root, not just target_path.
@@ -239,6 +245,7 @@ def acquire(context):
         if not previous:
             write_json(owner_path, owner)
         engine = Acquisition(context)
+        context.progress('Loki archive ready; starting discovery and acquisition')
         engine.run()
     finally:
         if engine:

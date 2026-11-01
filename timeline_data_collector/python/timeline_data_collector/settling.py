@@ -32,6 +32,7 @@ def settled_manifest(context, manifest):
                 ready[path] = stamp
     context.metrics.update(waiting_files=len(manifest)-len(ready), settled_files=len(ready))
     if len(ready) != len(manifest):
-        context.logger.debug('%s/%s: %d inputs settled; %d waiting for %.1f seconds without writes',
-                             context.namespace, context.source['id'], len(ready), len(manifest)-len(ready), seconds)
+        report = getattr(context, 'progress', context.logger.debug)
+        report('%s/%s: %d inputs settled; %d waiting for %.1f seconds without writes',
+               context.namespace, context.source['id'], len(ready), len(manifest)-len(ready), seconds)
     return ready

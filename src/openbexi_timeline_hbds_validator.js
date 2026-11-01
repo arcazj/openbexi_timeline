@@ -24,9 +24,9 @@ SOFTWARE.
 */
 "use strict";
 export const hbdsSchema = validate186;
-const schema35 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/HBDS/schema/configuration.schema.json","title":"OpenBEXI Timeline HBDS configuration","description":"Owned instance projection of openbexi_timeline.json. Entity IDs and relationship ownership are validated before saving.","type":"object","properties":{"schemaVersion":{"const":1},"defaultNamespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaces":{"type":"array","items":{"$ref":"#/definitions/namespace"},"minItems":1},"models":{"type":"array","items":{"$ref":"#/definitions/model"},"minItems":1},"sources":{"type":"array","items":{"$ref":"#/definitions/source"},"minItems":0},"connectors":{"type":"array","items":{"$ref":"#/definitions/connector"},"minItems":0},"tabs":{"type":"array","items":{"$ref":"#/definitions/tab"},"minItems":1},"users":{"type":"array","items":{"$ref":"#/definitions/user"},"minItems":0},"groups":{"type":"array","items":{"$ref":"#/definitions/group"},"minItems":0},"roles":{"type":"array","items":{"$ref":"#/definitions/role"},"minItems":0},"grants":{"type":"array","items":{"$ref":"#/definitions/grant"},"minItems":0},"deployment":{"$ref":"#/definitions/deployment"}},"required":["schemaVersion","defaultNamespaceId","namespaces","models","sources","connectors","tabs","users","groups","roles","grants","deployment"],"additionalProperties":false,"definitions":{"render":{"type":"object","properties":{"textColor":{"type":"string"},"dateColor":{"type":"string"},"color":{"type":"string"},"alternateColor":{"type":"string"}},"required":[],"additionalProperties":true},"filter":{"type":"object","properties":{"include":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"exclude":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]}},"required":[],"additionalProperties":true},"namespace":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespace":{"type":"string","minLength":1},"modelId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"render":{"$ref":"#/definitions/render"},"filter":{"$ref":"#/definitions/filter"},"connectorIds":{"type":"array","items":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"minItems":0,"uniqueItems":true}},"required":["id","namespace","modelId","render","filter","connectorIds"],"additionalProperties":false},"model":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"configuration":{"type":"object","if":{"properties":{"dataSource":{}},"required":["dataSource"]},"then":{"$ref":"#/definitions/demoModel"},"else":{"$ref":"#/definitions/legacyModel"}}},"required":["id","configuration"],"additionalProperties":false},"sourceConfiguration":{"type":"object","properties":{"type":{"type":"string","minLength":1},"enable":{"type":"boolean"},"permission":{"type":"string"},"converter2events_class":{"type":"string"},"connector":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"target_path":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"source_path":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"source_plugin":{"type":"string"},"converter_plugin":{"type":"string"},"sources":{"type":"array","items":{"type":"object"},"minItems":0},"render":{"$ref":"#/definitions/render"},"filter":{"$ref":"#/definitions/filter"},"format":{"type":"string"},"poll_seconds":{"type":"number","minimum":0},"timezone":{"type":"string"},"host":{"type":"string"},"port":{"type":"integer","minimum":1,"maximum":65535},"username":{"type":"string"},"key_filename":{"type":"string"},"password":{"type":"string"},"known_hosts":{"type":"string"},"bucket":{"type":"string"},"prefix":{"type":"string"},"region_name":{"type":"string"},"profile":{"type":"string"},"endpoint_url":{"type":"string"},"aws_access_key_id":{"type":"string"},"aws_secret_access_key":{"type":"string"},"aws_session_token":{"type":"string"},"dsn":{"type":"string"},"user":{"type":"string"},"batch_size":{"type":"integer","minimum":1},"key_column":{"type":"string"},"watermark_column":{"type":"string"},"watermark_type":{"type":"string"},"initial_watermark":{"type":["string","number"]},"query":{"type":"string"},"binds":{"type":"object"},"field_mapping":{"type":"object"}},"required":["type"],"additionalProperties":true},"source":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"order":{"type":"integer","minimum":0},"configuration":{"$ref":"#/definitions/sourceConfiguration"}},"required":["id","namespaceId","order","configuration"],"additionalProperties":false},"connector":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"protocol":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_+-]*$"},"port":{"type":"integer","minimum":1,"maximum":65535}},"required":["id","protocol","port"],"additionalProperties":false},"tab":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"title":{"type":"string","minLength":1,"maxLength":160},"order":{"type":"integer","minimum":0},"enabled":{"type":"boolean"}},"required":["id","namespaceId","title","order","enabled"],"additionalProperties":false},"user":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1},"email":{"type":"string","pattern":"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"},"admin":{"type":"boolean"},"roleId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"groupId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"}},"required":["id","name","email","admin","roleId","groupId"],"additionalProperties":false},"group":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1}},"required":["id","name"],"additionalProperties":false},"role":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1},"ceiling":{"type":"string","enum":["admin","rw","r","denied"]}},"required":["id","name","ceiling"],"additionalProperties":false},"grant":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"groupId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"permission":{"type":"string","enum":["admin","rw","r","denied"]}},"required":["id","groupId","namespaceId","permission"],"additionalProperties":false},"deployment":{"type":"object","properties":{"server":{"type":"object"},"timeline_server":{"type":"object"},"ai":{"type":"object"}},"additionalProperties":true},"demoModel":{"title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/demoModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"format":{"$ref":"#/definitions/demoModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/demoModel/definitions/positive"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/demoModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/demoModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/demoModel/definitions/field"},"title":{"$ref":"#/definitions/demoModel/definitions/field"},"description":{"$ref":"#/definitions/demoModel/definitions/field"},"namespace":{"$ref":"#/definitions/demoModel/definitions/field"},"color":{"$ref":"#/definitions/demoModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/demoModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/demoModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/demoModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/demoModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"end":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/demoModel/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/demoModel/definitions/text"},"eventColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateColor":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/demoModel/definitions/text"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/demoModel/definitions/range"},"context":{"$ref":"#/definitions/demoModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/demoModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/demoModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/demoModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/demoModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"legacyModel":{"title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/legacyModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"format":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/legacyModel/definitions/positive"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/legacyModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/legacyModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/legacyModel/definitions/field"},"title":{"$ref":"#/definitions/legacyModel/definitions/field"},"description":{"$ref":"#/definitions/legacyModel/definitions/field"},"namespace":{"$ref":"#/definitions/legacyModel/definitions/field"},"color":{"$ref":"#/definitions/legacyModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/legacyModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/legacyModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/legacyModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/legacyModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"end":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/legacyModel/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"eventColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}}},"range":{"$ref":"#/definitions/legacyModel/definitions/range"},"context":{"$ref":"#/definitions/legacyModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/legacyModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/legacyModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/legacyModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/legacyModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}}}};
+const schema35 = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://openbexi.org/HBDS/schema/configuration.schema.json","title":"OpenBEXI Timeline HBDS configuration","description":"Owned instance projection of openbexi_timeline.json. Entity IDs and relationship ownership are validated before saving.","type":"object","properties":{"schemaVersion":{"const":1},"defaultNamespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaces":{"type":"array","items":{"$ref":"#/definitions/namespace"},"minItems":1},"models":{"type":"array","items":{"$ref":"#/definitions/model"},"minItems":1},"sources":{"type":"array","items":{"$ref":"#/definitions/source"},"minItems":0},"connectors":{"type":"array","items":{"$ref":"#/definitions/connector"},"minItems":0},"tabs":{"type":"array","items":{"$ref":"#/definitions/tab"},"minItems":1},"users":{"type":"array","items":{"$ref":"#/definitions/user"},"minItems":0},"groups":{"type":"array","items":{"$ref":"#/definitions/group"},"minItems":0},"roles":{"type":"array","items":{"$ref":"#/definitions/role"},"minItems":0},"grants":{"type":"array","items":{"$ref":"#/definitions/grant"},"minItems":0},"deployment":{"$ref":"#/definitions/deployment"}},"required":["schemaVersion","defaultNamespaceId","namespaces","models","sources","connectors","tabs","users","groups","roles","grants","deployment"],"additionalProperties":false,"definitions":{"render":{"type":"object","properties":{"textColor":{"type":"string"},"dateColor":{"type":"string"},"color":{"type":"string"},"alternateColor":{"type":"string"}},"required":[],"additionalProperties":true},"filter":{"type":"object","properties":{"include":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"exclude":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]}},"required":[],"additionalProperties":true},"namespace":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespace":{"type":"string","minLength":1},"modelId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"render":{"$ref":"#/definitions/render"},"filter":{"$ref":"#/definitions/filter"},"connectorIds":{"type":"array","items":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"minItems":0,"uniqueItems":true}},"required":["id","namespace","modelId","render","filter","connectorIds"],"additionalProperties":false},"model":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"configuration":{"type":"object","if":{"properties":{"dataSource":{}},"required":["dataSource"]},"then":{"$ref":"#/definitions/demoModel"},"else":{"$ref":"#/definitions/legacyModel"}}},"required":["id","configuration"],"additionalProperties":false},"sourceConfiguration":{"type":"object","properties":{"type":{"type":"string","minLength":1},"enable":{"type":"boolean"},"permission":{"type":"string"},"converter2events_class":{"type":"string"},"connector":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"target_path":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"source_path":{"anyOf":[{"type":"string"},{"type":"array","items":{"type":"string"}}]},"source_plugin":{"type":"string"},"converter_plugin":{"type":"string"},"sources":{"type":"array","items":{"type":"object"},"minItems":0},"render":{"$ref":"#/definitions/render"},"filter":{"$ref":"#/definitions/filter"},"format":{"type":"string"},"poll_seconds":{"type":"number","minimum":0},"timezone":{"type":"string"},"host":{"type":"string"},"port":{"type":"integer","minimum":1,"maximum":65535},"username":{"type":"string"},"key_filename":{"type":"string"},"password":{"type":"string"},"known_hosts":{"type":"string"},"bucket":{"type":"string"},"prefix":{"type":"string"},"region_name":{"type":"string"},"profile":{"type":"string"},"endpoint_url":{"type":"string"},"aws_access_key_id":{"type":"string"},"aws_secret_access_key":{"type":"string"},"aws_session_token":{"type":"string"},"dsn":{"type":"string"},"user":{"type":"string"},"batch_size":{"type":"integer","minimum":1},"key_column":{"type":"string"},"watermark_column":{"type":"string"},"watermark_type":{"type":"string"},"initial_watermark":{"type":["string","number"]},"query":{"type":"string"},"binds":{"type":"object"},"field_mapping":{"type":"object"}},"required":["type"],"additionalProperties":true},"source":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"order":{"type":"integer","minimum":0},"configuration":{"$ref":"#/definitions/sourceConfiguration"}},"required":["id","namespaceId","order","configuration"],"additionalProperties":false},"connector":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"protocol":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_+-]*$"},"port":{"type":"integer","minimum":1,"maximum":65535}},"required":["id","protocol","port"],"additionalProperties":false},"tab":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"title":{"type":"string","minLength":1,"maxLength":160},"order":{"type":"integer","minimum":0},"enabled":{"type":"boolean"}},"required":["id","namespaceId","title","order","enabled"],"additionalProperties":false},"user":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1},"email":{"type":"string","pattern":"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"},"admin":{"type":"boolean"},"roleId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"groupId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"}},"required":["id","name","email","admin","roleId","groupId"],"additionalProperties":false},"group":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1}},"required":["id","name"],"additionalProperties":false},"role":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1},"ceiling":{"type":"string","enum":["admin","rw","r","denied"]}},"required":["id","name","ceiling"],"additionalProperties":false},"grant":{"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"groupId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespaceId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"permission":{"type":"string","enum":["admin","rw","r","denied"]}},"required":["id","groupId","namespaceId","permission"],"additionalProperties":false},"deployment":{"type":"object","properties":{"server":{"type":"object"},"timeline_server":{"type":"object"},"ai":{"type":"object"}},"additionalProperties":true},"demoModel":{"title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/demoModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"recordVisuals":{"type":"object","additionalProperties":false,"description":"Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.","properties":{"enabled":{"type":"boolean","default":false,"description":"Reserve artwork space and render record visuals in the shared 2D and 3D core."},"presentation3D":{"type":"string","default":"board","enum":["board","stage"],"description":"Board artwork or upright exhibits on horizontal display lanes in perspective mode."},"stageLaneDepth":{"type":"number","default":100,"minimum":40,"maximum":400,"description":"Depth of each horizontal display lane in stage mode, in timeline units."},"stageSurfaceOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Opacity of the raised display lanes in stage mode."},"stageRows":{"type":"number","default":3,"minimum":1,"maximum":8,"description":"Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages."},"stageScale":{"type":"number","default":1.5,"minimum":1,"maximum":3,"description":"Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged."},"manifest":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin asset manifest URL, relative to the application root."},"keyField":{"type":"string","default":"data.title","minLength":1,"maxLength":160,"description":"Exact record field used to look up an entry in the asset manifest."},"caseInsensitive":{"type":"boolean","default":true,"description":"Match manifest entry keys without case sensitivity."},"imageField":{"type":["string","null"],"default":null,"minLength":1,"maxLength":160,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback."},"fallbackImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin fallback image URL, relative to the application root."},"rotation":{"type":"array","default":[0,0,0],"minItems":3,"maxItems":3,"description":"Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.","items":{"type":"number","minimum":-6.283185307179586,"maximum":6.283185307179586}},"width":{"type":"number","default":128,"minimum":24,"maximum":600,"description":"Normalized artwork display width in timeline pixels; does not represent physical size."},"height":{"type":"number","default":92,"minimum":20,"maximum":480,"description":"Normalized artwork display height above the occurrence bar."},"gap":{"type":"number","default":18,"minimum":0,"maximum":120,"description":"Spacing between artwork, occurrence bars and neighboring rows."},"depth":{"type":"number","default":32,"minimum":0,"maximum":300,"description":"Maximum normalized artwork depth in the perspective view."},"maxModels":{"type":"number","default":16,"minimum":0,"maximum":100,"description":"Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks."},"minimumModelPixels":{"type":"number","default":60,"minimum":0,"maximum":600,"description":"Minimum projected artwork width before loading a detailed 3D model."},"clusterPixels":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale."},"selectedScale":{"type":"number","default":1,"minimum":1,"maximum":3,"description":"Display-only artwork scale multiplier for the selected record."},"selectedLift":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Display-only foreground lift for selected artwork, in timeline pixels."},"transitionMs":{"type":"number","default":0,"minimum":0,"maximum":1000,"description":"Artwork selection transition duration; zero disables animation."},"bandOpacity":{"type":"number","default":1,"minimum":0,"maximum":1,"description":"Band surface opacity when record visuals are enabled; zero retains an invisible drag surface."},"label2D":{"type":"string","default":"Scientific","minLength":1,"maxLength":160,"description":"Label for the shared orthographic presentation."},"label3D":{"type":"string","default":"Museum","minLength":1,"maxLength":160,"description":"Label for the shared perspective presentation."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"format":{"$ref":"#/definitions/demoModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/demoModel/definitions/positive"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/demoModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/demoModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/demoModel/definitions/field"},"title":{"$ref":"#/definitions/demoModel/definitions/field"},"description":{"$ref":"#/definitions/demoModel/definitions/field"},"namespace":{"$ref":"#/definitions/demoModel/definitions/field"},"color":{"$ref":"#/definitions/demoModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/demoModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/demoModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/demoModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/demoModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"end":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/demoModel/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/demoModel/definitions/text"},"eventColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateColor":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/demoModel/definitions/text"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/demoModel/definitions/range"},"context":{"$ref":"#/definitions/demoModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/demoModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/demoModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/demoModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/demoModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"legacyModel":{"title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/legacyModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"recordVisuals":{"type":"object","additionalProperties":false,"description":"Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.","properties":{"enabled":{"type":"boolean","default":false,"description":"Reserve artwork space and render record visuals in the shared 2D and 3D core."},"presentation3D":{"type":"string","default":"board","enum":["board","stage"],"description":"Board artwork or upright exhibits on horizontal display lanes in perspective mode."},"stageLaneDepth":{"type":"number","default":100,"minimum":40,"maximum":400,"description":"Depth of each horizontal display lane in stage mode, in timeline units."},"stageSurfaceOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Opacity of the raised display lanes in stage mode."},"stageRows":{"type":"number","default":3,"minimum":1,"maximum":8,"description":"Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages."},"stageScale":{"type":"number","default":1.5,"minimum":1,"maximum":3,"description":"Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged."},"manifest":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin asset manifest URL, relative to the application root."},"keyField":{"type":"string","default":"data.title","minLength":1,"maxLength":160,"description":"Exact record field used to look up an entry in the asset manifest."},"caseInsensitive":{"type":"boolean","default":true,"description":"Match manifest entry keys without case sensitivity."},"imageField":{"type":["string","null"],"default":null,"minLength":1,"maxLength":160,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback."},"fallbackImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin fallback image URL, relative to the application root."},"rotation":{"type":"array","default":[0,0,0],"minItems":3,"maxItems":3,"description":"Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.","items":{"type":"number","minimum":-6.283185307179586,"maximum":6.283185307179586}},"width":{"type":"number","default":128,"minimum":24,"maximum":600,"description":"Normalized artwork display width in timeline pixels; does not represent physical size."},"height":{"type":"number","default":92,"minimum":20,"maximum":480,"description":"Normalized artwork display height above the occurrence bar."},"gap":{"type":"number","default":18,"minimum":0,"maximum":120,"description":"Spacing between artwork, occurrence bars and neighboring rows."},"depth":{"type":"number","default":32,"minimum":0,"maximum":300,"description":"Maximum normalized artwork depth in the perspective view."},"maxModels":{"type":"number","default":16,"minimum":0,"maximum":100,"description":"Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks."},"minimumModelPixels":{"type":"number","default":60,"minimum":0,"maximum":600,"description":"Minimum projected artwork width before loading a detailed 3D model."},"clusterPixels":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale."},"selectedScale":{"type":"number","default":1,"minimum":1,"maximum":3,"description":"Display-only artwork scale multiplier for the selected record."},"selectedLift":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Display-only foreground lift for selected artwork, in timeline pixels."},"transitionMs":{"type":"number","default":0,"minimum":0,"maximum":1000,"description":"Artwork selection transition duration; zero disables animation."},"bandOpacity":{"type":"number","default":1,"minimum":0,"maximum":1,"description":"Band surface opacity when record visuals are enabled; zero retains an invisible drag surface."},"label2D":{"type":"string","default":"Scientific","minLength":1,"maxLength":160,"description":"Label for the shared orthographic presentation."},"label3D":{"type":"string","default":"Museum","minLength":1,"maxLength":160,"description":"Label for the shared perspective presentation."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"format":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/legacyModel/definitions/positive"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/legacyModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/legacyModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/legacyModel/definitions/field"},"title":{"$ref":"#/definitions/legacyModel/definitions/field"},"description":{"$ref":"#/definitions/legacyModel/definitions/field"},"namespace":{"$ref":"#/definitions/legacyModel/definitions/field"},"color":{"$ref":"#/definitions/legacyModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/legacyModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/legacyModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/legacyModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/legacyModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"end":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/legacyModel/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"eventColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}}},"range":{"$ref":"#/definitions/legacyModel/definitions/range"},"context":{"$ref":"#/definitions/legacyModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/legacyModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/legacyModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/legacyModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/legacyModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}}}};
 const func2 = Object.prototype.hasOwnProperty;
-const pattern68 = new RegExp("^[A-Za-z][A-Za-z0-9_.-]{0,95}$", "");
+const pattern74 = new RegExp("^[A-Za-z][A-Za-z0-9_.-]{0,95}$", "");
 const schema36 = {"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"namespace":{"type":"string","minLength":1},"modelId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"render":{"$ref":"#/definitions/render"},"filter":{"$ref":"#/definitions/filter"},"connectorIds":{"type":"array","items":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"minItems":0,"uniqueItems":true}},"required":["id","namespace","modelId","render","filter","connectorIds"],"additionalProperties":false};
 const func3 = function ucs2length(str) {
     const len = str.length;
@@ -353,7 +353,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err7 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -403,7 +403,7 @@ errors++;
 if(data.modelId !== undefined){
 let data2 = data.modelId;
 if(typeof data2 === "string"){
-if(!pattern68.test(data2)){
+if(!pattern74.test(data2)){
 const err11 = {instancePath:instancePath+"/modelId",schemaPath:"#/properties/modelId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err11];
@@ -454,7 +454,7 @@ const len0 = data5.length;
 for(let i0=0; i0<len0; i0++){
 let data6 = data5[i0];
 if(typeof data6 === "string"){
-if(!pattern68.test(data6)){
+if(!pattern74.test(data6)){
 const err14 = {instancePath:instancePath+"/connectorIds/" + i0,schemaPath:"#/properties/connectorIds/items/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err14];
@@ -528,7 +528,7 @@ return errors === 0;
 }
 
 const schema39 = {"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"configuration":{"type":"object","if":{"properties":{"dataSource":{}},"required":["dataSource"]},"then":{"$ref":"#/definitions/demoModel"},"else":{"$ref":"#/definitions/legacyModel"}}},"required":["id","configuration"],"additionalProperties":false};
-const schema40 = {"title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/demoModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"format":{"$ref":"#/definitions/demoModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/demoModel/definitions/positive"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/demoModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/demoModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/demoModel/definitions/field"},"title":{"$ref":"#/definitions/demoModel/definitions/field"},"description":{"$ref":"#/definitions/demoModel/definitions/field"},"namespace":{"$ref":"#/definitions/demoModel/definitions/field"},"color":{"$ref":"#/definitions/demoModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/demoModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/demoModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/demoModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/demoModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"end":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/demoModel/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/demoModel/definitions/text"},"eventColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateColor":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/demoModel/definitions/text"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/demoModel/definitions/range"},"context":{"$ref":"#/definitions/demoModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/demoModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/demoModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/demoModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/demoModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
+const schema40 = {"title":"OpenBEXI file-backed timeline model","type":"object","additionalProperties":false,"required":["params","dataSource","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/demoModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"recordVisuals":{"type":"object","additionalProperties":false,"description":"Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.","properties":{"enabled":{"type":"boolean","default":false,"description":"Reserve artwork space and render record visuals in the shared 2D and 3D core."},"presentation3D":{"type":"string","default":"board","enum":["board","stage"],"description":"Board artwork or upright exhibits on horizontal display lanes in perspective mode."},"stageLaneDepth":{"type":"number","default":100,"minimum":40,"maximum":400,"description":"Depth of each horizontal display lane in stage mode, in timeline units."},"stageSurfaceOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Opacity of the raised display lanes in stage mode."},"stageRows":{"type":"number","default":3,"minimum":1,"maximum":8,"description":"Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages."},"stageScale":{"type":"number","default":1.5,"minimum":1,"maximum":3,"description":"Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged."},"manifest":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin asset manifest URL, relative to the application root."},"keyField":{"type":"string","default":"data.title","minLength":1,"maxLength":160,"description":"Exact record field used to look up an entry in the asset manifest."},"caseInsensitive":{"type":"boolean","default":true,"description":"Match manifest entry keys without case sensitivity."},"imageField":{"type":["string","null"],"default":null,"minLength":1,"maxLength":160,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback."},"fallbackImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin fallback image URL, relative to the application root."},"rotation":{"type":"array","default":[0,0,0],"minItems":3,"maxItems":3,"description":"Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.","items":{"type":"number","minimum":-6.283185307179586,"maximum":6.283185307179586}},"width":{"type":"number","default":128,"minimum":24,"maximum":600,"description":"Normalized artwork display width in timeline pixels; does not represent physical size."},"height":{"type":"number","default":92,"minimum":20,"maximum":480,"description":"Normalized artwork display height above the occurrence bar."},"gap":{"type":"number","default":18,"minimum":0,"maximum":120,"description":"Spacing between artwork, occurrence bars and neighboring rows."},"depth":{"type":"number","default":32,"minimum":0,"maximum":300,"description":"Maximum normalized artwork depth in the perspective view."},"maxModels":{"type":"number","default":16,"minimum":0,"maximum":100,"description":"Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks."},"minimumModelPixels":{"type":"number","default":60,"minimum":0,"maximum":600,"description":"Minimum projected artwork width before loading a detailed 3D model."},"clusterPixels":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale."},"selectedScale":{"type":"number","default":1,"minimum":1,"maximum":3,"description":"Display-only artwork scale multiplier for the selected record."},"selectedLift":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Display-only foreground lift for selected artwork, in timeline pixels."},"transitionMs":{"type":"number","default":0,"minimum":0,"maximum":1000,"description":"Artwork selection transition duration; zero disables animation."},"bandOpacity":{"type":"number","default":1,"minimum":0,"maximum":1,"description":"Band surface opacity when record visuals are enabled; zero retains an invisible drag surface."},"label2D":{"type":"string","default":"Scientific","minLength":1,"maxLength":160,"description":"Label for the shared orthographic presentation."},"label3D":{"type":"string","default":"Museum","minLength":1,"maxLength":160,"description":"Label for the shared perspective presentation."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"format":{"$ref":"#/definitions/demoModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"to":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/demoModel/definitions/positive"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/demoModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/demoModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/demoModel/definitions/field"},"title":{"$ref":"#/definitions/demoModel/definitions/field"},"description":{"$ref":"#/definitions/demoModel/definitions/field"},"namespace":{"$ref":"#/definitions/demoModel/definitions/field"},"color":{"$ref":"#/definitions/demoModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/demoModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/demoModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/demoModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/demoModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"end":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/demoModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":false,"required":["name","height","intervalUnit","intervalPixels"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/demoModel/definitions/unit"},"intervalPixels":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/demoModel/definitions/text"},"eventColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateColor":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/demoModel/definitions/text"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sortBy"],"properties":{"sortBy":{"const":"NONE"}}}},"range":{"$ref":"#/definitions/demoModel/definitions/range"},"context":{"$ref":"#/definitions/demoModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/demoModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/demoModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/demoModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/demoModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/demoModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/demoModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/demoModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/demoModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/demoModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"step":{"$ref":"#/definitions/demoModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"color":{"$ref":"#/definitions/demoModel/definitions/text"},"textColor":{"$ref":"#/definitions/demoModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
 const schema41 = {"type":"object","additionalProperties":false,"required":["name","date","width","height"],"properties":{"name":{"$ref":"#/definitions/demoModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/demoModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/demoModel/definitions/positive"},"height":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/demoModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/demoModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}};
 const schema42 = {"type":"string","minLength":1};
 
@@ -5852,12 +5852,12 @@ vErrors.push(err237);
 errors++;
 }
 }
-if(data6.layout !== undefined){
-let data75 = data6.layout;
+if(data6.recordVisuals !== undefined){
+let data75 = data6.recordVisuals;
 if(data75 && typeof data75 == "object" && !Array.isArray(data75)){
 for(const key7 in data75){
-if(!(func2.call(schema40.properties.rendering.properties.layout.properties, key7))){
-const err238 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
+if(!(func2.call(schema40.properties.rendering.properties.recordVisuals.properties, key7))){
+const err238 = {instancePath:instancePath+"/rendering/recordVisuals",schemaPath:"#/properties/rendering/properties/recordVisuals/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err238];
 }
@@ -5867,11 +5867,9 @@ vErrors.push(err238);
 errors++;
 }
 }
-if(data75.sidebarBreakpoint !== undefined){
-let data76 = data75.sidebarBreakpoint;
-if((typeof data76 == "number") && (isFinite(data76))){
-if(data76 > 2400 || isNaN(data76)){
-const err239 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
+if(data75.enabled !== undefined){
+if(typeof data75.enabled !== "boolean"){
+const err239 = {instancePath:instancePath+"/rendering/recordVisuals/enabled",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/enabled/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err239];
 }
@@ -5880,8 +5878,11 @@ vErrors.push(err239);
 }
 errors++;
 }
-if(data76 < 320 || isNaN(data76)){
-const err240 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
+}
+if(data75.presentation3D !== undefined){
+let data77 = data75.presentation3D;
+if(typeof data77 !== "string"){
+const err240 = {instancePath:instancePath+"/rendering/recordVisuals/presentation3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/presentation3D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err240];
 }
@@ -5890,9 +5891,8 @@ vErrors.push(err240);
 }
 errors++;
 }
-}
-else {
-const err241 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!((data77 === "board") || (data77 === "stage"))){
+const err241 = {instancePath:instancePath+"/rendering/recordVisuals/presentation3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/presentation3D/enum",keyword:"enum",params:{allowedValues: schema40.properties.rendering.properties.recordVisuals.properties.presentation3D.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err241];
 }
@@ -5902,11 +5902,11 @@ vErrors.push(err241);
 errors++;
 }
 }
-if(data75.sidebarMinimum !== undefined){
-let data77 = data75.sidebarMinimum;
-if((typeof data77 == "number") && (isFinite(data77))){
-if(data77 > 800 || isNaN(data77)){
-const err242 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(data75.stageLaneDepth !== undefined){
+let data78 = data75.stageLaneDepth;
+if((typeof data78 == "number") && (isFinite(data78))){
+if(data78 > 400 || isNaN(data78)){
+const err242 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err242];
 }
@@ -5915,8 +5915,8 @@ vErrors.push(err242);
 }
 errors++;
 }
-if(data77 < 180 || isNaN(data77)){
-const err243 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+if(data78 < 40 || isNaN(data78)){
+const err243 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err243];
 }
@@ -5927,7 +5927,7 @@ errors++;
 }
 }
 else {
-const err244 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err244 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err244];
 }
@@ -5937,11 +5937,11 @@ vErrors.push(err244);
 errors++;
 }
 }
-if(data75.sidebarDefaultMaximum !== undefined){
-let data78 = data75.sidebarDefaultMaximum;
-if((typeof data78 == "number") && (isFinite(data78))){
-if(data78 > 1400 || isNaN(data78)){
-const err245 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
+if(data75.stageSurfaceOpacity !== undefined){
+let data79 = data75.stageSurfaceOpacity;
+if((typeof data79 == "number") && (isFinite(data79))){
+if(data79 > 1 || isNaN(data79)){
+const err245 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err245];
 }
@@ -5950,8 +5950,8 @@ vErrors.push(err245);
 }
 errors++;
 }
-if(data78 < 180 || isNaN(data78)){
-const err246 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+if(data79 < 0 || isNaN(data79)){
+const err246 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err246];
 }
@@ -5962,7 +5962,7 @@ errors++;
 }
 }
 else {
-const err247 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err247 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err247];
 }
@@ -5972,11 +5972,11 @@ vErrors.push(err247);
 errors++;
 }
 }
-if(data75.sidebarDefaultRatio !== undefined){
-let data79 = data75.sidebarDefaultRatio;
-if((typeof data79 == "number") && (isFinite(data79))){
-if(data79 > 0.7 || isNaN(data79)){
-const err248 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
+if(data75.stageRows !== undefined){
+let data80 = data75.stageRows;
+if((typeof data80 == "number") && (isFinite(data80))){
+if(data80 > 8 || isNaN(data80)){
+const err248 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err248];
 }
@@ -5985,8 +5985,8 @@ vErrors.push(err248);
 }
 errors++;
 }
-if(data79 < 0.1 || isNaN(data79)){
-const err249 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+if(data80 < 1 || isNaN(data80)){
+const err249 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err249];
 }
@@ -5997,7 +5997,7 @@ errors++;
 }
 }
 else {
-const err250 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err250 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err250];
 }
@@ -6007,11 +6007,11 @@ vErrors.push(err250);
 errors++;
 }
 }
-if(data75.sidebarMaximumRatio !== undefined){
-let data80 = data75.sidebarMaximumRatio;
-if((typeof data80 == "number") && (isFinite(data80))){
-if(data80 > 0.85 || isNaN(data80)){
-const err251 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
+if(data75.stageScale !== undefined){
+let data81 = data75.stageScale;
+if((typeof data81 == "number") && (isFinite(data81))){
+if(data81 > 3 || isNaN(data81)){
+const err251 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err251];
 }
@@ -6020,8 +6020,8 @@ vErrors.push(err251);
 }
 errors++;
 }
-if(data80 < 0.2 || isNaN(data80)){
-const err252 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+if(data81 < 1 || isNaN(data81)){
+const err252 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err252];
 }
@@ -6032,7 +6032,7 @@ errors++;
 }
 }
 else {
-const err253 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err253 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err253];
 }
@@ -6042,11 +6042,10 @@ vErrors.push(err253);
 errors++;
 }
 }
-if(data75.minimumPlotWidth !== undefined){
-let data81 = data75.minimumPlotWidth;
-if((typeof data81 == "number") && (isFinite(data81))){
-if(data81 > 1200 || isNaN(data81)){
-const err254 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(data75.manifest !== undefined){
+let data82 = data75.manifest;
+if((typeof data82 !== "string") && (data82 !== null)){
+const err254 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/type",keyword:"type",params:{type: schema40.properties.rendering.properties.recordVisuals.properties.manifest.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err254];
 }
@@ -6055,8 +6054,9 @@ vErrors.push(err254);
 }
 errors++;
 }
-if(data81 < 80 || isNaN(data81)){
-const err255 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
+if(typeof data82 === "string"){
+if(func3(data82) > 2048){
+const err255 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err255];
 }
@@ -6065,9 +6065,8 @@ vErrors.push(err255);
 }
 errors++;
 }
-}
-else {
-const err256 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data82) < 1){
+const err256 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err256];
 }
@@ -6076,12 +6075,8 @@ vErrors.push(err256);
 }
 errors++;
 }
-}
-if(data75.overviewMaxHeight !== undefined){
-let data82 = data75.overviewMaxHeight;
-if((typeof data82 == "number") && (isFinite(data82))){
-if(data82 > 800 || isNaN(data82)){
-const err257 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(!pattern1.test(data82)){
+const err257 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err257];
 }
@@ -6090,8 +6085,13 @@ vErrors.push(err257);
 }
 errors++;
 }
-if(data82 < 40 || isNaN(data82)){
-const err258 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+}
+if(data75.keyField !== undefined){
+let data83 = data75.keyField;
+if(typeof data83 === "string"){
+if(func3(data83) > 160){
+const err258 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err258];
 }
@@ -6100,9 +6100,8 @@ vErrors.push(err258);
 }
 errors++;
 }
-}
-else {
-const err259 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data83) < 1){
+const err259 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err259];
 }
@@ -6112,11 +6111,8 @@ vErrors.push(err259);
 errors++;
 }
 }
-if(data75.minimumDetailHeight !== undefined){
-let data83 = data75.minimumDetailHeight;
-if((typeof data83 == "number") && (isFinite(data83))){
-if(data83 > 800 || isNaN(data83)){
-const err260 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err260 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err260];
 }
@@ -6125,8 +6121,10 @@ vErrors.push(err260);
 }
 errors++;
 }
-if(data83 < 40 || isNaN(data83)){
-const err261 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.caseInsensitive !== undefined){
+if(typeof data75.caseInsensitive !== "boolean"){
+const err261 = {instancePath:instancePath+"/rendering/recordVisuals/caseInsensitive",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/caseInsensitive/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err261];
 }
@@ -6136,8 +6134,10 @@ vErrors.push(err261);
 errors++;
 }
 }
-else {
-const err262 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data75.imageField !== undefined){
+let data85 = data75.imageField;
+if((typeof data85 !== "string") && (data85 !== null)){
+const err262 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/type",keyword:"type",params:{type: schema40.properties.rendering.properties.recordVisuals.properties.imageField.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err262];
 }
@@ -6146,12 +6146,9 @@ vErrors.push(err262);
 }
 errors++;
 }
-}
-if(data75.splitRatio !== undefined){
-let data84 = data75.splitRatio;
-if((typeof data84 == "number") && (isFinite(data84))){
-if(data84 > 0.8 || isNaN(data84)){
-const err263 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
+if(typeof data85 === "string"){
+if(func3(data85) > 160){
+const err263 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err263];
 }
@@ -6160,8 +6157,8 @@ vErrors.push(err263);
 }
 errors++;
 }
-if(data84 < 0.2 || isNaN(data84)){
-const err264 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+if(func3(data85) < 1){
+const err264 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err264];
 }
@@ -6170,9 +6167,8 @@ vErrors.push(err264);
 }
 errors++;
 }
-}
-else {
-const err265 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern1.test(data85)){
+const err265 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err265];
 }
@@ -6183,8 +6179,10 @@ errors++;
 }
 }
 }
-else {
-const err266 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data75.fallbackImage !== undefined){
+let data86 = data75.fallbackImage;
+if((typeof data86 !== "string") && (data86 !== null)){
+const err266 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/type",keyword:"type",params:{type: schema40.properties.rendering.properties.recordVisuals.properties.fallbackImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err266];
 }
@@ -6193,13 +6191,9 @@ vErrors.push(err266);
 }
 errors++;
 }
-}
-if(data6.interaction !== undefined){
-let data85 = data6.interaction;
-if(data85 && typeof data85 == "object" && !Array.isArray(data85)){
-for(const key8 in data85){
-if(!(func2.call(schema40.properties.rendering.properties.interaction.properties, key8))){
-const err267 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(typeof data86 === "string"){
+if(func3(data86) > 2048){
+const err267 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err267];
 }
@@ -6208,11 +6202,8 @@ vErrors.push(err267);
 }
 errors++;
 }
-}
-if(data85.searchMode !== undefined){
-let data86 = data85.searchMode;
-if(typeof data86 !== "string"){
-const err268 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data86) < 1){
+const err268 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err268];
 }
@@ -6221,8 +6212,8 @@ vErrors.push(err268);
 }
 errors++;
 }
-if(!((data86 === "highlight") || (data86 === "only"))){
-const err269 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema40.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+if(!pattern1.test(data86)){
+const err269 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err269];
 }
@@ -6232,9 +6223,12 @@ vErrors.push(err269);
 errors++;
 }
 }
-if(data85.highlight !== undefined){
-if(typeof data85.highlight !== "boolean"){
-const err270 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+}
+if(data75.rotation !== undefined){
+let data87 = data75.rotation;
+if(Array.isArray(data87)){
+if(data87.length > 3){
+const err270 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/maxItems",keyword:"maxItems",params:{limit: 3},message:"must NOT have more than 3 items"};
 if(vErrors === null){
 vErrors = [err270];
 }
@@ -6243,10 +6237,8 @@ vErrors.push(err270);
 }
 errors++;
 }
-}
-if(data85.autoScale !== undefined){
-if(typeof data85.autoScale !== "boolean"){
-const err271 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(data87.length < 3){
+const err271 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/minItems",keyword:"minItems",params:{limit: 3},message:"must NOT have fewer than 3 items"};
 if(vErrors === null){
 vErrors = [err271];
 }
@@ -6255,12 +6247,12 @@ vErrors.push(err271);
 }
 errors++;
 }
-}
-if(data85.adaptiveRatio !== undefined){
-let data89 = data85.adaptiveRatio;
-if((typeof data89 == "number") && (isFinite(data89))){
-if(data89 > 16 || isNaN(data89)){
-const err272 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+const len2 = data87.length;
+for(let i2=0; i2<len2; i2++){
+let data88 = data87[i2];
+if((typeof data88 == "number") && (isFinite(data88))){
+if(data88 > 6.283185307179586 || isNaN(data88)){
+const err272 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/maximum",keyword:"maximum",params:{comparison: "<=", limit: 6.283185307179586},message:"must be <= 6.283185307179586"};
 if(vErrors === null){
 vErrors = [err272];
 }
@@ -6269,8 +6261,8 @@ vErrors.push(err272);
 }
 errors++;
 }
-if(data89 < 1 || isNaN(data89)){
-const err273 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(data88 < -6.283185307179586 || isNaN(data88)){
+const err273 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/minimum",keyword:"minimum",params:{comparison: ">=", limit: -6.283185307179586},message:"must be >= -6.283185307179586"};
 if(vErrors === null){
 vErrors = [err273];
 }
@@ -6281,7 +6273,7 @@ errors++;
 }
 }
 else {
-const err274 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err274 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err274];
 }
@@ -6291,11 +6283,9 @@ vErrors.push(err274);
 errors++;
 }
 }
-if(data85.zoomInFactor !== undefined){
-let data90 = data85.zoomInFactor;
-if((typeof data90 == "number") && (isFinite(data90))){
-if(data90 > 0.99 || isNaN(data90)){
-const err275 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+}
+else {
+const err275 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/type",keyword:"type",params:{type: "array"},message:"must be array"};
 if(vErrors === null){
 vErrors = [err275];
 }
@@ -6304,8 +6294,12 @@ vErrors.push(err275);
 }
 errors++;
 }
-if(data90 < 0.1 || isNaN(data90)){
-const err276 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data75.width !== undefined){
+let data89 = data75.width;
+if((typeof data89 == "number") && (isFinite(data89))){
+if(data89 > 600 || isNaN(data89)){
+const err276 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 600},message:"must be <= 600"};
 if(vErrors === null){
 vErrors = [err276];
 }
@@ -6314,9 +6308,8 @@ vErrors.push(err276);
 }
 errors++;
 }
-}
-else {
-const err277 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data89 < 24 || isNaN(data89)){
+const err277 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 24},message:"must be >= 24"};
 if(vErrors === null){
 vErrors = [err277];
 }
@@ -6326,11 +6319,8 @@ vErrors.push(err277);
 errors++;
 }
 }
-if(data85.zoomOutFactor !== undefined){
-let data91 = data85.zoomOutFactor;
-if((typeof data91 == "number") && (isFinite(data91))){
-if(data91 > 10 || isNaN(data91)){
-const err278 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+else {
+const err278 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err278];
 }
@@ -6339,8 +6329,12 @@ vErrors.push(err278);
 }
 errors++;
 }
-if(data91 < 1.01 || isNaN(data91)){
-const err279 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+}
+if(data75.height !== undefined){
+let data90 = data75.height;
+if((typeof data90 == "number") && (isFinite(data90))){
+if(data90 > 480 || isNaN(data90)){
+const err279 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/maximum",keyword:"maximum",params:{comparison: "<=", limit: 480},message:"must be <= 480"};
 if(vErrors === null){
 vErrors = [err279];
 }
@@ -6349,9 +6343,8 @@ vErrors.push(err279);
 }
 errors++;
 }
-}
-else {
-const err280 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data90 < 20 || isNaN(data90)){
+const err280 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
 if(vErrors === null){
 vErrors = [err280];
 }
@@ -6361,11 +6354,8 @@ vErrors.push(err280);
 errors++;
 }
 }
-if(data85.overviewPanFraction !== undefined){
-let data92 = data85.overviewPanFraction;
-if((typeof data92 == "number") && (isFinite(data92))){
-if(data92 > 1 || isNaN(data92)){
-const err281 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err281 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err281];
 }
@@ -6374,8 +6364,12 @@ vErrors.push(err281);
 }
 errors++;
 }
-if(data92 < 0.05 || isNaN(data92)){
-const err282 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+}
+if(data75.gap !== undefined){
+let data91 = data75.gap;
+if((typeof data91 == "number") && (isFinite(data91))){
+if(data91 > 120 || isNaN(data91)){
+const err282 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err282];
 }
@@ -6384,9 +6378,8 @@ vErrors.push(err282);
 }
 errors++;
 }
-}
-else {
-const err283 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data91 < 0 || isNaN(data91)){
+const err283 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err283];
 }
@@ -6396,11 +6389,8 @@ vErrors.push(err283);
 errors++;
 }
 }
-if(data85.overviewKeyboardFraction !== undefined){
-let data93 = data85.overviewKeyboardFraction;
-if((typeof data93 == "number") && (isFinite(data93))){
-if(data93 > 1 || isNaN(data93)){
-const err284 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err284 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err284];
 }
@@ -6409,8 +6399,12 @@ vErrors.push(err284);
 }
 errors++;
 }
-if(data93 < 0.01 || isNaN(data93)){
-const err285 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+}
+if(data75.depth !== undefined){
+let data92 = data75.depth;
+if((typeof data92 == "number") && (isFinite(data92))){
+if(data92 > 300 || isNaN(data92)){
+const err285 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
 if(vErrors === null){
 vErrors = [err285];
 }
@@ -6419,9 +6413,8 @@ vErrors.push(err285);
 }
 errors++;
 }
-}
-else {
-const err286 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data92 < 0 || isNaN(data92)){
+const err286 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err286];
 }
@@ -6431,11 +6424,8 @@ vErrors.push(err286);
 errors++;
 }
 }
-if(data85.resizeStep !== undefined){
-let data94 = data85.resizeStep;
-if((typeof data94 == "number") && (isFinite(data94))){
-if(data94 > 100 || isNaN(data94)){
-const err287 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err287 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err287];
 }
@@ -6444,8 +6434,12 @@ vErrors.push(err287);
 }
 errors++;
 }
-if(data94 < 1 || isNaN(data94)){
-const err288 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data75.maxModels !== undefined){
+let data93 = data75.maxModels;
+if((typeof data93 == "number") && (isFinite(data93))){
+if(data93 > 100 || isNaN(data93)){
+const err288 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err288];
 }
@@ -6454,9 +6448,8 @@ vErrors.push(err288);
 }
 errors++;
 }
-}
-else {
-const err289 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data93 < 0 || isNaN(data93)){
+const err289 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err289];
 }
@@ -6466,11 +6459,8 @@ vErrors.push(err289);
 errors++;
 }
 }
-if(data85.resizeLargeStep !== undefined){
-let data95 = data85.resizeLargeStep;
-if((typeof data95 == "number") && (isFinite(data95))){
-if(data95 > 300 || isNaN(data95)){
-const err290 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+else {
+const err290 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err290];
 }
@@ -6479,8 +6469,12 @@ vErrors.push(err290);
 }
 errors++;
 }
-if(data95 < 1 || isNaN(data95)){
-const err291 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data75.minimumModelPixels !== undefined){
+let data94 = data75.minimumModelPixels;
+if((typeof data94 == "number") && (isFinite(data94))){
+if(data94 > 600 || isNaN(data94)){
+const err291 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 600},message:"must be <= 600"};
 if(vErrors === null){
 vErrors = [err291];
 }
@@ -6489,9 +6483,8 @@ vErrors.push(err291);
 }
 errors++;
 }
-}
-else {
-const err292 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data94 < 0 || isNaN(data94)){
+const err292 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err292];
 }
@@ -6501,9 +6494,8 @@ vErrors.push(err292);
 errors++;
 }
 }
-}
 else {
-const err293 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err293 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err293];
 }
@@ -6513,12 +6505,11 @@ vErrors.push(err293);
 errors++;
 }
 }
-if(data6.controls !== undefined){
-let data96 = data6.controls;
-if(data96 && typeof data96 == "object" && !Array.isArray(data96)){
-for(const key9 in data96){
-if(!(func2.call(schema40.properties.rendering.properties.controls.properties, key9))){
-const err294 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
+if(data75.clusterPixels !== undefined){
+let data95 = data75.clusterPixels;
+if((typeof data95 == "number") && (isFinite(data95))){
+if(data95 > 400 || isNaN(data95)){
+const err294 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err294];
 }
@@ -6527,12 +6518,8 @@ vErrors.push(err294);
 }
 errors++;
 }
-}
-if(data96.timelineLabel !== undefined){
-let data97 = data96.timelineLabel;
-if(typeof data97 === "string"){
-if(func3(data97) > 160){
-const err295 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data95 < 0 || isNaN(data95)){
+const err295 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err295];
 }
@@ -6541,8 +6528,9 @@ vErrors.push(err295);
 }
 errors++;
 }
-if(func3(data97) < 1){
-const err296 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err296 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err296];
 }
@@ -6552,8 +6540,11 @@ vErrors.push(err296);
 errors++;
 }
 }
-else {
-const err297 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.selectedScale !== undefined){
+let data96 = data75.selectedScale;
+if((typeof data96 == "number") && (isFinite(data96))){
+if(data96 > 3 || isNaN(data96)){
+const err297 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err297];
 }
@@ -6562,12 +6553,8 @@ vErrors.push(err297);
 }
 errors++;
 }
-}
-if(data96.tableLabel !== undefined){
-let data98 = data96.tableLabel;
-if(typeof data98 === "string"){
-if(func3(data98) > 160){
-const err298 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data96 < 1 || isNaN(data96)){
+const err298 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err298];
 }
@@ -6576,8 +6563,9 @@ vErrors.push(err298);
 }
 errors++;
 }
-if(func3(data98) < 1){
-const err299 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err299 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err299];
 }
@@ -6587,8 +6575,11 @@ vErrors.push(err299);
 errors++;
 }
 }
-else {
-const err300 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.selectedLift !== undefined){
+let data97 = data75.selectedLift;
+if((typeof data97 == "number") && (isFinite(data97))){
+if(data97 > 400 || isNaN(data97)){
+const err300 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err300];
 }
@@ -6597,12 +6588,8 @@ vErrors.push(err300);
 }
 errors++;
 }
-}
-if(data96.splitLabel !== undefined){
-let data99 = data96.splitLabel;
-if(typeof data99 === "string"){
-if(func3(data99) > 160){
-const err301 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data97 < 0 || isNaN(data97)){
+const err301 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err301];
 }
@@ -6611,8 +6598,9 @@ vErrors.push(err301);
 }
 errors++;
 }
-if(func3(data99) < 1){
-const err302 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err302 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err302];
 }
@@ -6622,8 +6610,11 @@ vErrors.push(err302);
 errors++;
 }
 }
-else {
-const err303 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.transitionMs !== undefined){
+let data98 = data75.transitionMs;
+if((typeof data98 == "number") && (isFinite(data98))){
+if(data98 > 1000 || isNaN(data98)){
+const err303 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1000},message:"must be <= 1000"};
 if(vErrors === null){
 vErrors = [err303];
 }
@@ -6632,12 +6623,8 @@ vErrors.push(err303);
 }
 errors++;
 }
-}
-if(data96.previousOverviewLabel !== undefined){
-let data100 = data96.previousOverviewLabel;
-if(typeof data100 === "string"){
-if(func3(data100) > 160){
-const err304 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data98 < 0 || isNaN(data98)){
+const err304 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err304];
 }
@@ -6646,8 +6633,9 @@ vErrors.push(err304);
 }
 errors++;
 }
-if(func3(data100) < 1){
-const err305 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err305 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err305];
 }
@@ -6657,8 +6645,11 @@ vErrors.push(err305);
 errors++;
 }
 }
-else {
-const err306 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.bandOpacity !== undefined){
+let data99 = data75.bandOpacity;
+if((typeof data99 == "number") && (isFinite(data99))){
+if(data99 > 1 || isNaN(data99)){
+const err306 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err306];
 }
@@ -6667,12 +6658,8 @@ vErrors.push(err306);
 }
 errors++;
 }
-}
-if(data96.previousOverviewTitle !== undefined){
-let data101 = data96.previousOverviewTitle;
-if(typeof data101 === "string"){
-if(func3(data101) > 160){
-const err307 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data99 < 0 || isNaN(data99)){
+const err307 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err307];
 }
@@ -6681,8 +6668,9 @@ vErrors.push(err307);
 }
 errors++;
 }
-if(func3(data101) < 1){
-const err308 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err308 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err308];
 }
@@ -6692,8 +6680,11 @@ vErrors.push(err308);
 errors++;
 }
 }
-else {
-const err309 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.label2D !== undefined){
+let data100 = data75.label2D;
+if(typeof data100 === "string"){
+if(func3(data100) > 160){
+const err309 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err309];
 }
@@ -6702,12 +6693,8 @@ vErrors.push(err309);
 }
 errors++;
 }
-}
-if(data96.nextOverviewLabel !== undefined){
-let data102 = data96.nextOverviewLabel;
-if(typeof data102 === "string"){
-if(func3(data102) > 160){
-const err310 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data100) < 1){
+const err310 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err310];
 }
@@ -6716,8 +6703,9 @@ vErrors.push(err310);
 }
 errors++;
 }
-if(func3(data102) < 1){
-const err311 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err311 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err311];
 }
@@ -6727,8 +6715,11 @@ vErrors.push(err311);
 errors++;
 }
 }
-else {
-const err312 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.label3D !== undefined){
+let data101 = data75.label3D;
+if(typeof data101 === "string"){
+if(func3(data101) > 160){
+const err312 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err312];
 }
@@ -6737,12 +6728,8 @@ vErrors.push(err312);
 }
 errors++;
 }
-}
-if(data96.nextOverviewTitle !== undefined){
-let data103 = data96.nextOverviewTitle;
-if(typeof data103 === "string"){
-if(func3(data103) > 160){
-const err313 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data101) < 1){
+const err313 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err313];
 }
@@ -6751,8 +6738,9 @@ vErrors.push(err313);
 }
 errors++;
 }
-if(func3(data103) < 1){
-const err314 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err314 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err314];
 }
@@ -6762,8 +6750,9 @@ vErrors.push(err314);
 errors++;
 }
 }
+}
 else {
-const err315 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err315 = {instancePath:instancePath+"/rendering/recordVisuals",schemaPath:"#/properties/rendering/properties/recordVisuals/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err315];
 }
@@ -6773,11 +6762,12 @@ vErrors.push(err315);
 errors++;
 }
 }
-if(data96.fitOverviewLabel !== undefined){
-let data104 = data96.fitOverviewLabel;
-if(typeof data104 === "string"){
-if(func3(data104) > 160){
-const err316 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data6.layout !== undefined){
+let data102 = data6.layout;
+if(data102 && typeof data102 == "object" && !Array.isArray(data102)){
+for(const key8 in data102){
+if(!(func2.call(schema40.properties.rendering.properties.layout.properties, key8))){
+const err316 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err316];
 }
@@ -6786,8 +6776,12 @@ vErrors.push(err316);
 }
 errors++;
 }
-if(func3(data104) < 1){
-const err317 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.sidebarBreakpoint !== undefined){
+let data103 = data102.sidebarBreakpoint;
+if((typeof data103 == "number") && (isFinite(data103))){
+if(data103 > 2400 || isNaN(data103)){
+const err317 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
 if(vErrors === null){
 vErrors = [err317];
 }
@@ -6796,9 +6790,8 @@ vErrors.push(err317);
 }
 errors++;
 }
-}
-else {
-const err318 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data103 < 320 || isNaN(data103)){
+const err318 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
 if(vErrors === null){
 vErrors = [err318];
 }
@@ -6808,11 +6801,8 @@ vErrors.push(err318);
 errors++;
 }
 }
-if(data96.fitOverviewTitle !== undefined){
-let data105 = data96.fitOverviewTitle;
-if(typeof data105 === "string"){
-if(func3(data105) > 160){
-const err319 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err319 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err319];
 }
@@ -6821,8 +6811,12 @@ vErrors.push(err319);
 }
 errors++;
 }
-if(func3(data105) < 1){
-const err320 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.sidebarMinimum !== undefined){
+let data104 = data102.sidebarMinimum;
+if((typeof data104 == "number") && (isFinite(data104))){
+if(data104 > 800 || isNaN(data104)){
+const err320 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err320];
 }
@@ -6831,9 +6825,8 @@ vErrors.push(err320);
 }
 errors++;
 }
-}
-else {
-const err321 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data104 < 180 || isNaN(data104)){
+const err321 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err321];
 }
@@ -6843,9 +6836,8 @@ vErrors.push(err321);
 errors++;
 }
 }
-}
 else {
-const err322 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err322 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err322];
 }
@@ -6855,12 +6847,11 @@ vErrors.push(err322);
 errors++;
 }
 }
-if(data6.table !== undefined){
-let data106 = data6.table;
-if(data106 && typeof data106 == "object" && !Array.isArray(data106)){
-for(const key10 in data106){
-if(!((key10 === "emptyText") || (key10 === "columns"))){
-const err323 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+if(data102.sidebarDefaultMaximum !== undefined){
+let data105 = data102.sidebarDefaultMaximum;
+if((typeof data105 == "number") && (isFinite(data105))){
+if(data105 > 1400 || isNaN(data105)){
+const err323 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
 if(vErrors === null){
 vErrors = [err323];
 }
@@ -6869,12 +6860,8 @@ vErrors.push(err323);
 }
 errors++;
 }
-}
-if(data106.emptyText !== undefined){
-let data107 = data106.emptyText;
-if(typeof data107 === "string"){
-if(func3(data107) > 160){
-const err324 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data105 < 180 || isNaN(data105)){
+const err324 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err324];
 }
@@ -6883,8 +6870,9 @@ vErrors.push(err324);
 }
 errors++;
 }
-if(func3(data107) < 1){
-const err325 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err325 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err325];
 }
@@ -6894,8 +6882,11 @@ vErrors.push(err325);
 errors++;
 }
 }
-else {
-const err326 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data102.sidebarDefaultRatio !== undefined){
+let data106 = data102.sidebarDefaultRatio;
+if((typeof data106 == "number") && (isFinite(data106))){
+if(data106 > 0.7 || isNaN(data106)){
+const err326 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
 if(vErrors === null){
 vErrors = [err326];
 }
@@ -6904,12 +6895,8 @@ vErrors.push(err326);
 }
 errors++;
 }
-}
-if(data106.columns !== undefined){
-let data108 = data106.columns;
-if(Array.isArray(data108)){
-if(data108.length > 20){
-const err327 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(data106 < 0.1 || isNaN(data106)){
+const err327 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err327];
 }
@@ -6918,8 +6905,9 @@ vErrors.push(err327);
 }
 errors++;
 }
-if(data108.length < 1){
-const err328 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+}
+else {
+const err328 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err328];
 }
@@ -6928,12 +6916,12 @@ vErrors.push(err328);
 }
 errors++;
 }
-const len2 = data108.length;
-for(let i2=0; i2<len2; i2++){
-let data109 = data108[i2];
-if(data109 && typeof data109 == "object" && !Array.isArray(data109)){
-if(data109.field === undefined){
-const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+}
+if(data102.sidebarMaximumRatio !== undefined){
+let data107 = data102.sidebarMaximumRatio;
+if((typeof data107 == "number") && (isFinite(data107))){
+if(data107 > 0.85 || isNaN(data107)){
+const err329 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
 if(vErrors === null){
 vErrors = [err329];
 }
@@ -6942,8 +6930,8 @@ vErrors.push(err329);
 }
 errors++;
 }
-if(data109.label === undefined){
-const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+if(data107 < 0.2 || isNaN(data107)){
+const err330 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err330];
 }
@@ -6952,9 +6940,9 @@ vErrors.push(err330);
 }
 errors++;
 }
-for(const key11 in data109){
-if(!((((key11 === "field") || (key11 === "label")) || (key11 === "width")) || (key11 === "visible"))){
-const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key11},message:"must NOT have additional properties"};
+}
+else {
+const err331 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err331];
 }
@@ -6964,10 +6952,11 @@ vErrors.push(err331);
 errors++;
 }
 }
-if(data109.field !== undefined){
-let data110 = data109.field;
-if(typeof data110 !== "string"){
-const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data102.minimumPlotWidth !== undefined){
+let data108 = data102.minimumPlotWidth;
+if((typeof data108 == "number") && (isFinite(data108))){
+if(data108 > 1200 || isNaN(data108)){
+const err332 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err332];
 }
@@ -6976,8 +6965,8 @@ vErrors.push(err332);
 }
 errors++;
 }
-if(!(((((((data110 === "title") || (data110 === "start")) || (data110 === "end")) || (data110 === "source")) || (data110 === "status")) || (data110 === "description")) || (data110 === "id"))){
-const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema40.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+if(data108 < 80 || isNaN(data108)){
+const err333 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
 if(vErrors === null){
 vErrors = [err333];
 }
@@ -6987,11 +6976,8 @@ vErrors.push(err333);
 errors++;
 }
 }
-if(data109.label !== undefined){
-let data111 = data109.label;
-if(typeof data111 === "string"){
-if(func3(data111) > 80){
-const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err334 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err334];
 }
@@ -7000,8 +6986,12 @@ vErrors.push(err334);
 }
 errors++;
 }
-if(func3(data111) < 1){
-const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.overviewMaxHeight !== undefined){
+let data109 = data102.overviewMaxHeight;
+if((typeof data109 == "number") && (isFinite(data109))){
+if(data109 > 800 || isNaN(data109)){
+const err335 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err335];
 }
@@ -7010,9 +7000,8 @@ vErrors.push(err335);
 }
 errors++;
 }
-}
-else {
-const err336 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data109 < 40 || isNaN(data109)){
+const err336 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err336];
 }
@@ -7022,11 +7011,8 @@ vErrors.push(err336);
 errors++;
 }
 }
-if(data109.width !== undefined){
-let data112 = data109.width;
-if((typeof data112 == "number") && (isFinite(data112))){
-if(data112 > 1200 || isNaN(data112)){
-const err337 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+else {
+const err337 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err337];
 }
@@ -7035,8 +7021,12 @@ vErrors.push(err337);
 }
 errors++;
 }
-if(data112 < 40 || isNaN(data112)){
-const err338 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data102.minimumDetailHeight !== undefined){
+let data110 = data102.minimumDetailHeight;
+if((typeof data110 == "number") && (isFinite(data110))){
+if(data110 > 800 || isNaN(data110)){
+const err338 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err338];
 }
@@ -7045,9 +7035,8 @@ vErrors.push(err338);
 }
 errors++;
 }
-}
-else {
-const err339 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data110 < 40 || isNaN(data110)){
+const err339 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err339];
 }
@@ -7057,9 +7046,8 @@ vErrors.push(err339);
 errors++;
 }
 }
-if(data109.visible !== undefined){
-if(typeof data109.visible !== "boolean"){
-const err340 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+else {
+const err340 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err340];
 }
@@ -7069,9 +7057,11 @@ vErrors.push(err340);
 errors++;
 }
 }
-}
-else {
-const err341 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data102.splitRatio !== undefined){
+let data111 = data102.splitRatio;
+if((typeof data111 == "number") && (isFinite(data111))){
+if(data111 > 0.8 || isNaN(data111)){
+const err341 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
 if(vErrors === null){
 vErrors = [err341];
 }
@@ -7080,10 +7070,8 @@ vErrors.push(err341);
 }
 errors++;
 }
-}
-}
-else {
-const err342 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(data111 < 0.2 || isNaN(data111)){
+const err342 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err342];
 }
@@ -7093,9 +7081,8 @@ vErrors.push(err342);
 errors++;
 }
 }
-}
 else {
-const err343 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err343 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err343];
 }
@@ -7107,7 +7094,7 @@ errors++;
 }
 }
 else {
-const err344 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err344 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err344];
 }
@@ -7117,9 +7104,12 @@ vErrors.push(err344);
 errors++;
 }
 }
-}
-else {
-const err345 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data6.interaction !== undefined){
+let data112 = data6.interaction;
+if(data112 && typeof data112 == "object" && !Array.isArray(data112)){
+for(const key9 in data112){
+if(!(func2.call(schema40.properties.rendering.properties.interaction.properties, key9))){
+const err345 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err345];
 }
@@ -7128,11 +7118,931 @@ vErrors.push(err345);
 }
 errors++;
 }
+}
+if(data112.searchMode !== undefined){
+let data113 = data112.searchMode;
+if(typeof data113 !== "string"){
+const err346 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err346];
+}
+else {
+vErrors.push(err346);
+}
+errors++;
+}
+if(!((data113 === "highlight") || (data113 === "only"))){
+const err347 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema40.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err347];
+}
+else {
+vErrors.push(err347);
+}
+errors++;
+}
+}
+if(data112.highlight !== undefined){
+if(typeof data112.highlight !== "boolean"){
+const err348 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err348];
+}
+else {
+vErrors.push(err348);
+}
+errors++;
+}
+}
+if(data112.autoScale !== undefined){
+if(typeof data112.autoScale !== "boolean"){
+const err349 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err349];
+}
+else {
+vErrors.push(err349);
+}
+errors++;
+}
+}
+if(data112.adaptiveRatio !== undefined){
+let data116 = data112.adaptiveRatio;
+if((typeof data116 == "number") && (isFinite(data116))){
+if(data116 > 16 || isNaN(data116)){
+const err350 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+if(vErrors === null){
+vErrors = [err350];
+}
+else {
+vErrors.push(err350);
+}
+errors++;
+}
+if(data116 < 1 || isNaN(data116)){
+const err351 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err351];
+}
+else {
+vErrors.push(err351);
+}
+errors++;
+}
+}
+else {
+const err352 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err352];
+}
+else {
+vErrors.push(err352);
+}
+errors++;
+}
+}
+if(data112.zoomInFactor !== undefined){
+let data117 = data112.zoomInFactor;
+if((typeof data117 == "number") && (isFinite(data117))){
+if(data117 > 0.99 || isNaN(data117)){
+const err353 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+if(vErrors === null){
+vErrors = [err353];
+}
+else {
+vErrors.push(err353);
+}
+errors++;
+}
+if(data117 < 0.1 || isNaN(data117)){
+const err354 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+if(vErrors === null){
+vErrors = [err354];
+}
+else {
+vErrors.push(err354);
+}
+errors++;
+}
+}
+else {
+const err355 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err355];
+}
+else {
+vErrors.push(err355);
+}
+errors++;
+}
+}
+if(data112.zoomOutFactor !== undefined){
+let data118 = data112.zoomOutFactor;
+if((typeof data118 == "number") && (isFinite(data118))){
+if(data118 > 10 || isNaN(data118)){
+const err356 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+if(vErrors === null){
+vErrors = [err356];
+}
+else {
+vErrors.push(err356);
+}
+errors++;
+}
+if(data118 < 1.01 || isNaN(data118)){
+const err357 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+if(vErrors === null){
+vErrors = [err357];
+}
+else {
+vErrors.push(err357);
+}
+errors++;
+}
+}
+else {
+const err358 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err358];
+}
+else {
+vErrors.push(err358);
+}
+errors++;
+}
+}
+if(data112.overviewPanFraction !== undefined){
+let data119 = data112.overviewPanFraction;
+if((typeof data119 == "number") && (isFinite(data119))){
+if(data119 > 1 || isNaN(data119)){
+const err359 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(vErrors === null){
+vErrors = [err359];
+}
+else {
+vErrors.push(err359);
+}
+errors++;
+}
+if(data119 < 0.05 || isNaN(data119)){
+const err360 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+if(vErrors === null){
+vErrors = [err360];
+}
+else {
+vErrors.push(err360);
+}
+errors++;
+}
+}
+else {
+const err361 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err361];
+}
+else {
+vErrors.push(err361);
+}
+errors++;
+}
+}
+if(data112.overviewKeyboardFraction !== undefined){
+let data120 = data112.overviewKeyboardFraction;
+if((typeof data120 == "number") && (isFinite(data120))){
+if(data120 > 1 || isNaN(data120)){
+const err362 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(vErrors === null){
+vErrors = [err362];
+}
+else {
+vErrors.push(err362);
+}
+errors++;
+}
+if(data120 < 0.01 || isNaN(data120)){
+const err363 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+if(vErrors === null){
+vErrors = [err363];
+}
+else {
+vErrors.push(err363);
+}
+errors++;
+}
+}
+else {
+const err364 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err364];
+}
+else {
+vErrors.push(err364);
+}
+errors++;
+}
+}
+if(data112.resizeStep !== undefined){
+let data121 = data112.resizeStep;
+if((typeof data121 == "number") && (isFinite(data121))){
+if(data121 > 100 || isNaN(data121)){
+const err365 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+if(vErrors === null){
+vErrors = [err365];
+}
+else {
+vErrors.push(err365);
+}
+errors++;
+}
+if(data121 < 1 || isNaN(data121)){
+const err366 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err366];
+}
+else {
+vErrors.push(err366);
+}
+errors++;
+}
+}
+else {
+const err367 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err367];
+}
+else {
+vErrors.push(err367);
+}
+errors++;
+}
+}
+if(data112.resizeLargeStep !== undefined){
+let data122 = data112.resizeLargeStep;
+if((typeof data122 == "number") && (isFinite(data122))){
+if(data122 > 300 || isNaN(data122)){
+const err368 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+if(vErrors === null){
+vErrors = [err368];
+}
+else {
+vErrors.push(err368);
+}
+errors++;
+}
+if(data122 < 1 || isNaN(data122)){
+const err369 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err369];
+}
+else {
+vErrors.push(err369);
+}
+errors++;
+}
+}
+else {
+const err370 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err370];
+}
+else {
+vErrors.push(err370);
+}
+errors++;
+}
+}
+}
+else {
+const err371 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err371];
+}
+else {
+vErrors.push(err371);
+}
+errors++;
+}
+}
+if(data6.controls !== undefined){
+let data123 = data6.controls;
+if(data123 && typeof data123 == "object" && !Array.isArray(data123)){
+for(const key10 in data123){
+if(!(func2.call(schema40.properties.rendering.properties.controls.properties, key10))){
+const err372 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err372];
+}
+else {
+vErrors.push(err372);
+}
+errors++;
+}
+}
+if(data123.timelineLabel !== undefined){
+let data124 = data123.timelineLabel;
+if(typeof data124 === "string"){
+if(func3(data124) > 160){
+const err373 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err373];
+}
+else {
+vErrors.push(err373);
+}
+errors++;
+}
+if(func3(data124) < 1){
+const err374 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err374];
+}
+else {
+vErrors.push(err374);
+}
+errors++;
+}
+}
+else {
+const err375 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err375];
+}
+else {
+vErrors.push(err375);
+}
+errors++;
+}
+}
+if(data123.tableLabel !== undefined){
+let data125 = data123.tableLabel;
+if(typeof data125 === "string"){
+if(func3(data125) > 160){
+const err376 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err376];
+}
+else {
+vErrors.push(err376);
+}
+errors++;
+}
+if(func3(data125) < 1){
+const err377 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err377];
+}
+else {
+vErrors.push(err377);
+}
+errors++;
+}
+}
+else {
+const err378 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err378];
+}
+else {
+vErrors.push(err378);
+}
+errors++;
+}
+}
+if(data123.splitLabel !== undefined){
+let data126 = data123.splitLabel;
+if(typeof data126 === "string"){
+if(func3(data126) > 160){
+const err379 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err379];
+}
+else {
+vErrors.push(err379);
+}
+errors++;
+}
+if(func3(data126) < 1){
+const err380 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err380];
+}
+else {
+vErrors.push(err380);
+}
+errors++;
+}
+}
+else {
+const err381 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err381];
+}
+else {
+vErrors.push(err381);
+}
+errors++;
+}
+}
+if(data123.previousOverviewLabel !== undefined){
+let data127 = data123.previousOverviewLabel;
+if(typeof data127 === "string"){
+if(func3(data127) > 160){
+const err382 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err382];
+}
+else {
+vErrors.push(err382);
+}
+errors++;
+}
+if(func3(data127) < 1){
+const err383 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err383];
+}
+else {
+vErrors.push(err383);
+}
+errors++;
+}
+}
+else {
+const err384 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err384];
+}
+else {
+vErrors.push(err384);
+}
+errors++;
+}
+}
+if(data123.previousOverviewTitle !== undefined){
+let data128 = data123.previousOverviewTitle;
+if(typeof data128 === "string"){
+if(func3(data128) > 160){
+const err385 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err385];
+}
+else {
+vErrors.push(err385);
+}
+errors++;
+}
+if(func3(data128) < 1){
+const err386 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err386];
+}
+else {
+vErrors.push(err386);
+}
+errors++;
+}
+}
+else {
+const err387 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err387];
+}
+else {
+vErrors.push(err387);
+}
+errors++;
+}
+}
+if(data123.nextOverviewLabel !== undefined){
+let data129 = data123.nextOverviewLabel;
+if(typeof data129 === "string"){
+if(func3(data129) > 160){
+const err388 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err388];
+}
+else {
+vErrors.push(err388);
+}
+errors++;
+}
+if(func3(data129) < 1){
+const err389 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err389];
+}
+else {
+vErrors.push(err389);
+}
+errors++;
+}
+}
+else {
+const err390 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err390];
+}
+else {
+vErrors.push(err390);
+}
+errors++;
+}
+}
+if(data123.nextOverviewTitle !== undefined){
+let data130 = data123.nextOverviewTitle;
+if(typeof data130 === "string"){
+if(func3(data130) > 160){
+const err391 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err391];
+}
+else {
+vErrors.push(err391);
+}
+errors++;
+}
+if(func3(data130) < 1){
+const err392 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err392];
+}
+else {
+vErrors.push(err392);
+}
+errors++;
+}
+}
+else {
+const err393 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err393];
+}
+else {
+vErrors.push(err393);
+}
+errors++;
+}
+}
+if(data123.fitOverviewLabel !== undefined){
+let data131 = data123.fitOverviewLabel;
+if(typeof data131 === "string"){
+if(func3(data131) > 160){
+const err394 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err394];
+}
+else {
+vErrors.push(err394);
+}
+errors++;
+}
+if(func3(data131) < 1){
+const err395 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err395];
+}
+else {
+vErrors.push(err395);
+}
+errors++;
+}
+}
+else {
+const err396 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err396];
+}
+else {
+vErrors.push(err396);
+}
+errors++;
+}
+}
+if(data123.fitOverviewTitle !== undefined){
+let data132 = data123.fitOverviewTitle;
+if(typeof data132 === "string"){
+if(func3(data132) > 160){
+const err397 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err397];
+}
+else {
+vErrors.push(err397);
+}
+errors++;
+}
+if(func3(data132) < 1){
+const err398 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err398];
+}
+else {
+vErrors.push(err398);
+}
+errors++;
+}
+}
+else {
+const err399 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err399];
+}
+else {
+vErrors.push(err399);
+}
+errors++;
+}
+}
+}
+else {
+const err400 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err400];
+}
+else {
+vErrors.push(err400);
+}
+errors++;
+}
+}
+if(data6.table !== undefined){
+let data133 = data6.table;
+if(data133 && typeof data133 == "object" && !Array.isArray(data133)){
+for(const key11 in data133){
+if(!((key11 === "emptyText") || (key11 === "columns"))){
+const err401 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key11},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err401];
+}
+else {
+vErrors.push(err401);
+}
+errors++;
+}
+}
+if(data133.emptyText !== undefined){
+let data134 = data133.emptyText;
+if(typeof data134 === "string"){
+if(func3(data134) > 160){
+const err402 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err402];
+}
+else {
+vErrors.push(err402);
+}
+errors++;
+}
+if(func3(data134) < 1){
+const err403 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err403];
+}
+else {
+vErrors.push(err403);
+}
+errors++;
+}
+}
+else {
+const err404 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err404];
+}
+else {
+vErrors.push(err404);
+}
+errors++;
+}
+}
+if(data133.columns !== undefined){
+let data135 = data133.columns;
+if(Array.isArray(data135)){
+if(data135.length > 20){
+const err405 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(vErrors === null){
+vErrors = [err405];
+}
+else {
+vErrors.push(err405);
+}
+errors++;
+}
+if(data135.length < 1){
+const err406 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+if(vErrors === null){
+vErrors = [err406];
+}
+else {
+vErrors.push(err406);
+}
+errors++;
+}
+const len3 = data135.length;
+for(let i3=0; i3<len3; i3++){
+let data136 = data135[i3];
+if(data136 && typeof data136 == "object" && !Array.isArray(data136)){
+if(data136.field === undefined){
+const err407 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+if(vErrors === null){
+vErrors = [err407];
+}
+else {
+vErrors.push(err407);
+}
+errors++;
+}
+if(data136.label === undefined){
+const err408 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+if(vErrors === null){
+vErrors = [err408];
+}
+else {
+vErrors.push(err408);
+}
+errors++;
+}
+for(const key12 in data136){
+if(!((((key12 === "field") || (key12 === "label")) || (key12 === "width")) || (key12 === "visible"))){
+const err409 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key12},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err409];
+}
+else {
+vErrors.push(err409);
+}
+errors++;
+}
+}
+if(data136.field !== undefined){
+let data137 = data136.field;
+if(typeof data137 !== "string"){
+const err410 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err410];
+}
+else {
+vErrors.push(err410);
+}
+errors++;
+}
+if(!(((((((data137 === "title") || (data137 === "start")) || (data137 === "end")) || (data137 === "source")) || (data137 === "status")) || (data137 === "description")) || (data137 === "id"))){
+const err411 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema40.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err411];
+}
+else {
+vErrors.push(err411);
+}
+errors++;
+}
+}
+if(data136.label !== undefined){
+let data138 = data136.label;
+if(typeof data138 === "string"){
+if(func3(data138) > 80){
+const err412 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(vErrors === null){
+vErrors = [err412];
+}
+else {
+vErrors.push(err412);
+}
+errors++;
+}
+if(func3(data138) < 1){
+const err413 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err413];
+}
+else {
+vErrors.push(err413);
+}
+errors++;
+}
+}
+else {
+const err414 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err414];
+}
+else {
+vErrors.push(err414);
+}
+errors++;
+}
+}
+if(data136.width !== undefined){
+let data139 = data136.width;
+if((typeof data139 == "number") && (isFinite(data139))){
+if(data139 > 1200 || isNaN(data139)){
+const err415 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(vErrors === null){
+vErrors = [err415];
+}
+else {
+vErrors.push(err415);
+}
+errors++;
+}
+if(data139 < 40 || isNaN(data139)){
+const err416 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+if(vErrors === null){
+vErrors = [err416];
+}
+else {
+vErrors.push(err416);
+}
+errors++;
+}
+}
+else {
+const err417 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err417];
+}
+else {
+vErrors.push(err417);
+}
+errors++;
+}
+}
+if(data136.visible !== undefined){
+if(typeof data136.visible !== "boolean"){
+const err418 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err418];
+}
+else {
+vErrors.push(err418);
+}
+errors++;
+}
+}
+}
+else {
+const err419 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err419];
+}
+else {
+vErrors.push(err419);
+}
+errors++;
+}
+}
+}
+else {
+const err420 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err420];
+}
+else {
+vErrors.push(err420);
+}
+errors++;
+}
+}
+}
+else {
+const err421 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err421];
+}
+else {
+vErrors.push(err421);
+}
+errors++;
+}
+}
+}
+else {
+const err422 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err422];
+}
+else {
+vErrors.push(err422);
+}
+errors++;
+}
+}
+}
+else {
+const err423 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err423];
+}
+else {
+vErrors.push(err423);
+}
+errors++;
+}
 validate194.errors = vErrors;
 return errors === 0;
 }
 
-const schema54 = {"title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/legacyModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"format":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/legacyModel/definitions/positive"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/legacyModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/legacyModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/legacyModel/definitions/field"},"title":{"$ref":"#/definitions/legacyModel/definitions/field"},"description":{"$ref":"#/definitions/legacyModel/definitions/field"},"namespace":{"$ref":"#/definitions/legacyModel/definitions/field"},"color":{"$ref":"#/definitions/legacyModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/legacyModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/legacyModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/legacyModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/legacyModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"end":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/legacyModel/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"eventColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}}},"range":{"$ref":"#/definitions/legacyModel/definitions/range"},"context":{"$ref":"#/definitions/legacyModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/legacyModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/legacyModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/legacyModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/legacyModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
+const schema54 = {"title":"OpenBEXI provider and legacy timeline model","type":"object","additionalProperties":true,"required":["params","bands"],"properties":{"$schema":{"type":"string"},"params":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/params"}},"dataSource":{"$ref":"#/definitions/legacyModel/definitions/dataSource"},"bands":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/band"}},"rendering":{"type":"object","additionalProperties":false,"description":"Optional rendering settings. Omitted properties retain the existing presentation.","properties":{"theme":{"type":"object","additionalProperties":false,"description":"Scene and optional application surface colors.","properties":{"sceneBackground":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Canvas background."},"sceneBackgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."},"headerBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Header background; null keeps the stylesheet theme."},"panelBackground":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Timeline panel background; null keeps the stylesheet theme."},"panelText":{"type":["string","null"],"default":null,"minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Panel text color; null keeps the stylesheet theme."}}},"axis":{"type":"object","additionalProperties":false,"description":"Date axes and automatic tick spacing.","properties":{"background":{"type":"string","default":"#f7f9fc","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date axis and date-label background."},"separatorColor":{"type":"string","default":"#8090a0","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date-axis boundary color."},"textColor":{"type":"string","default":"#233449","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Date label color."},"minimumHeight":{"type":"number","default":28,"minimum":16,"maximum":160,"description":"Minimum date-axis height in pixels."},"verticalPadding":{"type":"number","default":16,"minimum":0,"maximum":80,"description":"Additional axis height above the band font size."},"minimumFontSize":{"type":"number","default":12,"minimum":6,"maximum":48,"description":"Minimum canvas date-label font size in pixels."},"targetTickPixels":{"type":"number","default":100,"minimum":30,"maximum":400,"description":"Preferred distance between automatically chosen time labels."},"groupHeaderHeight":{"type":"number","default":24,"minimum":12,"maximum":120,"description":"Space reserved for a group heading."},"scaleHeaderColor":{"type":"string","default":"#edf0f1","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header background."},"scaleHeaderText":{"type":"string","default":"#397a9c","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default scale-header text."},"secondaryColor":{"type":"string","default":"#ffd58a","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale background."},"secondaryText":{"type":"string","default":"#704308","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Default secondary-scale text."}}},"overview":{"type":"object","additionalProperties":false,"description":"Overview SVG labels, markers and visible-range indicators.","properties":{"borderColor":{"type":"string","default":"#aab8bf","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Top divider."},"headingColor":{"type":"string","default":"#566871","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Heading and record-count text."},"headingFontSize":{"type":"number","default":11,"minimum":6,"maximum":32,"description":"Default overview heading size."},"countFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Record-count size."},"axisFontSize":{"type":"number","default":10,"minimum":6,"maximum":32,"description":"Overview date-label size."},"markerStroke":{"type":"string","default":"#253746","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Record marker outline."},"markerStrokeWidth":{"type":"number","default":0.35,"minimum":0,"maximum":8,"description":"Record marker outline width."},"dimmedOpacity":{"type":"number","default":0.25,"minimum":0,"maximum":1,"description":"Opacity multiplier for nonmatching records during search."},"matchColor":{"type":"string","default":"#ffe04b","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match fill."},"matchOpacity":{"type":"number","default":0.95,"minimum":0,"maximum":1,"description":"Search-match opacity."},"matchStroke":{"type":"string","default":"#783800","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Search-match outline and count text."},"matchStrokeWidth":{"type":"number","default":2,"minimum":0,"maximum":8,"description":"Search-match outline width."},"viewportColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range fill."},"viewportOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"Visible-range fill opacity."},"viewportStroke":{"type":"string","default":"#536872","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range outline."},"viewportStrokeWidth":{"type":"number","default":1,"minimum":0,"maximum":8,"description":"Visible-range outline width."},"handleColor":{"type":"string","default":"#eff8ff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle fill."},"handleStroke":{"type":"string","default":"#4d89ae","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Visible-range handle outline."},"handleWidth":{"type":"number","default":7,"minimum":3,"maximum":24,"description":"Handle width in pixels."},"handleMaxHeight":{"type":"number","default":48,"minimum":12,"maximum":120,"description":"Maximum handle height in pixels."}}},"camera":{"type":"object","additionalProperties":false,"description":"3D camera and lighting. The UI starts in 2D; the model editor can preview either mode.","properties":{"mode":{"type":"string","default":"Orthographic","enum":["Orthographic","Perspective"],"description":"Camera mode for model preview. Page startup always uses 2D."},"fieldOfView":{"type":"number","default":30,"minimum":10,"maximum":100,"description":"Perspective field of view in degrees."},"yaw":{"type":"number","default":-0.9948376736367678,"minimum":-3.141592653589793,"maximum":3.141592653589793,"description":"Initial horizontal orbit angle in radians."},"pitch":{"type":"number","default":0.2792526803190927,"minimum":-1.48,"maximum":1.48,"description":"Initial vertical orbit angle in radians."},"roll":{"type":"number","default":0,"minimum":-0.5,"maximum":0.5,"description":"Board rotation in radians."},"rotationSensitivity":{"type":"number","default":0.002,"minimum":0.0001,"maximum":0.02,"description":"Orbit rotation sensitivity; 0.002 is the default speed."},"ambientColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective ambient light."},"ambientIntensity":{"type":"number","default":0.3,"minimum":0,"maximum":5,"description":"Perspective ambient light intensity."},"directionalColor":{"type":"string","default":"#ffffff","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Perspective directional light."},"directionalIntensity":{"type":"number","default":1.8,"minimum":0,"maximum":5,"description":"Perspective directional light intensity."}}},"activity":{"type":"object","additionalProperties":false,"description":"Activity labels, 3D materials and selection brightness. Selection never enlarges activities.","properties":{"labelMinWidth":{"type":"number","default":80,"minimum":20,"maximum":400,"description":"Minimum wrapping width in pixels."},"labelMaxWidth":{"type":"number","default":360,"minimum":40,"maximum":1600,"description":"Maximum wrapping width in pixels."},"labelHorizontalPadding":{"type":"number","default":24,"minimum":0,"maximum":200,"description":"Space reserved around labels."},"lineHeight":{"type":"number","default":1.25,"minimum":1,"maximum":3,"description":"Label line-height multiplier."},"shininess":{"type":"number","default":24,"minimum":0,"maximum":100,"description":"3D activity material shininess."},"shadowColor":{"type":"string","default":"#17363d","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D activity shadow."},"shadowOpacity":{"type":"number","default":0.16,"minimum":0,"maximum":1,"description":"3D activity shadow opacity."},"laneOpacity":{"type":"number","default":0.08,"minimum":0,"maximum":1,"description":"3D row lane opacity."},"glowColor":{"type":"string","default":"#ffca28","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow."},"glowOutline":{"type":"string","default":"#ae5b00","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected activity glow outline."},"glowOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Selected activity resting glow opacity."},"glowPulse":{"type":"number","default":0.12,"minimum":0,"maximum":1,"description":"Additional glow opacity during the selection pulse."},"transitionMs":{"type":"number","default":850,"minimum":0,"maximum":5000,"description":"Selection pulse duration; zero disables animation."},"matchBackground":{"type":"string","default":"#fff6bd","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Matching activity label background."},"leaderColor":{"type":"string","default":"#507585","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"3D label connector."},"selectedLeaderColor":{"type":"string","default":"#9c5900","minLength":1,"maxLength":80,"pattern":"^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(?:rgb|hsl)a?\\([0-9.,% +\\-]+\\))$","description":"Selected label connector."}}},"recordVisuals":{"type":"object","additionalProperties":false,"description":"Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.","properties":{"enabled":{"type":"boolean","default":false,"description":"Reserve artwork space and render record visuals in the shared 2D and 3D core."},"presentation3D":{"type":"string","default":"board","enum":["board","stage"],"description":"Board artwork or upright exhibits on horizontal display lanes in perspective mode."},"stageLaneDepth":{"type":"number","default":100,"minimum":40,"maximum":400,"description":"Depth of each horizontal display lane in stage mode, in timeline units."},"stageSurfaceOpacity":{"type":"number","default":0.22,"minimum":0,"maximum":1,"description":"Opacity of the raised display lanes in stage mode."},"stageRows":{"type":"number","default":3,"minimum":1,"maximum":8,"description":"Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages."},"stageScale":{"type":"number","default":1.5,"minimum":1,"maximum":3,"description":"Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged."},"manifest":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin asset manifest URL, relative to the application root."},"keyField":{"type":"string","default":"data.title","minLength":1,"maxLength":160,"description":"Exact record field used to look up an entry in the asset manifest."},"caseInsensitive":{"type":"boolean","default":true,"description":"Match manifest entry keys without case sensitivity."},"imageField":{"type":["string","null"],"default":null,"minLength":1,"maxLength":160,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback."},"fallbackImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin fallback image URL, relative to the application root."},"rotation":{"type":"array","default":[0,0,0],"minItems":3,"maxItems":3,"description":"Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.","items":{"type":"number","minimum":-6.283185307179586,"maximum":6.283185307179586}},"width":{"type":"number","default":128,"minimum":24,"maximum":600,"description":"Normalized artwork display width in timeline pixels; does not represent physical size."},"height":{"type":"number","default":92,"minimum":20,"maximum":480,"description":"Normalized artwork display height above the occurrence bar."},"gap":{"type":"number","default":18,"minimum":0,"maximum":120,"description":"Spacing between artwork, occurrence bars and neighboring rows."},"depth":{"type":"number","default":32,"minimum":0,"maximum":300,"description":"Maximum normalized artwork depth in the perspective view."},"maxModels":{"type":"number","default":16,"minimum":0,"maximum":100,"description":"Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks."},"minimumModelPixels":{"type":"number","default":60,"minimum":0,"maximum":600,"description":"Minimum projected artwork width before loading a detailed 3D model."},"clusterPixels":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale."},"selectedScale":{"type":"number","default":1,"minimum":1,"maximum":3,"description":"Display-only artwork scale multiplier for the selected record."},"selectedLift":{"type":"number","default":0,"minimum":0,"maximum":400,"description":"Display-only foreground lift for selected artwork, in timeline pixels."},"transitionMs":{"type":"number","default":0,"minimum":0,"maximum":1000,"description":"Artwork selection transition duration; zero disables animation."},"bandOpacity":{"type":"number","default":1,"minimum":0,"maximum":1,"description":"Band surface opacity when record visuals are enabled; zero retains an invisible drag surface."},"label2D":{"type":"string","default":"Scientific","minLength":1,"maxLength":160,"description":"Label for the shared orthographic presentation."},"label3D":{"type":"string","default":"Museum","minLength":1,"maxLength":160,"description":"Label for the shared perspective presentation."}}},"layout":{"type":"object","additionalProperties":false,"description":"Responsive layout preferences; computed positions and page membership are not persisted.","properties":{"sidebarBreakpoint":{"type":"number","default":900,"minimum":320,"maximum":2400,"description":"Viewport width below which the Data panel overlays the plot."},"sidebarMinimum":{"type":"number","default":320,"minimum":180,"maximum":800,"description":"Minimum docked Data panel width."},"sidebarDefaultMaximum":{"type":"number","default":480,"minimum":180,"maximum":1400,"description":"Maximum initial Data panel width."},"sidebarDefaultRatio":{"type":"number","default":0.22,"minimum":0.1,"maximum":0.7,"description":"Initial Data panel width relative to the viewport."},"sidebarMaximumRatio":{"type":"number","default":0.6,"minimum":0.2,"maximum":0.85,"description":"Maximum docked Data panel width relative to the viewport."},"minimumPlotWidth":{"type":"number","default":420,"minimum":80,"maximum":1200,"description":"Space retained next to a docked Data panel."},"overviewMaxHeight":{"type":"number","default":180,"minimum":40,"maximum":800,"description":"Maximum height per docked overview."},"minimumDetailHeight":{"type":"number","default":100,"minimum":40,"maximum":800,"description":"Space retained above the overview."},"splitRatio":{"type":"number","default":0.5,"minimum":0.2,"maximum":0.8,"description":"Timeline share of the split view width."}}},"interaction":{"type":"object","additionalProperties":false,"description":"Initial search preferences and user navigation increments. Saved/URL state still takes precedence.","properties":{"searchMode":{"type":"string","default":"highlight","enum":["highlight","only"],"description":"Initial search presentation."},"highlight":{"type":"boolean","default":true,"description":"Highlight matching activities."},"autoScale":{"type":"boolean","default":false,"description":"Enable density-based scaling initially."},"adaptiveRatio":{"type":"number","default":8,"minimum":1,"maximum":16,"description":"Maximum initial adaptive scaling ratio."},"zoomInFactor":{"type":"number","default":0.8,"minimum":0.1,"maximum":0.99,"description":"Zoom-in span multiplier."},"zoomOutFactor":{"type":"number","default":1.25,"minimum":1.01,"maximum":10,"description":"Zoom-out span multiplier."},"overviewPanFraction":{"type":"number","default":0.5,"minimum":0.05,"maximum":1,"description":"Overview button navigation fraction."},"overviewKeyboardFraction":{"type":"number","default":0.1,"minimum":0.01,"maximum":1,"description":"Overview arrow-key navigation fraction."},"resizeStep":{"type":"number","default":20,"minimum":1,"maximum":100,"description":"Data panel keyboard resize step in pixels."},"resizeLargeStep":{"type":"number","default":50,"minimum":1,"maximum":300,"description":"Shift-arrow resize step in pixels."}}},"controls":{"type":"object","additionalProperties":false,"description":"Labels for existing, approved view and overview actions.","properties":{"timelineLabel":{"type":"string","default":"Timeline","minLength":1,"maxLength":160,"description":"Timeline view button label."},"tableLabel":{"type":"string","default":"Table","minLength":1,"maxLength":160,"description":"Table view button label."},"splitLabel":{"type":"string","default":"Split","minLength":1,"maxLength":160,"description":"Split view button label."},"previousOverviewLabel":{"type":"string","default":"←","minLength":1,"maxLength":160,"description":"Overview previous button label."},"previousOverviewTitle":{"type":"string","default":"Navigate earlier","minLength":1,"maxLength":160,"description":"Overview previous button tooltip."},"nextOverviewLabel":{"type":"string","default":"→","minLength":1,"maxLength":160,"description":"Overview next button label."},"nextOverviewTitle":{"type":"string","default":"Navigate later","minLength":1,"maxLength":160,"description":"Overview next button tooltip."},"fitOverviewLabel":{"type":"string","default":"Fit context","minLength":1,"maxLength":160,"description":"Fit overview button label."},"fitOverviewTitle":{"type":"string","default":"Fit loaded context in Overview","minLength":1,"maxLength":160,"description":"Fit overview button tooltip."}}},"table":{"type":"object","additionalProperties":false,"description":"Table columns and details links.","properties":{"emptyText":{"type":"string","default":"No events to display.","minLength":1,"maxLength":160,"description":"Empty table message."},"columns":{"type":"array","minItems":1,"maxItems":20,"description":"Columns in display order; field is a supported record value.","default":[{"field":"title","label":"Title"},{"field":"start","label":"Start"},{"field":"end","label":"End"},{"field":"source","label":"Source"},{"field":"status","label":"Status"}],"items":{"type":"object","additionalProperties":false,"required":["field","label"],"properties":{"field":{"type":"string","enum":["title","start","end","source","status","description","id"]},"label":{"type":"string","minLength":1,"maxLength":80},"width":{"type":"number","minimum":40,"maximum":1200},"visible":{"type":"boolean","default":true}}}}}}}}},"definitions":{"text":{"type":"string","minLength":1},"positive":{"type":"number","exclusiveMinimum":0},"timeValue":{"type":["string","number"],"minLength":1},"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY"]},"path":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)*$"},"field":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/path"},{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/path"}}]},"range":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"}}},"ticks":{"type":"object","additionalProperties":false,"required":["unit","step"],"properties":{"unit":{"enum":["MILLISECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","YEAR","DECADE","CENTURY","NUMERIC"]},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"format":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"focus":{"type":"object","additionalProperties":false,"required":["from","to","magnification"],"properties":{"from":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"to":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"magnification":{"type":"number","minimum":1},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"}}},"params":{"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/legacyModel/definitions/positive"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}},"dataSource":{"type":"object","additionalProperties":false,"required":["format"],"properties":{"format":{"enum":["json","simile-xml"]},"url":{"$ref":"#/definitions/legacyModel/definitions/text"},"recordsPath":{"$ref":"#/definitions/legacyModel/definitions/path"},"fields":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"#/definitions/legacyModel/definitions/field"},"title":{"$ref":"#/definitions/legacyModel/definitions/field"},"description":{"$ref":"#/definitions/legacyModel/definitions/field"},"namespace":{"$ref":"#/definitions/legacyModel/definitions/field"},"color":{"$ref":"#/definitions/legacyModel/definitions/field"}}},"iconColors":{"type":"object","additionalProperties":{"$ref":"#/definitions/legacyModel/definitions/text"}},"zones":{"type":"array","items":{"$ref":"#/definitions/legacyModel/definitions/zone"}},"time":{"type":"object","additionalProperties":false,"required":["kind","unit","millisecondsPerUnit"],"properties":{"kind":{"const":"numeric"},"unit":{"$ref":"#/definitions/legacyModel/definitions/text"},"millisecondsPerUnit":{"$ref":"#/definitions/legacyModel/definitions/positive"},"direction":{"enum":[-1,1]},"approximatePrefixes":{"type":"array","uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}}}}}},"zone":{"type":"object","additionalProperties":false,"required":["start","end","title"],"properties":{"id":{"type":["string","number"]},"start":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"end":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"title":{"type":"string"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"render":{"type":"object","additionalProperties":false,"properties":{"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"opacity":{"type":"number","minimum":0,"maximum":1},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"verticalAlign":{"enum":["top","center"]},"labelPosition":{"enum":["top","bottom"]},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}},"band":{"type":"object","additionalProperties":true,"required":["name"],"dependencies":{"context":["range"],"focus":["range"]},"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"height":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^(?:[1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)%$"}]},"intervalUnit":{"$ref":"#/definitions/legacyModel/definitions/unit"},"intervalPixels":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/positive"},{"type":"string","pattern":"^[0-9]+(?:\\.[0-9]+)?$"}]},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"SessionColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"eventColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"dateFormat":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontSize":{"type":["number","string"]},"intervalUnitPos":{"enum":["TOP","BOTTOM"]},"model":{"type":"array","items":{"type":"object","additionalProperties":true,"properties":{"sortBy":{"type":"string"},"alternateColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}}},"range":{"$ref":"#/definitions/legacyModel/definitions/range"},"context":{"$ref":"#/definitions/legacyModel/definitions/range"},"focus":{"anyOf":[{"$ref":"#/definitions/legacyModel/definitions/focus"},{"type":"array","minItems":1,"items":{"$ref":"#/definitions/legacyModel/definitions/focus"}}]},"ticks":{"$ref":"#/definitions/legacyModel/definitions/ticks"},"tickMinutes":{"$ref":"#/definitions/legacyModel/definitions/positive"},"labelPosition":{"enum":["above","inside"]},"topPadding":{"type":"number","minimum":0},"trackIncrement":{"$ref":"#/definitions/legacyModel/definitions/positive"},"sessionHeight":{"$ref":"#/definitions/legacyModel/definitions/positive"},"defaultEventSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"groupBy":{"$ref":"#/definitions/legacyModel/definitions/path"},"eventKind":{"enum":["event","duration"]},"filter":{"type":"object","additionalProperties":false,"required":["field","equals"],"properties":{"field":{"$ref":"#/definitions/legacyModel/definitions/path"},"equals":{"type":["string","number","boolean","null"]}}},"sourceBands":{"type":"array","minItems":1,"uniqueItems":true,"items":{"$ref":"#/definitions/legacyModel/definitions/text"}},"fitRows":{"type":"boolean"},"showContextLabel":{"type":"boolean"},"viewportHandles":{"type":"boolean"},"overviewContextRatio":{"type":"number","minimum":1,"maximum":12},"overviewMarkerSize":{"type":"number","minimum":1,"maximum":12},"overviewLabel":{"anyOf":[{"type":"string"},{"const":false}]},"uncertaintyOpacity":{"type":"number","minimum":0,"maximum":1},"scaleHeader":{"type":"object","additionalProperties":false,"required":["label"],"properties":{"label":{"type":"string"},"unit":{"type":"string"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"}}},"secondaryScale":{"type":"object","additionalProperties":false,"required":["format","origin","step"],"properties":{"format":{"const":"elapsedYears"},"origin":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"step":{"$ref":"#/definitions/legacyModel/definitions/positive"},"position":{"enum":["top","bottom"]},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"color":{"$ref":"#/definitions/legacyModel/definitions/text"},"textColor":{"$ref":"#/definitions/legacyModel/definitions/text"},"suffix":{"type":"string"},"min":{"type":"number"}}},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]},"subIntervalPixels":{"type":["number","string"]},"texture":{"type":"string"},"defaultSessionTexture":{"type":"string"},"backgroundImage":{"type":["string","null"],"default":null,"minLength":1,"maxLength":2048,"pattern":"^[^\\u0000-\\u001f\\u007f]+$","description":"Optional same-origin image URL, relative to the hosting page. Stretched to the background; null keeps the color."}}}}};
 const schema55 = {"type":"object","additionalProperties":true,"required":["name"],"properties":{"name":{"$ref":"#/definitions/legacyModel/definitions/text"},"title":{"type":"string"},"date":{"$ref":"#/definitions/legacyModel/definitions/timeValue"},"timeZone":{"type":"string"},"timeZoneLabel":{"type":"string"},"displayOffsetMinutes":{"type":"number","minimum":-1440,"maximum":1440},"top":{"type":"number"},"left":{"type":"number"},"width":{"$ref":"#/definitions/legacyModel/definitions/positive"},"height":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontSize":{"$ref":"#/definitions/legacyModel/definitions/positive"},"fontFamily":{"$ref":"#/definitions/legacyModel/definitions/text"},"data":{"type":"string"},"overview":{"type":"boolean"},"dockOverview":{"type":"boolean"},"overviewHeightRatio":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1},"showCurrentTime":{"type":"boolean"},"dateAxisMode":{"enum":["shared","per-band"],"default":"shared","description":"shared shows one date axis at the top of each visible page; per-band shows each main band's axis using intervalUnitPos. Overview keeps its independent context axis."},"fullWindow":{"type":"boolean","default":true,"description":"Fill available browser space; false uses custom geometry bounded by the viewport."},"camera":{"enum":["Orthographic","Perspective"]},"fontStyle":{"enum":["normal","italic","oblique"]},"fontWeight":{"type":["string","number"]}}};
 const schema56 = {"type":"string","minLength":1};
 
@@ -8526,7 +9436,7 @@ validate331.errors = vErrors;
 return errors === 0;
 }
 
-const pattern36 = new RegExp("^[0-9]+(?:\\.[0-9]+)?$", "");
+const pattern39 = new RegExp("^[0-9]+(?:\\.[0-9]+)?$", "");
 
 function validate313(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -8658,7 +9568,7 @@ valid3 = valid3 || _valid1;
 if(!valid3){
 const _errs12 = errors;
 if(typeof data3 === "string"){
-if(!pattern36.test(data3)){
+if(!pattern39.test(data3)){
 const err6 = {instancePath:instancePath+"/intervalPixels",schemaPath:"#/properties/intervalPixels/anyOf/1/pattern",keyword:"pattern",params:{pattern: "^[0-9]+(?:\\.[0-9]+)?$"},message:"must match pattern \""+"^[0-9]+(?:\\.[0-9]+)?$"+"\""};
 if(vErrors === null){
 vErrors = [err6];
@@ -12389,12 +13299,12 @@ vErrors.push(err235);
 errors++;
 }
 }
-if(data6.layout !== undefined){
-let data75 = data6.layout;
+if(data6.recordVisuals !== undefined){
+let data75 = data6.recordVisuals;
 if(data75 && typeof data75 == "object" && !Array.isArray(data75)){
 for(const key6 in data75){
-if(!(func2.call(schema54.properties.rendering.properties.layout.properties, key6))){
-const err236 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
+if(!(func2.call(schema54.properties.rendering.properties.recordVisuals.properties, key6))){
+const err236 = {instancePath:instancePath+"/rendering/recordVisuals",schemaPath:"#/properties/rendering/properties/recordVisuals/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err236];
 }
@@ -12404,11 +13314,9 @@ vErrors.push(err236);
 errors++;
 }
 }
-if(data75.sidebarBreakpoint !== undefined){
-let data76 = data75.sidebarBreakpoint;
-if((typeof data76 == "number") && (isFinite(data76))){
-if(data76 > 2400 || isNaN(data76)){
-const err237 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
+if(data75.enabled !== undefined){
+if(typeof data75.enabled !== "boolean"){
+const err237 = {instancePath:instancePath+"/rendering/recordVisuals/enabled",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/enabled/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err237];
 }
@@ -12417,8 +13325,11 @@ vErrors.push(err237);
 }
 errors++;
 }
-if(data76 < 320 || isNaN(data76)){
-const err238 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
+}
+if(data75.presentation3D !== undefined){
+let data77 = data75.presentation3D;
+if(typeof data77 !== "string"){
+const err238 = {instancePath:instancePath+"/rendering/recordVisuals/presentation3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/presentation3D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err238];
 }
@@ -12427,9 +13338,8 @@ vErrors.push(err238);
 }
 errors++;
 }
-}
-else {
-const err239 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!((data77 === "board") || (data77 === "stage"))){
+const err239 = {instancePath:instancePath+"/rendering/recordVisuals/presentation3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/presentation3D/enum",keyword:"enum",params:{allowedValues: schema54.properties.rendering.properties.recordVisuals.properties.presentation3D.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err239];
 }
@@ -12439,11 +13349,11 @@ vErrors.push(err239);
 errors++;
 }
 }
-if(data75.sidebarMinimum !== undefined){
-let data77 = data75.sidebarMinimum;
-if((typeof data77 == "number") && (isFinite(data77))){
-if(data77 > 800 || isNaN(data77)){
-const err240 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(data75.stageLaneDepth !== undefined){
+let data78 = data75.stageLaneDepth;
+if((typeof data78 == "number") && (isFinite(data78))){
+if(data78 > 400 || isNaN(data78)){
+const err240 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err240];
 }
@@ -12452,8 +13362,8 @@ vErrors.push(err240);
 }
 errors++;
 }
-if(data77 < 180 || isNaN(data77)){
-const err241 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+if(data78 < 40 || isNaN(data78)){
+const err241 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err241];
 }
@@ -12464,7 +13374,7 @@ errors++;
 }
 }
 else {
-const err242 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err242 = {instancePath:instancePath+"/rendering/recordVisuals/stageLaneDepth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageLaneDepth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err242];
 }
@@ -12474,11 +13384,11 @@ vErrors.push(err242);
 errors++;
 }
 }
-if(data75.sidebarDefaultMaximum !== undefined){
-let data78 = data75.sidebarDefaultMaximum;
-if((typeof data78 == "number") && (isFinite(data78))){
-if(data78 > 1400 || isNaN(data78)){
-const err243 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
+if(data75.stageSurfaceOpacity !== undefined){
+let data79 = data75.stageSurfaceOpacity;
+if((typeof data79 == "number") && (isFinite(data79))){
+if(data79 > 1 || isNaN(data79)){
+const err243 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err243];
 }
@@ -12487,8 +13397,8 @@ vErrors.push(err243);
 }
 errors++;
 }
-if(data78 < 180 || isNaN(data78)){
-const err244 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
+if(data79 < 0 || isNaN(data79)){
+const err244 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err244];
 }
@@ -12499,7 +13409,7 @@ errors++;
 }
 }
 else {
-const err245 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err245 = {instancePath:instancePath+"/rendering/recordVisuals/stageSurfaceOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageSurfaceOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err245];
 }
@@ -12509,11 +13419,11 @@ vErrors.push(err245);
 errors++;
 }
 }
-if(data75.sidebarDefaultRatio !== undefined){
-let data79 = data75.sidebarDefaultRatio;
-if((typeof data79 == "number") && (isFinite(data79))){
-if(data79 > 0.7 || isNaN(data79)){
-const err246 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
+if(data75.stageRows !== undefined){
+let data80 = data75.stageRows;
+if((typeof data80 == "number") && (isFinite(data80))){
+if(data80 > 8 || isNaN(data80)){
+const err246 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/maximum",keyword:"maximum",params:{comparison: "<=", limit: 8},message:"must be <= 8"};
 if(vErrors === null){
 vErrors = [err246];
 }
@@ -12522,8 +13432,8 @@ vErrors.push(err246);
 }
 errors++;
 }
-if(data79 < 0.1 || isNaN(data79)){
-const err247 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+if(data80 < 1 || isNaN(data80)){
+const err247 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err247];
 }
@@ -12534,7 +13444,7 @@ errors++;
 }
 }
 else {
-const err248 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err248 = {instancePath:instancePath+"/rendering/recordVisuals/stageRows",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageRows/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err248];
 }
@@ -12544,11 +13454,11 @@ vErrors.push(err248);
 errors++;
 }
 }
-if(data75.sidebarMaximumRatio !== undefined){
-let data80 = data75.sidebarMaximumRatio;
-if((typeof data80 == "number") && (isFinite(data80))){
-if(data80 > 0.85 || isNaN(data80)){
-const err249 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
+if(data75.stageScale !== undefined){
+let data81 = data75.stageScale;
+if((typeof data81 == "number") && (isFinite(data81))){
+if(data81 > 3 || isNaN(data81)){
+const err249 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err249];
 }
@@ -12557,8 +13467,8 @@ vErrors.push(err249);
 }
 errors++;
 }
-if(data80 < 0.2 || isNaN(data80)){
-const err250 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+if(data81 < 1 || isNaN(data81)){
+const err250 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err250];
 }
@@ -12569,7 +13479,7 @@ errors++;
 }
 }
 else {
-const err251 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err251 = {instancePath:instancePath+"/rendering/recordVisuals/stageScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/stageScale/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err251];
 }
@@ -12579,11 +13489,10 @@ vErrors.push(err251);
 errors++;
 }
 }
-if(data75.minimumPlotWidth !== undefined){
-let data81 = data75.minimumPlotWidth;
-if((typeof data81 == "number") && (isFinite(data81))){
-if(data81 > 1200 || isNaN(data81)){
-const err252 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(data75.manifest !== undefined){
+let data82 = data75.manifest;
+if((typeof data82 !== "string") && (data82 !== null)){
+const err252 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/type",keyword:"type",params:{type: schema54.properties.rendering.properties.recordVisuals.properties.manifest.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err252];
 }
@@ -12592,8 +13501,9 @@ vErrors.push(err252);
 }
 errors++;
 }
-if(data81 < 80 || isNaN(data81)){
-const err253 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
+if(typeof data82 === "string"){
+if(func3(data82) > 2048){
+const err253 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err253];
 }
@@ -12602,9 +13512,8 @@ vErrors.push(err253);
 }
 errors++;
 }
-}
-else {
-const err254 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data82) < 1){
+const err254 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err254];
 }
@@ -12613,12 +13522,8 @@ vErrors.push(err254);
 }
 errors++;
 }
-}
-if(data75.overviewMaxHeight !== undefined){
-let data82 = data75.overviewMaxHeight;
-if((typeof data82 == "number") && (isFinite(data82))){
-if(data82 > 800 || isNaN(data82)){
-const err255 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+if(!pattern1.test(data82)){
+const err255 = {instancePath:instancePath+"/rendering/recordVisuals/manifest",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/manifest/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err255];
 }
@@ -12627,8 +13532,13 @@ vErrors.push(err255);
 }
 errors++;
 }
-if(data82 < 40 || isNaN(data82)){
-const err256 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+}
+if(data75.keyField !== undefined){
+let data83 = data75.keyField;
+if(typeof data83 === "string"){
+if(func3(data83) > 160){
+const err256 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err256];
 }
@@ -12637,9 +13547,8 @@ vErrors.push(err256);
 }
 errors++;
 }
-}
-else {
-const err257 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(func3(data83) < 1){
+const err257 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err257];
 }
@@ -12649,11 +13558,8 @@ vErrors.push(err257);
 errors++;
 }
 }
-if(data75.minimumDetailHeight !== undefined){
-let data83 = data75.minimumDetailHeight;
-if((typeof data83 == "number") && (isFinite(data83))){
-if(data83 > 800 || isNaN(data83)){
-const err258 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
+else {
+const err258 = {instancePath:instancePath+"/rendering/recordVisuals/keyField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/keyField/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err258];
 }
@@ -12662,8 +13568,10 @@ vErrors.push(err258);
 }
 errors++;
 }
-if(data83 < 40 || isNaN(data83)){
-const err259 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data75.caseInsensitive !== undefined){
+if(typeof data75.caseInsensitive !== "boolean"){
+const err259 = {instancePath:instancePath+"/rendering/recordVisuals/caseInsensitive",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/caseInsensitive/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
 if(vErrors === null){
 vErrors = [err259];
 }
@@ -12673,8 +13581,10 @@ vErrors.push(err259);
 errors++;
 }
 }
-else {
-const err260 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data75.imageField !== undefined){
+let data85 = data75.imageField;
+if((typeof data85 !== "string") && (data85 !== null)){
+const err260 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/type",keyword:"type",params:{type: schema54.properties.rendering.properties.recordVisuals.properties.imageField.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err260];
 }
@@ -12683,12 +13593,9 @@ vErrors.push(err260);
 }
 errors++;
 }
-}
-if(data75.splitRatio !== undefined){
-let data84 = data75.splitRatio;
-if((typeof data84 == "number") && (isFinite(data84))){
-if(data84 > 0.8 || isNaN(data84)){
-const err261 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
+if(typeof data85 === "string"){
+if(func3(data85) > 160){
+const err261 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err261];
 }
@@ -12697,8 +13604,8 @@ vErrors.push(err261);
 }
 errors++;
 }
-if(data84 < 0.2 || isNaN(data84)){
-const err262 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
+if(func3(data85) < 1){
+const err262 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err262];
 }
@@ -12707,9 +13614,8 @@ vErrors.push(err262);
 }
 errors++;
 }
-}
-else {
-const err263 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(!pattern1.test(data85)){
+const err263 = {instancePath:instancePath+"/rendering/recordVisuals/imageField",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/imageField/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err263];
 }
@@ -12720,8 +13626,10 @@ errors++;
 }
 }
 }
-else {
-const err264 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data75.fallbackImage !== undefined){
+let data86 = data75.fallbackImage;
+if((typeof data86 !== "string") && (data86 !== null)){
+const err264 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/type",keyword:"type",params:{type: schema54.properties.rendering.properties.recordVisuals.properties.fallbackImage.type},message:"must be string,null"};
 if(vErrors === null){
 vErrors = [err264];
 }
@@ -12730,13 +13638,9 @@ vErrors.push(err264);
 }
 errors++;
 }
-}
-if(data6.interaction !== undefined){
-let data85 = data6.interaction;
-if(data85 && typeof data85 == "object" && !Array.isArray(data85)){
-for(const key7 in data85){
-if(!(func2.call(schema54.properties.rendering.properties.interaction.properties, key7))){
-const err265 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
+if(typeof data86 === "string"){
+if(func3(data86) > 2048){
+const err265 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/maxLength",keyword:"maxLength",params:{limit: 2048},message:"must NOT have more than 2048 characters"};
 if(vErrors === null){
 vErrors = [err265];
 }
@@ -12745,11 +13649,8 @@ vErrors.push(err265);
 }
 errors++;
 }
-}
-if(data85.searchMode !== undefined){
-let data86 = data85.searchMode;
-if(typeof data86 !== "string"){
-const err266 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(func3(data86) < 1){
+const err266 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err266];
 }
@@ -12758,8 +13659,8 @@ vErrors.push(err266);
 }
 errors++;
 }
-if(!((data86 === "highlight") || (data86 === "only"))){
-const err267 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema54.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+if(!pattern1.test(data86)){
+const err267 = {instancePath:instancePath+"/rendering/recordVisuals/fallbackImage",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/fallbackImage/pattern",keyword:"pattern",params:{pattern: "^[^\\u0000-\\u001f\\u007f]+$"},message:"must match pattern \""+"^[^\\u0000-\\u001f\\u007f]+$"+"\""};
 if(vErrors === null){
 vErrors = [err267];
 }
@@ -12769,9 +13670,12 @@ vErrors.push(err267);
 errors++;
 }
 }
-if(data85.highlight !== undefined){
-if(typeof data85.highlight !== "boolean"){
-const err268 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+}
+if(data75.rotation !== undefined){
+let data87 = data75.rotation;
+if(Array.isArray(data87)){
+if(data87.length > 3){
+const err268 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/maxItems",keyword:"maxItems",params:{limit: 3},message:"must NOT have more than 3 items"};
 if(vErrors === null){
 vErrors = [err268];
 }
@@ -12780,10 +13684,8 @@ vErrors.push(err268);
 }
 errors++;
 }
-}
-if(data85.autoScale !== undefined){
-if(typeof data85.autoScale !== "boolean"){
-const err269 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(data87.length < 3){
+const err269 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/minItems",keyword:"minItems",params:{limit: 3},message:"must NOT have fewer than 3 items"};
 if(vErrors === null){
 vErrors = [err269];
 }
@@ -12792,12 +13694,12 @@ vErrors.push(err269);
 }
 errors++;
 }
-}
-if(data85.adaptiveRatio !== undefined){
-let data89 = data85.adaptiveRatio;
-if((typeof data89 == "number") && (isFinite(data89))){
-if(data89 > 16 || isNaN(data89)){
-const err270 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+const len2 = data87.length;
+for(let i2=0; i2<len2; i2++){
+let data88 = data87[i2];
+if((typeof data88 == "number") && (isFinite(data88))){
+if(data88 > 6.283185307179586 || isNaN(data88)){
+const err270 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/maximum",keyword:"maximum",params:{comparison: "<=", limit: 6.283185307179586},message:"must be <= 6.283185307179586"};
 if(vErrors === null){
 vErrors = [err270];
 }
@@ -12806,8 +13708,8 @@ vErrors.push(err270);
 }
 errors++;
 }
-if(data89 < 1 || isNaN(data89)){
-const err271 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(data88 < -6.283185307179586 || isNaN(data88)){
+const err271 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/minimum",keyword:"minimum",params:{comparison: ">=", limit: -6.283185307179586},message:"must be >= -6.283185307179586"};
 if(vErrors === null){
 vErrors = [err271];
 }
@@ -12818,7 +13720,7 @@ errors++;
 }
 }
 else {
-const err272 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const err272 = {instancePath:instancePath+"/rendering/recordVisuals/rotation/" + i2,schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/items/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err272];
 }
@@ -12828,11 +13730,9 @@ vErrors.push(err272);
 errors++;
 }
 }
-if(data85.zoomInFactor !== undefined){
-let data90 = data85.zoomInFactor;
-if((typeof data90 == "number") && (isFinite(data90))){
-if(data90 > 0.99 || isNaN(data90)){
-const err273 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+}
+else {
+const err273 = {instancePath:instancePath+"/rendering/recordVisuals/rotation",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/rotation/type",keyword:"type",params:{type: "array"},message:"must be array"};
 if(vErrors === null){
 vErrors = [err273];
 }
@@ -12841,8 +13741,12 @@ vErrors.push(err273);
 }
 errors++;
 }
-if(data90 < 0.1 || isNaN(data90)){
-const err274 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+}
+if(data75.width !== undefined){
+let data89 = data75.width;
+if((typeof data89 == "number") && (isFinite(data89))){
+if(data89 > 600 || isNaN(data89)){
+const err274 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 600},message:"must be <= 600"};
 if(vErrors === null){
 vErrors = [err274];
 }
@@ -12851,9 +13755,8 @@ vErrors.push(err274);
 }
 errors++;
 }
-}
-else {
-const err275 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data89 < 24 || isNaN(data89)){
+const err275 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 24},message:"must be >= 24"};
 if(vErrors === null){
 vErrors = [err275];
 }
@@ -12863,11 +13766,8 @@ vErrors.push(err275);
 errors++;
 }
 }
-if(data85.zoomOutFactor !== undefined){
-let data91 = data85.zoomOutFactor;
-if((typeof data91 == "number") && (isFinite(data91))){
-if(data91 > 10 || isNaN(data91)){
-const err276 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+else {
+const err276 = {instancePath:instancePath+"/rendering/recordVisuals/width",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err276];
 }
@@ -12876,8 +13776,12 @@ vErrors.push(err276);
 }
 errors++;
 }
-if(data91 < 1.01 || isNaN(data91)){
-const err277 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+}
+if(data75.height !== undefined){
+let data90 = data75.height;
+if((typeof data90 == "number") && (isFinite(data90))){
+if(data90 > 480 || isNaN(data90)){
+const err277 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/maximum",keyword:"maximum",params:{comparison: "<=", limit: 480},message:"must be <= 480"};
 if(vErrors === null){
 vErrors = [err277];
 }
@@ -12886,9 +13790,8 @@ vErrors.push(err277);
 }
 errors++;
 }
-}
-else {
-const err278 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data90 < 20 || isNaN(data90)){
+const err278 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/minimum",keyword:"minimum",params:{comparison: ">=", limit: 20},message:"must be >= 20"};
 if(vErrors === null){
 vErrors = [err278];
 }
@@ -12898,11 +13801,8 @@ vErrors.push(err278);
 errors++;
 }
 }
-if(data85.overviewPanFraction !== undefined){
-let data92 = data85.overviewPanFraction;
-if((typeof data92 == "number") && (isFinite(data92))){
-if(data92 > 1 || isNaN(data92)){
-const err279 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err279 = {instancePath:instancePath+"/rendering/recordVisuals/height",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/height/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err279];
 }
@@ -12911,8 +13811,12 @@ vErrors.push(err279);
 }
 errors++;
 }
-if(data92 < 0.05 || isNaN(data92)){
-const err280 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+}
+if(data75.gap !== undefined){
+let data91 = data75.gap;
+if((typeof data91 == "number") && (isFinite(data91))){
+if(data91 > 120 || isNaN(data91)){
+const err280 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
 if(vErrors === null){
 vErrors = [err280];
 }
@@ -12921,9 +13825,8 @@ vErrors.push(err280);
 }
 errors++;
 }
-}
-else {
-const err281 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data91 < 0 || isNaN(data91)){
+const err281 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err281];
 }
@@ -12933,11 +13836,8 @@ vErrors.push(err281);
 errors++;
 }
 }
-if(data85.overviewKeyboardFraction !== undefined){
-let data93 = data85.overviewKeyboardFraction;
-if((typeof data93 == "number") && (isFinite(data93))){
-if(data93 > 1 || isNaN(data93)){
-const err282 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+else {
+const err282 = {instancePath:instancePath+"/rendering/recordVisuals/gap",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/gap/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err282];
 }
@@ -12946,8 +13846,12 @@ vErrors.push(err282);
 }
 errors++;
 }
-if(data93 < 0.01 || isNaN(data93)){
-const err283 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+}
+if(data75.depth !== undefined){
+let data92 = data75.depth;
+if((typeof data92 == "number") && (isFinite(data92))){
+if(data92 > 300 || isNaN(data92)){
+const err283 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
 if(vErrors === null){
 vErrors = [err283];
 }
@@ -12956,9 +13860,8 @@ vErrors.push(err283);
 }
 errors++;
 }
-}
-else {
-const err284 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data92 < 0 || isNaN(data92)){
+const err284 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err284];
 }
@@ -12968,11 +13871,8 @@ vErrors.push(err284);
 errors++;
 }
 }
-if(data85.resizeStep !== undefined){
-let data94 = data85.resizeStep;
-if((typeof data94 == "number") && (isFinite(data94))){
-if(data94 > 100 || isNaN(data94)){
-const err285 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+else {
+const err285 = {instancePath:instancePath+"/rendering/recordVisuals/depth",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/depth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err285];
 }
@@ -12981,8 +13881,12 @@ vErrors.push(err285);
 }
 errors++;
 }
-if(data94 < 1 || isNaN(data94)){
-const err286 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data75.maxModels !== undefined){
+let data93 = data75.maxModels;
+if((typeof data93 == "number") && (isFinite(data93))){
+if(data93 > 100 || isNaN(data93)){
+const err286 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
 if(vErrors === null){
 vErrors = [err286];
 }
@@ -12991,9 +13895,8 @@ vErrors.push(err286);
 }
 errors++;
 }
-}
-else {
-const err287 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data93 < 0 || isNaN(data93)){
+const err287 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err287];
 }
@@ -13003,11 +13906,8 @@ vErrors.push(err287);
 errors++;
 }
 }
-if(data85.resizeLargeStep !== undefined){
-let data95 = data85.resizeLargeStep;
-if((typeof data95 == "number") && (isFinite(data95))){
-if(data95 > 300 || isNaN(data95)){
-const err288 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+else {
+const err288 = {instancePath:instancePath+"/rendering/recordVisuals/maxModels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/maxModels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err288];
 }
@@ -13016,8 +13916,12 @@ vErrors.push(err288);
 }
 errors++;
 }
-if(data95 < 1 || isNaN(data95)){
-const err289 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data75.minimumModelPixels !== undefined){
+let data94 = data75.minimumModelPixels;
+if((typeof data94 == "number") && (isFinite(data94))){
+if(data94 > 600 || isNaN(data94)){
+const err289 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 600},message:"must be <= 600"};
 if(vErrors === null){
 vErrors = [err289];
 }
@@ -13026,9 +13930,8 @@ vErrors.push(err289);
 }
 errors++;
 }
-}
-else {
-const err290 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data94 < 0 || isNaN(data94)){
+const err290 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err290];
 }
@@ -13038,9 +13941,8 @@ vErrors.push(err290);
 errors++;
 }
 }
-}
 else {
-const err291 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err291 = {instancePath:instancePath+"/rendering/recordVisuals/minimumModelPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/minimumModelPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err291];
 }
@@ -13050,12 +13952,11 @@ vErrors.push(err291);
 errors++;
 }
 }
-if(data6.controls !== undefined){
-let data96 = data6.controls;
-if(data96 && typeof data96 == "object" && !Array.isArray(data96)){
-for(const key8 in data96){
-if(!(func2.call(schema54.properties.rendering.properties.controls.properties, key8))){
-const err292 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(data75.clusterPixels !== undefined){
+let data95 = data75.clusterPixels;
+if((typeof data95 == "number") && (isFinite(data95))){
+if(data95 > 400 || isNaN(data95)){
+const err292 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err292];
 }
@@ -13064,12 +13965,8 @@ vErrors.push(err292);
 }
 errors++;
 }
-}
-if(data96.timelineLabel !== undefined){
-let data97 = data96.timelineLabel;
-if(typeof data97 === "string"){
-if(func3(data97) > 160){
-const err293 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data95 < 0 || isNaN(data95)){
+const err293 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err293];
 }
@@ -13078,8 +13975,9 @@ vErrors.push(err293);
 }
 errors++;
 }
-if(func3(data97) < 1){
-const err294 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err294 = {instancePath:instancePath+"/rendering/recordVisuals/clusterPixels",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/clusterPixels/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err294];
 }
@@ -13089,8 +13987,11 @@ vErrors.push(err294);
 errors++;
 }
 }
-else {
-const err295 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.selectedScale !== undefined){
+let data96 = data75.selectedScale;
+if((typeof data96 == "number") && (isFinite(data96))){
+if(data96 > 3 || isNaN(data96)){
+const err295 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/maximum",keyword:"maximum",params:{comparison: "<=", limit: 3},message:"must be <= 3"};
 if(vErrors === null){
 vErrors = [err295];
 }
@@ -13099,12 +14000,8 @@ vErrors.push(err295);
 }
 errors++;
 }
-}
-if(data96.tableLabel !== undefined){
-let data98 = data96.tableLabel;
-if(typeof data98 === "string"){
-if(func3(data98) > 160){
-const err296 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data96 < 1 || isNaN(data96)){
+const err296 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err296];
 }
@@ -13113,8 +14010,9 @@ vErrors.push(err296);
 }
 errors++;
 }
-if(func3(data98) < 1){
-const err297 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err297 = {instancePath:instancePath+"/rendering/recordVisuals/selectedScale",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedScale/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err297];
 }
@@ -13124,8 +14022,11 @@ vErrors.push(err297);
 errors++;
 }
 }
-else {
-const err298 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.selectedLift !== undefined){
+let data97 = data75.selectedLift;
+if((typeof data97 == "number") && (isFinite(data97))){
+if(data97 > 400 || isNaN(data97)){
+const err298 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/maximum",keyword:"maximum",params:{comparison: "<=", limit: 400},message:"must be <= 400"};
 if(vErrors === null){
 vErrors = [err298];
 }
@@ -13134,12 +14035,8 @@ vErrors.push(err298);
 }
 errors++;
 }
-}
-if(data96.splitLabel !== undefined){
-let data99 = data96.splitLabel;
-if(typeof data99 === "string"){
-if(func3(data99) > 160){
-const err299 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data97 < 0 || isNaN(data97)){
+const err299 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err299];
 }
@@ -13148,8 +14045,9 @@ vErrors.push(err299);
 }
 errors++;
 }
-if(func3(data99) < 1){
-const err300 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err300 = {instancePath:instancePath+"/rendering/recordVisuals/selectedLift",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/selectedLift/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err300];
 }
@@ -13159,8 +14057,11 @@ vErrors.push(err300);
 errors++;
 }
 }
-else {
-const err301 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.transitionMs !== undefined){
+let data98 = data75.transitionMs;
+if((typeof data98 == "number") && (isFinite(data98))){
+if(data98 > 1000 || isNaN(data98)){
+const err301 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1000},message:"must be <= 1000"};
 if(vErrors === null){
 vErrors = [err301];
 }
@@ -13169,12 +14070,8 @@ vErrors.push(err301);
 }
 errors++;
 }
-}
-if(data96.previousOverviewLabel !== undefined){
-let data100 = data96.previousOverviewLabel;
-if(typeof data100 === "string"){
-if(func3(data100) > 160){
-const err302 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data98 < 0 || isNaN(data98)){
+const err302 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err302];
 }
@@ -13183,8 +14080,9 @@ vErrors.push(err302);
 }
 errors++;
 }
-if(func3(data100) < 1){
-const err303 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err303 = {instancePath:instancePath+"/rendering/recordVisuals/transitionMs",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/transitionMs/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err303];
 }
@@ -13194,8 +14092,11 @@ vErrors.push(err303);
 errors++;
 }
 }
-else {
-const err304 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.bandOpacity !== undefined){
+let data99 = data75.bandOpacity;
+if((typeof data99 == "number") && (isFinite(data99))){
+if(data99 > 1 || isNaN(data99)){
+const err304 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
 if(vErrors === null){
 vErrors = [err304];
 }
@@ -13204,12 +14105,8 @@ vErrors.push(err304);
 }
 errors++;
 }
-}
-if(data96.previousOverviewTitle !== undefined){
-let data101 = data96.previousOverviewTitle;
-if(typeof data101 === "string"){
-if(func3(data101) > 160){
-const err305 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data99 < 0 || isNaN(data99)){
+const err305 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err305];
 }
@@ -13218,8 +14115,9 @@ vErrors.push(err305);
 }
 errors++;
 }
-if(func3(data101) < 1){
-const err306 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err306 = {instancePath:instancePath+"/rendering/recordVisuals/bandOpacity",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/bandOpacity/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err306];
 }
@@ -13229,8 +14127,11 @@ vErrors.push(err306);
 errors++;
 }
 }
-else {
-const err307 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.label2D !== undefined){
+let data100 = data75.label2D;
+if(typeof data100 === "string"){
+if(func3(data100) > 160){
+const err307 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err307];
 }
@@ -13239,12 +14140,8 @@ vErrors.push(err307);
 }
 errors++;
 }
-}
-if(data96.nextOverviewLabel !== undefined){
-let data102 = data96.nextOverviewLabel;
-if(typeof data102 === "string"){
-if(func3(data102) > 160){
-const err308 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data100) < 1){
+const err308 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err308];
 }
@@ -13253,8 +14150,9 @@ vErrors.push(err308);
 }
 errors++;
 }
-if(func3(data102) < 1){
-const err309 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err309 = {instancePath:instancePath+"/rendering/recordVisuals/label2D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label2D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err309];
 }
@@ -13264,8 +14162,11 @@ vErrors.push(err309);
 errors++;
 }
 }
-else {
-const err310 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data75.label3D !== undefined){
+let data101 = data75.label3D;
+if(typeof data101 === "string"){
+if(func3(data101) > 160){
+const err310 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
 if(vErrors === null){
 vErrors = [err310];
 }
@@ -13274,12 +14175,8 @@ vErrors.push(err310);
 }
 errors++;
 }
-}
-if(data96.nextOverviewTitle !== undefined){
-let data103 = data96.nextOverviewTitle;
-if(typeof data103 === "string"){
-if(func3(data103) > 160){
-const err311 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(func3(data101) < 1){
+const err311 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
 if(vErrors === null){
 vErrors = [err311];
 }
@@ -13288,8 +14185,9 @@ vErrors.push(err311);
 }
 errors++;
 }
-if(func3(data103) < 1){
-const err312 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err312 = {instancePath:instancePath+"/rendering/recordVisuals/label3D",schemaPath:"#/properties/rendering/properties/recordVisuals/properties/label3D/type",keyword:"type",params:{type: "string"},message:"must be string"};
 if(vErrors === null){
 vErrors = [err312];
 }
@@ -13299,8 +14197,9 @@ vErrors.push(err312);
 errors++;
 }
 }
+}
 else {
-const err313 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err313 = {instancePath:instancePath+"/rendering/recordVisuals",schemaPath:"#/properties/rendering/properties/recordVisuals/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err313];
 }
@@ -13310,11 +14209,12 @@ vErrors.push(err313);
 errors++;
 }
 }
-if(data96.fitOverviewLabel !== undefined){
-let data104 = data96.fitOverviewLabel;
-if(typeof data104 === "string"){
-if(func3(data104) > 160){
-const err314 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data6.layout !== undefined){
+let data102 = data6.layout;
+if(data102 && typeof data102 == "object" && !Array.isArray(data102)){
+for(const key7 in data102){
+if(!(func2.call(schema54.properties.rendering.properties.layout.properties, key7))){
+const err314 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err314];
 }
@@ -13323,8 +14223,12 @@ vErrors.push(err314);
 }
 errors++;
 }
-if(func3(data104) < 1){
-const err315 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.sidebarBreakpoint !== undefined){
+let data103 = data102.sidebarBreakpoint;
+if((typeof data103 == "number") && (isFinite(data103))){
+if(data103 > 2400 || isNaN(data103)){
+const err315 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/maximum",keyword:"maximum",params:{comparison: "<=", limit: 2400},message:"must be <= 2400"};
 if(vErrors === null){
 vErrors = [err315];
 }
@@ -13333,9 +14237,8 @@ vErrors.push(err315);
 }
 errors++;
 }
-}
-else {
-const err316 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data103 < 320 || isNaN(data103)){
+const err316 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/minimum",keyword:"minimum",params:{comparison: ">=", limit: 320},message:"must be >= 320"};
 if(vErrors === null){
 vErrors = [err316];
 }
@@ -13345,11 +14248,8 @@ vErrors.push(err316);
 errors++;
 }
 }
-if(data96.fitOverviewTitle !== undefined){
-let data105 = data96.fitOverviewTitle;
-if(typeof data105 === "string"){
-if(func3(data105) > 160){
-const err317 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+else {
+const err317 = {instancePath:instancePath+"/rendering/layout/sidebarBreakpoint",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarBreakpoint/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err317];
 }
@@ -13358,8 +14258,12 @@ vErrors.push(err317);
 }
 errors++;
 }
-if(func3(data105) < 1){
-const err318 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.sidebarMinimum !== undefined){
+let data104 = data102.sidebarMinimum;
+if((typeof data104 == "number") && (isFinite(data104))){
+if(data104 > 800 || isNaN(data104)){
+const err318 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err318];
 }
@@ -13368,9 +14272,8 @@ vErrors.push(err318);
 }
 errors++;
 }
-}
-else {
-const err319 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data104 < 180 || isNaN(data104)){
+const err319 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err319];
 }
@@ -13380,9 +14283,8 @@ vErrors.push(err319);
 errors++;
 }
 }
-}
 else {
-const err320 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err320 = {instancePath:instancePath+"/rendering/layout/sidebarMinimum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMinimum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err320];
 }
@@ -13392,12 +14294,11 @@ vErrors.push(err320);
 errors++;
 }
 }
-if(data6.table !== undefined){
-let data106 = data6.table;
-if(data106 && typeof data106 == "object" && !Array.isArray(data106)){
-for(const key9 in data106){
-if(!((key9 === "emptyText") || (key9 === "columns"))){
-const err321 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
+if(data102.sidebarDefaultMaximum !== undefined){
+let data105 = data102.sidebarDefaultMaximum;
+if((typeof data105 == "number") && (isFinite(data105))){
+if(data105 > 1400 || isNaN(data105)){
+const err321 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1400},message:"must be <= 1400"};
 if(vErrors === null){
 vErrors = [err321];
 }
@@ -13406,12 +14307,8 @@ vErrors.push(err321);
 }
 errors++;
 }
-}
-if(data106.emptyText !== undefined){
-let data107 = data106.emptyText;
-if(typeof data107 === "string"){
-if(func3(data107) > 160){
-const err322 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(data105 < 180 || isNaN(data105)){
+const err322 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/minimum",keyword:"minimum",params:{comparison: ">=", limit: 180},message:"must be >= 180"};
 if(vErrors === null){
 vErrors = [err322];
 }
@@ -13420,8 +14317,9 @@ vErrors.push(err322);
 }
 errors++;
 }
-if(func3(data107) < 1){
-const err323 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+else {
+const err323 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultMaximum",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultMaximum/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err323];
 }
@@ -13431,8 +14329,11 @@ vErrors.push(err323);
 errors++;
 }
 }
-else {
-const err324 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data102.sidebarDefaultRatio !== undefined){
+let data106 = data102.sidebarDefaultRatio;
+if((typeof data106 == "number") && (isFinite(data106))){
+if(data106 > 0.7 || isNaN(data106)){
+const err324 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.7},message:"must be <= 0.7"};
 if(vErrors === null){
 vErrors = [err324];
 }
@@ -13441,12 +14342,8 @@ vErrors.push(err324);
 }
 errors++;
 }
-}
-if(data106.columns !== undefined){
-let data108 = data106.columns;
-if(Array.isArray(data108)){
-if(data108.length > 20){
-const err325 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(data106 < 0.1 || isNaN(data106)){
+const err325 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
 if(vErrors === null){
 vErrors = [err325];
 }
@@ -13455,8 +14352,9 @@ vErrors.push(err325);
 }
 errors++;
 }
-if(data108.length < 1){
-const err326 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+}
+else {
+const err326 = {instancePath:instancePath+"/rendering/layout/sidebarDefaultRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarDefaultRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err326];
 }
@@ -13465,12 +14363,12 @@ vErrors.push(err326);
 }
 errors++;
 }
-const len2 = data108.length;
-for(let i2=0; i2<len2; i2++){
-let data109 = data108[i2];
-if(data109 && typeof data109 == "object" && !Array.isArray(data109)){
-if(data109.field === undefined){
-const err327 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+}
+if(data102.sidebarMaximumRatio !== undefined){
+let data107 = data102.sidebarMaximumRatio;
+if((typeof data107 == "number") && (isFinite(data107))){
+if(data107 > 0.85 || isNaN(data107)){
+const err327 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.85},message:"must be <= 0.85"};
 if(vErrors === null){
 vErrors = [err327];
 }
@@ -13479,8 +14377,8 @@ vErrors.push(err327);
 }
 errors++;
 }
-if(data109.label === undefined){
-const err328 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+if(data107 < 0.2 || isNaN(data107)){
+const err328 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err328];
 }
@@ -13489,9 +14387,9 @@ vErrors.push(err328);
 }
 errors++;
 }
-for(const key10 in data109){
-if(!((((key10 === "field") || (key10 === "label")) || (key10 === "width")) || (key10 === "visible"))){
-const err329 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+}
+else {
+const err329 = {instancePath:instancePath+"/rendering/layout/sidebarMaximumRatio",schemaPath:"#/properties/rendering/properties/layout/properties/sidebarMaximumRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err329];
 }
@@ -13501,10 +14399,11 @@ vErrors.push(err329);
 errors++;
 }
 }
-if(data109.field !== undefined){
-let data110 = data109.field;
-if(typeof data110 !== "string"){
-const err330 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data102.minimumPlotWidth !== undefined){
+let data108 = data102.minimumPlotWidth;
+if((typeof data108 == "number") && (isFinite(data108))){
+if(data108 > 1200 || isNaN(data108)){
+const err330 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
 if(vErrors === null){
 vErrors = [err330];
 }
@@ -13513,8 +14412,8 @@ vErrors.push(err330);
 }
 errors++;
 }
-if(!(((((((data110 === "title") || (data110 === "start")) || (data110 === "end")) || (data110 === "source")) || (data110 === "status")) || (data110 === "description")) || (data110 === "id"))){
-const err331 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema54.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+if(data108 < 80 || isNaN(data108)){
+const err331 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/minimum",keyword:"minimum",params:{comparison: ">=", limit: 80},message:"must be >= 80"};
 if(vErrors === null){
 vErrors = [err331];
 }
@@ -13524,11 +14423,8 @@ vErrors.push(err331);
 errors++;
 }
 }
-if(data109.label !== undefined){
-let data111 = data109.label;
-if(typeof data111 === "string"){
-if(func3(data111) > 80){
-const err332 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+else {
+const err332 = {instancePath:instancePath+"/rendering/layout/minimumPlotWidth",schemaPath:"#/properties/rendering/properties/layout/properties/minimumPlotWidth/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err332];
 }
@@ -13537,8 +14433,12 @@ vErrors.push(err332);
 }
 errors++;
 }
-if(func3(data111) < 1){
-const err333 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+}
+if(data102.overviewMaxHeight !== undefined){
+let data109 = data102.overviewMaxHeight;
+if((typeof data109 == "number") && (isFinite(data109))){
+if(data109 > 800 || isNaN(data109)){
+const err333 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err333];
 }
@@ -13547,9 +14447,8 @@ vErrors.push(err333);
 }
 errors++;
 }
-}
-else {
-const err334 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data109 < 40 || isNaN(data109)){
+const err334 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err334];
 }
@@ -13559,11 +14458,8 @@ vErrors.push(err334);
 errors++;
 }
 }
-if(data109.width !== undefined){
-let data112 = data109.width;
-if((typeof data112 == "number") && (isFinite(data112))){
-if(data112 > 1200 || isNaN(data112)){
-const err335 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+else {
+const err335 = {instancePath:instancePath+"/rendering/layout/overviewMaxHeight",schemaPath:"#/properties/rendering/properties/layout/properties/overviewMaxHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err335];
 }
@@ -13572,8 +14468,12 @@ vErrors.push(err335);
 }
 errors++;
 }
-if(data112 < 40 || isNaN(data112)){
-const err336 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+}
+if(data102.minimumDetailHeight !== undefined){
+let data110 = data102.minimumDetailHeight;
+if((typeof data110 == "number") && (isFinite(data110))){
+if(data110 > 800 || isNaN(data110)){
+const err336 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/maximum",keyword:"maximum",params:{comparison: "<=", limit: 800},message:"must be <= 800"};
 if(vErrors === null){
 vErrors = [err336];
 }
@@ -13582,9 +14482,8 @@ vErrors.push(err336);
 }
 errors++;
 }
-}
-else {
-const err337 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data110 < 40 || isNaN(data110)){
+const err337 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
 if(vErrors === null){
 vErrors = [err337];
 }
@@ -13594,9 +14493,8 @@ vErrors.push(err337);
 errors++;
 }
 }
-if(data109.visible !== undefined){
-if(typeof data109.visible !== "boolean"){
-const err338 = {instancePath:instancePath+"/rendering/table/columns/" + i2+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+else {
+const err338 = {instancePath:instancePath+"/rendering/layout/minimumDetailHeight",schemaPath:"#/properties/rendering/properties/layout/properties/minimumDetailHeight/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err338];
 }
@@ -13606,9 +14504,11 @@ vErrors.push(err338);
 errors++;
 }
 }
-}
-else {
-const err339 = {instancePath:instancePath+"/rendering/table/columns/" + i2,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data102.splitRatio !== undefined){
+let data111 = data102.splitRatio;
+if((typeof data111 == "number") && (isFinite(data111))){
+if(data111 > 0.8 || isNaN(data111)){
+const err339 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.8},message:"must be <= 0.8"};
 if(vErrors === null){
 vErrors = [err339];
 }
@@ -13617,10 +14517,8 @@ vErrors.push(err339);
 }
 errors++;
 }
-}
-}
-else {
-const err340 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(data111 < 0.2 || isNaN(data111)){
+const err340 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.2},message:"must be >= 0.2"};
 if(vErrors === null){
 vErrors = [err340];
 }
@@ -13630,9 +14528,8 @@ vErrors.push(err340);
 errors++;
 }
 }
-}
 else {
-const err341 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err341 = {instancePath:instancePath+"/rendering/layout/splitRatio",schemaPath:"#/properties/rendering/properties/layout/properties/splitRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err341];
 }
@@ -13644,7 +14541,7 @@ errors++;
 }
 }
 else {
-const err342 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err342 = {instancePath:instancePath+"/rendering/layout",schemaPath:"#/properties/rendering/properties/layout/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err342];
 }
@@ -13654,14 +14551,937 @@ vErrors.push(err342);
 errors++;
 }
 }
-}
-else {
-const err343 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data6.interaction !== undefined){
+let data112 = data6.interaction;
+if(data112 && typeof data112 == "object" && !Array.isArray(data112)){
+for(const key8 in data112){
+if(!(func2.call(schema54.properties.rendering.properties.interaction.properties, key8))){
+const err343 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err343];
 }
 else {
 vErrors.push(err343);
+}
+errors++;
+}
+}
+if(data112.searchMode !== undefined){
+let data113 = data112.searchMode;
+if(typeof data113 !== "string"){
+const err344 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err344];
+}
+else {
+vErrors.push(err344);
+}
+errors++;
+}
+if(!((data113 === "highlight") || (data113 === "only"))){
+const err345 = {instancePath:instancePath+"/rendering/interaction/searchMode",schemaPath:"#/properties/rendering/properties/interaction/properties/searchMode/enum",keyword:"enum",params:{allowedValues: schema54.properties.rendering.properties.interaction.properties.searchMode.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err345];
+}
+else {
+vErrors.push(err345);
+}
+errors++;
+}
+}
+if(data112.highlight !== undefined){
+if(typeof data112.highlight !== "boolean"){
+const err346 = {instancePath:instancePath+"/rendering/interaction/highlight",schemaPath:"#/properties/rendering/properties/interaction/properties/highlight/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err346];
+}
+else {
+vErrors.push(err346);
+}
+errors++;
+}
+}
+if(data112.autoScale !== undefined){
+if(typeof data112.autoScale !== "boolean"){
+const err347 = {instancePath:instancePath+"/rendering/interaction/autoScale",schemaPath:"#/properties/rendering/properties/interaction/properties/autoScale/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err347];
+}
+else {
+vErrors.push(err347);
+}
+errors++;
+}
+}
+if(data112.adaptiveRatio !== undefined){
+let data116 = data112.adaptiveRatio;
+if((typeof data116 == "number") && (isFinite(data116))){
+if(data116 > 16 || isNaN(data116)){
+const err348 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/maximum",keyword:"maximum",params:{comparison: "<=", limit: 16},message:"must be <= 16"};
+if(vErrors === null){
+vErrors = [err348];
+}
+else {
+vErrors.push(err348);
+}
+errors++;
+}
+if(data116 < 1 || isNaN(data116)){
+const err349 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err349];
+}
+else {
+vErrors.push(err349);
+}
+errors++;
+}
+}
+else {
+const err350 = {instancePath:instancePath+"/rendering/interaction/adaptiveRatio",schemaPath:"#/properties/rendering/properties/interaction/properties/adaptiveRatio/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err350];
+}
+else {
+vErrors.push(err350);
+}
+errors++;
+}
+}
+if(data112.zoomInFactor !== undefined){
+let data117 = data112.zoomInFactor;
+if((typeof data117 == "number") && (isFinite(data117))){
+if(data117 > 0.99 || isNaN(data117)){
+const err351 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 0.99},message:"must be <= 0.99"};
+if(vErrors === null){
+vErrors = [err351];
+}
+else {
+vErrors.push(err351);
+}
+errors++;
+}
+if(data117 < 0.1 || isNaN(data117)){
+const err352 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.1},message:"must be >= 0.1"};
+if(vErrors === null){
+vErrors = [err352];
+}
+else {
+vErrors.push(err352);
+}
+errors++;
+}
+}
+else {
+const err353 = {instancePath:instancePath+"/rendering/interaction/zoomInFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomInFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err353];
+}
+else {
+vErrors.push(err353);
+}
+errors++;
+}
+}
+if(data112.zoomOutFactor !== undefined){
+let data118 = data112.zoomOutFactor;
+if((typeof data118 == "number") && (isFinite(data118))){
+if(data118 > 10 || isNaN(data118)){
+const err354 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/maximum",keyword:"maximum",params:{comparison: "<=", limit: 10},message:"must be <= 10"};
+if(vErrors === null){
+vErrors = [err354];
+}
+else {
+vErrors.push(err354);
+}
+errors++;
+}
+if(data118 < 1.01 || isNaN(data118)){
+const err355 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1.01},message:"must be >= 1.01"};
+if(vErrors === null){
+vErrors = [err355];
+}
+else {
+vErrors.push(err355);
+}
+errors++;
+}
+}
+else {
+const err356 = {instancePath:instancePath+"/rendering/interaction/zoomOutFactor",schemaPath:"#/properties/rendering/properties/interaction/properties/zoomOutFactor/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err356];
+}
+else {
+vErrors.push(err356);
+}
+errors++;
+}
+}
+if(data112.overviewPanFraction !== undefined){
+let data119 = data112.overviewPanFraction;
+if((typeof data119 == "number") && (isFinite(data119))){
+if(data119 > 1 || isNaN(data119)){
+const err357 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(vErrors === null){
+vErrors = [err357];
+}
+else {
+vErrors.push(err357);
+}
+errors++;
+}
+if(data119 < 0.05 || isNaN(data119)){
+const err358 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.05},message:"must be >= 0.05"};
+if(vErrors === null){
+vErrors = [err358];
+}
+else {
+vErrors.push(err358);
+}
+errors++;
+}
+}
+else {
+const err359 = {instancePath:instancePath+"/rendering/interaction/overviewPanFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewPanFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err359];
+}
+else {
+vErrors.push(err359);
+}
+errors++;
+}
+}
+if(data112.overviewKeyboardFraction !== undefined){
+let data120 = data112.overviewKeyboardFraction;
+if((typeof data120 == "number") && (isFinite(data120))){
+if(data120 > 1 || isNaN(data120)){
+const err360 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1},message:"must be <= 1"};
+if(vErrors === null){
+vErrors = [err360];
+}
+else {
+vErrors.push(err360);
+}
+errors++;
+}
+if(data120 < 0.01 || isNaN(data120)){
+const err361 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0.01},message:"must be >= 0.01"};
+if(vErrors === null){
+vErrors = [err361];
+}
+else {
+vErrors.push(err361);
+}
+errors++;
+}
+}
+else {
+const err362 = {instancePath:instancePath+"/rendering/interaction/overviewKeyboardFraction",schemaPath:"#/properties/rendering/properties/interaction/properties/overviewKeyboardFraction/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err362];
+}
+else {
+vErrors.push(err362);
+}
+errors++;
+}
+}
+if(data112.resizeStep !== undefined){
+let data121 = data112.resizeStep;
+if((typeof data121 == "number") && (isFinite(data121))){
+if(data121 > 100 || isNaN(data121)){
+const err363 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+if(vErrors === null){
+vErrors = [err363];
+}
+else {
+vErrors.push(err363);
+}
+errors++;
+}
+if(data121 < 1 || isNaN(data121)){
+const err364 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err364];
+}
+else {
+vErrors.push(err364);
+}
+errors++;
+}
+}
+else {
+const err365 = {instancePath:instancePath+"/rendering/interaction/resizeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err365];
+}
+else {
+vErrors.push(err365);
+}
+errors++;
+}
+}
+if(data112.resizeLargeStep !== undefined){
+let data122 = data112.resizeLargeStep;
+if((typeof data122 == "number") && (isFinite(data122))){
+if(data122 > 300 || isNaN(data122)){
+const err366 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/maximum",keyword:"maximum",params:{comparison: "<=", limit: 300},message:"must be <= 300"};
+if(vErrors === null){
+vErrors = [err366];
+}
+else {
+vErrors.push(err366);
+}
+errors++;
+}
+if(data122 < 1 || isNaN(data122)){
+const err367 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err367];
+}
+else {
+vErrors.push(err367);
+}
+errors++;
+}
+}
+else {
+const err368 = {instancePath:instancePath+"/rendering/interaction/resizeLargeStep",schemaPath:"#/properties/rendering/properties/interaction/properties/resizeLargeStep/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err368];
+}
+else {
+vErrors.push(err368);
+}
+errors++;
+}
+}
+}
+else {
+const err369 = {instancePath:instancePath+"/rendering/interaction",schemaPath:"#/properties/rendering/properties/interaction/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err369];
+}
+else {
+vErrors.push(err369);
+}
+errors++;
+}
+}
+if(data6.controls !== undefined){
+let data123 = data6.controls;
+if(data123 && typeof data123 == "object" && !Array.isArray(data123)){
+for(const key9 in data123){
+if(!(func2.call(schema54.properties.rendering.properties.controls.properties, key9))){
+const err370 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key9},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err370];
+}
+else {
+vErrors.push(err370);
+}
+errors++;
+}
+}
+if(data123.timelineLabel !== undefined){
+let data124 = data123.timelineLabel;
+if(typeof data124 === "string"){
+if(func3(data124) > 160){
+const err371 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err371];
+}
+else {
+vErrors.push(err371);
+}
+errors++;
+}
+if(func3(data124) < 1){
+const err372 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err372];
+}
+else {
+vErrors.push(err372);
+}
+errors++;
+}
+}
+else {
+const err373 = {instancePath:instancePath+"/rendering/controls/timelineLabel",schemaPath:"#/properties/rendering/properties/controls/properties/timelineLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err373];
+}
+else {
+vErrors.push(err373);
+}
+errors++;
+}
+}
+if(data123.tableLabel !== undefined){
+let data125 = data123.tableLabel;
+if(typeof data125 === "string"){
+if(func3(data125) > 160){
+const err374 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err374];
+}
+else {
+vErrors.push(err374);
+}
+errors++;
+}
+if(func3(data125) < 1){
+const err375 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err375];
+}
+else {
+vErrors.push(err375);
+}
+errors++;
+}
+}
+else {
+const err376 = {instancePath:instancePath+"/rendering/controls/tableLabel",schemaPath:"#/properties/rendering/properties/controls/properties/tableLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err376];
+}
+else {
+vErrors.push(err376);
+}
+errors++;
+}
+}
+if(data123.splitLabel !== undefined){
+let data126 = data123.splitLabel;
+if(typeof data126 === "string"){
+if(func3(data126) > 160){
+const err377 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err377];
+}
+else {
+vErrors.push(err377);
+}
+errors++;
+}
+if(func3(data126) < 1){
+const err378 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err378];
+}
+else {
+vErrors.push(err378);
+}
+errors++;
+}
+}
+else {
+const err379 = {instancePath:instancePath+"/rendering/controls/splitLabel",schemaPath:"#/properties/rendering/properties/controls/properties/splitLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err379];
+}
+else {
+vErrors.push(err379);
+}
+errors++;
+}
+}
+if(data123.previousOverviewLabel !== undefined){
+let data127 = data123.previousOverviewLabel;
+if(typeof data127 === "string"){
+if(func3(data127) > 160){
+const err380 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err380];
+}
+else {
+vErrors.push(err380);
+}
+errors++;
+}
+if(func3(data127) < 1){
+const err381 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err381];
+}
+else {
+vErrors.push(err381);
+}
+errors++;
+}
+}
+else {
+const err382 = {instancePath:instancePath+"/rendering/controls/previousOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err382];
+}
+else {
+vErrors.push(err382);
+}
+errors++;
+}
+}
+if(data123.previousOverviewTitle !== undefined){
+let data128 = data123.previousOverviewTitle;
+if(typeof data128 === "string"){
+if(func3(data128) > 160){
+const err383 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err383];
+}
+else {
+vErrors.push(err383);
+}
+errors++;
+}
+if(func3(data128) < 1){
+const err384 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err384];
+}
+else {
+vErrors.push(err384);
+}
+errors++;
+}
+}
+else {
+const err385 = {instancePath:instancePath+"/rendering/controls/previousOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/previousOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err385];
+}
+else {
+vErrors.push(err385);
+}
+errors++;
+}
+}
+if(data123.nextOverviewLabel !== undefined){
+let data129 = data123.nextOverviewLabel;
+if(typeof data129 === "string"){
+if(func3(data129) > 160){
+const err386 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err386];
+}
+else {
+vErrors.push(err386);
+}
+errors++;
+}
+if(func3(data129) < 1){
+const err387 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err387];
+}
+else {
+vErrors.push(err387);
+}
+errors++;
+}
+}
+else {
+const err388 = {instancePath:instancePath+"/rendering/controls/nextOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err388];
+}
+else {
+vErrors.push(err388);
+}
+errors++;
+}
+}
+if(data123.nextOverviewTitle !== undefined){
+let data130 = data123.nextOverviewTitle;
+if(typeof data130 === "string"){
+if(func3(data130) > 160){
+const err389 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err389];
+}
+else {
+vErrors.push(err389);
+}
+errors++;
+}
+if(func3(data130) < 1){
+const err390 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err390];
+}
+else {
+vErrors.push(err390);
+}
+errors++;
+}
+}
+else {
+const err391 = {instancePath:instancePath+"/rendering/controls/nextOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/nextOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err391];
+}
+else {
+vErrors.push(err391);
+}
+errors++;
+}
+}
+if(data123.fitOverviewLabel !== undefined){
+let data131 = data123.fitOverviewLabel;
+if(typeof data131 === "string"){
+if(func3(data131) > 160){
+const err392 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err392];
+}
+else {
+vErrors.push(err392);
+}
+errors++;
+}
+if(func3(data131) < 1){
+const err393 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err393];
+}
+else {
+vErrors.push(err393);
+}
+errors++;
+}
+}
+else {
+const err394 = {instancePath:instancePath+"/rendering/controls/fitOverviewLabel",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewLabel/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err394];
+}
+else {
+vErrors.push(err394);
+}
+errors++;
+}
+}
+if(data123.fitOverviewTitle !== undefined){
+let data132 = data123.fitOverviewTitle;
+if(typeof data132 === "string"){
+if(func3(data132) > 160){
+const err395 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err395];
+}
+else {
+vErrors.push(err395);
+}
+errors++;
+}
+if(func3(data132) < 1){
+const err396 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err396];
+}
+else {
+vErrors.push(err396);
+}
+errors++;
+}
+}
+else {
+const err397 = {instancePath:instancePath+"/rendering/controls/fitOverviewTitle",schemaPath:"#/properties/rendering/properties/controls/properties/fitOverviewTitle/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err397];
+}
+else {
+vErrors.push(err397);
+}
+errors++;
+}
+}
+}
+else {
+const err398 = {instancePath:instancePath+"/rendering/controls",schemaPath:"#/properties/rendering/properties/controls/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err398];
+}
+else {
+vErrors.push(err398);
+}
+errors++;
+}
+}
+if(data6.table !== undefined){
+let data133 = data6.table;
+if(data133 && typeof data133 == "object" && !Array.isArray(data133)){
+for(const key10 in data133){
+if(!((key10 === "emptyText") || (key10 === "columns"))){
+const err399 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key10},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err399];
+}
+else {
+vErrors.push(err399);
+}
+errors++;
+}
+}
+if(data133.emptyText !== undefined){
+let data134 = data133.emptyText;
+if(typeof data134 === "string"){
+if(func3(data134) > 160){
+const err400 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/maxLength",keyword:"maxLength",params:{limit: 160},message:"must NOT have more than 160 characters"};
+if(vErrors === null){
+vErrors = [err400];
+}
+else {
+vErrors.push(err400);
+}
+errors++;
+}
+if(func3(data134) < 1){
+const err401 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err401];
+}
+else {
+vErrors.push(err401);
+}
+errors++;
+}
+}
+else {
+const err402 = {instancePath:instancePath+"/rendering/table/emptyText",schemaPath:"#/properties/rendering/properties/table/properties/emptyText/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err402];
+}
+else {
+vErrors.push(err402);
+}
+errors++;
+}
+}
+if(data133.columns !== undefined){
+let data135 = data133.columns;
+if(Array.isArray(data135)){
+if(data135.length > 20){
+const err403 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/maxItems",keyword:"maxItems",params:{limit: 20},message:"must NOT have more than 20 items"};
+if(vErrors === null){
+vErrors = [err403];
+}
+else {
+vErrors.push(err403);
+}
+errors++;
+}
+if(data135.length < 1){
+const err404 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+if(vErrors === null){
+vErrors = [err404];
+}
+else {
+vErrors.push(err404);
+}
+errors++;
+}
+const len3 = data135.length;
+for(let i3=0; i3<len3; i3++){
+let data136 = data135[i3];
+if(data136 && typeof data136 == "object" && !Array.isArray(data136)){
+if(data136.field === undefined){
+const err405 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "field"},message:"must have required property '"+"field"+"'"};
+if(vErrors === null){
+vErrors = [err405];
+}
+else {
+vErrors.push(err405);
+}
+errors++;
+}
+if(data136.label === undefined){
+const err406 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/required",keyword:"required",params:{missingProperty: "label"},message:"must have required property '"+"label"+"'"};
+if(vErrors === null){
+vErrors = [err406];
+}
+else {
+vErrors.push(err406);
+}
+errors++;
+}
+for(const key11 in data136){
+if(!((((key11 === "field") || (key11 === "label")) || (key11 === "width")) || (key11 === "visible"))){
+const err407 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key11},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err407];
+}
+else {
+vErrors.push(err407);
+}
+errors++;
+}
+}
+if(data136.field !== undefined){
+let data137 = data136.field;
+if(typeof data137 !== "string"){
+const err408 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err408];
+}
+else {
+vErrors.push(err408);
+}
+errors++;
+}
+if(!(((((((data137 === "title") || (data137 === "start")) || (data137 === "end")) || (data137 === "source")) || (data137 === "status")) || (data137 === "description")) || (data137 === "id"))){
+const err409 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/field",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/field/enum",keyword:"enum",params:{allowedValues: schema54.properties.rendering.properties.table.properties.columns.items.properties.field.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err409];
+}
+else {
+vErrors.push(err409);
+}
+errors++;
+}
+}
+if(data136.label !== undefined){
+let data138 = data136.label;
+if(typeof data138 === "string"){
+if(func3(data138) > 80){
+const err410 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/maxLength",keyword:"maxLength",params:{limit: 80},message:"must NOT have more than 80 characters"};
+if(vErrors === null){
+vErrors = [err410];
+}
+else {
+vErrors.push(err410);
+}
+errors++;
+}
+if(func3(data138) < 1){
+const err411 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/minLength",keyword:"minLength",params:{limit: 1},message:"must NOT have fewer than 1 characters"};
+if(vErrors === null){
+vErrors = [err411];
+}
+else {
+vErrors.push(err411);
+}
+errors++;
+}
+}
+else {
+const err412 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/label",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/label/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err412];
+}
+else {
+vErrors.push(err412);
+}
+errors++;
+}
+}
+if(data136.width !== undefined){
+let data139 = data136.width;
+if((typeof data139 == "number") && (isFinite(data139))){
+if(data139 > 1200 || isNaN(data139)){
+const err413 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1200},message:"must be <= 1200"};
+if(vErrors === null){
+vErrors = [err413];
+}
+else {
+vErrors.push(err413);
+}
+errors++;
+}
+if(data139 < 40 || isNaN(data139)){
+const err414 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/minimum",keyword:"minimum",params:{comparison: ">=", limit: 40},message:"must be >= 40"};
+if(vErrors === null){
+vErrors = [err414];
+}
+else {
+vErrors.push(err414);
+}
+errors++;
+}
+}
+else {
+const err415 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/width",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/width/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err415];
+}
+else {
+vErrors.push(err415);
+}
+errors++;
+}
+}
+if(data136.visible !== undefined){
+if(typeof data136.visible !== "boolean"){
+const err416 = {instancePath:instancePath+"/rendering/table/columns/" + i3+"/visible",schemaPath:"#/properties/rendering/properties/table/properties/columns/items/properties/visible/type",keyword:"type",params:{type: "boolean"},message:"must be boolean"};
+if(vErrors === null){
+vErrors = [err416];
+}
+else {
+vErrors.push(err416);
+}
+errors++;
+}
+}
+}
+else {
+const err417 = {instancePath:instancePath+"/rendering/table/columns/" + i3,schemaPath:"#/properties/rendering/properties/table/properties/columns/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err417];
+}
+else {
+vErrors.push(err417);
+}
+errors++;
+}
+}
+}
+else {
+const err418 = {instancePath:instancePath+"/rendering/table/columns",schemaPath:"#/properties/rendering/properties/table/properties/columns/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err418];
+}
+else {
+vErrors.push(err418);
+}
+errors++;
+}
+}
+}
+else {
+const err419 = {instancePath:instancePath+"/rendering/table",schemaPath:"#/properties/rendering/properties/table/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err419];
+}
+else {
+vErrors.push(err419);
+}
+errors++;
+}
+}
+}
+else {
+const err420 = {instancePath:instancePath+"/rendering",schemaPath:"#/properties/rendering/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err420];
+}
+else {
+vErrors.push(err420);
+}
+errors++;
+}
+}
+}
+else {
+const err421 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err421];
+}
+else {
+vErrors.push(err421);
 }
 errors++;
 }
@@ -13709,7 +15529,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err3 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err3];
@@ -14627,7 +16447,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err5 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err5];
@@ -14652,7 +16472,7 @@ errors++;
 if(data.namespaceId !== undefined){
 let data1 = data.namespaceId;
 if(typeof data1 === "string"){
-if(!pattern68.test(data1)){
+if(!pattern74.test(data1)){
 const err7 = {instancePath:instancePath+"/namespaceId",schemaPath:"#/properties/namespaceId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -14721,7 +16541,7 @@ return errors === 0;
 }
 
 const schema70 = {"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"protocol":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_+-]*$"},"port":{"type":"integer","minimum":1,"maximum":65535}},"required":["id","protocol","port"],"additionalProperties":false};
-const pattern143 = new RegExp("^[A-Za-z][A-Za-z0-9_+-]*$", "");
+const pattern155 = new RegExp("^[A-Za-z][A-Za-z0-9_+-]*$", "");
 
 function validate367(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -14772,7 +16592,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err4 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err4];
@@ -14797,7 +16617,7 @@ errors++;
 if(data.protocol !== undefined){
 let data1 = data.protocol;
 if(typeof data1 === "string"){
-if(!pattern143.test(data1)){
+if(!pattern155.test(data1)){
 const err6 = {instancePath:instancePath+"/protocol",schemaPath:"#/properties/protocol/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_+-]*$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_+-]*$"+"\""};
 if(vErrors === null){
 vErrors = [err6];
@@ -14940,7 +16760,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err6 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err6];
@@ -14965,7 +16785,7 @@ errors++;
 if(data.namespaceId !== undefined){
 let data1 = data.namespaceId;
 if(typeof data1 === "string"){
-if(!pattern68.test(data1)){
+if(!pattern74.test(data1)){
 const err8 = {instancePath:instancePath+"/namespaceId",schemaPath:"#/properties/namespaceId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err8];
@@ -15075,7 +16895,7 @@ return errors === 0;
 }
 
 const schema72 = {"type":"object","properties":{"id":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"name":{"type":"string","minLength":1},"email":{"type":"string","pattern":"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"},"admin":{"type":"boolean"},"roleId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},"groupId":{"type":"string","pattern":"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"}},"required":["id","name","email","admin","roleId","groupId"],"additionalProperties":false};
-const pattern147 = new RegExp("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "");
+const pattern159 = new RegExp("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "");
 
 function validate371(data, {instancePath="", parentData, parentDataProperty, rootData=data}={}){
 let vErrors = null;
@@ -15156,7 +16976,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err7 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -15206,7 +17026,7 @@ errors++;
 if(data.email !== undefined){
 let data2 = data.email;
 if(typeof data2 === "string"){
-if(!pattern147.test(data2)){
+if(!pattern159.test(data2)){
 const err11 = {instancePath:instancePath+"/email",schemaPath:"#/properties/email/pattern",keyword:"pattern",params:{pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"},message:"must match pattern \""+"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"+"\""};
 if(vErrors === null){
 vErrors = [err11];
@@ -15243,7 +17063,7 @@ errors++;
 if(data.roleId !== undefined){
 let data4 = data.roleId;
 if(typeof data4 === "string"){
-if(!pattern68.test(data4)){
+if(!pattern74.test(data4)){
 const err14 = {instancePath:instancePath+"/roleId",schemaPath:"#/properties/roleId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err14];
@@ -15268,7 +17088,7 @@ errors++;
 if(data.groupId !== undefined){
 let data5 = data.groupId;
 if(typeof data5 === "string"){
-if(!pattern68.test(data5)){
+if(!pattern74.test(data5)){
 const err16 = {instancePath:instancePath+"/groupId",schemaPath:"#/properties/groupId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err16];
@@ -15346,7 +17166,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err3 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err3];
@@ -15459,7 +17279,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err4 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err4];
@@ -15605,7 +17425,7 @@ errors++;
 if(data.id !== undefined){
 let data0 = data.id;
 if(typeof data0 === "string"){
-if(!pattern68.test(data0)){
+if(!pattern74.test(data0)){
 const err5 = {instancePath:instancePath+"/id",schemaPath:"#/properties/id/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err5];
@@ -15630,7 +17450,7 @@ errors++;
 if(data.groupId !== undefined){
 let data1 = data.groupId;
 if(typeof data1 === "string"){
-if(!pattern68.test(data1)){
+if(!pattern74.test(data1)){
 const err7 = {instancePath:instancePath+"/groupId",schemaPath:"#/properties/groupId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err7];
@@ -15655,7 +17475,7 @@ errors++;
 if(data.namespaceId !== undefined){
 let data2 = data.namespaceId;
 if(typeof data2 === "string"){
-if(!pattern68.test(data2)){
+if(!pattern74.test(data2)){
 const err9 = {instancePath:instancePath+"/namespaceId",schemaPath:"#/properties/namespaceId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err9];
@@ -15928,7 +17748,7 @@ errors++;
 if(data.defaultNamespaceId !== undefined){
 let data1 = data.defaultNamespaceId;
 if(typeof data1 === "string"){
-if(!pattern68.test(data1)){
+if(!pattern74.test(data1)){
 const err14 = {instancePath:instancePath+"/defaultNamespaceId",schemaPath:"#/properties/defaultNamespaceId/pattern",keyword:"pattern",params:{pattern: "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"},message:"must match pattern \""+"^[A-Za-z][A-Za-z0-9_.-]{0,95}$"+"\""};
 if(vErrors === null){
 vErrors = [err14];

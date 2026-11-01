@@ -10,10 +10,10 @@ async function twoFrames(page) {
 async function beginProbe(page, kind) {
     // A loaded dataset can still have a pending toolbar-height measurement.
     // Attach to the final DragControls after that initial layout settles.
-    await page.waitForFunction(async()=>{
+    await expect.poll(()=>page.evaluate(async()=>{
         const t=await(await import('/src/openbexi_demo.js')).demoReady;
         return !t.ob_results.pending && t.ob_viewport.headerHeight===t.ob_timeline_header.offsetHeight;
-    });
+    })).toBe(true);
     return page.evaluate(async kind => {
         const timeline = await (await import('/src/openbexi_demo.js')).demoReady;
         const scene = timeline.ob_scene[0];
@@ -149,6 +149,21 @@ test('A real flick coasts visibly and a click on the title stops it immediately'
     });
     expect(stopped.moving).toBe(false);await page.waitForTimeout(250);
     expect(await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_markerDate.getTime())).toBe(stopped.time);
+});
+
+test('A 3D stage pans into earlier and later sessions without changing source intervals',async({page},testInfo)=>{
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto('/demos.html?demo=dinausaurs');
+    await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready');
+    const before=await page.evaluate(async()=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,m=t.staticTimeAxis.millisecondsPerUnit;
+        t.ob_results.navigate({from:-145*m,to:-115*m},true,{immediate:true});
+        t.ob_perspective.setMode(true);return JSON.stringify(t.staticData);
+    });
+    const reports=[await drag(page,1),await drag(page,-1)];
+    expect(await page.evaluate(async()=>JSON.stringify((await(await import('/src/openbexi_demo.js')).demoReady).staticData))).toBe(before);
+    await testInfo.attach('stage-drag-work',{body:JSON.stringify(reports,null,2),contentType:'application/json'});
+    expect(errors).toEqual([]);
 });
 
 for (const demo of catalog.demos) test(`${demo.id}: horizontal drag reuses rendered content in both directions`, async ({page}, testInfo) => {

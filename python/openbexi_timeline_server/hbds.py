@@ -376,6 +376,7 @@ def projection(document, revision, namespace_id=None):
         raise HBDSError(404, "HBDS namespace not found.")
     model = next(item for item in document["models"] if item["id"] == namespace["modelId"])
     return {"revision": revision, "namespaceId": selected, "namespace": namespace["namespace"],
+            "namespaceNames": {item["id"]: item["namespace"] for item in document["namespaces"]},
             "tabs": deepcopy(sorted((item for item in document["tabs"] if item["enabled"]), key=lambda item: (item["order"], item["id"]))),
             "modelConfiguration": deepcopy(model["configuration"])}
 

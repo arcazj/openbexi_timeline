@@ -8,6 +8,32 @@ fixture.dataSource.url='/json/test-data/default-dataset.json';
 const configPath='/openbexi_timeline/config';
 const json=value=>new Response(JSON.stringify(value),{status:200});
 const settle=()=>new Promise(resolve=>setTimeout(resolve,30));
+
+test('A superseded visual manifest cannot initialize an older model after its replacement',async()=>{
+    const h=await createTimelineHarness();
+    let started;
+    const requested=new Promise(resolve=>started=resolve);
+    h.window.fetch=async(url,{signal}={})=>{
+        assert.match(String(url),/pending-assets\.json$/);
+        started();
+        return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(new Error('Aborted')),{once:true}));
+    };
+    const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
+    const t=new OB_TIMELINE({autoStart:false}),initialized=[];
+    t.initializeTimeline=()=>initialized.push(t.params[0].title);
+    try {
+        const first=structuredClone(fixture),second=structuredClone(fixture);
+        first.params[0].title='Earlier model';first.rendering={recordVisuals:{enabled:true,manifest:'pending-assets.json'}};
+        second.params[0].title='Current model';delete second.rendering;
+        const previous=t.applyModel(first,{offline:true});await requested;
+        const oldVisuals=t.recordVisuals;
+        await t.applyModel(second,{offline:true});await previous;
+        assert.deepEqual(initialized,['Current model']);
+        assert.equal(t.params[0].title,t.modelDocument.params[0].title);
+        assert.equal(t.params[0].title,'Current model');
+        assert.equal(t.recordVisuals,null);assert.equal(oldVisuals.disposed,true);
+    } finally {t.modelStartup.cancel();h.close();}
+});
 async function setup(fetcher,options={}) {
     const h=await createTimelineHarness({calendar:true});
     const fallback=h.window.fetch,requests=[];

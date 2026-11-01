@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="170" viewBox="0 0 240 170">
+  <g fill="none" stroke="#8ba295" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="120" cy="76" rx="49" ry="46" stroke-width="2" opacity=".35"/>
+    <path d="M143 105c-26 17-55 3-55-23 0-22 25-37 43-26 19 12 16 32-1 37-13 4-24-9-17-18 4-6 13-5 16 1" stroke-width="7"/>
+    <path d="m80 118 9-5m65-61 7-9m-41-13v9m38 74-8-5" stroke-width="2"/>
+  </g>
+  <text x="120" y="150" text-anchor="middle" fill="#657d6e" font-family="Arial,sans-serif" font-size="11">No genus reconstruction available</text>
+</svg>

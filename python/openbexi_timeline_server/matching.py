@@ -89,6 +89,15 @@ def instant(value):
         raise ValueError("Invalid date; use ISO 8601 with a timezone.") from error
 
 
+def flat_descriptor(record):
+    result = {key: value for key, value in record.items() if key != "data"}
+    for key, value in record.get("data", {}).items():
+        result.setdefault(key, value)
+    if "activities" in result:
+        result["activities"] = [flat_descriptor(child) for child in result["activities"]]
+    return result
+
+
 def namespace(record, inherited=""):
     data = record.get("data") if isinstance(record.get("data"), dict) else {}
     for value in (record.get("namespace"), data.get("namespace")):
@@ -179,7 +188,7 @@ class FilterParser:
                     raise ValueError("Unclosed quoted filter value.")
                 i += 1
                 self.tokens.append((value, True))
-            elif c in "(),":
+            elif c in "(),|":
                 i += 1
                 self.tokens.append((c, False))
             elif c in "=!<>":
@@ -188,7 +197,7 @@ class FilterParser:
                     i += 1
                 self.tokens.append((text[start:i], False))
             else:
-                while i < len(text) and not text[i].isspace() and text[i] not in "(),=!<>\"'":
+                while i < len(text) and not text[i].isspace() and text[i] not in "(),|=!<>\"'":
                     i += 1
                 self.tokens.append((text[start:i], False))
             if len(self.tokens) > 512:
@@ -208,6 +217,9 @@ class FilterParser:
 
     def parse(self):
         result = self.either()
+        if self.take("|"):
+            include, exclude = result, self.either()
+            result = lambda record: include(record) and not exclude(record)
         if self.tokens[self.at][0]:
             raise ValueError("Unexpected filter token.")
         return result

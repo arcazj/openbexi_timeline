@@ -128,7 +128,7 @@ public class json_files_manager extends data_manager {
                             obj.removeIf(value->!predicate.test((JSONObject)value));
                         }
                     }
-                    if (!_include.equals("") || !_exclude.equals(""))
+                    if (!_include.equals("") || !_exclude.equals("") || _data_configuration.getConfiguration().get("namespaces")!=null)
                         obj = filterSelected(obj);
                     if (!_search.equals(""))
                         obj = searchEvents(obj, _search);
@@ -634,6 +634,7 @@ public class json_files_manager extends data_manager {
 
     @Override
     public JSONArray filterEvents(JSONArray events, String filter_include, String filter_exclude) {
+        events=FilterNamespaces.select(events,_data_configuration.getConfiguration());
         if(filter_include!=null && filter_include.startsWith("expr:")) {
             var include=FilterExpression.compile(filter_include);
             var exclude=filter_exclude==null || filter_exclude.isEmpty()?null:FilterExpression.compile(filter_exclude);

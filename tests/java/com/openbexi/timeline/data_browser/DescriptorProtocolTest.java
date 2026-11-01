@@ -15,6 +15,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class DescriptorProtocolTest {
     @TempDir Path temporary;
 
+    @Test void nativeWritesUseFlatEscapedMetadataAndPreserveDescriptions() throws Exception {
+        var source=new org.json.simple.JSONObject(java.util.Map.of("namespace","DEMO","data_model",temporary.resolve("data/yyyy/mm/dd").toString()));
+        var sources=new org.json.simple.JSONArray();sources.add(source);
+        var configuration=new data_configuration(new org.json.simple.JSONObject(java.util.Map.of("startup configuration",sources)));
+        var descriptor=new event_descriptor("DEMO-1","","2026-09-12T12:00:00Z","","","DEMO","Subject \"quoted\"","Ticket","READY","1","","",configuration);
+        descriptor.write("Additional description with \"quotes\"");
+        var value=new org.json.JSONObject(Files.readString(temporary.resolve("data/2026/09/12/descriptors/DEMO-1.json"))).getJSONArray("event_descriptor").getJSONObject(0);
+        assertFalse(value.has("data"));assertEquals("DEMO-1",value.getString("id"));
+        assertEquals("Additional description with \"quotes\"",value.getString("description"));assertEquals("DEMO",value.getString("namespace"));
+    }
+
     @Test void realHttpPreservesFullDescriptorsAndAlwaysReturnsJsonOnFailure() throws Exception {
         Path source=temporary.resolve("data/2026/09/12"),descriptors=source.resolve("descriptors");
         Files.createDirectories(descriptors);
@@ -41,7 +52,7 @@ class DescriptorProtocolTest {
             for(String start:new String[]{"2026-09-12T12:30:00Z","Sat Sep 12 12:30:00 UTC 2026"}) {
                 var response=read(client,base,"sample",start);
                 assertEquals(200,response.statusCode(),response.body());
-                var data=new org.json.JSONObject(response.body()).getJSONArray("event_descriptor").getJSONObject(0).getJSONObject("data");
+                var data=new org.json.JSONObject(response.body()).getJSONArray("event_descriptor").getJSONObject(0);
                 assertEquals("<b>Started</b><br>Ready [confirmed]",data.getString("description"));
                 assertEquals(2,data.getJSONArray("history").length());assertEquals("warning",data.getString("status"));
             }

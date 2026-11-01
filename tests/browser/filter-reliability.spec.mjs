@@ -21,6 +21,10 @@ async function openFilters(page) {
     if(await more.isVisible())await more.click();
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
 }
+async function openItems(builder,namespace) {
+    const details=builder.locator(`[data-filter-mode=include][data-filter-item-namespace="${namespace}"]`);
+    if(await details.getAttribute('open')===null)await details.locator(':scope > summary').click();
+}
 test.beforeEach(async({page})=>{
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
     await page.route('**/json/test-data/default-dataset.json',route=>route.fulfill({json:{records}}));
@@ -40,8 +44,11 @@ test('Saved exclusion radios can be reapplied after chips, builder criteria and 
     await expect.poll(()=>ids(page)).toEqual(['finished','other','warning']);await expect(radio).not.toBeChecked();
     await radio.check();await expect.poll(()=>ids(page)).toEqual(['other','warning']);
     await page.locator('.ob_filter_build_section > summary').click();
-    await page.getByRole('combobox',{name:'Filter field',exact:true}).selectOption('status');
-    await page.getByRole('textbox',{name:'Filter value',exact:true}).fill('FINISHED');
+    await page.locator('[data-filter-section=include] > summary').click();
+    await openItems(page,'operations');
+    await page.getByRole('checkbox',{name:'Include operations status: FINISHED',exact:true}).check();
+    await openItems(page,'planning');
+    await page.getByRole('checkbox',{name:'Include planning status: FINISHED',exact:true}).check();
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Finished');
     await page.getByRole('button',{name:'Save filter',exact:true}).click();
     await expect.poll(()=>ids(page)).toEqual(['finished','other']);await expect(radio).not.toBeChecked();
@@ -90,14 +97,16 @@ test('Create and clone drafts save supported filters, protect originals and canc
     await page.goto('/demos.html?demo=default-dataset');await ready(page);await openFilters(page);
     const build=page.locator('.ob_filter_build_section');await build.locator('summary').first().click();
     await expect(build.getByLabel('New filter name',{exact:true})).toBeVisible();
-    expect(await build.getByLabel('Namespace',{exact:true}).locator('option:not([hidden])').allTextContents()).toEqual(['operations','planning']);
+    await build.locator('[data-filter-section=namespaces] > summary').click();
+    expect(await build.locator('[data-filter-namespace]').evaluateAll(inputs=>inputs.map(input=>input.dataset.filterNamespace))).toEqual(['operations','planning']);
     const choices=await build.getByLabel('Group by (sort_by)',{exact:true}).locator('option').allTextContents();
     expect(choices).toContain('title');expect(choices).toContain('status');
-    await build.getByLabel('Namespace',{exact:true}).selectOption('operations');
+    await build.getByRole('checkbox',{name:'Include namespace planning',exact:true}).uncheck();
     await build.getByLabel('Group by (sort_by)',{exact:true}).selectOption('status');
-    await build.getByLabel('Filter field',{exact:true}).selectOption('status');
-    await build.getByLabel('Filter value',{exact:true}).fill('WARNING');
-    await expect(build.getByLabel('New filter expression',{exact:true})).toHaveValue('expr: namespace = "operations" AND (status = "WARNING")');
+    await build.locator('[data-filter-section=include] > summary').click();
+    await openItems(build,'operations');
+    await build.getByRole('checkbox',{name:'Include operations status: WARNING',exact:true}).check();
+    await expect(build.getByLabel('New filter expression',{exact:true})).toHaveValue('expr: namespace = "operations" AND status IN ("WARNING")');
     expect(await ids(page)).toEqual(['finished','other','warning']);
     await build.getByLabel('New filter name',{exact:true}).fill('Warnings');
     const actions=build.locator('.ob_filter_draft_actions');
@@ -106,7 +115,8 @@ test('Create and clone drafts save supported filters, protect originals and canc
     await actions.getByRole('button',{name:'Save filter',exact:true}).click();await expect.poll(()=>ids(page)).toEqual(['warning']);
     await build.locator('summary').first().click();
     await build.getByLabel('Clone existing filter',{exact:true}).selectOption('Warnings');
-    await expect(build.getByLabel('Namespace',{exact:true})).toHaveValue('operations');
+    await build.locator('[data-filter-section=namespaces] > summary').click();
+    await expect(build.getByRole('checkbox',{name:'Include namespace operations',exact:true})).toBeChecked();
     await expect(build.getByLabel('Group by (sort_by)',{exact:true})).toHaveValue('status');
     await build.getByLabel('New filter name',{exact:true}).fill('Warnings');
     await actions.getByRole('button',{name:'Save filter',exact:true}).click();

@@ -12,7 +12,7 @@ public final class SavedFilters {
     private SavedFilters() {}
     private static String identity(String value,String fallback) {
         String result=value==null || value.isBlank()?fallback:value;
-        if(!result.matches("[A-Za-z0-9_-]{1,128}"))throw new IllegalArgumentException("Invalid filter profile identity.");
+        if(!result.matches("[A-Za-z0-9_.-]{1,128}"))throw new IllegalArgumentException("Invalid filter profile identity.");
         return result;
     }
     private static Path directory(JSONObject configuration) {
@@ -44,12 +44,12 @@ public final class SavedFilters {
         Path target=path(configuration),folder=target.getParent(),base=Path.of(Objects.toString(configuration.get("_hbds_root"),"HBDS"),"filters");
         List<Path> candidates=new ArrayList<>();candidates.add(target);
         if(!folder.equals(base))candidates.add(base.resolve(target.getFileName()));
-        candidates.add(Path.of("HBDS/private/filters").resolve(target.getFileName()));
-        candidates.add(Path.of("filters").resolve(target.getFileName()));
+        candidates.add(base.toAbsolutePath().getParent().resolve("private/filters").resolve(target.getFileName()));
+        candidates.add(base.toAbsolutePath().getParent().getParent().resolve("filters").resolve(target.getFileName()));
         if("guest".equals(identity((String)configuration.get("userName"),"guest"))) {
             candidates.add(folder.resolve("default_filter_setting.json"));
             if(!folder.equals(base))candidates.add(base.resolve("default_filter_setting.json"));
-            candidates.add(com.openbexi.timeline.api.TimelineHbds.resolve(Path.of(""),"filters/default_filter_setting.json"));
+            candidates.add(base.toAbsolutePath().getParent().resolve("templates/filters/default_filter_setting.json"));
         }
         for(Path candidate:candidates) {
             if(!Files.isRegularFile(candidate))continue;
@@ -68,6 +68,7 @@ public final class SavedFilters {
         if(configuration.get("timelineName")==null || configuration.get("userName")==null)return;
         try {
             JSONObject document=read(configuration);if(document==null)return;
+            FilterRepository.apply(configuration,document,"readFilters");
             JSONObject timeline=(JSONObject)((JSONArray)document.get("openbexi_timeline")).get(0);
             for(Object value:(JSONArray)timeline.get("filters")) {
                 JSONObject filter=(JSONObject)value;
@@ -101,22 +102,11 @@ public final class SavedFilters {
             timeline.put("name",identity((String)query.get("timelineName"),"timeline"));
             timeline.put("user",identity((String)query.get("userName"),"guest"));
             timeline.put("sources",query.get("startup configuration"));timeline.put("multiples","45");
+            FilterRepository.apply(query,document,operation);
+            timeline=(JSONObject)((JSONArray)document.get("openbexi_timeline")).get(0);
             if(operation.equals("readFilters"))return document;
-            JSONArray filters=(JSONArray)timeline.get("filters");
-            String name=Objects.toString(query.get("filterName"),"");
-            if(name.isBlank())throw new IllegalArgumentException("Enter a filter name.");
             JSONObject selected=null;
-            for(Object value:filters)if(name.equals(((JSONObject)value).get("name")))selected=(JSONObject)value;
-            if(operation.equals("deleteFilter")) {
-                filters.remove(selected);selected=filters.isEmpty()?null:(JSONObject)filters.get(0);
-            } else {
-                if(selected==null){selected=new JSONObject();filters.add(selected);}
-                selected.put("name",name);selected.put("filter_value",expression);
-                selected.put("sortBy",Objects.toString(query.get("sortBy"),"NONE"));
-                selected.put("backgroundColor",Objects.toString(query.get("backgroundColor"),"#eef1f2"));
-                filters.remove(selected);filters.add(0,selected);
-            }
-            for(Object value:filters)((JSONObject)value).put("current",value==selected?"yes":"no");
+            for(Object value:(JSONArray)timeline.get("filters"))if("yes".equals(((JSONObject)value).get("current")))selected=(JSONObject)value;
             timeline.put("sortBy",selected==null?"NONE":selected.get("sortBy"));
             Path target=path(query);Files.createDirectories(target.toAbsolutePath().getParent());
             Path temporary=Files.createTempFile(target.toAbsolutePath().getParent(),".filter-",".tmp");

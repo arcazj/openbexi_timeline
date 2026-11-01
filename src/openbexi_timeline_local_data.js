@@ -7,6 +7,19 @@ const workerURL = new URL('./openbexi_timeline_data_worker.js', import.meta.url)
 const abortError = () => new DOMException('Dataset loading cancelled.', 'AbortError');
 const checkAbort = signal => { if (signal?.aborted) throw abortError(); };
 
+/** Untagged local records belong to their configured HBDS namespace. */
+export function applyLocalNamespace(dataset, namespace) {
+    if (!namespace) return dataset;
+    const assign = (record, inherited) => {
+        const selected = record.namespace || record.data?.namespace || inherited;
+        record.namespace = selected;
+        record.data = {...record.data, namespace: selected};
+        for (const child of record.activities || []) assign(child, selected);
+    };
+    for (const record of dataset.events) assign(record, namespace);
+    return dataset;
+}
+
 export function describeLocalProgress({stage, loaded = 0, total = 0}) {
     if (stage === 'processing') return 'Processing dataset…';
     const size = loaded >= 1024 * 1024 ? `${(loaded / (1024 * 1024)).toFixed(1)} MB` : `${Math.ceil(loaded / 1024)} KB`;

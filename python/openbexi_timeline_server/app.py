@@ -18,7 +18,8 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import FileResponse, JSONResponse, Response, StreamingResponse
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
+from starlette.websockets import WebSocketDisconnect
 
 from . import __version__
 from .assets import public_asset
@@ -268,6 +269,8 @@ def create_app(configuration, *, start_indexer=True):
             if request.headers.get("accept") == "text/event-stream":
                 return Response("data:" + compact(body) + "\n\n", status, media_type="text/event-stream")
             return JSONResponse(body, status)
+        except PermissionError as error:
+            return JSONResponse({"error": str(error)}, 403)
         except (ValueError, UnicodeError) as error:
             return JSONResponse({"error": str(error)}, 400)
         except (OSError, RuntimeError, sqlite3.Error):
@@ -288,6 +291,43 @@ def create_app(configuration, *, start_indexer=True):
             except HBDSError as error:
                 return JSONResponse({"error": str(error)}, error.status)
         return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    async def filter_values(request):
+        if configuration.legacy_fallback:
+            return await proxy(request)
+        from .filter_catalog import FilterCatalog
+        try:
+            body = await run_in_threadpool(FilterCatalog(index).refresh)
+            return JSONResponse(body, headers={"Cache-Control": "private, no-store"})
+        except (OSError, ValueError, sqlite3.Error):
+            return JSONResponse({"error": "Filter catalog is unavailable. Retry after source indexing completes."}, 503)
+
+    async def websocket_sessions(socket):
+        await socket.accept()
+        if configuration.legacy_fallback:
+            await socket.send_json({"error": "Use the Java WebSocket endpoint for this source configuration."})
+            await socket.close(code=1003);return
+        params = dict(socket.query_params)
+        allowed = {"startDate", "endDate", "scene", "namespace", "namespaces", "userName", "timelineName", "filter", "search", "searchMode", "sortBy", "progressive", "cursor", "cancel", "history"}
+        try:
+            while True:
+                try:
+                    message = await socket.receive_json()
+                except ValueError:
+                    await socket.send_json({"error": "Invalid timeline query."});continue
+                if not isinstance(message, dict) or any(key not in allowed or not isinstance(value, str) for key, value in message.items()):
+                    await socket.send_json({"error": "Invalid timeline query."});continue
+                if "cursor" not in message and any(params.get(key) != value for key, value in message.items() if key != "cancel"):
+                    params.pop("cursor", None)
+                params = {**params, **message}
+                try:
+                    resolved = await run_in_threadpool(storage.resolve, params)
+                    body = await run_in_threadpool(queries.query, resolved)
+                    await socket.send_json(body)
+                except (ValueError, PermissionError, OSError, RuntimeError, sqlite3.Error):
+                    await socket.send_json({"error": "Invalid or unavailable timeline query."})
+        except WebSocketDisconnect:
+            pass
 
     async def hbds(request):
         headers = {"Cache-Control": "no-store", "Vary": "Origin, Authorization"}
@@ -348,11 +388,14 @@ def create_app(configuration, *, start_indexer=True):
         if not requested and (configuration.model or hbds_store):
             requested = "openbexi_timeline.html"
         path = await run_in_threadpool(public_asset, configuration.root, requested)
-        return FileResponse(path, headers={"Cache-Control": "no-cache"}) if path else JSONResponse({"error": "Not found."}, 404)
+        media_type = {".glb": "model/gltf-binary", ".gltf": "model/gltf+json"}.get(path.suffix.lower()) if path else None
+        return FileResponse(path, media_type=media_type, headers={"Cache-Control": "no-cache"}) if path else JSONResponse({"error": "Not found."}, 404)
 
     base = configuration.context_path
     routes = [Route(base + name, sessions, methods=["GET", "POST", "HEAD"]) for name in ("/openbexi_timeline/sessions", "/openbexi_timeline_sse/sessions")]
-    routes += [Route(base + "/openbexi_timeline/config", config), Route(base + "/health", health), Route(base + "/ready", health),
+    routes += [WebSocketRoute(base + "/openbexi_timeline_ws/sessions", websocket_sessions)]
+    routes += [Route(base + "/openbexi_timeline/filter-values", filter_values), Route(base + "/openbexi_timeline_sse/filter-values", filter_values),
+               Route(base + "/openbexi_timeline/config", config), Route(base + "/health", health), Route(base + "/ready", health),
                Route(base + "/api/v1/hbds", hbds, methods=["GET", "HEAD", "PUT"]), Route(base + "/api/v1/hbds/schema", hbds, methods=["GET", "HEAD"]),
                Route(base + "/api/v1", proxy, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]),
                Route(base + "/api/v1/{path:path}", proxy, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]), Route(base + "/{path:path}", asset)]

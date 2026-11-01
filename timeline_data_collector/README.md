@@ -1,5 +1,28 @@
 # Timeline data collector
 
+Collector output uses a shared metadata normalizer. A deployment can keep its
+satellite names, aliases and series in the private local file
+`HBDS/reference/satellites.json`, or select another local file with
+`OPENBEXI_SATELLITE_CATALOG`. The public code and release contain no operational
+mapping values. A dictionary has `version: 1` and a `satellites` array whose entries
+contain `name`, `series` and optional `aliases`. All collectors use this dictionary;
+unknown satellite names are preserved and their series is `others`. Dictionary
+changes invalidate converter checkpoints and normalize retained contributions
+before upserts, preserving source ownership and canonical record IDs/dates.
+
+The optional local catalog property `field_aliases` maps imported field names to
+canonical names. Set `flatten_fields: true` to flatten nested `fields` objects
+and use their subject or title as the descriptor description. The default keeps
+nested fields and supplied descriptions unchanged. These settings apply to the
+selected catalog without namespace-specific rules; deployment dictionaries stay
+outside the public release.
+
+Events and sessions retain their timeline `data` object. Dated descriptor files
+and both timeline descriptor endpoints expose metadata at the descriptor root.
+The writer preserves canonical root metadata when imported attributes collide.
+Historical nested descriptors remain readable during adoption. Every namespace
+uses the same Data panel, typography and icon/text interaction in 2D and 3D.
+
 The public ingestion core for OpenBEXI Timeline 2.9. It discovers independently
 built packages in `HBDS/plugins/<name>` or installed Python entry points. The
 timeline servers read existing JSON without running the collector or installing
@@ -43,10 +66,31 @@ The plugin-specific command is installed with its wheel or editable package.
 dates or keep watching for new files. Omitting date options leaves date selection
 to the converter. A single `--date YYYY-MM-DD` selects only that day; add
 `--end-date YYYY-MM-DD` to process through a later day.
-The console lists selected sources before starting, reports disabled or missing
-inputs, and shows scanning, checksum, input-copy, conversion and publication
-progress. Long conversion/publication calls report that they are still working
-every 10 seconds. Progress goes to stderr; the final JSON result stays on stdout.
+At the default INFO level, every collector prints a detailed startup trace in
+the console, including IntelliJ run configurations. It reports the runtime and
+workspace, resolved service/namespace files, discovered plugins and versions,
+state database, interrupted-job recovery, selected sources and skip reasons,
+source/output paths, UTC date selection, locks, checkpoints and working directory.
+Numbered, timed steps follow the first acquisition, scanning, checksum, input-copy,
+conversion and publication pass. Each job includes its namespace, source and job
+ID so concurrent output can be distinguished. Java adapters report runtime and
+artifact resolution, subprocess PID, local converter-log location and exit code.
+MQTT reports connection/subscription readiness; Loki reports its acquisition plan.
+Server startup explains schedule recovery, stopped/disabled sources and the actual
+dashboard listening address.
+
+Slow startup steps report that they are still working every 10 seconds. Messages
+use UTC timestamps with milliseconds and go to stderr; `--json` results stay on
+stdout. `--log-file <local-path>` also retains them in a rotating local file.
+New startup diagnostics do not dump plugin options, credentials, source records,
+checkpoint contents or arbitrary exception payloads. URL credentials and signed
+query strings are redacted. Failures identify the stage, exception type and code
+location; schema failures also identify the field and validation rule.
+
+The first pass for a source/configuration/mode is detailed at INFO. Unchanged
+repeat passes move those diagnostics to DEBUG; configuration changes are traced
+again. Streams switch their batch diagnostics to DEBUG after the first committed
+batch. Use `--log-level DEBUG` to retain detailed progress on every pass.
 Only namespaces included in the selected workspace are considered.
 `--date` accepts `today`, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; ranges are inclusive
 UTC calendar dates. `--offline` forbids remote acquisition. `--validate-only`

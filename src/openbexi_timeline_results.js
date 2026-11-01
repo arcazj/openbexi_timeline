@@ -42,6 +42,8 @@ export class TimelineResults {
     }
 
     prepare(data, metadata) {
+        const visible=this.timeline.visibleNamespaces;
+        if(visible&&this.timeline.staticData)data={...data,events:data.events.filter(record=>record.zone && !record.namespace && !record.data?.namespace ? visible.size>0 : visible.has(record.namespace ?? record.data?.namespace ?? ''))};
         if (!metadata) data = filterLocalData(data, this.timeline.ob_scene?.[0]?.ob_filter_value || '');
         const snapshot = metadata ? createProviderMatchSnapshot(data, metadata, this.state.query,
             {sourceScope: this.timeline.name || ''}) : createStaticMatchSnapshot(data, this.state.query,

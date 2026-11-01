@@ -23,7 +23,7 @@ Each demo uses Timeline, Table and Split views with its own data, model and time
 | Demo | What it shows | Resources |
 | --- | --- | --- |
 | [Operations sample](https://arcazj.github.io/openbexi_timeline/demos.html?demo=default-dataset) | Sessions, milestones, source colors, and maintenance and verification windows. | [Data](../json/test-data/default-dataset.json) · [Model](../HBDS/templates/models/demos/default-dataset.json) · [Screenshot](../docs/ui/overview/default-dataset-desktop.png) |
-| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur lifespans on a numeric axis measured in millions of years ago. | [Data](../json/test-data/dinausaurs.json) · [Model](../HBDS/templates/models/demos/dinausaurs.json) · [Screenshot](../docs/ui/overview/dinausaurs-desktop.png) |
+| [Dinosaurs](https://arcazj.github.io/openbexi_timeline/demos.html?demo=dinausaurs) | Dinosaur fossil occurrence intervals with scientific and museum views, local genus models and labeled visual fallbacks. | [Data](../json/test-data/dinausaurs.json) · [Model](../HBDS/templates/models/demos/dinausaurs.json) · [Screenshot](../docs/ui/overview/dinausaurs-desktop.png) |
 | [Satellite ephemeris](https://arcazj.github.io/openbexi_timeline/demos.html?demo=ephemeris) | Orbital visibility sessions grouped by satellite. | [Data](../json/test-data/ephemeris.json) · [Model](../HBDS/templates/models/demos/ephemeris.json) · [Screenshot](../docs/ui/overview/ephemeris-desktop.png) |
 | [JFK chronology](https://arcazj.github.io/openbexi_timeline/demos.html?demo=jfk) | A minute-scale historical chronology with highlighted reference windows. | [Data](../json/test-data/jfk.json) · [Model](../HBDS/templates/models/demos/jfk.json) · [Screenshot](../docs/ui/overview/jfk-desktop.png) |
 | [Claude Monet](https://arcazj.github.io/openbexi_timeline/demos.html?demo=monet) | Life events, painting periods, original colors, and a secondary age scale. | [Data](../json/test-data/monet.json) · [Model](../HBDS/templates/models/demos/monet.json) · [Screenshot](../docs/ui/overview/monet-desktop.png) |
@@ -82,8 +82,8 @@ initialization method when ready.
 Each model in `models/demos` uses the existing `params` and `bands` structure, plus `dataSource`. The presence of `dataSource` enables the shared file-backed loader; existing server models continue to use their server connection.
 
 Both demo and provider models also accept the optional root `rendering` object.
-Its 92 settings cover theme, axes, Overview, camera, activity appearance, layout,
-interactions, controls and table columns. Omitted settings keep the established
+Its settings cover theme, axes, Overview, camera, activity appearance, layout,
+record artwork, interactions, controls and table columns. Omitted settings keep the established
 defaults. The [rendering inventory](model-rendering-inventory.md) lists every
 setting and its precedence. Open **Settings → HBDS Editor** to edit
 these properties and preview the actual timeline as you type; see the
@@ -154,7 +154,7 @@ Monet uses a uniform 1824–1916 main range with decade ticks, a gold age strip 
 
 Operations opens September 12 from 08:00 to 17:00 UTC, with extra space around 12:10–13:20 and a uniform full-day Overview. Its 48 records for that day keep their source colors and both highlight zones. All 1,008 records remain loaded and available through the table, search, and date navigation. These choices come from the model's range, context, focus, and label settings; the shared renderer has no Operations-specific branches.
 
-Dinosaurs opens at 165–115 Ma, centered on 140 Ma, with a 4× horizontal scale and 5 Ma ticks. Its fixed Overview retains the full 240–40 Ma context, from older ages on the left to younger ages on the right, covering all 224 source records spanning 228–65 Ma. Labels sit above compact duration bars, and the Overview fits the completed event rows into its available height. All event details remain available through navigation, pagination, search, and the table.
+Dinosaurs opens at 240–62 Ma, centered on 151 Ma, with older ages on the left and younger ages on the right. Its shared Scientific and Museum modes add local genus artwork above exact occurrence bars, with readable labels below. Expandable visual clusters keep the broad view compact without changing the linear time axis. The docked Overview retains all 224 source records spanning 228–65 Ma. Search, filters, native pages and the table retain access to every record. See [record visuals](record-visuals.md) for configuration, asset provenance, screenshots and measured limitations.
 
 The supplied `jfk.json`, `monet.json`, `religions.json`, and `dinausaurs.json` contain legacy XML despite their suffix. Their catalog models declare `simile-xml`. The ephemeris file's trailing comma was removed so its contents are valid JSON. `default-dataset.json` is a snapshot with a `records` array and separate `zones`. The dinosaurs source uses millions of years ago, not calendar years; its model declares a descending numeric axis. The supplied filename `dinausaurs.json` is retained.
 

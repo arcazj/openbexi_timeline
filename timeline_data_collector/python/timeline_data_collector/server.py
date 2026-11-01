@@ -15,10 +15,12 @@ from .runner import Runner
 from .scheduler import Scheduler
 from .io import model_root
 from .publisher import Publisher
+from .tracing import StartupTrace
 
 
 class Dashboard:
     def __init__(self, runner, *, host='127.0.0.1', port=8765, workspaces=()):
+        trace = StartupTrace('dashboard')
         if host not in {'127.0.0.1', 'localhost'}: raise ValueError('The collector dashboard binds to localhost; use an authenticated local tunnel for remote access')
         self.csrf = secrets.token_urlsafe(32)
         self.guard = threading.RLock()
@@ -27,7 +29,8 @@ class Dashboard:
         self.workspaces = {self.initial: runner.configuration.workspace}
         for workspace in workspaces:
             path = Path(workspace).resolve()
-            load(path)  # Validate selectable paths at startup, without loading converters.
+            with trace.step('validating selectable workspace', path=path):
+                load(path, trace=trace)  # Validate without loading converters.
             self.workspaces[identity(str(path))] = path
         self.schedulers = {self.initial: Scheduler(runner)}
         app = self
@@ -129,8 +132,10 @@ class Dashboard:
                     self.respond({'error': 'Not found'}, 404)
                 except (ValueError, KeyError, TypeError, OSError) as exc: self.respond({'error': str(exc)}, 400)
 
-        self.http = ThreadingHTTPServer((host, port), Handler)
+        with trace.step('binding local dashboard listener', host=host, port=port):
+            self.http = ThreadingHTTPServer((host, port), Handler)
         self.url = f'http://127.0.0.1:{self.http.server_port}'
+        trace.finish('dashboard listener bound', url=self.url, selectable_workspaces=len(self.workspaces))
 
     def health(self):
         now = datetime.now(timezone.utc)
@@ -264,10 +269,14 @@ class Dashboard:
 
 
 def serve(runner, *, host=None, port=None, workspaces=()):
+    trace = StartupTrace('server')
     settings = runner.configuration.document.get('collector_ui', {})
     dashboard = Dashboard(runner, host=host or settings.get('host', '127.0.0.1'), port=port if port is not None else settings.get('port', 8765), workspaces=workspaces)
-    dashboard.schedulers[dashboard.initial].resume()
-    print('Timeline data collector: ' + dashboard.url, flush=True)
-    try: dashboard.http.serve_forever(poll_interval=.2)
+    try:
+        with trace.step('applying startup schedule policy'):
+            dashboard.schedulers[dashboard.initial].resume()
+        trace.finish('Timeline data collector ready', url=dashboard.url,
+                     active_schedules=len(dashboard.schedulers[dashboard.initial].running))
+        dashboard.http.serve_forever(poll_interval=.2)
     finally: dashboard.close()
     return 0

@@ -1,6 +1,7 @@
 import {cleanTimelineURL, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
 import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
+import {recordKey} from './openbexi_timeline_paging.js';
 
 export const recordRange = record => ({from:Date.parse(record.start),to:Date.parse(record.end || record.start)});
 export const intersects = (a,b) => a.from<=b.to && a.to>=b.from;
@@ -70,6 +71,38 @@ export function clusterEvents(events, scale, protectedKeys=new Set(), cell=48) {
             searchMatch:group.some(event=>event.searchMatch),cluster:{from,to,count:group.length,warnings,keys:group.map(event=>event.matchKey)}});
     }
     return output.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start));
+}
+
+// Optional artwork LOD: group projected interval midpoints without changing the
+// scale or the representative's original dates, identity, title or metadata.
+// The complete membership is retained for native expansion, table and Overview.
+export function clusterVisualRecords(events, scale, protectedKeys=new Set(), cell=0, hasModel=()=>false) {
+    if (!(cell>0) || !Number.isFinite(cell) || typeof scale?.toPixel!=='function') return [...events];
+    const groups=new Map(), output=[];
+    for(const event of events) {
+        const prioritized=[event.data?.priority,event.data?.severity].some(value=>['critical','high','emergency'].includes(String(value || '').toLowerCase()));
+        const range=recordRange(event), identity=recordKey(event);
+        if(event.zone || event.cluster || event.structuralContext || event.activities?.length ||
+            protectedKeys.has(identity) || prioritized || event.pinned===true || event.data?.pinned===true ||
+            !Number.isFinite(range.from) || !Number.isFinite(range.to) || range.to<range.from) {
+            output.push(event);continue;
+        }
+        const midpoint=(scale.toPixel(event.start)+scale.toPixel(event.end || event.start))/2;
+        if(!Number.isFinite(midpoint)) {output.push(event);continue;}
+        const key=JSON.stringify([event.namespace || event.data?.namespace || '',Math.floor(midpoint/cell)]);
+        if(!groups.has(key))groups.set(key,[]);
+        groups.get(key).push(event);
+    }
+    for(const group of groups.values()) {
+        if(group.length<3) {output.push(...group);continue;}
+        const stable=[...group].sort((a,b)=>String(a.id).localeCompare(String(b.id)) || recordKey(a).localeCompare(recordKey(b)));
+        const representative=stable.find(hasModel) || stable[0];
+        const ranges=group.map(recordRange);
+        output.push({...representative,cluster:{from:Math.min(...ranges.map(range=>range.from)),
+            to:Math.max(...ranges.map(range=>range.to)),count:group.length,
+            keys:stable.map(recordKey),representative:true}});
+    }
+    return output.sort((a,b)=>Date.parse(a.start)-Date.parse(b.start) || recordKey(a).localeCompare(recordKey(b)));
 }
 
 // A history cursor owns one archive traversal. Each request is bounded, but

@@ -10,6 +10,33 @@ import {createTimelineHarness} from './helpers/timeline-dom.mjs';
 const padding = ' '.repeat(LOCAL_WORKER_THRESHOLD);
 const sample = {events: [{id: 'sample', start: '2026-10-02', data: {title: 'Café 🌎'}}]};
 
+for(const inline of [false,true])test(`HBDS namespace selection retains untagged ${inline?'inline':'downloaded'} records and their Overview`,async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js'),t=new OB_TIMELINE({autoStart:false});
+        const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
+        Object.assign(model.params[0],{date:'2026-09-12T12:00:00Z',showCurrentTime:false});
+        const payload={events:[{id:'untagged',start:'2026-09-12T12:00:00Z',data:{title:'Owned by the selected namespace'}},
+            {id:'other',namespace:'BETA',start:'2026-09-12T12:00:00Z',data:{title:'Explicit other namespace'}}]};
+        const original=JSON.stringify(payload),fetch=h.window.fetch;
+        if(!inline) {
+            model.dataSource={format:'json',url:'/__namespace-local.json'};
+            h.window.fetch=async(resource,options)=>String(resource).includes('/__namespace-local.json')?
+                new Response(JSON.stringify(payload)):fetch(resource,options);
+        }
+        t.setHbdsNamespace('ALPHA');t.visibleNamespaces=new Set(['ALPHA']);
+        await t.applyModel(model,inline?{inlineData:payload}:{});
+        const deadline=Date.now()+5000;
+        while(t.ob_results.pending){assert.ok(Date.now()<deadline);await new Promise(resolve=>setTimeout(resolve,10));}
+        assert.equal(t.staticData.events.find(record=>record.id==='untagged').namespace,'ALPHA');
+        assert.equal(t.staticData.events.find(record=>record.id==='other').namespace,'BETA');
+        assert.ok(t.ob_results.snapshot.entries.some(entry=>entry.record.id==='untagged'));
+        assert.ok(t.ob_results.snapshot.entries.every(entry=>entry.record.id!=='other'));
+        assert.ok(t.ob_timeline_panel.querySelector('.ob_docked_overview [data-event-id="untagged"]'));
+        assert.equal(JSON.stringify(payload),original,'Namespace inheritance does not modify the supplied payload');
+    } finally {h.close();}
+});
+
 // Run the actual browser worker module in a separate Node thread. The shim only
 // maps Web Worker messaging; parsing and normalization use production sources.
 function workers() {

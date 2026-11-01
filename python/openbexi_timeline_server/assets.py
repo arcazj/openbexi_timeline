@@ -32,6 +32,7 @@ def public_asset(root, requested):
     allowed = len(parts) == 1 and (requested in ("README.md", "LICENSE") or suffix in {"html", "png", "jpg", "jpeg", "svg", "ico"})
     allowed |= first == "src" and (len(parts) == 2 and suffix in {"js", "mjs"} or requested.startswith("src/vendor/yaml/") and (suffix in {"js", "json"} or parts[-1] == "LICENSE"))
     allowed |= first in {"node_modules", "icon", "css"} and suffix in BROWSER
+    allowed |= first == "icon" and suffix in {"glb", "gltf", "bin"}
     allowed |= first == "demos" and (suffix == "json" or requested in {"demos/embedded-earth-orbit.html", "demos/embedded-earth-orbit.js"})
     allowed |= first in {"models", "help", "schemas"} and suffix == "json"
     if first == "HBDS":

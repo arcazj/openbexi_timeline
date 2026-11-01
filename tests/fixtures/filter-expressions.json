@@ -170,6 +170,36 @@
       "ids": [
         "a"
       ]
+    },
+    {
+      "expression": "expr: namespace = operations | status = STARTED",
+      "ids": [
+        "b"
+      ]
+    },
+    {
+      "expression": "expr: namespace IN (operations, planning) AND priority >= 2 | status = CANCELLED",
+      "ids": [
+        "a",
+        "session"
+      ]
+    },
+    {
+      "expression": "expr: title CONTAINS \"A+B | ready\" | priority < 3",
+      "ids": [
+        "a"
+      ]
+    },
+    {
+      "expression": "expr: EXISTS(namespace) AND NOT EXISTS(namespace)",
+      "ids": []
+    },
+    {
+      "expression": "expr: namespace = operations AND status IN (STARTED, SCHEDULE) | namespace = operations AND priority = 1",
+      "ids": [
+        "a",
+        "session"
+      ]
     }
   ],
   "invalid": [
@@ -183,6 +213,9 @@
     "expr: a = b trailing",
     "expr: title = A+B",
     "expr: a = 1e999",
-    "["
+    "[",
+    "expr: status = STARTED |",
+    "expr: status = STARTED | status = CANCELLED | priority = 3",
+    "expr: (status = STARTED | status = CANCELLED)"
   ]
 }

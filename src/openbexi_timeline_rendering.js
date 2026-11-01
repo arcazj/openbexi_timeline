@@ -92,6 +92,35 @@ export const RENDERING_SCHEMA = group('Optional rendering settings. Omitted prop
         leaderColor:color('#507585','3D label connector.'),
         selectedLeaderColor:color('#9c5900','Selected label connector.')
     }),
+    recordVisuals:group('Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.',{
+        enabled:bool(false,'Reserve artwork space and render record visuals in the shared 2D and 3D core.'),
+        presentation3D:choice('board',['board','stage'],'Board artwork or upright exhibits on horizontal display lanes in perspective mode.'),
+        stageLaneDepth:number(100,40,400,'Depth of each horizontal display lane in stage mode, in timeline units.'),
+        stageSurfaceOpacity:number(.22,0,1,'Opacity of the raised display lanes in stage mode.'),
+        stageRows:number(3,1,8,'Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages.'),
+        stageScale:number(1.5,1,3,'Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged.'),
+        manifest:{...BACKGROUND_IMAGE_SCHEMA,description:'Optional same-origin asset manifest URL, relative to the application root.'},
+        keyField:text('data.title','Exact record field used to look up an entry in the asset manifest.'),
+        caseInsensitive:bool(true,'Match manifest entry keys without case sensitivity.'),
+        imageField:{...BACKGROUND_IMAGE_SCHEMA,maxLength:160,description:'Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback.'},
+        fallbackImage:{...BACKGROUND_IMAGE_SCHEMA,description:'Optional same-origin fallback image URL, relative to the application root.'},
+        rotation:{type:'array',default:[0,0,0],minItems:3,maxItems:3,
+            description:'Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.',
+            items:{type:'number',minimum:-Math.PI*2,maximum:Math.PI*2}},
+        width:number(128,24,600,'Normalized artwork display width in timeline pixels; does not represent physical size.'),
+        height:number(92,20,480,'Normalized artwork display height above the occurrence bar.'),
+        gap:number(18,0,120,'Spacing between artwork, occurrence bars and neighboring rows.'),
+        depth:number(32,0,300,'Maximum normalized artwork depth in the perspective view.'),
+        maxModels:number(16,0,100,'Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks.'),
+        minimumModelPixels:number(60,0,600,'Minimum projected artwork width before loading a detailed 3D model.'),
+        clusterPixels:number(0,0,400,'Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale.'),
+        selectedScale:number(1,1,3,'Display-only artwork scale multiplier for the selected record.'),
+        selectedLift:number(0,0,400,'Display-only foreground lift for selected artwork, in timeline pixels.'),
+        transitionMs:number(0,0,1000,'Artwork selection transition duration; zero disables animation.'),
+        bandOpacity:number(1,0,1,'Band surface opacity when record visuals are enabled; zero retains an invisible drag surface.'),
+        label2D:text('Scientific','Label for the shared orthographic presentation.'),
+        label3D:text('Museum','Label for the shared perspective presentation.')
+    }),
     layout:group('Responsive layout preferences; computed positions and page membership are not persisted.',{
         sidebarBreakpoint:number(900,320,2400,'Viewport width below which the Data panel overlays the plot.'),
         sidebarMinimum:number(320,180,800,'Minimum docked Data panel width.'),
@@ -179,6 +208,8 @@ export function resolveRendering(value) {
     return merge(RENDERING_DEFAULTS,value);
 }
 export const renderingFor=timeline=>timeline?.rendering || RENDERING_DEFAULTS;
+export const usesRecordStage=(timeline,index=0)=>Boolean(renderingFor(timeline).recordVisuals.enabled &&
+    renderingFor(timeline).recordVisuals.presentation3D==='stage' && timeline?.ob_scene?.[index]?.ob_camera_type==='Perspective');
 export const bandRendering=band=>band?._rendering || RENDERING_DEFAULTS;
 export function applyRenderingTheme(timeline) {
     applyAppearanceBackground(timeline);

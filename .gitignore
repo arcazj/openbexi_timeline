@@ -142,10 +142,10 @@ __pycache__/
 !/HBDS/roles/
 /HBDS/roles/*
 !/HBDS/roles/defaults.json
-/GCS_data_collector/
-/.run/Collector - MCC - Loki Backfill.run.xml
-/.run/Collector - MCC - Loki Server.run.xml
-/.run/Timeline Python - MCC.run.xml
+/*_data_collector/
+!/timeline_data_collector/
+/.run/Collector - * - *.run.xml
+/.run/Timeline Python - *.run.xml
 /tools/com/openbexi/intelsat/
 **/.venv/
 **/target/
@@ -168,8 +168,8 @@ __pycache__/
 !/HBDS/plugins/README.md
 !/HBDS/schema/plugin.schema.json
 
-**/.gcs-collector/
-**/.gcs-state/
+**/.*-collector/
+**/.*-state/
 
 !/HBDS/schema/namespace.schema.json
 !/HBDS/schema/service.schema.json
@@ -180,6 +180,9 @@ __pycache__/
 *.pre-v3.bak
 
 # Private deployment restart instructions.
-/MCC_COLLECTOR_RESTART.md
+/*_COLLECTOR_RESTART.md
 /PROJECT_ARCHITECTURE.png
 /PROJECT_ARCHITECTURE.svg
+
+# Local operational icons stay with the private collectors.
+/icon/private/

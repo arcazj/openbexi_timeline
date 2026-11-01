@@ -33,6 +33,20 @@ async function load() {
     t.bands=model.bands;t.staticData=structuredClone(data);t.initializeTimeline();
     return {h,t,r:t.ob_results,c:t.ob_results.controls};
 }
+
+test('Optional artwork controls stay accessible in More when the available toolbar narrows',async()=>{
+    const {h,t,r,c}=await load();
+    try {
+        Object.defineProperty(r.primaryToolbar,'clientWidth',{value:1100,configurable:true});
+        c.layout();assert.equal(c.compact,false,'Ordinary models retain their existing toolbar layout');
+        t.recordVisuals={};c.layout();
+        assert.equal(c.compact,true);assert.equal(c.moreButton.hidden,false);
+        assert.equal(c.moreView.contains(r.utilities),true);
+        Object.defineProperty(r.primaryToolbar,'clientWidth',{value:1400,configurable:true});
+        c.layout();assert.equal(c.compact,false);
+        assert.equal(r.primaryToolbar.contains(r.utilities),true);
+    } finally {t.recordVisuals=null;h.close();}
+});
 test('Back restores range and zoom after search and selection, retaining current search/filter/grouping',async()=>{
     const {h,t,r,c}=await load();
     try {
@@ -111,7 +125,7 @@ test('Sorting and filtering has three sections with namespaces visible and the b
         assert.ok(build.compareDocumentPosition(saved)&h.window.Node.DOCUMENT_POSITION_FOLLOWING);
         assert.equal(namespaces.closest('details'),null,'Namespaces remain available without expanding another section');
         assert.equal(namespaces.hidden,false);
-        assert.equal(namespaces.querySelector('[role="tab"]').textContent,'Main namespace');
+        assert.equal(namespaces.querySelector('label').textContent,'Main namespace');
         assert.equal(build.querySelector('summary').textContent,'Build a new filter');
         assert.equal(build.open,false);
         assert.equal(saved.querySelector('legend').textContent,'List of saved filters');
@@ -131,23 +145,23 @@ test('Sorting and filtering has three sections with namespaces visible and the b
 test('Namespace controls select immediately and reflect renamed or reordered tabs without discarding a filter draft',async()=>{
     const {h,t}=await load();
     try {
-        let state={items:[{id:'tab-main',title:'Main',namespaceId:'main'},{id:'tab-other',title:'Other',namespaceId:'other'}],activeId:'tab-main'};
+        let state={items:[{id:'tab-main',title:'Main',namespaceId:'main'},{id:'tab-other',title:'Other',namespaceId:'other'}],activeId:'tab-main',selectedIds:['tab-main']};
         const selections=[];
-        t.namespaceNavigation={getState:()=>state,select:id=>{selections.push(id);state={...state,activeId:id};h.window.dispatchEvent(new h.window.CustomEvent('ob-hbds-navigation-change'));}};
+        t.namespaceNavigation={getState:()=>state,setSelected:ids=>{selections.push(ids);state={...state,selectedIds:ids};h.window.dispatchEvent(new h.window.CustomEvent('ob-hbds-navigation-change'));}};
         t.ob_create_filters(0,undefined,'select_filter');
-        const tabs=()=>[...t.ob_timeline_right_panel.querySelectorAll('.ob_filter_namespaces [role="tab"]')];
-        assert.equal(tabs()[0].getAttribute('aria-selected'),'true');
-        assert.equal(tabs()[1].getAttribute('aria-selected'),'false');
+        const tabs=()=>[...t.ob_timeline_right_panel.querySelectorAll('.ob_filter_namespaces input[type=checkbox]')];
+        assert.equal(tabs()[0].checked,true);
+        assert.equal(tabs()[1].checked,false);
         tabs()[1].click();
-        assert.deepEqual(selections,['tab-other']);
-        assert.equal(tabs()[1].getAttribute('aria-selected'),'true');
+        assert.deepEqual(JSON.parse(JSON.stringify(selections)),[['tab-main','tab-other']]);
+        assert.equal(tabs()[1].checked,true);
         t.ob_timeline_right_panel.querySelector('.ob_filter_build_section').open=true;
         const input=t.ob_timeline_right_panel.querySelector('[aria-label="New filter expression"]');
         input.value='expr: title CONTAINS "draft + 25%"';
-        state={items:[{id:'tab-other',title:'Renamed other',namespaceId:'other'},{id:'tab-main',title:'Main',namespaceId:'main'}],activeId:'tab-other'};
+        state={items:[{id:'tab-other',title:'Renamed other',namespaceId:'other'},{id:'tab-main',title:'Main',namespaceId:'main'}],activeId:'tab-other',selectedIds:['tab-other']};
         h.window.dispatchEvent(new h.window.CustomEvent('ob-hbds-navigation-change'));
-        assert.deepEqual(tabs().map(tab=>tab.textContent),['Renamed other','Main']);
-        assert.equal(tabs()[0].getAttribute('aria-selected'),'true');
+        assert.deepEqual(tabs().map(tab=>tab.parentElement.textContent),['Renamed other','Main']);
+        assert.equal(tabs()[0].checked,true);
         assert.equal(t.ob_timeline_right_panel.querySelector('[aria-label="New filter expression"]'),input);
         assert.equal(input.value,'expr: title CONTAINS "draft + 25%"');
     } finally {h.close();}

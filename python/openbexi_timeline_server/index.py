@@ -378,6 +378,12 @@ class TimelineIndex:
                 self.put(db, "status", {"indexing": False, "revision": revision, "warnings": warnings[:100], "warningCount": warning_count, "files": len(files), "records": total, "checkedAt": time.time()})
                 self.put(db, "lease", {"owner": self.owner, "until": 0})
                 self.cleanup(db)
+            from .filter_catalog import FilterCatalog
+            try:
+                FilterCatalog(self).refresh()
+            except (OSError, ValueError, sqlite3.Error):
+                import logging
+                logging.getLogger("openbexi.timeline").warning("Historical filter catalog update failed; retrying on the next scan.")
             return changed or revision != old_status["revision"]
         except Exception:
             with self.connect() as db:

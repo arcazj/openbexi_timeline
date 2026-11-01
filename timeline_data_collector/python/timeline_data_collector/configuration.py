@@ -57,7 +57,7 @@ def execution_policy(value):
     return policy
 
 
-def load(workspace, *, dataconf=None, service=None, hbds_root=None):
+def load(workspace, *, dataconf=None, service=None, hbds_root=None, trace=None):
     workspace = Path(workspace).resolve()
     root = Path(hbds_root).resolve() if hbds_root else workspace.parent
     if dataconf:
@@ -68,7 +68,10 @@ def load(workspace, *, dataconf=None, service=None, hbds_root=None):
         files = [workspace.parent / item for item in document.get('namespace_files', [])]
         if not files: raise ValueError('Workspace requires namespace_files')
         service_path = Path(service).resolve() if service else workspace.parent / document.get('service', 'service.yml')
-    bundle = load_bundle(files, service_path if service_path.exists() else None, root, workspace)
+    if trace:
+        trace.note('configuration paths resolved', workspace=workspace, hbds_root=root,
+                   namespace_files=files, service=service_path, service_exists=service_path.exists())
+    bundle = load_bundle(files, service_path if service_path.exists() else None, root, workspace, trace=trace)
     for group in bundle['data_sources']:
         if 'sources' not in group:
             raise ValueError('Collector requires namespace files with sources; migrate legacy combined configuration before running')
@@ -79,5 +82,9 @@ def load(workspace, *, dataconf=None, service=None, hbds_root=None):
     roots = tuple((root / expand_env(item)).resolve() for item in roots)
     selected_state = expand_env(bundle.get('state_root', '../.local-private/timeline-collector'))
     state_root = (root / selected_state).resolve()
+    if trace:
+        trace.note('configuration validated', namespaces=len(bundle['data_sources']),
+                   sources=sum(len(group.get('sources', [])) for group in bundle['data_sources']),
+                   plugin_roots=roots, state_root=state_root, revision=identity(bundle))
     return Configuration(workspace, root, bundle, identity(bundle), roots, state_root,
                          dict(dataconf=dataconf, service=service, hbds_root=str(root)))

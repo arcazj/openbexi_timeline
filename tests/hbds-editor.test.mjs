@@ -153,6 +153,21 @@ test('provider workspaces open All namespaces and refresh the aggregate after ei
     }finally{harness.close();}
 });
 
+test('Checkbox namespace selections reuse an aggregate frame for multiple, single and empty scopes',async()=>{
+    const {harness,runtime,document}=await setup();try {
+        const host=harness.window.document.createElement('main');harness.window.document.body.append(host);
+        const tabs=runtime.mountHbdsTabs(host,hbdsPublicConfiguration(document));
+        tabs.setSelected(['tab-alpha','tab-beta']);
+        const frame=tabs.frames.get('__all__');assert.ok(frame);assert.equal(tabs.activeId,'__all__');
+        assert.deepEqual(plain(tabs.getState().selectedIds),['tab-alpha','tab-beta']);
+        tabs.setSelected(['tab-beta']);assert.equal(tabs.frames.get('__all__'),frame);
+        assert.deepEqual(plain(tabs.getState().selectedIds),['tab-beta']);
+        tabs.setSelected([]);assert.equal(tabs.frames.get('__all__'),frame);assert.deepEqual(plain(tabs.getState().selectedIds),[]);
+        assert.equal(frame.hidden,false);assert.equal(tabs.frames.get('tab-alpha').hidden,true);
+        tabs.dispose();
+    }finally{harness.close();}
+});
+
 test('All namespace child queries the provider without a namespace restriction',async()=>{
     const harness=await createTimelineHarness({calendar:true,url:'http://localhost/openbexi_timeline.html?hbdsTab=__all__&hbdsScope=all'});try{
         const document=await hbdsFixture(),configuration=hbdsPublicConfiguration(document);

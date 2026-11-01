@@ -322,10 +322,14 @@ public class openbexi_timeline implements Runnable {
         }
         if (_data_conf != null && ob_timeline_context != null)
             ob_timeline_context.addParameter("data_conf", _data_conf);
+        com.openbexi.timeline.websockets.ob_websocket_timeline.configure(Integer.parseInt(_port),_data_conf);
 
         Tomcat.addServlet(ob_timeline_context, "timeline_config", new TimelineConfigServlet(
                 mode==ob_mode.secure_sse?"/openbexi_timeline_sse/sessions":"/openbexi_timeline/sessions"));
         ob_timeline_context.addServletMappingDecoded("/openbexi_timeline/config", "timeline_config");
+        Tomcat.addServlet(ob_timeline_context,"filter_catalog",new ob_ajax_timeline()).setLoadOnStartup(1);
+        ob_timeline_context.addServletMappingDecoded("/openbexi_timeline/filter-values","filter_catalog");
+        ob_timeline_context.addServletMappingDecoded("/openbexi_timeline_sse/filter-values","filter_catalog");
 
         Tomcat.addServlet(ob_timeline_context, "api_v1", new TimelineApiServlet()).setLoadOnStartup(1);
         ob_timeline_context.addServletMappingDecoded("/api/v1/*", "api_v1");

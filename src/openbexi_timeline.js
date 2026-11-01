@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 Jean-Christophe Arcaz.
- *     OpenBEXI Timeline version 2.9.2
+ *     OpenBEXI Timeline version 2.9.3
  * The latest version is available at https://github.com/arcazj/openbexi_timeline.
  *
  * Distributed under the OpenBEXI Timeline Commercial and Exempt Use License
@@ -12,25 +12,26 @@
  */
 
 import * as THREE from 'three';
-import {resolveRendering, validateRendering, renderingFor, applyRenderingTheme} from './openbexi_timeline_rendering.js';
+import {resolveRendering, validateRendering, renderingFor, applyRenderingTheme, usesRecordStage} from './openbexi_timeline_rendering.js';
 import {DragControls} from 'drag_controls';
 import SpriteText from "three-spritetext";
 import {TimelineViews} from './openbexi_timeline_views.js';
 import {TimelineResults} from './openbexi_timeline_results.js';
 import {TimelineLoader} from './openbexi_timeline_loader.js';
-import {readLocalTimelineData, describeLocalProgress} from './openbexi_timeline_local_data.js';
+import {readLocalTimelineData, describeLocalProgress, applyLocalNamespace} from './openbexi_timeline_local_data.js';
 import {TimelineTextureCache, TimelineBackgroundTextureCache, backgroundImageURL} from './openbexi_timeline_textures.js';
 import {TimelineModelStartup} from './openbexi_timeline_model_startup.js';
 import {createTimelineSettings} from './openbexi_timeline_settings.js';
 import {fetchTimeline,traceURL,timelineTrace} from './openbexi_timeline_trace.js';
 import {TimelineActivityFocus,positionActivityCamera} from './openbexi_timeline_activity_focus.js';
-import {bindEventTextHitTarget, TimelineEventInteraction} from './openbexi_timeline_event_interaction.js';
+import {bindRecordHitTarget, TimelineEventInteraction} from './openbexi_timeline_event_interaction.js';
 import {renderDescriptor,loadDescriptor,cancelDescriptor} from './openbexi_timeline_descriptor.js';
 import {compileFilter,decodeFilter} from './openbexi_timeline_filter_expression.js';
 import {readTimelineResponse,cleanTimelineURL} from './openbexi_timeline_transport.js';
 import {createFilterPanel, applyLocalFilterOperation, restoreLocalFilter, updateFilterAvailability, refreshPendingFilters, filterDataOptions, filterSortBy, validateNewFilter, showFilterSyntax, showFilterError} from './openbexi_timeline_filters.js';
 import {TimelineViewport} from './openbexi_timeline_viewport.js';
 import {TimelinePerspective} from './openbexi_timeline_perspective.js';
+import {TimelineRecordVisuals} from './openbexi_timeline_record_visuals.js';
 import {createTimelineHelp} from './openbexi_timeline_help.js';
 import {validateDemoModel, validateLegacyModel} from './openbexi_timeline_model_validation.js';
 import {projectOverviewSessions, renderOverviewSessions, updateOverviewViewport} from './openbexi_timeline_overview.js';
@@ -567,7 +568,7 @@ function OB_TIMELINE(options = {}) {
         this.data = this.ob_get_url_head(ob_scene_index) + "?ob_request=" + ob_request +
             "&filterName=" + encodeURIComponent(ob_filter_name || '') +
             "&scene=" + ob_scene_index +
-            "&namespace=" + namespace +
+            "&namespace=" + encodeURIComponent(this.hbdsNamespace || namespace) +
             "&timelineName=" + this.name +
             "&title=" + this.title +
             "&backgroundColor=" + backgroundColor +
@@ -1037,14 +1038,24 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.ob_createDescriptor = function (index, record) {
-        const custom=this.ob_scene[index].descriptor;
-        const method=typeof custom==='string'?custom.replace(/^this\./,'').replace(/\.js$/,''):null;
-        if (method && typeof this[method]==='function') {
-            this.ob_timeline_right_panel.replaceChildren(this[method](record));
-            this.ob_timeline_right_panel.style.visibility='visible';
-            return;
-        }
         return renderDescriptor(this,index,record);
+    };
+
+    OB_TIMELINE.prototype.ob_sync_overview_control = function () {
+        if (!this.ob_view || !this.ob_no_view) return;
+        const hasOverview = this.bands?.some(band => band.name.includes('overview_')) ||
+            (!this.staticData && !this.ob_results?.remoteData);
+        const table = this.ob_views?.mode === 'table';
+        const visible = hasOverview && this.ob_visible_view && !table;
+        for (const [icon, active] of [[this.ob_view, visible], [this.ob_no_view, !visible]]) {
+            icon.hidden = false;
+            icon.style.visibility = active ? 'visible' : 'hidden';
+            icon.tabIndex = active ? 0 : -1;
+            icon.setAttribute('aria-disabled', String(!hasOverview || table));
+            icon.setAttribute('aria-expanded', String(Boolean(visible)));
+            icon.title = !hasOverview ? 'This model has no Overview band' : table ?
+                'Switch to Timeline or Split view to show Overview' : visible ? 'Hide Overview' : 'Show Overview';
+        }
     };
 
     OB_TIMELINE.prototype.ob_createTimelineHeader = function (ob_scene_index) {
@@ -1251,40 +1262,20 @@ function OB_TIMELINE(options = {}) {
             this.ob_no_view.style.height = 32 + "px";
             this.ob_view.style.width = 32 + "px";
             this.ob_no_view.style.width = 32 + "px";
-            this.ob_view.onmouseenter = function (e) {
-            };
-            this.ob_no_view.onmouseenter = function (e) {
-            };
-            this.ob_view.onclick = function () {
+            this.ob_view.onclick = this.ob_no_view.onclick = function () {
                 that2.moving = false;
-                that2.ob_view.style.zIndex = "9999";
-                clearInterval(that2.ob_scene[ob_scene_index].ob_interval_move);
-                that2.ob_view.className = "ob_view";
-                if (that2.ob_view.style.visibility === "visible") {
-                    that2.ob_view.style.visibility = "hidden";
-                    that2.ob_no_view.style.visibility = "visible";
-                    that2.ob_visible_view = false;
-                    that2.update_scene(ob_scene_index, that2.header, that2.params,
-                        that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                        that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
-                        null, false);
-                }
-            }
-            this.ob_no_view.onclick = function () {
-                that2.moving = false;
-                that2.ob_no_view.style.zIndex = "9999";
-                clearInterval(that2.ob_scene[ob_scene_index].ob_interval_move);
-                that2.ob_view.className = "ob_view";
-                if (that2.ob_no_view.style.visibility === "visible") {
-                    that2.ob_no_view.style.visibility = "hidden";
-                    that2.ob_view.style.visibility = "visible";
-                    that2.ob_visible_view = true;
-                    that2.update_scene(ob_scene_index, that2.header, that2.params,
-                        that2.ob_scene[ob_scene_index].bands, that2.ob_scene[ob_scene_index].model,
-                        that2.ob_scene[ob_scene_index].sessions, that2.ob_scene[ob_scene_index].ob_camera_type,
-                        null, true);
-                }
-            }
+                const scene = that2.ob_scene[ob_scene_index];
+                clearInterval(scene.ob_interval_move);
+                scene.cancelPan?.();
+                const focused = document.activeElement === that2.ob_view || document.activeElement === that2.ob_no_view;
+                that2.ob_visible_view = !that2.ob_visible_view;
+                that2.ob_sync_overview_control();
+                if (focused) (that2.ob_visible_view ? that2.ob_view : that2.ob_no_view).focus({preventScroll:true});
+                // Visibility is presentation state. A cached/unchanged server
+                // response need not rebuild the scene, so repaint it directly.
+                that2.update_scene(ob_scene_index, that2.header, that2.params,
+                    scene.bands, scene.model, scene.sessions, scene.ob_camera_type, null, false);
+            };
             this.ob_view.onmousemove = function () {
                 that2.moving = false;
                 that2.ob_view.style.cursor = "pointer";
@@ -1444,14 +1435,6 @@ function OB_TIMELINE(options = {}) {
             this.ob_calendar.hidden = false;
             this.ob_calendar.setAttribute('aria-disabled', String(this.staticTimeAxis?.kind === 'numeric'));
             if (this.staticTimeAxis?.kind === 'numeric') this.ob_calendar.title = 'Calendar dates do not apply to this numeric time scale';
-            this.ob_view.hidden = this.ob_no_view.hidden = false;
-            const hasOverview = this.bands.some(band => band.name.includes('overview_'));
-            for (const icon of [this.ob_view,this.ob_no_view]) {
-                icon.setAttribute('aria-disabled',String(!hasOverview));
-                if (!hasOverview) icon.title='This model has no Overview band';
-            }
-            this.ob_view.style.visibility = this.ob_visible_view ? "visible" : "hidden";
-            this.ob_no_view.style.visibility = this.ob_visible_view ? "hidden" : "visible";
         }
         for (const icon of this.ob_timeline_header.querySelectorAll('img')) {
             if (!icon.onclick) continue;
@@ -1463,6 +1446,7 @@ function OB_TIMELINE(options = {}) {
                 icon.dataset.accessibleAction='true';
             }
         }
+        this.ob_sync_overview_control();
 
         // Mouse events
         //this.ob_timeline_header.addEventListener('mousedown', this.ob_onMouseDown);
@@ -2525,9 +2509,11 @@ function OB_TIMELINE(options = {}) {
     OB_TIMELINE.prototype.create_zones = function (ob_scene_index) {
         if (this.staticData || this.ob_results?.remoteData) {
             for (const band of this.ob_scene[ob_scene_index].bands.filter(band => !band.name.includes("overview_"))) for (const zone of band.zones) {
-                const start = this.dateToBandPixelOffSet(ob_scene_index, band, zone.start);
-                const end = this.dateToBandPixelOffSet(ob_scene_index, band, zone.end);
+                const stage=usesRecordStage(this,ob_scene_index),halfWidth=band.width/2;
+                const start = Math.max(stage?-halfWidth:-Infinity,this.dateToBandPixelOffSet(ob_scene_index, band, zone.start));
+                const end = Math.min(stage?halfWidth:Infinity,this.dateToBandPixelOffSet(ob_scene_index, band, zone.end));
                 const width = end - start;
+                if(stage && width<=0)continue;
                 const height = zone.render.height || band.height;
                 const mesh = this.track[ob_scene_index](new THREE.Mesh(
                     this.track[ob_scene_index](new THREE.BoxGeometry(width, height, 1)),
@@ -2544,10 +2530,31 @@ function OB_TIMELINE(options = {}) {
                         (band.scaleHeader?.height || 0) + (band.secondaryScale?.height || 0) + (band.groupBy ? renderingFor(this).axis.groupHeaderHeight : 0);
                     const labelY = zone.render.labelPosition === 'bottom' ? -height / 2 + 36 :
                         Math.min(height / 2 - 20, band.height / 2 - mesh.position.y - topInset - fontSize / 2 - 5);
+                    const labelX=this.recordVisuals?Math.max(start,-this.ob_scene[ob_scene_index].width/2)+labelWidth/2+6-mesh.position.x:
+                        -width/2+labelWidth/2+6;
                     this.add_text_sprite(ob_scene_index, mesh, zone.data.title,
-                        -width / 2 + labelWidth / 2 + 6, labelY, 2, false, fontSize, "normal", "bold", "#79552d", this.fontFamily);
+                        labelX, labelY, 2, false, fontSize, "normal", "bold", stage?"#193847":"#79552d", this.fontFamily);
                     mesh.children.at(-1).userData.zoneLabel = true;
+                    if(stage) {
+                        const visuals=renderingFor(this).recordVisuals,label=mesh.children.at(-1);
+                        const ribbonZ=visuals.height*visuals.stageScale*.72;
+                        const ribbon=this.track[ob_scene_index](new THREE.Mesh(
+                            this.track[ob_scene_index](new THREE.BoxGeometry(width,3,34)),
+                            this.track[ob_scene_index](new THREE.MeshBasicMaterial({color:zone.render.color || '#94b5a6',transparent:true,opacity:.8}))));
+                        ribbon.position.set(0,labelY,ribbonZ);mesh.add(ribbon);
+                        label.position.z=ribbonZ+1;label.position.y-=4;label.scale.multiplyScalar(1.4);
+                        label.material.depthTest=false;label.material.depthWrite=false;label.renderOrder=40;
+                    }
+                    if(this.recordVisuals) {
+                        const halfWidth=this.ob_scene[ob_scene_index].width/2;
+                        const available=Math.min(start+width,halfWidth)-Math.max(start,-halfWidth);
+                        mesh.children.find(child=>child.userData.zoneLabel).visible=available>=labelWidth+12;
+                    }
                 }
+                // Normalized zones annotate time ranges. Let the native band
+                // own pointer gestures instead of dragging these decorations
+                // as if they were activities with saved geometry positions.
+                mesh.traverse(decoration=>{decoration.raycast=()=>{};});
             }
             return;
         }
@@ -2682,6 +2689,10 @@ function OB_TIMELINE(options = {}) {
             ob_material = this.track[ob_scene_index](new THREE.MeshBasicMaterial({color: color}));
         }
         ob_band = this.track[ob_scene_index](new THREE.Mesh(ob_box, ob_material));
+        if (this.recordVisuals && !band_name.includes('overview_')) {
+            ob_material.transparent=true;ob_material.opacity=renderingFor(this).recordVisuals.bandOpacity;
+            ob_material.depthWrite=ob_material.opacity===1;
+        }
         ob_band.name = band_name;
         ob_band.pos_x = x;
         ob_band.pos_y = this.get_band(ob_scene_index, band_name).pos_y;
@@ -2717,6 +2728,7 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.destroy_scene = function (ob_scene_index) {
+        this.recordVisuals?.detach();
         this.ob_perspective?.detach();
         if (this.ob_scene === undefined || this.ob_scene[ob_scene_index] === undefined) return;
         this.ob_scene[ob_scene_index].cancelPan?.();
@@ -2739,6 +2751,7 @@ function OB_TIMELINE(options = {}) {
         this.ob_render_index = ob_scene_index;
         updateOverviewViewport(this, ob_scene_index);
         syncOverviewPanel(this, ob_scene_index);
+        this.recordVisuals?.sync(ob_scene_index);
         this.ob_activity_focus?.sync(ob_scene_index);
         syncCurrentTime(this,ob_scene_index);
         this.ob_scene[ob_scene_index].ob_renderer.render(this.ob_scene[ob_scene_index],
@@ -2802,6 +2815,7 @@ function OB_TIMELINE(options = {}) {
             this.ob_scene[ob_scene_index].new_multiples = setting_and_filters.openbexi_timeline[0].multiples;
             this.ob_scene[ob_scene_index].multiples = parseInt(this.ob_scene[ob_scene_index].new_multiples);
             this.ob_filters = setting_and_filters.openbexi_timeline[0].filters || [];
+            this.ob_filter_access = setting_and_filters.openbexi_timeline[0].filterAccess;
             this.backgroundColor = setting_and_filters.openbexi_timeline[0].backgroundColor;
             const active = this.ob_filters.find(filter => filter.current === 'yes');
             const scene = this.ob_scene[ob_scene_index];
@@ -3177,6 +3191,7 @@ function OB_TIMELINE(options = {}) {
             const parent = scene.getObjectByName(band.name);
             const group = new THREE.Group();
             group.name = band.name + '_scale_headers';
+            if(usesRecordStage(this,index))group.position.z=renderingFor(this).recordVisuals.height*renderingFor(this).recordVisuals.stageScale;
             parent.add(group);
             const text = (label, x, y, color, tag) => {
                 this.add_text_sprite(index, group, label, x, y, 22, false, 11,
@@ -3193,7 +3208,7 @@ function OB_TIMELINE(options = {}) {
             };
             const sharedAxisHeight = band.dateAxisMode === 'shared' ? dateAxisHeight(band) : 0;
             let top = band.height / 2 - (band.groupBy ? renderingFor(this).axis.groupHeaderHeight : 0) - sharedAxisHeight;
-            if (header) {
+            if (header && !usesRecordStage(this,index)) {
                 const height = header.height || 38;
                 strip(height, top, header.color || renderingFor(this).axis.scaleHeaderColor, 'scaleHeader');
                 const labelWidth = this.getTextWidth(header.label || '', '11px ' + band.fontFamily, 0);
@@ -3245,6 +3260,11 @@ function OB_TIMELINE(options = {}) {
         label.backgroundColor = renderingFor(this).axis.background;
         label.fontSize = 48;
         label.userData.dateLabel = true;
+        if(usesRecordStage(this,ob_scene_index)) {
+            label.scale.multiplyScalar(1.6);
+            label.position.z+=renderingFor(this).recordVisuals.height*renderingFor(this).recordVisuals.stageScale;
+            label.raycast=()=>{};
+        }
         if(this.ob_scene[ob_scene_index].ob_camera_type==='Perspective') {
             label.material.depthTest=false;label.material.depthWrite=false;label.renderOrder=40;
         }
@@ -3821,12 +3841,14 @@ function OB_TIMELINE(options = {}) {
                 tolerance, 1, 10)), ob_material));
         ob_tolerance.position.set(session.original_x + (width + tolerance) / 2,
             session.y - session.height / 2, session.z + 1);
+        bindRecordHitTarget(ob_tolerance, ob_object);
 
         // Function to create circle
         const createCircle = (positionX) => {
             const circle = this.track[ob_scene_index](new THREE.Mesh(
                 this.track[ob_scene_index](new THREE.SphereGeometry(2)), ob_material));
             circle.position.set(positionX, 0, session.z);
+            bindRecordHitTarget(circle, ob_object);
             ob_tolerance.add(circle);
         };
 
@@ -3846,6 +3868,7 @@ function OB_TIMELINE(options = {}) {
         if (ob_set_sessions === true) this.set_sessions(ob_scene_index);
         this.ob_activity_focus ??= new TimelineActivityFocus(this);
         this.ob_activity_focus.begin(ob_scene_index);
+        this.recordVisuals?.begin(ob_scene_index);
 
         for (let i = 0; i < this.ob_scene[ob_scene_index].bands.length; i++) {
             const band = this.ob_scene[ob_scene_index].bands[i];
@@ -3916,6 +3939,7 @@ function OB_TIMELINE(options = {}) {
                             textBackgroundColor, fontSizeInt, fontStyle, fontWeight, textColor, fontFamily,
                             this.ob_scene[ob_scene_index].font_align);
                     }
+                    this.recordVisuals?.add(activityMesh,activity,band);
                     this.ob_activity_focus.register(activityMesh,band);
                 }
 
@@ -4027,7 +4051,9 @@ function OB_TIMELINE(options = {}) {
         if (image !== undefined) {
             let copy_session = {...session};
             copy_session.x_relative = copy_session.pixelOffSetStart - 8;
-            copy_session.z = parseInt(session.z + 41);
+            // Keep the badge just in front of its bar. A large lift projects it
+            // under another DOM label when the board is viewed at an angle.
+            copy_session.z = Number(session.z) + 8;
             this.add_event(
                 ob_scene_index,
                 band_name,
@@ -4112,6 +4138,7 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.disposeTextures = function () {
+        this.recordVisuals?.dispose();
         cancelPanFrame(this.textureRenderFrame);
         delete this.textureRenderFrame;
         this.iconTextures.dispose();
@@ -4151,6 +4178,7 @@ function OB_TIMELINE(options = {}) {
                 map: texture,
                 transparent: true,
                 opacity: 1,
+                side: THREE.DoubleSide,
                 toneMapped: this.ob_scene[ob_scene_index].ob_camera_type!=='Perspective',
             }));
         } else {
@@ -4229,6 +4257,9 @@ function OB_TIMELINE(options = {}) {
             }));
 
             const segment = this.track[ob_scene_index](new THREE.LineSegments(geometry, material));
+            // Axis and clock guides are visual overlays, not drag targets.
+            // Their raycast tolerance otherwise steals clicks from records below.
+            segment.raycast = () => {};
 
             if (dashed) {
                 segment.computeLineDistances();
@@ -4300,7 +4331,7 @@ function OB_TIMELINE(options = {}) {
 
         if (ob_object !== undefined) {
             ob_object.add(ob_sprite);
-            if (ob_object.data) bindEventTextHitTarget(ob_sprite, ob_object);
+            if (ob_object.data) bindRecordHitTarget(ob_sprite, ob_object);
         }
     };
 
@@ -4369,6 +4400,7 @@ function OB_TIMELINE(options = {}) {
         let that = this;
         let ob_scene = this.ob_scene[ob_scene_index];
         let dragged = false;
+        let pressPosition;
         let pendingDrag, lastPointer, velocity = 0;
         const normalized = () => Boolean(that.staticData || that.ob_results?.remoteData);
         const isBand = object => normalized() ? ob_scene.bands.some(band => band.name === object.name) :
@@ -4454,6 +4486,8 @@ function OB_TIMELINE(options = {}) {
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
 
+            pressPosition = ob_obj.position.clone();
+
             ob_obj.dragstart_source = ob_obj.position.x || 0;
             lastPointer = {x: ob_scene.panPointerX ?? ob_obj.position.x, time: ob_scene.panPointerTime ?? window.performance.now()};
 
@@ -4482,6 +4516,26 @@ function OB_TIMELINE(options = {}) {
             flushDrag();
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) { that.ob_results?.endGesture(); return; }
+            const gesture = ob_scene.eventInteraction?.gesture;
+            if (!dragged && pressPosition) ob_obj.position.copy(pressPosition);
+            if (!dragged && gesture && !gesture.clicked) {
+                that.ob_results?.endGesture();
+                that.ob_render(ob_scene_index);
+                return;
+            }
+
+            // Marker names are presentation metadata. Icons, duration bars and
+            // text targets all resolve through their attached source record.
+            if (!dragged && ob_obj.sortBy !== 'true' && ob_obj.data &&
+                (ob_obj.data.start !== undefined || ob_obj.data.cluster) && !isBand(ob_obj) &&
+                !/zone_|_overview_/.test(ob_obj.name) && !/_overview_/.test(ob_obj.parent?.name || '')) {
+                if ([ob_obj.pos_x,ob_obj.pos_y,ob_obj.pos_z].every(Number.isFinite))
+                    ob_obj.position.set(ob_obj.pos_x,ob_obj.pos_y,ob_obj.pos_z);
+                that.ob_open_descriptor(ob_scene_index, ob_obj.data);
+                that.ob_results?.endGesture();
+                that.ob_render(ob_scene_index);
+                return;
+            }
 
             if (ob_obj.sortBy !== undefined && ob_obj.sortBy === "true") {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
@@ -4510,14 +4564,6 @@ function OB_TIMELINE(options = {}) {
                 return;
             } else if (ob_obj.type.match(/Mesh/) && ob_obj.name === "") {
                 that.move_band(ob_scene_index, ob_obj.parent.name, ob_obj.parent.position.x, ob_obj.parent.pos_y, ob_obj.parent.pos_z, true);
-                // A click selects an event; it must not start an inertial pan and
-                // refresh the side panel as if the user had dragged the timeline.
-                if (!dragged) {
-                    that.ob_open_descriptor(ob_scene_index, ob_obj.data);
-                    that.ob_results?.endGesture();
-                    that.ob_render(ob_scene_index);
-                    return;
-                }
             } else {
                 ob_obj.position.set(ob_obj.pos_x, ob_obj.pos_y, ob_obj.pos_z);
             }
@@ -4685,6 +4731,13 @@ function OB_TIMELINE(options = {}) {
             if (that.ob_results?.loading) return;
             let ob_obj = ob_scene.getObjectById(e.object.id);
             if (ob_obj === undefined) return;
+            // DragControls emits drag for every pointermove, even at the same
+            // pixel. Do not move geometry or suppress clicks until intent is clear.
+            const gesture = ob_scene.eventInteraction?.gesture;
+            if (!dragged && gesture && !gesture.moved) {
+                if (pressPosition) ob_obj.position.copy(pressPosition);
+                return;
+            }
             dragged = true;
             if (normalized()) {
                 const now = ob_scene.panPointerTime ?? window.performance.now();
@@ -4980,6 +5033,8 @@ function OB_TIMELINE(options = {}) {
         }
 
         this.data = cleanTimelineURL(this.data).href;
+        if(this.visibleNamespaces){const scoped=new URL(this.data);scoped.searchParams.set('namespaces',JSON.stringify([...this.visibleNamespaces].sort()));this.data=scoped.href;}
+
         const results = this.ob_results;
         if (results && this.method === 'GET' && this.progressiveLoading !== false) {
             this.dataAbort?.abort(); this.eventSource?.close(); results.requestRevision++;
@@ -5299,7 +5354,7 @@ function OB_TIMELINE(options = {}) {
                 }
             });
             if (controller.signal.aborted || this.localDataAbort!==controller) return this;
-            this.staticData=dataset;
+            this.staticData=applyLocalNamespace(dataset,this.hbdsNamespace);
             if (!this.localLoaded) {
                 results.domain=undefined; results.map=null; results.ranges.clear(); results.visibleRanges.clear();
             }
@@ -5323,8 +5378,16 @@ function OB_TIMELINE(options = {}) {
     };
 
     OB_TIMELINE.prototype.applyModel = async function (data, options = {}) {
+        const application=this.modelApplication=(this.modelApplication || 0)+1;
         this.modelDocument = structuredClone(data);
         this.rendering = resolveRendering(data.rendering);
+        this.recordVisuals?.dispose();
+        this.recordVisuals=this.rendering.recordVisuals.enabled?new TimelineRecordVisuals(this):null;
+        const visuals=this.recordVisuals;
+        if(visuals) {
+            await visuals.ready();
+            if(application!==this.modelApplication || visuals.disposed)return this;
+        }
         this.params = structuredClone(data.params);
         this.bands = structuredClone(data.bands);
         this.params[0].camera ??= this.rendering.camera.mode;
@@ -5336,7 +5399,7 @@ function OB_TIMELINE(options = {}) {
         // or a provider request. Normalization stays inside the renderer.
         if (Object.hasOwn(options,'inlineData')) {
             const source=data.dataSource || {};
-            this.staticData=parseTimelineData(JSON.stringify(options.inlineData),source);
+            this.staticData=applyLocalNamespace(parseTimelineData(JSON.stringify(options.inlineData),source),this.hbdsNamespace);
             this.staticTimeAxis=source.time;
             if(this.staticTimeAxis?.kind==='numeric')this.params[0].date=new Date(timelineValueToTime(this.params[0].date,this.staticTimeAxis)).toISOString();
             else if(['current_time','Date.now()'].includes(this.params[0].date))this.params[0].date=new Date().toISOString();

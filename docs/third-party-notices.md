@@ -70,3 +70,15 @@ and notice resources. Earthquake acquisition additionally bundles Apache
 Commons Compress (Apache-2.0) and XZ for Java (public domain). Build and runtime
 manifests record artifact checksums. The Inno Setup compiler and test MQTT
 broker are build tools and are not included in the installer.
+
+## Dinosaur visual assets
+
+The local `icon/dinosaurs/manifest.json` records the source, creator, license,
+hashes and representation type for each genus. Smithsonian's Triceratops
+composite skeleton and matching photograph are marked CC0 by the museum.
+The other imported genus illustrations come from 3D Assets and are released
+under CC0 1.0; they are stylized AI-generated assets, not validated anatomical
+reconstructions. Original schematic fallback symbols are labeled separately.
+See [dinosaur asset research and provenance](dinosaur-assets-research.md) for
+primary collection pages, license links and the offline Draco decoding step.
+Keep this attribution and the manifest when distributing those assets.

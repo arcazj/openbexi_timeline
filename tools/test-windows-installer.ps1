@@ -66,7 +66,7 @@ try {
         } catch { Start-Sleep -Milliseconds 500 }
     }
     if (!$collectorReady) { throw 'Installed collector dashboard never became healthy.' }
-    if (Get-ChildItem -LiteralPath $installDir -Directory -Recurse | Where-Object { $_.Name -like 'timeline_private_*' -or $_.Name -eq 'GCS_data_collector' }) { throw 'Private package found in installer.' }
+    if (Get-ChildItem -LiteralPath $installDir -Directory -Recurse | Where-Object { $_.Name -like 'timeline_private_*' -or ($_.Name -like '*_data_collector' -and $_.Name -ne 'timeline_data_collector') }) { throw 'Private package found in installer.' }
     [System.IO.File]::WriteAllText((Join-Path $dataDir 'keep.txt'), 'User data survives uninstall.')
 } finally {
     if ($collectorLauncher -and !$collectorLauncher.HasExited) { & taskkill.exe /PID $collectorLauncher.Id /T /F | Out-Null }

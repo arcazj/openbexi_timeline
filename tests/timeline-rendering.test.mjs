@@ -20,6 +20,19 @@ test('Rendering defaults are immutable, independently resolved, and identical to
     for(const file of ['demo-model','legacy-model'])assert.deepEqual((await read('schemas/'+file+'.schema.json')).properties.rendering,RENDERING_SCHEMA);
 });
 
+test('Visual clustering and selected artwork extensions are opt-in, bounded and supported by both model schemas',async()=>{
+    const defaults=resolveRendering().recordVisuals;
+    assert.equal(defaults.clusterPixels,0);assert.equal(defaults.selectedScale,1);
+    assert.equal(defaults.selectedLift,0);assert.equal(defaults.transitionMs,0);
+    const valid={recordVisuals:{enabled:true,clusterPixels:170,selectedScale:1.7,selectedLift:90,transitionMs:320}};
+    assert.doesNotThrow(()=>validateRendering(valid));
+    for(const property of ['clusterPixels','selectedScale','selectedLift','transitionMs']) {
+        for(const value of [-1,1001,NaN])assert.throws(()=>validateRendering({recordVisuals:{[property]:value}}),/must be between/,property);
+    }
+    const model=await read('HBDS/templates/models/demos/monet.json');model.rendering=valid;
+    validateDemoModel(model);validateLegacyModel(model);
+});
+
 test('Both model formats reject invalid rendering options and retain legacy extensions',async()=>{
     for(const invalid of [{camera:{fieldOfView:0}},{axis:{targetTickPixels:NaN}},{overview:{matchOpacity:2}},
         {activity:{labelMaxWidth:40}},{table:{columns:[{field:'title',label:'Title',visible:false}]}},
@@ -140,7 +153,8 @@ function presentation(timeline) {
 }
 
 for(const demo of catalog.demos)test('Omitted rendering settings preserve explicit-default output: '+demo.id,async()=>{
-    const model=await read(demo.model),original=JSON.stringify(model);
+    const model=await read(demo.model);delete model.rendering;
+    const original=JSON.stringify(model);
     const first=await render(model,demo.dataset);
     let second;
     try {

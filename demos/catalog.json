@@ -14,7 +14,7 @@
     {
       "id": "dinausaurs",
       "title": "Dinosaurs",
-      "description": "Dinosaur lifespans on a numeric axis measured in millions of years ago.",
+      "description": "Dinosaur fossil occurrence intervals with scientific and museum views, local genus models and labeled visual fallbacks.",
       "dataset": "json/test-data/dinausaurs.json",
       "model": "HBDS/templates/models/demos/dinausaurs.json",
       "reference": "docs/ui/overview/dinausaurs-desktop.png",

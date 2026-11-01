@@ -35,6 +35,7 @@ ob_ajax_timeline extends HttpServlet {
         String data_conf = getServletContext().getInitParameter("data_conf");
         try {
             _data_configuration = new data_configuration(data_conf);
+            com.openbexi.timeline.data_browser.FilterCatalog.read(_data_configuration.getConfiguration());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseException e) {
@@ -54,6 +55,13 @@ ob_ajax_timeline extends HttpServlet {
 
         // Assuming ob_handle_header should be called for any valid ob_request
         handler.ob_handle_header(req, resp);
+
+        if(req.getServletPath().endsWith("/filter-values")) {
+            try {resp.setContentType("application/json;charset=UTF-8");resp.setHeader("Cache-Control","private, no-store");
+                resp.getWriter().write(com.openbexi.timeline.data_browser.FilterCatalog.read(_data_configuration.getConfiguration()).toString());}
+            catch(Exception error){handler.jsonError(req,resp,503,"Filter catalog is unavailable.");}
+            return;
+        }
 
         if (startDate == null || startDate.equals("test"))
             handler.ob_handle_test_requests(req, resp);

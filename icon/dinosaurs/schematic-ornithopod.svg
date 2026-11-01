@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Schematic ornithopod clade pictogram</title>
+  <desc id="description">Original simplified clade symbol based on the source classification. This is not a reconstruction of an individual genus or species.</desc>
+  <path fill="#849e8d" stroke="#eff3eb" stroke-width=".7" stroke-linejoin="round" d="M8 76Q36 63 65 63L89 50 100 32Q107 28 117 30L134 37 148 43 139 51 117 48 106 65 119 79 114 85 102 77 91 86 97 107 110 110 109 114 87 114 77 89 67 90 62 110 74 113 54 114 51 83Z"/>
+  <path d="M122 38h2M120 46l13 1" fill="none" stroke="#537b63" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

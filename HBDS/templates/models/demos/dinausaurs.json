@@ -4,7 +4,7 @@
       "fullWindow": true,
       "name": "ob_demo",
       "title": "Dinosaurs",
-      "date": 140,
+      "date": 151,
       "timeZone": "UTC",
       "timeZoneLabel": "million years ago",
       "top": 130,
@@ -15,12 +15,17 @@
       "data": "",
       "overview": true,
       "dockOverview": true,
-      "overviewHeightRatio": 0.18,
+      "overviewHeightRatio": 0.14,
       "showCurrentTime": false
     }
   ],
   "dataSource": {
     "format": "simile-xml",
+    "zones": [
+      {"start":251.902,"end":201.4,"title":"Triassic · 251.902–201.4 Ma","render":{"color":"#bf8457","opacity":0.055}},
+      {"start":201.4,"end":143.1,"title":"Jurassic · 201.4–143.1 Ma","render":{"color":"#6a9fb2","opacity":0.055}},
+      {"start":143.1,"end":66,"title":"Cretaceous · 143.1–66 Ma","render":{"color":"#7ba181","opacity":0.055}}
+    ],
     "time": {
       "kind": "numeric",
       "unit": "Ma",
@@ -29,10 +34,29 @@
       "approximatePrefixes": ["?"]
     }
   },
+  "rendering": {
+    "recordVisuals": {
+      "enabled":true,
+      "presentation3D":"stage","stageLaneDepth":70,"stageSurfaceOpacity":0.5,"stageRows":3,"stageScale":1.5,
+      "manifest":"icon/dinosaurs/manifest.json",
+      "keyField":"data.title",
+      "fallbackImage":"icon/dinosaurs/unavailable.svg",
+      "rotation":[0,1.5707963267948966,0],
+      "width":148,"height":94,"gap":14,"depth":70,
+      "maxModels":16,"minimumModelPixels":48,"bandOpacity":0,
+      "clusterPixels":170,"selectedScale":1.55,"selectedLift":95,"transitionMs":280,
+      "label2D":"Scientific","label3D":"Museum"
+    },
+    "theme":{"sceneBackground":"#fafbf7","headerBackground":"#f8faf7","panelBackground":"#fafbf7","panelText":"#284a3d"},
+    "axis":{"background":"#f3f6f0","textColor":"#416b58","separatorColor":"#d3ded4","scaleHeaderColor":"#edf3eb","scaleHeaderText":"#345c49","targetTickPixels":110},
+    "camera":{"yaw":-0.4,"pitch":0.85,"fieldOfView":45,"ambientIntensity":1.15,"directionalIntensity":2},
+    "activity":{"laneOpacity":0.025,"shadowOpacity":0.05,"labelMinWidth":100,"labelMaxWidth":190},
+    "interaction":{"autoScale":false}
+  },
   "bands": [
     {
       "name": "ob_band_main",
-      "height": "82%",
+      "height": "86%",
       "intervalUnit": "DECADE",
       "intervalPixels": 160,
       "color": "#f0f4ec",
@@ -49,19 +73,19 @@
         }
       ],
       "scaleHeader": {
-        "label": "Millions of years ago",
+        "label": "Dinosaur atlas · older ←  millions of years ago  → younger",
         "unit": "Ma",
         "height": 38,
         "color": "#e4ecdf",
         "textColor": "#456744"
       },
       "range": {
-        "from": 165,
-        "to": 115
+        "from": 240,
+        "to": 62
       },
       "context": {
-        "from": 240,
-        "to": 40
+        "from": 251.902,
+        "to": 62
       },
       "ticks": {
         "unit": "NUMERIC",
@@ -75,7 +99,7 @@
     },
     {
       "name": "ob_overview_band",
-      "height": "18%",
+      "height": "14%",
       "intervalUnit": "DECADE",
       "intervalPixels": 48,
       "color": "#dbe3d5",
@@ -97,12 +121,12 @@
       "overviewLabel": "Overview",
       "viewportHandles": true,
       "range": {
-        "from": 240,
-        "to": 40
+        "from": 251.902,
+        "to": 62
       },
       "context": {
-        "from": 240,
-        "to": 40
+        "from": 251.902,
+        "to": 62
       },
       "ticks": {
         "unit": "NUMERIC",

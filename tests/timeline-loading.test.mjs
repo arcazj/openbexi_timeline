@@ -142,21 +142,29 @@ test('SSE revisions refresh changes once, reconcile deletions and ignore closed 
         assert.equal(stream.closed,true);assert.equal(requests.length,offset);assert.equal(r.liveState,'');
     } finally {f.close();}
 });
-async function connected({abortRequests=true,data='http://localhost/sessions'}={}) {
+async function connected({abortRequests=true,data='http://localhost/sessions',overview=true}={}) {
     const h=await createTimelineHarness({calendar:true});
     const {OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const t=new OB_TIMELINE({autoStart:false}),model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8'));
     t.params=model.params; t.bands=model.bands;
-    Object.assign(t.params[0],{data,date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
-    const requests=[];
-    h.window.fetch=(url,options={})=>new Promise((resolve,reject)=>{
+    Object.assign(t.params[0],{data,overview,date:'2026-09-12T12:30:00Z',fullWindow:true,showCurrentTime:false});
+    const requests=[],catalogRequests=[];
+    h.window.fetch=(url,options={})=>{
+        // This fixture models the legacy sessions/settings API. Catalog fetches
+        // have a separate lifecycle and must never be answered as event batches.
+        if(new URL(String(url)).pathname.endsWith('/filter-values')) {
+            catalogRequests.push(String(url));
+            return Promise.resolve(new Response('{}',{status:404}));
+        }
+        return new Promise((resolve,reject)=>{
         requests.push({url:String(url),options,resolve,reject});
         if(abortRequests)options.signal?.addEventListener('abort',()=>reject(new h.window.DOMException('Request aborted','AbortError')),{once:true});
-    });
+        });
+    };
     t.initializeTimeline();
     const settings={name:t.name,user:'guest',email:'',top:0,left:0,width:1100,height:650,camera:'Orthographic',multiples:'45',
         backgroundColor:'#eef1f2',sortBy:'NONE',sources:[],filters:[{name:'ALL',current:'yes',filter_value:'',sortBy:'NONE',backgroundColor:'#eef1f2'}]};
-    return {h,t,r:t.ob_results,requests,settings,close(){t.ob_loader?.cancel();h.close();}};
+    return {h,t,r:t.ob_results,requests,catalogRequests,settings,close(){t.ob_loader?.cancel();h.close();}};
 }
 function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     const url=new URL(request.url),from=Date.parse(url.searchParams.get('startDate')),to=Date.parse(url.searchParams.get('endDate'));
@@ -165,6 +173,33 @@ function batch(request, ids, cursor=null, complete=!cursor, headers={}) {
     request.resolve({ok:true,status:200,headers:new Headers(headers),json:async()=>({events,timelineMatch:{version:1,searchMode:'text',progressive:true,query:url.searchParams.get('search')||'',
         hasCondition:!!url.searchParams.get('search'),complete,revision:ids.join(','),nextCursor:cursor,domain:{from:new Date(from).toISOString(),to:new Date(to).toISOString()}}})});
 }
+
+for (const overview of [true,false]) test(`Connected Overview icon toggles the rendered panel on its first click, initially ${overview?'shown':'hidden'}`,async()=>{
+    const f=await connected({overview}),{t,r,requests,settings}=f;
+    try {
+        requests[0].resolve({ok:true,json:async()=>({openbexi_timeline:[settings]})});
+        await waitFor(()=>requests.length===2);
+        await finishCycle(f,1,request=>batch(request,['visible']));
+        const visiblePanels=()=>t.ob_timeline_panel.querySelectorAll('.ob_docked_overview:not([hidden])').length;
+        assert.equal(visiblePanels(),overview?1:0);
+        const before=requests.length,snapshot=r.snapshot;
+        for (let attempt=0;attempt<4;attempt++) {
+            const expected=attempt%2===0?!overview:overview;
+            const icon=[t.ob_view,t.ob_no_view].find(icon=>icon.style.visibility==='visible');
+            assert.ok(icon,'Exactly one Overview icon is available');
+            icon.click();
+            await waitFor(()=>visiblePanels()===(expected?1:0));
+            assert.equal(t.ob_visible_view,expected);
+            assert.equal(t.ob_view.style.visibility,expected?'visible':'hidden');
+            assert.equal(t.ob_no_view.style.visibility,expected?'hidden':'visible');
+            const active=expected?t.ob_view:t.ob_no_view;
+            assert.equal(active.title,expected?'Hide Overview':'Show Overview');
+            assert.equal(active.getAttribute('aria-expanded'),String(expected));
+            assert.equal(requests.length,before,'Toggling presentation does not fetch or wait for server data');
+            assert.equal(r.snapshot,snapshot,'Toggling preserves the loaded result snapshot');
+        }
+    } finally {f.close();}
+});
 
 for(const draft of [false,true])test(`Late server filters populate the open panel${draft?' without replacing a new-filter draft':''}`,async()=>{
     const f=await connected(),{h,t,requests,settings}=f;
@@ -176,9 +211,10 @@ for(const draft of [false,true])test(`Late server filters populate the open pane
         assert.equal(panel.querySelectorAll('.ob_saved_filter').length,0);
         const name=panel.querySelector('[aria-label="New filter name"]');
         const expression=panel.querySelector('[aria-label="New filter expression"]');
-        const sorting=panel.querySelector('[aria-label="Group by (sort_by)"]');
+        const sorting=panel.querySelector('[data-filter-builder-sort]');
         if(draft) {
             name.value='Unsaved draft';expression.value='expr: title CONTAINS "25% + planned"\nAND EXISTS(status)';
+            expression.dispatchEvent(new h.window.Event('input',{bubbles:true}));
             if(![...sorting.options].some(option=>option.value==='namespace'))sorting.add(new h.window.Option('namespace','namespace'));
             sorting.value='namespace';sorting.dispatchEvent(new h.window.Event('change',{bubbles:true}));
         }
@@ -193,7 +229,7 @@ for(const draft of [false,true])test(`Late server filters populate the open pane
         if(draft) {
             assert.equal(panel.querySelector('[aria-label="New filter name"]'),name);
             assert.equal(panel.querySelector('[aria-label="New filter expression"]'),expression);
-            assert.equal(panel.querySelector('[aria-label="Group by (sort_by)"]'),sorting);
+            assert.equal(panel.querySelector('[data-filter-builder-sort]'),sorting);
             assert.equal(name.value,'Unsaved draft');
             assert.equal(expression.value,'expr: title CONTAINS "25% + planned"\nAND EXISTS(status)');
             assert.equal(sorting.value,'namespace');
@@ -712,7 +748,7 @@ test('Creating a server filter saves the selected Sort by together with its expr
         t.ob_create_filters(0,undefined,'add_filter');
         h.window.document.querySelector('[aria-label="New filter name"]').value='Grouped warnings';
         h.window.document.querySelector('[aria-label="New filter expression"]').value='expr: status = "warning"';
-        h.window.document.querySelector('[aria-label="Group by (sort_by)"]').value='series';
+        h.window.document.querySelector('[data-filter-builder-sort]').value='series';
         t.ob_load_filters('addFilter',0,undefined,true);
         const request=requests.find(req=>new URL(req.url).searchParams.get('ob_request')==='addFilter');assert.ok(request);
         const url=new URL(request.url);assert.equal(url.searchParams.get('sortBy'),'series');

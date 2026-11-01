@@ -116,6 +116,7 @@ abstract class data_manager {
     }
 
     protected JSONArray filterSelected(JSONArray events) {
+        events=FilterNamespaces.select(events,_data_configuration.getConfiguration());
         JSONArray selected=new JSONArray();
         for(Object event:events)if(_eventFilter.test((JSONObject)event))selected.add(event);
         return selected;

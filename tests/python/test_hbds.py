@@ -185,7 +185,8 @@ class HBDSTests(unittest.TestCase):
             self.assertEqual(404, client.get(base + "/HBDS/private/configurations/example.hbds.json").status_code)
             startup = client.get(base + "/openbexi_timeline/config").json()
             self.assertEqual("EXAMPLE", startup["hbds"]["namespace"])
-            self.assertEqual({"revision", "namespaceId", "namespace", "tabs", "modelConfiguration"}, set(startup["hbds"]))
+            self.assertEqual({"revision", "namespaceId", "namespace", "namespaceNames", "tabs", "modelConfiguration"}, set(startup["hbds"]))
+            self.assertEqual({"ns-example": "EXAMPLE"}, startup["hbds"]["namespaceNames"])
             self.assertNotIn("data_model", json.dumps(startup))
 
     def test_static_hbds_requires_explicit_public_manifest(self):

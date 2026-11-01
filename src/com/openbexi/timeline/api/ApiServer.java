@@ -13,6 +13,7 @@ public final class ApiServer {
         server.setPort(port); server.getConnector().setProperty("address", "127.0.0.1");
         Context context = server.addContext("", root.toString());
         mountTimeline(context,root);
+        com.openbexi.timeline.websockets.ob_websocket_timeline.configure(port,TimelineHbds.selected(root,null).toString());
         Tomcat.addServlet(context, "assets", new PublicAssetServlet()); context.addServletMappingDecoded("/", "assets");
         Tomcat.addServlet(context, "api", new TimelineApiServlet()).setLoadOnStartup(1); context.addServletMappingDecoded("/api/v1/*", "api");
         context.addMimeMapping("js", "text/javascript"); context.addMimeMapping("mjs", "text/javascript"); context.addMimeMapping("json", "application/json");
@@ -24,8 +25,10 @@ public final class ApiServer {
         context.addParameter("data_conf",configuration.toString());
         Tomcat.addServlet(context,"timelineConfig",new com.openbexi.timeline.servlets.TimelineConfigServlet());
         context.addServletMappingDecoded("/openbexi_timeline/config","timelineConfig");
-        Tomcat.addServlet(context,"timelineSessions",new com.openbexi.timeline.servlets.ob_ajax_timeline());
+        Tomcat.addServlet(context,"timelineSessions",new com.openbexi.timeline.servlets.ob_ajax_timeline()).setLoadOnStartup(1);
         context.addServletMappingDecoded("/openbexi_timeline/sessions","timelineSessions");
+        context.addServletMappingDecoded("/openbexi_timeline/filter-values","timelineSessions");
+        context.addServletMappingDecoded("/openbexi_timeline_sse/filter-values","timelineSessions");
         Tomcat.addServlet(context,"timelineSse",new com.openbexi.timeline.servlets.ob_sse_timeline());
         context.addServletMappingDecoded("/openbexi_timeline_sse/sessions","timelineSse");
     }

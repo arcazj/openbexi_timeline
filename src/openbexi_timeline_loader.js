@@ -189,12 +189,14 @@ export class TimelineLoader {
         url.searchParams.set('matchProtocol','1');url.searchParams.set('progressive','1');
         url.searchParams.set('search',r.state.query);url.searchParams.set('sortBy',t.ob_sortBy || 'NONE');
         url.searchParams.set('searchMode',r.state.searchMode || 'text');
+        if(t.visibleNamespaces)url.searchParams.set('namespaces',JSON.stringify([...t.visibleNamespaces].sort()));
+        else url.searchParams.delete('namespaces');
         const cacheKey=JSON.stringify([url.origin,url.pathname,r.state.query,r.state.searchMode,url.searchParams.get('filter'),
-            url.searchParams.get('userName'),url.searchParams.get('timelineName'),scene.sources]);
+            url.searchParams.get('userName'),url.searchParams.get('timelineName'),url.searchParams.get('namespaces'),scene.sources]);
         // Regrouping can retain loaded records, but a server search cursor is
         // bound to its original Sort by and must restart when that changes.
         r.explorer?.sourceChanged(JSON.stringify([cacheKey,url.searchParams.get('sortBy')]));
-        this.input=input;
+        this.input=url.href;
         const subscription=new URL(url);
         subscription.searchParams.set('startDate',new Date(visible.from).toISOString());
         subscription.searchParams.set('endDate',new Date(visible.to).toISOString());

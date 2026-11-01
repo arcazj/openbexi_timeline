@@ -210,14 +210,16 @@ def resolve_namespace_files(paths, hbds_root=None, workspace_path=None):
     return tuple(resolved)
 
 
-def load_bundle(paths, service_path=None, hbds_root=None, workspace_path=None):
+def load_bundle(paths, service_path=None, hbds_root=None, workspace_path=None, *, trace=None):
     resolved=resolve_namespace_files(paths,hbds_root,workspace_path)
     if not resolved: raise ValueError('At least one namespace file is required')
     if len({os.path.normcase(str(p)) for p in resolved}) != len(resolved):
         raise ValueError('Configuration file was specified more than once')
+    if trace: trace.note('reading service configuration', path=service_path, defaults=service_path is None)
     service = validate_service(read_yaml(service_path), service_path) if service_path else {}
     entries, names, targets = [], set(), set()
     for path in resolved:
+        if trace: trace.note('reading and validating namespace configuration', path=path)
         document = read_yaml(path)
         if 'data_sources' in document and 'namespace' not in document:
             if len(resolved) != 1 or service_path:

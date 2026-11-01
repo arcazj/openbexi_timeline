@@ -96,6 +96,43 @@ function assertProjection(timeline) {
     return {mainBands, overviewBands};
 }
 
+test('Visual clustering retains every original Overview interval in compact independent rows without changing the main layout',async()=>{
+    const harness=await createTimelineHarness();
+    try {
+        const {projectOverviewSessions}=await harness.importModule('src/openbexi_timeline_overview.js');
+        const base=Date.parse('2024-05-03T07:00:00Z');
+        const records=Array.from({length:24},(_,index)=>({...event('record-'+index),matchKey:'key-'+index,
+            start:new Date(base+index*60000).toISOString(),end:new Date(base+(index+60)*60000).toISOString()}));
+        const source={name:'configured-main',sourceBand:'configured-main',height:400,trackIncrement:148,occupiedRows:2,
+            sessionHeight:4,defaultEventSize:2,gregorianUnitLengths:3600000,intervalPixels:50,color:'#ddeedd',timeScale:{kind:'linear'},
+            sessions:records.slice(0,2).map((record,index)=>({...record,y:60-index*148,height:148,activities:[{...record,
+                pixelOffSetStart:index,pixelOffSetEnd:index+50,y:60-index*148,height:4,size:2}]}))};
+        const overview={name:'overview_compact',height:130,fontSizeInt:10,fitRows:true,sourceBands:['configured-main'],
+            gregorianUnitLengths:3600000,intervalPixels:10,intervalUnitPos:'BOTTOM',timeScale:{kind:'linear'}};
+        const original=structuredClone(source),originalRecords=structuredClone(records);
+        const timeline={rendering:{recordVisuals:{enabled:true,clusterPixels:170}},ob_scene:[{bands:[source,overview]}],
+            ob_results:{supported:true,projection:{densityRecords:records},belongs:()=>true},
+            dateToBandPixelOffSet:(_,band,date)=>(Date.parse(date)-base)/band.gregorianUnitLengths*band.intervalPixels};
+        projectOverviewSessions(timeline,0);
+        const projected=activities(overview);
+        assert.equal(projected.length,records.length);assert.equal(new Set(projected.map(record=>record.y)).size,24,
+            'Overlapping original intervals occupy distinct compact rows instead of two representative rows');
+        assert.deepEqual(Array.from(projected,record=>record.id).sort(),records.map(record=>record.id).sort());
+        for(const record of projected) {
+            const input=records.find(candidate=>candidate.id===record.id);
+            assert.equal(record.start,input.start);assert.equal(record.end,input.end);
+            near(record.x,timeline.dateToBandPixelOffSet(0,overview,input.start),'Overview start position remains exact');
+            near(record.width,10,'One hour retains its exact duration width');
+        }
+        assert.deepEqual(source,original);assert.deepEqual(records,originalRecords);
+        assert.equal(overview.overviewRegions[0].sourceBand,source.name);
+        timeline.rendering.recordVisuals.clusterPixels=0;projectOverviewSessions(timeline,0);
+        const ordinary=activities(overview);
+        near(ordinary.find(record=>record.id===records[0].id).overviewSourceY,60,'The opt-out path retains existing source-row projection');
+        near(ordinary.find(record=>record.id===records[1].id).overviewSourceY,-88,'The opt-out path retains the second existing row');
+    } finally {harness.close();}
+});
+
 test('Dense server sessions retain rows, source colors, point markers, and a single nested-session box', async () => {
     const harness = await createTimelineHarness();
     try {

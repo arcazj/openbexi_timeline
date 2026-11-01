@@ -18,6 +18,10 @@ class Plugin:
         import paho.mqtt.client as mqtt
         options = context.options
         if context.offline: raise ValueError('MQTT requires a broker connection')
+        context.progress('Initializing MQTT connection; port=%s; tls=%s; authentication_configured=%s; '
+                         'qos=1; max_queue=%s; connect_timeout_seconds=%s; mode=%s',
+                         options.get('port', 1883), bool(options.get('tls')), bool(options.get('username')),
+                         options.get('max_queue', 128), options.get('connect_timeout', 30), context.mode)
         incoming = Queue(maxsize=options.get('max_queue', 128))
         errors = Queue(maxsize=1)
         subscribed = threading.Event()
@@ -33,11 +37,14 @@ class Plugin:
             client.disconnect()
         def connected(connection, userdata, flags, reason, properties):
             if reason.is_failure: fail('Broker rejected the connection: ' + str(reason)); return
+            context.progress('MQTT broker connected; subscribing to configured topic with QoS 1')
             status, _ = connection.subscribe(options['topic'], qos=1)
             if status != mqtt.MQTT_ERR_SUCCESS: fail('Could not subscribe to the configured topic')
         def subscription(connection, userdata, mid, reasons, properties):
             if any(reason.is_failure or reason.value != 1 for reason in reasons): fail('Broker did not grant QoS 1')
-            else: subscribed.set()
+            else:
+                subscribed.set()
+                context.progress('MQTT subscription ready; waiting for messages; acknowledgement follows publication')
         def received(connection, userdata, message):
             if message.qos != 1: fail('Publisher must use QoS 1 for durable delivery'); return
             if len(message.payload) > options.get('max_payload_bytes', 65536):

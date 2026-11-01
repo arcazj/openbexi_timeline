@@ -13,6 +13,7 @@ import uuid
 from urllib.parse import quote
 from .io import atomic_write, day_path, identity, model_root, normalize, read_json, write_json, utc_now, timestamp, remove_file
 from .locking import SourceLock
+from .metadata import MetadataNormalizer, descriptor_record, merge_descriptor
 
 
 def legacy_document(path):
@@ -33,8 +34,9 @@ def legacy_document(path):
 class Publisher:
     # Matches the timeline backends' default materialized-file budget.
     MAX_SNAPSHOT_BYTES = 64 * 1024 * 1024
-    def __init__(self, target, namespace):
+    def __init__(self, target, namespace, *, normalizer=None):
         self.target, self.namespace = str(target), namespace
+        self.normalizer = normalizer or MetadataNormalizer()
         self.root = model_root(target)
         if self.root == self.root.parent: raise ValueError('Output cannot be a filesystem root')
         self.state_dir = self.root / '.timeline-collector'
@@ -125,19 +127,28 @@ class Publisher:
                     descriptor = path.parent / 'descriptors' / (str(item.get('id', item.get('ID', ''))) + '.json')
                     if descriptor.is_file():
                         values = legacy_document(descriptor).get('event_descriptor', [])
-                        if values: item['data'] = dict(item.get('data', {}), **values[0].get('data', {}))
+                        if values:
+                            merged = merge_descriptor(item, values[0]); item.clear(); item.update(merged)
                     for child in item.get('activities', []): merge_details(child)
                 merge_details(record)
                 retained[key] = record
         return {'version': 1, 'sources': {}, 'reports': [], 'retained': retained, 'baseline_reports': reports}
 
     def publish(self, source_key, source_id, plugin, batch, *, run_id=None):
-        records = normalize(batch.records, self.namespace, source_key)
+        records = [self.normalizer.record(record, self.namespace) for record in normalize(batch.records, self.namespace, source_key)]
         with self.locked():
             previous = read_json(self.state_path)
             if previous is None: previous = self._baseline()
             else: previous = self.expand_state(previous)
             candidate = deepcopy(previous)
+            if candidate.get('metadata_revision') != self.normalizer.revision:
+                def normalized(record):
+                    namespace = record.get('namespace') or record.get('data', {}).get('namespace') or self.namespace
+                    return self.normalizer.record(record, namespace)
+                candidate['retained'] = {key: normalized(record) for key, record in candidate.get('retained', {}).items()}
+                for contribution in candidate['sources'].values():
+                    contribution['records'] = {key: normalized(record) for key, record in contribution['records'].items()}
+                candidate['metadata_revision'] = self.normalizer.revision
             source = candidate['sources'].setdefault(source_key, {'records': {}, 'checkpoint': {}})
             if batch.snapshot: source['records'] = {}
             for record in records:
@@ -195,12 +206,12 @@ class Publisher:
                     outputs[report] = {'dateTimeFormat': 'iso8601', 'events': values}
                 for record in values:
                     if record['id'] not in changed: continue
-                    outputs[directory / 'descriptors' / (record['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [record]}
+                    outputs[directory / 'descriptors' / (record['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [descriptor_record(record)]}
                     def child_descriptors(parent):
                         for child in parent.get('activities', []):
                             normalized = normalize([child], self.namespace, source_key)[0]
                             child_dir = output_directory(normalized['start'])
-                            outputs[child_dir / 'descriptors' / (normalized['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [normalized]}
+                            outputs[child_dir / 'descriptors' / (normalized['id'] + '.json')] = {'dateTimeFormat': 'iso8601', 'event_descriptor': [descriptor_record(normalized)]}
                             child_descriptors(child)
                     child_descriptors(record)
             for path in previous.get('reports', []):
@@ -257,6 +268,7 @@ class Publisher:
                 self._recover()
                 raise
             return {'generation_id': generation, 'records_written': len(records),
+                    'metadata_warnings': dict(self.normalizer.issues),
                     '_checkpoint_stamp': self.stamp(),
                     'records_created': len(changed - old_records.keys()), 'records_updated': len(changed & old_records.keys()),
                     'namespace_records': len(merged), 'reports': sorted(reports)}
