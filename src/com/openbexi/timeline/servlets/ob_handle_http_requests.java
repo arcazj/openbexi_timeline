@@ -207,8 +207,8 @@ public class ob_handle_http_requests {
             }
             configuration.diagnostics.sent(json,connector_type,false);
         } catch (Exception e) {
-            jsonError(req,resp,e instanceof IllegalArgumentException?400:500,
-                    e instanceof IllegalArgumentException?e.getMessage():"Cannot read or update timeline filters.");
+            jsonError(req,resp,e instanceof SecurityException?403:e instanceof IllegalArgumentException?400:500,
+                    e instanceof IllegalArgumentException||e instanceof SecurityException?e.getMessage():"Cannot read or update timeline filters.");
         }
     }
 

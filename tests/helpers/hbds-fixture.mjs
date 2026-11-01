@@ -13,5 +13,5 @@ export async function hbdsFixture(){
 }
 export function hbdsPublicConfiguration(document,revision='revision-1',namespaceId=document.defaultNamespaceId){
     const namespace=document.namespaces.find(item=>item.id===namespaceId);
-    return {hbds:{revision,namespaceId,namespace:namespace.namespace,tabs:structuredClone(document.tabs),modelConfiguration:structuredClone(document.models.find(model=>model.id===namespace.modelId).configuration)}};
+    return {hbds:{revision,namespaceId,namespace:namespace.namespace,namespaceNames:Object.fromEntries(document.namespaces.map(item=>[item.id,item.namespace])),tabs:structuredClone(document.tabs),modelConfiguration:structuredClone(document.models.find(model=>model.id===namespace.modelId).configuration)}};
 }

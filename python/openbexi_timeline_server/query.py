@@ -27,7 +27,7 @@ class Queries:
 
     def identity(self, params):
         return digest([self.config.signature, {key: params.get(key, "") for key in (
-            "startDate", "endDate", "scene", "namespace", "userName", "timelineName", "filter", "sortBy", "search", "searchMode", "history")}])
+            "startDate", "endDate", "scene", "namespace", "namespaces", "userName", "timelineName", "filter", "sortBy", "search", "searchMode", "history")}])
 
     def validate(self, params):
         lower, upper = instant(params.get("startDate")), instant(params.get("endDate"))
@@ -61,7 +61,14 @@ class Queries:
             return envelope(params, error="Invalid search expression.", revision=self.index.status()["revision"])
         identity = self.identity(params)
         requested_namespace = params.get("namespace", "")
+        if requested_namespace == "0":
+            requested_namespace = ""
+        selected_namespaces = json.loads(params["namespaces"]) if "namespaces" in params else None
+        if selected_namespaces is not None and (not isinstance(selected_namespaces, list) or not all(isinstance(name, str) for name in selected_namespaces)):
+            raise ValueError("Invalid namespace selection.")
         source_indices = sorted({source.index for source in self.config.sources if source.namespace == requested_namespace}) if requested_namespace else None
+        if selected_namespaces == []:
+            source_indices = []
         token = params.get("cursor") or ""
         with self.index.connect() as db:
             # One short transaction serializes consumption of the same cursor, including
@@ -143,7 +150,9 @@ class Queries:
                 # windows cannot materialize thousands of large records at once.
                 record = json.loads(db.execute("SELECT payload FROM records WHERE id=?", (row_record["id"],)).fetchone()[0])
                 include, exclude = self.source_filters.get(row_record["source"], (lambda _: True, lambda _: False))
-                accepted = include(record) and not exclude(record) and predicate(record)
+                record_data = record.get("data", {})
+                record_namespace = record.get("namespace", record_data.get("namespace", "") if isinstance(record_data, dict) else "")
+                accepted = (not requested_namespace or record_namespace == requested_namespace) and (selected_namespaces is None or record_namespace in selected_namespaces) and include(record) and not exclude(record) and predicate(record)
                 item = annotate(record, search, lower, upper, record["sourceRecordKey"]) if accepted else None
                 if item is not None and params.get("history") == "backward" and search.active and not has_match(item):
                     item = None

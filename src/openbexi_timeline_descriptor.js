@@ -9,10 +9,26 @@ const element = (tag,text,className) => {
     return node;
 };
 const safeTags=new Set('a b strong em i u s small span font p br div ul ol li pre code blockquote table thead tbody tr th td'.split(' '));
-function appendValue(target,value) {
+function setReferenceLink(node,value) {
+    if(typeof value!=='string' || !value.trim())return false;
+    try {
+        const url=new URL(value.trim(),window.location.href);
+        if(!['http:','https:','mailto:'].includes(url.protocol))return false;
+        node.href=url.href;node.title=url.href;node.target='_blank';node.rel='noopener noreferrer';return true;
+    }catch{return false;}
+}
+function appendValue(target,value,field='') {
     if(value && typeof value==='object') {target.append(element('pre',JSON.stringify(value,(key,item)=>key==='sourceRecordKey'?undefined:item,2)));return;}
     const text=String(value ?? '');
-    if(!/<(?:a|b|strong|em|i|span|font|p|br|div|ul|ol|pre|table)\b/i.test(text)) {target.textContent=text;return;}
+    if(!/<(?:a|b|strong|em|i|span|font|p|br|div|ul|ol|pre|table)\b/i.test(text)) {
+        const candidate=text.trim();
+        if(!/(?:image|thumbnail|icon)(?:url)?$/i.test(field) && (/^(?:https?:\/\/|mailto:)\S+$/i.test(candidate) ||
+            (/(?:link|url|href)$/i.test(field) && /^(?:[./#?]|[^:\s]+[/.?#])/.test(candidate)))) {
+            const link=element('a',/report/i.test(field)?'Open report':'Open reference');
+            if(setReferenceLink(link,candidate)){target.append(link);return;}
+        }
+        target.textContent=text;return;
+    }
     // An inert template plus an explicit allowlist preserves report formatting
     // without executing provider markup or accepting event-handler attributes.
     const template=document.createElement('template');template.innerHTML=text;
@@ -22,12 +38,7 @@ function appendValue(target,value) {
         const tag=source.tagName.toLowerCase();
         if(['script','style','iframe','object','embed','svg','math','img'].includes(tag)) return;
         const node=safeTags.has(tag)?element(tag):document.createDocumentFragment();
-        if(tag==='a') {
-            try {
-                const url=new URL(source.getAttribute('href') || '',window.location.href);
-                if(['http:','https:','mailto:'].includes(url.protocol)) {node.href=url.href;node.rel='noopener noreferrer';}
-            } catch {}
-        }
+        if(tag==='a')setReferenceLink(node,source.getAttribute('href'));
         if(node.style) for(const property of ['color','backgroundColor','fontWeight','fontStyle','textDecoration'])
             node.style[property]=source.style[property];
         if(tag==='font' && source.getAttribute('color')) node.style.color=source.getAttribute('color');
@@ -66,6 +77,8 @@ const hasValue=value=>value!==undefined && value!==null &&
     (typeof value!=='string' || value.trim()!=='') &&
     (typeof value!=='object' || Object.keys(value).length>0);
 const firstValue=(...values)=>values.find(hasValue);
+const artworkLayoutFields=new Set(['focusLabel','visualX','visualY','visualWidth','visualHeight',
+    'visualDepth','visualOffsetY','visualLeft','visualRight','cluster']);
 
 export function cancelDescriptor(t) {
     t.ob_descriptor_revision=(t.ob_descriptor_revision || 0)+1;
@@ -85,12 +98,13 @@ export function renderDescriptor(t,index,record,{status='',retry}={}) {
     close.type='button';close.setAttribute('aria-label','Close event details');close.onclick=()=>t.ob_remove_descriptor();
     heading.append(document.createTextNode('Data'),close);details.append(heading);
     const data=record?.data || {};
-    details.append(element('h2',firstValue(data.title,record?.title) || 'Record details'));
+    details.append(element('h2',firstValue(record?.title,data.title) || 'Record details'));
+    t.recordVisuals?.decorateDescriptor(details,record);
     const summary=element('dl',undefined,'ob_descriptor_summary');
     const namespace=firstValue(record?.namespace,data.namespace);
     for(const [label,value] of [
         ['ID',firstValue(record?.id,data.id)],['Namespace',namespace],
-        ['Status',firstValue(data.status,record?.status)],['Type',firstValue(data.type,record?.type)],
+        ['Status',firstValue(record?.status,data.status)],['Type',firstValue(record?.type,data.type)],
         ['Start',hasValue(record?.start)?displayDate(t,record.start):undefined],
         ['End',hasValue(record?.end)?displayDate(t,record.end):undefined],
         ['Duration',hasValue(record?.start)?duration(t,record):undefined]
@@ -107,16 +121,18 @@ export function renderDescriptor(t,index,record,{status='',retry}={}) {
     for(const [key,value] of Object.entries(record || {}))
         if(!['data','activities','render','searchMatch','matchKey','parentKey','structuralContext','sourceRecordKey'].includes(key) &&
             !['x','y','z','row','width','height','textX','textY','original_x','x_relative','total_width','size'].includes(key) &&
-            !key.startsWith('pixelOffSet') && !(key in fields)) fields[key]=value;
-    Object.assign(fields,data);
+            !artworkLayoutFields.has(key) && !key.startsWith('pixelOffSet') && !(key in fields)) fields[key]=value;
+    for(const [key,value] of Object.entries(data))if(!(key in fields))fields[key]=value;
     for(const key of ['description','sortByValue','title','sourceRecordKey','recordKind','id','start','end','namespace','status','type'])delete fields[key];
     for(const key of ['start','end'])if(fields['original_'+key]===record?.[key])delete fields['original_'+key];
     if(fields.source===namespace)delete fields.source;
-    for(const [key,value] of Object.entries(fields)) {
+    const preferred=['satellite','series','system','hostname','site','station','category','priority','state'];
+    const rank=key=>preferred.includes(key)?preferred.indexOf(key):preferred.length;
+    for(const [key,value] of Object.entries(fields).sort(([a],[b])=>rank(a)-rank(b)||a.localeCompare(b))) {
         if(!hasValue(value))continue;
-        const row=element('tr'),label=element('th',key),cell=element('td',undefined,'ob_descriptor_value');
+        const row=element('tr'),label=element('th',({satellite:'Satellite',series:'Series'})[key] || key),cell=element('td',undefined,'ob_descriptor_value');
         label.scope='row';
-        appendValue(cell,value);
+        appendValue(cell,value,key);
         row.append(label,cell);table.append(row);
     }
     const allFields=element('div',undefined,'ob_descriptor_fields');
@@ -128,7 +144,7 @@ export function renderDescriptor(t,index,record,{status='',retry}={}) {
     if(allFields.childElementCount)details.append(allFields);
     const feedback=element('p',status,'ob_descriptor_status');feedback.setAttribute('role','status');details.append(feedback);
     if(retry) {const button=element('button','Retry details');button.type='button';button.onclick=retry;details.append(button);}
-    const descriptionValue=firstValue(data.description,record?.description);
+    const descriptionValue=firstValue(record?.description,data.description);
     if(hasValue(descriptionValue)) {
         const description=element('div',undefined,'ob_descriptor_description');appendValue(description,descriptionValue);
         if(description.textContent.trim()) {
@@ -149,9 +165,10 @@ export async function loadDescriptor(t,index,record) {
     renderDescriptor(t,index,record,{status:'Loading details…'});
     try {
         const url=cleanTimelineURL(t.ob_get_url_head(index));url.search='';
-        if(record.id===undefined || !record.start) throw new Error('Record identity or start date is unavailable.');
+        if(!hasValue(record.id) || !hasValue(record.start)) throw new Error('Record identity or start date is unavailable.');
+        const namespace=firstValue(record.namespace,record.data?.namespace);
         const values={ob_request:'readDescriptor',scene:index,event_id:record.id,start:record.start,
-            namespace:record.namespace || record.data?.namespace,timelineName:t.name,userName:t.ob_user_name,
+            namespace,timelineName:t.name,userName:t.ob_user_name,
             filterName:t.ob_scene[index].ob_filter_name,filter:t.ob_scene[index].ob_filter_value,search:t.ob_results?.state.query || ''};
         for(const [key,value] of Object.entries(values)) if(value!==undefined && value!==null) url.searchParams.set(key,String(value));
         t.ob_descriptor_timeout=setTimeout(()=>controller.abort(),15000);
@@ -159,11 +176,12 @@ export async function loadDescriptor(t,index,record) {
         const body=await readTimelineResponse(response,'Descriptor request');
         if(!current()) return;
         if(!Array.isArray(body.event_descriptor)) throw new Error('The response contains no descriptor list.');
-        const detail=body.event_descriptor.find(item=>String(item.id ?? item.ID ?? record.id)===String(record.id));
+        const detail=body.event_descriptor.find(item=>String(item.id ?? item.ID ?? record.id)===String(record.id) &&
+            (!namespace || !firstValue(item.namespace,item.data?.namespace) || namespace===firstValue(item.namespace,item.data?.namespace)));
         if(!detail) {renderDescriptor(t,index,record,{status:'No additional descriptor was found.'});return;}
         const merged={...record,...detail,data:{...record.data,...detail.data}};
-        if(t.ob_scene[index].descriptor && t.ob_createDescriptor) t.ob_createDescriptor(index,merged);
-        else renderDescriptor(t,index,merged);
+        t.ob_descriptor_record=merged;
+        renderDescriptor(t,index,merged);
     } catch(error) {
         if(!current()) return;
         renderDescriptor(t,index,record,{status:error.name==='AbortError'?'Detail request timed out.':error.message,retry});

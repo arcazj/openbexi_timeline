@@ -1,6 +1,79 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import {createTimelineHarness} from './helpers/timeline-dom.mjs';
+
+test('Descriptor URL values and imported references are real links that retain the timeline',async()=>{
+    const h=await createTimelineHarness({url:'http://localhost/openbexi_timeline/demos.html'});
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'links',ob_timeline_right_panel:panel,ob_remove_descriptor(){}};
+        const record={id:'links',start:'2026-01-01',data:{title:'References',link:'https://example.org/record?a=1&b=2#detail',
+            report:'https://example.org/report',url:'docs/report.html',description:'Read <a href="https://example.org/context" target="_self">context</a>. <a href="">Empty</a> <a>No URL</a>',
+            unsafe:'javascript:alert(1)',text:'ordinary text',notes:'https://example.org is a source, not a URL value'}};
+        const before=JSON.stringify(record);renderDescriptor(t,0,record);
+        const anchors=[...panel.querySelectorAll('a[href]')];
+        assert.deepEqual(anchors.map(a=>a.href).sort(),['https://example.org/record?a=1&b=2#detail','https://example.org/report',
+            'http://localhost/openbexi_timeline/docs/report.html','https://example.org/context'].sort());
+        assert.ok(anchors.every(a=>a.target==='_blank'&&a.relList.contains('noopener')&&a.relList.contains('noreferrer')));
+        assert.ok(anchors.every(a=>a.title===a.href));
+        assert.deepEqual([...panel.querySelectorAll('.ob_descriptor_table a')].map(a=>a.textContent).sort(),['Open reference','Open reference','Open report']);
+        assert.equal(JSON.stringify(record),before);
+    }finally{h.close();}
+});
+
+test('Every demo preserves descriptor references from its source, including legacy inline anchors',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {parseTimelineData}=await h.importModule('src/openbexi_timeline_data_parser.js');
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const catalog=JSON.parse(await fs.readFile('demos/catalog.json','utf8'));
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'catalog-links',ob_timeline_right_panel:panel,ob_remove_descriptor(){}};
+        for(const demo of catalog.demos) {
+            const model=JSON.parse(await fs.readFile(demo.model,'utf8')),raw=await fs.readFile(demo.dataset,'utf8');
+            const data=parseTimelineData(raw,model.dataSource);
+            const source=model.dataSource?.format==='simile-xml'?new h.window.DOMParser().parseFromString(raw,'text/html'):null;
+            const sourceEvents=[...(source?.querySelectorAll('event')||[])];
+            let sourceReferences=0,renderedReferences=0;
+            for(const [i,record] of data.events.filter(r=>!r.zone).entries()) {
+                const embedded=[...(sourceEvents[i]?.querySelectorAll('a[href]')||[])].filter(a=>a.getAttribute('href').trim());
+                if(record.data?.link) {
+                    assert.ok(record.data.link.startsWith('https://'),demo.id+': primary references use HTTPS');
+                    assert.doesNotMatch(record.data.link,/internt\.nhm\.ac\.uk|accents-n-art\.com|Image:JFKmotorcade|Monet\.waterlilies\.500pix/);
+                }
+                sourceReferences+=embedded.length+(record.data?.link?1:0);
+                if(!embedded.length&&!record.data?.link)continue;
+                renderDescriptor(t,0,record);
+                const anchors=[...panel.querySelectorAll('a[href]')];
+                for(const a of anchors) {
+                    assert.equal(a.target,'_blank',demo.id+' '+record.data.title);
+                    assert.ok(/^https?:/.test(a.href),a.href);
+                }
+                renderedReferences+=anchors.length;
+            }
+            assert.equal(renderedReferences,sourceReferences,demo.id+': every supplied reference is usable');
+        }
+    }finally{h.close();}
+});
+
+test('Artwork layout properties do not leak into the record details',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {renderDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        const t={name:'visual',ob_timeline_right_panel:panel,ob_remove_descriptor(){}};
+        const record={id:'one',start:'2026-01-01',focusLabel:{fontFamily:'Internal font'},visualX:12,visualY:24,
+            visualWidth:128,visualHeight:92,visualDepth:32,visualOffsetY:18,visualLeft:-64,visualRight:64,
+            data:{title:'Museum record',classification:'Source classification',focusLabel:'Source-owned metadata'}};
+        const before=JSON.stringify(record);
+        renderDescriptor(t,0,record);
+        assert.doesNotMatch(panel.textContent,/Internal font|visualX|visualY|visualWidth|visualHeight|visualDepth|visualOffsetY|visualLeft|visualRight/);
+        assert.match(panel.textContent,/Source classification/);assert.match(panel.textContent,/Source-owned metadata/);
+        assert.equal(JSON.stringify(record),before);
+    } finally {h.close();}
+});
 
 test('Transport removes absent optional values without changing literal filters or searches',async()=>{
     const h=await createTimelineHarness();
@@ -67,6 +140,28 @@ test('Occurrence keys stay internal while descriptor requests use the original e
         assert.match(panel.textContent,/external-record/);assert.match(panel.textContent,/external-child/);
         assert.equal(panel.querySelector('details,summary'),null,'Activities and metadata are always expanded');
         cancelDescriptor(t);
+    } finally {h.close();}
+});
+
+test('Flat descriptors override summaries, match namespaces and retain one copy of each attribute',async()=>{
+    const h=await createTimelineHarness();
+    try {
+        const {loadDescriptor,cancelDescriptor}=await h.importModule('src/openbexi_timeline_descriptor.js');
+        const panel=h.window.document.createElement('aside');h.window.document.body.append(panel);
+        let requested;
+        h.window.fetch=async url=>{requested=new URL(url);return new Response(JSON.stringify({event_descriptor:[
+            {id:'shared-id',namespace:'Other',title:'Wrong record'},
+            {id:'shared-id',namespace:'Operations',title:'Current subject',description:'Subject only',status:'READY',satellite:'IS_9991',series:'series_99'}]}));};
+        const t={name:'flat',ob_timeline_right_panel:panel,ob_scene:[{descriptor:'legacy'}],ob_get_url_head:()=>'/sessions',ob_remove_descriptor:()=>cancelDescriptor(t),
+            ob_createDescriptor:()=>{throw new Error('Use shared presentation');}};
+        await loadDescriptor(t,0,{id:'shared-id',start:'2020-01-01T00:00:00Z',namespace:' ',data:{namespace:'Operations',title:'Old subject',description:'Old description',status:'OLD',satellite:'9991'}});
+        assert.equal(requested.searchParams.get('namespace'),'Operations');
+        assert.equal(panel.querySelector('h2').textContent,'Current subject');assert.ok(!panel.textContent.includes('Wrong record'));
+        assert.equal(panel.querySelector('.ob_descriptor_description').textContent,'Subject only');
+        assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/READY/);
+        const rows=[...panel.querySelectorAll('.ob_descriptor_fields tr')];
+        assert.deepEqual(rows.map(row=>row.querySelector('th').textContent),['Satellite','Series']);
+        assert.equal(rows[0].querySelector('td').textContent,'IS_9991');cancelDescriptor(t);
     } finally {h.close();}
 });
 

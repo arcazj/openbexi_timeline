@@ -51,7 +51,11 @@ for (const demo of catalog.demos) test(demo.id + ': load and build real scene ge
         await new Promise(resolve => setTimeout(resolve, 20));
         assert.equal(timeline.ob_views.mode, 'split');
         assert.ok(timeline.ob_views.tablePanel.textContent.includes('No events to display.'));
-        assert.deepEqual(harness.requests, ['/' + demo.model, '/' + demo.dataset], 'Static demos do not contact a live data backend');
+        const expected=['/' + demo.model];
+        if(timeline.rendering.recordVisuals.enabled && timeline.rendering.recordVisuals.manifest)
+            expected.push(new URL(timeline.rendering.recordVisuals.manifest,'http://localhost/').pathname);
+        expected.push('/' + demo.dataset);
+        assert.deepEqual(harness.requests, expected, 'Static demos request only their configured local model, asset manifest and dataset');
     } finally { harness.close(); }
 });
 

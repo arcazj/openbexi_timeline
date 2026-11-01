@@ -148,7 +148,7 @@ test('JFK combines a two-hour detail view with month, day and nested half-hour c
     } finally { harness.close(); }
 });
 
-test('Dinosaurs magnifies the main age scale fourfold while retaining every source age in Overview', async () => {
+test('Dinosaur visual clusters preserve exact geological positions and every source interval in Overview', async () => {
     const harness = await createTimelineHarness();
     try {
         const {OB_TIMELINE} = await harness.importModule('src/openbexi_timeline.js');
@@ -161,21 +161,23 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         const overview = scene.bands.find(band => band.name.includes('overview_'));
         const ma = value => -value * timeline.staticTimeAxis.millisecondsPerUnit;
         assert.equal(timeline.staticData.events.filter(event => !event.zone).length, 224);
-        assert.equal(main.sessions.length, 224, 'Every dinosaur remains in the layout when the visible range is magnified');
+        assert.equal(main.sessions.reduce((count,session)=>count+session.activities.reduce((n,activity)=>n+(activity.cluster?.count || 1),0),0), 224,
+            'Every dinosaur remains accessible through individual records or expandable clusters');
         assert.equal(overview.sessions.length, 224, 'The fixed Overview retains all normal-view events');
-        assert.equal(main.timeScale.from, ma(165));
-        assert.equal(main.timeScale.to, ma(115));
-        assert.equal(main.timeScale.contextFrom, ma(240));
-        assert.equal(main.timeScale.contextTo, ma(40));
-        assert.equal(overview.timeScale.from, ma(240));
-        assert.equal(overview.timeScale.to, ma(40));
+        assert.equal(main.timeScale.from, ma(240));
+        assert.equal(main.timeScale.to, ma(62));
+        assert.equal(main.timeScale.contextFrom, ma(251.902));
+        assert.equal(main.timeScale.contextTo, ma(62));
+        const overviewHalfSpan=(251.902-62)/2;
+        near(overview.timeScale.from, ma(151+overviewHalfSpan), 'Overview shares the model reference center');
+        near(overview.timeScale.to, ma(151-overviewHalfSpan), 'Overview retains its configured wider span');
         const intervalWidth = band => band.timeScale.toPixel(ma(130)) - band.timeScale.toPixel(ma(150));
-        near(intervalWidth(main) / intervalWidth(overview), 4, 'The same age interval is four times wider in the main view');
+        near(intervalWidth(main) / intervalWidth(overview), (251.902-62)/(240-62), 'Both views use the same linear age mapping');
         assert.ok(main.timeScale.toPixel(ma(228)) < main.timeScale.toPixel(ma(65)), 'Older ages are left of younger ages');
         for (const session of main.sessions) for (const activity of session.activities) {
             if (Number.isFinite(activity.pixelOffSetEnd)) {
                 assert.ok(activity.pixelOffSetEnd > activity.pixelOffSetStart, 'Numeric durations extend toward younger ages');
-                assert.ok(activity.textY > activity.height / 2, 'Duration labels are above their compact bars');
+                assert.ok(activity.textY < -activity.height / 2, 'Duration labels leave the artwork above their bars unobscured');
             }
         }
         for (const session of overview.sessions) for (const activity of session.activities) {
@@ -186,8 +188,9 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
             }
         }
         const ticks = bandTicks(main, main.timeScale.from, main.timeScale.to);
-        assert.deepEqual(Array.from(ticks, tick => timeline.formatEventDate(tick.time)),
-            ['165 Ma', '160 Ma', '155 Ma', '150 Ma', '145 Ma', '140 Ma', '135 Ma', '130 Ma', '125 Ma', '120 Ma', '115 Ma']);
+        assert.equal(timeline.formatEventDate(ticks[0].time),'240 Ma');
+        assert.equal(timeline.formatEventDate(ticks.at(-1).time),'65 Ma');
+        for(let index=1;index<ticks.length;index++)assert.equal(ticks[index].time-ticks[index-1].time,-ma(5));
         assert.equal(timeline.ob_calendar.hidden, false, 'The complete toolbar remains visible');
         assert.equal(timeline.ob_calendar.getAttribute('aria-disabled'), 'true', 'A calendar is unavailable on a numeric axis');
         assert.ok(timeline.ob_timeline_panel.querySelector('.ob_docked_overview'), 'Overview remains docked below scrollable rows');
@@ -198,9 +201,9 @@ test('Dinosaurs magnifies the main age scale fourfold while retaining every sour
         timeline.ob_scene.sync_time += 20 * timeline.staticTimeAxis.millisecondsPerUnit;
         prepareBandScale(timeline, 0, main);
         prepareBandScale(timeline, 0, overview);
-        assert.equal(main.timeScale.from, ma(145), 'Navigation advances the range in native axis units');
-        assert.equal(main.timeScale.to, ma(95));
-        assert.equal(overview.timeScale.contextFrom, ma(220), 'Overview context advances with the detail view');
+        assert.equal(main.timeScale.from, ma(220), 'Navigation advances the range in native axis units');
+        assert.equal(main.timeScale.to, ma(42));
+        assert.equal(overview.timeScale.contextFrom, ma(231.902), 'Overview context advances with the detail view');
         near(main.timeScale.toPixel(ma(130)), originalPosition / 2, 'Navigation does not convert internal timestamps twice');
         near(main.timeScale.toTime(main.timeScale.toPixel(ma(100))), ma(100), 'Numeric positions remain invertible after navigation');
         timeline.ob_views.setMode('table');

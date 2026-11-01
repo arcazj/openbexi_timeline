@@ -53,7 +53,8 @@ public final class PublicAssetServlet extends HttpServlet {
             case "src" -> (relative.getNameCount() == 2 ||
                     (relative.getNameCount() > 3 && relative.getName(1).toString().equals("vendor") && relative.getName(2).toString().equals("yaml")))
                     && (Set.of("js", "mjs").contains(extension) || filename.equals("LICENSE"));
-            case "node_modules", "icon", "css" -> BROWSER_EXTENSIONS.contains(extension);
+            case "node_modules", "icon", "css" -> BROWSER_EXTENSIONS.contains(extension)
+                    || folder.equals("icon") && Set.of("glb", "gltf", "bin").contains(extension);
             case "demos" -> extension.equals("json") || relative.getNameCount() == 2
                     && Set.of("embedded-earth-orbit.html", "embedded-earth-orbit.js").contains(filename);
             case "help", "schemas" -> extension.equals("json");
@@ -85,6 +86,8 @@ public final class PublicAssetServlet extends HttpServlet {
             String mime = getServletContext().getMimeType(name);
             if (mime == null) mime = CONTENT_TYPES.get(name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT));
             if (name.endsWith(".js") || name.endsWith(".mjs")) mime = "text/javascript";
+            else if (name.endsWith(".glb")) mime = "model/gltf-binary";
+            else if (name.endsWith(".gltf")) mime = "model/gltf+json";
             else if (name.endsWith(".json")) mime = "application/json";
             else if (name.endsWith(".md") || name.endsWith(".yaml") || name.endsWith(".yml") || name.equals("LICENSE")) mime = "text/plain";
             response.setContentType(mime == null ? "application/octet-stream" : mime);

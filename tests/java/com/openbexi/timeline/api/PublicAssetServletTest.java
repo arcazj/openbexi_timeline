@@ -13,6 +13,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PublicAssetServletTest {
+    @Test void servesGenericRecordModelsOnlyInsidePublicAssetRoots() throws Exception {
+        file("icon/survey/record.glb","public");file("icon/survey/record.gltf","public");file("icon/survey/geometry.bin","public");
+        file("private/record.glb","private");
+        assertEquals(200,request("GET","icon/survey/record.glb").statusCode());
+        assertEquals("model/gltf-binary",request("GET","icon/survey/record.glb").headers().firstValue("Content-Type").orElseThrow());
+        assertEquals("model/gltf+json",request("GET","icon/survey/record.gltf").headers().firstValue("Content-Type").orElseThrow());
+        assertEquals(200,request("GET","icon/survey/geometry.bin").statusCode());
+        assertEquals(404,request("GET","private/record.glb").statusCode());
+    }
     @TempDir static Path temporary;
     private Path root;
     private Tomcat server;

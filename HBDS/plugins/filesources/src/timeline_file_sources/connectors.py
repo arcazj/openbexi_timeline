@@ -55,7 +55,7 @@ def local_files(root, source, excluded=(), model=None, progress=None):
     found = []
     output_pattern = output_directory_pattern(model) if model else None
     excluded = [os.path.normcase(str(Path(path).resolve())).rstrip(os.sep) for path in excluded]
-    hidden = {'.timeline-state', '.timeline-collector', '.gcs-state', '.gcs-collector', 'descriptors'}
+    hidden = {'descriptors'}  # All dot-prefixed directories are excluded below.
     pending = [root]
     while pending:
         directory = pending.pop()

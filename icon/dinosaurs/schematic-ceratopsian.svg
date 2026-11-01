@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Schematic ceratopsian clade pictogram</title>
+  <desc id="description">Original simplified clade symbol based on the source classification. Frill and horn shapes are symbolic, not an anatomical reconstruction of an individual genus or species.</desc>
+  <path fill="#9b987d" stroke="#f4f2e8" stroke-width=".7" stroke-linejoin="round" d="M8 78 38 65Q55 49 87 62L101 48 113 52 124 70 146 76 130 81 142 91 124 88 116 98 104 86 100 111 90 112 88 86 64 86 59 111 48 111 49 83Z"/>
+  <path d="m104 62 6 21m14-7h2" fill="none" stroke="#74725b" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

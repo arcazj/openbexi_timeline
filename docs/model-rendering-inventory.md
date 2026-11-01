@@ -123,6 +123,22 @@ Consumer: `openbexi_timeline.js: ob_set_camera; activity_focus: positionActivity
 | `rendering.camera.directionalColor` | `"#ffffff"` | string |
 | `rendering.camera.directionalIntensity` | `1.8` | 0 to 5 |
 
+### recordVisuals
+
+Optional record images and 3D models use the existing timeline renderer, selection and navigation. `enabled` defaults to `false`. The [record visuals configuration](record-visuals.md#configuration) documents asset lookup, display sizes, model budgets, clustering, foreground selection and labels.
+
+The reusable stage presentation adds these settings under `rendering.recordVisuals`:
+
+| Property | Default | Type / allowed values |
+| --- | --- | --- |
+| `presentation3D` | `board` | `board` or `stage`; only affects perspective mode |
+| `stageLaneDepth` | `100` | 40 to 400 scene units |
+| `stageSurfaceOpacity` | `0.22` | 0 to 1 |
+| `stageRows` | `3` | 1 to 8, rounded for lane allocation |
+| `stageScale` | `1.5` | 1 to 3 |
+
+Stage mode uses Z as up, rotates models upright above horizontal lanes, and frames the actual display area above the docked overview. The native time coordinates and 2D layout remain unchanged. Consumer: record visuals, activity focus, perspective controls and shared row packing.
+
 ### activity
 
 Activity labels, 3D materials and selection brightness. Selection never enlarges activities.

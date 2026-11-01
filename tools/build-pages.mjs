@@ -22,6 +22,9 @@ const publicAssets=manifest.filter(file=>/^(?:css|icon|help|docs|schemas|swagger
 const dependencies=[
     'node_modules/three/build/three.module.min.js','node_modules/three/examples/jsm/controls/DragControls.js',
     'node_modules/three/examples/jsm/controls/OrbitControls.js',
+    'node_modules/three/examples/jsm/loaders/GLTFLoader.js',
+    'node_modules/three/examples/jsm/utils/BufferGeometryUtils.js',
+    'node_modules/three/examples/jsm/utils/SkeletonUtils.js',
     'node_modules/three/LICENSE','node_modules/three-spritetext/dist/three-spritetext.mjs',
     'node_modules/three-spritetext/LICENSE','node_modules/simple-jscalendar/source/jsCalendar.min.js',
     'node_modules/simple-jscalendar/LICENSE'

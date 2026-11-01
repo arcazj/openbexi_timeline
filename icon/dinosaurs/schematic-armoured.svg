@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Schematic armoured dinosaur clade pictogram</title>
+  <desc id="description">Original simplified clade symbol based on the source classification. The back markings indicate armour symbolically and are not a reconstruction of an individual genus or species.</desc>
+  <path fill="#8c9988" stroke="#eff3eb" stroke-width=".7" stroke-linejoin="round" d="M8 85 30 76 41 64 51 70 59 56 69 65 80 53 91 65 102 60 111 75 128 80 143 92 125 97 109 88 104 111 94 111 92 87 63 88 59 111 48 111 47 85Z"/>
+  <path d="m53 74 7-3m12 1 7-3m12 5 7-1m31 15h2" fill="none" stroke="#5c7059" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

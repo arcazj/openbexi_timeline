@@ -56,12 +56,12 @@ class Plugin:
             if force or now - last_report >= 10:
                 count = str(completed) if total is None else '%d/%d' % (completed, total)
                 size = '' if byte_count is None else '; %.2f GiB read' % (byte_count / 1024**3)
-                context.logger.debug('%s: %s %s files%s', label, phase, count, size)
+                context.progress('%s: %s %s files%s', label, phase, count, size)
                 last_report = now
         if kind in {'local', 'json_file'}:
-            context.logger.debug('%s: scanning local input %s (including subdirectories)', label, settings['source_path'])
+            context.progress('%s: scanning local input %s (including subdirectories)', label, settings['source_path'])
         else:
-            context.logger.debug('%s: acquiring input with %s', label, kind)
+            context.progress('%s: acquiring input with %s', label, kind)
         try:
             root, files = pool.prepare(settings, context.source.get('_target_path'),
                                        progress=lambda count: progress('scanning; discovered', count))
@@ -72,7 +72,7 @@ class Plugin:
             context.notice('input', 'Skipping %s: no matching input files in %s; retry on the next conversion pass.' % (label, root))
             return
         context.notice('input')
-        context.logger.debug('%s: discovered %d matching input files', label, len(files))
+        context.progress('%s: discovered %d matching input files', label, len(files))
         ready = None
         if kind in {'local', 'json_file'}:
             observed = {}
@@ -101,14 +101,14 @@ class Plugin:
             root_is_directory = root.is_dir()
             relative_paths = [path.relative_to(root) if root_is_directory else Path(path.name) for path in files]
             progress('checking', 0, len(files), 0, force=True)
-            if temporary: context.logger.debug('%s: copying while checking; no second read of original inputs', label)
+            if temporary: context.progress('%s: copying while checking; no second read of original inputs', label)
             for index, (path, relative) in enumerate(zip(files, relative_paths)):
                 context.check_cancelled()
                 digest = hashlib.sha256()
                 before = path.stat()
                 stamp = fingerprint(before)
                 if ready is not None and quiet_seconds(context) and ready[str(path)] != stamp:
-                    context.logger.debug('%s: input changed after settling; retrying on the next pass', label)
+                    context.progress('%s: input changed after settling; retrying on the next pass', label)
                     return
                 cached = hashes.execute('SELECT stamp,digest,verified FROM files WHERE path=?', (str(path),)).fetchone()
                 if (not temporary and not context.force and cached and cached[0] == stamp
@@ -136,7 +136,7 @@ class Plugin:
             progress('checked', len(files), len(files), bytes_read, force=True)
             checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
             if checkpoint == context.checkpoint and not context.force:
-                context.logger.debug('Skipping %s: inputs and configuration unchanged', label)
+                context.progress('Skipping %s: inputs and configuration unchanged', label)
                 return
             # Verify staged bytes before handing the immutable tree to a converter.
             snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])

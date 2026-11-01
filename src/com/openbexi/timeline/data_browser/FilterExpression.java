@@ -106,12 +106,12 @@ public final class FilterExpression {
                     }
                     if(!closed)throw error(start,"Unclosed quoted value.");
                     tokens.add(new Token(source.substring(start,i),value.toString(),start,true));
-                } else if("(),".indexOf(c)>=0) {tokens.add(new Token(""+c,null,i++,false));}
+                } else if("(),|".indexOf(c)>=0) {tokens.add(new Token(""+c,null,i++,false));}
                 else if("=!<>".indexOf(c)>=0) {
                     i++;if(i<source.length() && source.charAt(i)=='=')i++;
                     tokens.add(new Token(source.substring(start,i),null,start,false));
                 } else {
-                    while(i<source.length() && !Character.isWhitespace(source.charAt(i)) && "(),=!<>\"'".indexOf(source.charAt(i))<0)i++;
+                    while(i<source.length() && !Character.isWhitespace(source.charAt(i)) && "(),|=!<>\"'".indexOf(source.charAt(i))<0)i++;
                     String word=source.substring(start,i);
                     tokens.add(new Token(word,null,start,false));
                 }
@@ -122,7 +122,7 @@ public final class FilterExpression {
         Token peek(){return tokens.get(index);}
         boolean take(String text){if(!peek().literal && peek().text.equalsIgnoreCase(text)){index++;return true;}return false;}
         void require(String text){if(!take(text))throw error(peek().offset,"Expected '"+text+"'.");}
-        Predicate<JSONObject> parse(){Predicate<JSONObject> result=or();if(!peek().text.isEmpty())throw error(peek().offset,"Unexpected token.");return result;}
+        Predicate<JSONObject> parse(){Predicate<JSONObject> result=or();if(take("|"))result=result.and(or().negate());if(!peek().text.isEmpty())throw error(peek().offset,"Unexpected token.");return result;}
         Predicate<JSONObject> or(){Predicate<JSONObject> result=and();while(take("OR")){result=result.or(and());}return result;}
         Predicate<JSONObject> and(){Predicate<JSONObject> result=unary();while(take("AND")){result=result.and(unary());}return result;}
         Predicate<JSONObject> unary(){

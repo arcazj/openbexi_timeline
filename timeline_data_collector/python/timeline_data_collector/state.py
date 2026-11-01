@@ -53,12 +53,16 @@ class State:
         """A dead owner's OS lease distinguishes interrupted jobs from other processes."""
         with self.lock:
             rows = list(self.db.execute("SELECT id,owner FROM jobs WHERE status IN ('queued','running')"))
+        recovered = 0
         for ident, owner in rows:
             if not owner: continue
             lease = SourceLock(self.root / 'runners' / (owner + '.lock'))
             if lease.acquire():
-                try: self.update(ident, 'failed', {'error': 'Worker stopped before job completion; durable output is retained. Run again to recover.'})
+                try:
+                    self.update(ident, 'failed', {'error': 'Worker stopped before job completion; durable output is retained. Run again to recover.'})
+                    recovered += 1
                 finally: lease.release()
+        return recovered
 
     def save_schedule(self, ident, value):
         with self.lock, self.db:

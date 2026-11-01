@@ -1,0 +1,64 @@
+{
+  "version": "2.9.3",
+  "status": "passed",
+  "verifiedAt": "2026-11-01T15:33:24.650438+00:00",
+  "scope": "Local unit, backend, collector, Java, source and demo-bundle validation. Browser regression and compatibility, Linux integration, dependency audits, and Windows installer checks are required separately by the workflows for the committed release source before publication.",
+  "changeBaseline": "fa213ed80d83d917ad4093e4ef55f386ffcdaa73",
+  "tests": {
+    "javascript": {
+      "tests": 491,
+      "pass": 491,
+      "fail": 0,
+      "skipped": 0
+    },
+    "pythonBackend": {
+      "passed": 78,
+      "failed": 0
+    },
+    "collector": {
+      "passed": 103,
+      "failed": 0
+    },
+    "java": {
+      "tests": 216,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 34
+    },
+    "demoBundle": {
+      "passed": 16,
+      "failed": 0
+    },
+    "releasePublishing": {
+      "passed": 11,
+      "failed": 0
+    },
+    "schemasAndGeneratedContracts": "passed"
+  },
+  "versionChecks": {
+    "java-version": {
+      "check": "java-version",
+      "exitCode": 0,
+      "seconds": 98.54
+    },
+    "javascript-version": {
+      "check": "javascript-version",
+      "exitCode": 0,
+      "seconds": 29.31
+    }
+  },
+  "distribution": {
+    "applicationVersion": "2.9.3",
+    "collectorVersion": "2.9.3",
+    "filesourcesVersion": "1.0.2",
+    "mqttVersion": "1.0.1",
+    "lokiVersion": "1.0.1",
+    "publicPlugins": 7,
+    "privateToolsAndDataExcluded": true
+  },
+  "ci": {
+    "verify": "https://github.com/arcazj/openbexi_timeline/actions/workflows/verify.yml",
+    "pages": "https://github.com/arcazj/openbexi_timeline/actions/workflows/pages.yml",
+    "installer": "https://github.com/arcazj/openbexi_timeline/actions/workflows/release.yml"
+  }
+}

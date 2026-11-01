@@ -16,6 +16,88 @@ async function state(page,fraction=.3) {
             auto:r.state.auto,page:t.ob_viewport.pageIndex,selected:r.selectedKey,counts:r.snapshot.counts};
     },fraction);
 }
+
+async function clickControl(page,name,alt=false) {
+    const control=alt?page.getByAltText(name,{exact:true}):page.getByRole('button',{name,exact:true});
+    if(!await control.isVisible())await page.getByRole('button',{name:'More',exact:true}).click();
+    await control.click();await ready(page);
+}
+
+async function overviewPoint(page,target='plot') {
+    return page.evaluate(async target=>{
+        const t=await(await import('/src/openbexi_demo.js')).demoReady,s=t.ob_scene[0];
+        const panel=[...t.ob_timeline_panel.querySelectorAll('.ob_docked_overview')].find(panel=>!panel.hidden);
+        const svg=panel.querySelector('svg'),rect=svg.getBoundingClientRect();
+        let x=rect.left+rect.width*.72,y=rect.top+rect.height*.65;
+        const selector={mark:'[data-event-id]',window:'[data-overview-window]',axis:'[data-overview-axis] text'}[target];
+        if(selector) {
+            const bounds=[...svg.querySelectorAll(selector)].map(element=>element.getBoundingClientRect()).find(box=>
+                box.width>0&&box.height>0&&box.left>=rect.left+5&&box.right<=rect.right-5&&box.top>=rect.top+25&&box.bottom<=rect.bottom);
+            if(!bounds)throw new Error('No visible Overview '+target);
+            x=bounds.left+bounds.width*.3;y=bounds.top+bounds.height/2;
+        }
+        const band=s.bands.find(band=>band.name===panel.dataset.overviewBand),mesh=s.getObjectByName(band.name);
+        const pixel=(x-rect.left)*s.width/rect.width-s.width/2-mesh.position.x;
+        return {x,y,expected:t.pixelOffSetToBandDate(0,band,pixel).getTime()};
+    },target);
+}
+
+test('Overview first clicks on marks, range, axis and plot tolerate mouse jitter in 2D and 3D',async({page})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));
+    for(const mode of ['2D','3D'])for(const target of ['plot','mark','window','axis']) {
+        await page.goto('/demos.html?demo=default-dataset');await ready(page);
+        if(mode==='3D')await clickControl(page,'2D or 3D view',true);
+        const p=await overviewPoint(page,target);
+        await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+4,p.y);await page.mouse.up();
+        await ready(page);
+        const result=await page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;return {time:t.ob_scene.sync_time,gesture:t.ob_results.gesture};});
+        // Native pointer coordinates round to float32 before time conversion.
+        expect(Math.abs(result.time-p.expected),mode+' '+target+' selects the pressed time on its first click').toBeLessThan(10);
+        expect(result.gesture).toBe(false);
+    }
+    expect(errors).toEqual([]);
+});
+
+test('Overview recovers from real pointer capture loss and its next first click navigates',async({page})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    const before=await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_markerDate.getTime());
+    const p=await overviewPoint(page);
+    await page.locator('.ob_docked_overview svg').first().evaluate(svg=>{
+        svg.addEventListener('gotpointercapture',event=>{window.overviewPointer=event.pointerId;},{once:true});
+    });
+    await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+45,p.y,{steps:3});
+    await page.locator('.ob_docked_overview svg').first().evaluate(svg=>{
+        if(!svg.hasPointerCapture(window.overviewPointer))throw new Error('The drag must capture a real browser pointer');
+        svg.releasePointerCapture(window.overviewPointer);
+    });
+    // The browser dispatches lostpointercapture on the next pointer update.
+    await page.mouse.move(p.x+46,p.y);await page.mouse.up();await ready(page);
+    const restored=await page.evaluate(async()=>{const t=await(await import('/src/openbexi_demo.js')).demoReady;return {time:t.ob_markerDate.getTime(),gesture:t.ob_results.gesture};});
+    expect(restored).toEqual({time:before,gesture:false});
+    const next=await overviewPoint(page);await page.mouse.click(next.x,next.y);await ready(page);
+    const selected=await page.evaluate(async()=>(await(await import('/src/openbexi_demo.js')).demoReady).ob_scene.sync_time);
+    expect(Math.abs(selected-next.expected)).toBeLessThan(10);
+    expect(errors).toEqual([]);
+});
+
+test('Overview show/hide works on each first click across Timeline, Split and Table view changes',async({page})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    for(const mode of ['Timeline','Split','Timeline']) {
+        await clickControl(page,mode);
+        for(let attempt=0;attempt<2;attempt++) {
+            await clickControl(page,'Overview');
+            await expect(page.locator('.ob_docked_overview:visible')).toHaveCount(0);
+            await clickControl(page,'No overview');
+            await expect(page.locator('.ob_docked_overview:visible')).not.toHaveCount(0);
+        }
+        await clickControl(page,'Table');
+        await expect(page.locator('.ob_docked_overview:visible')).toHaveCount(0);
+    }
+    expect(errors).toEqual([]);
+});
 for (const auto of [false,true]) test(`Wheel targets only the hovered plot, Auto scale ${auto}`,async({page},info)=>{
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.clock.setFixedTime(new Date('2026-09-12T12:30:00Z'));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {coveredRange,timelineGaps,elapsedLabel,clusterEvents,neighboringEntry,seekTimelineRecord,searchTimelineHistory} from '../src/openbexi_timeline_exploration.js';
+import {coveredRange,timelineGaps,elapsedLabel,clusterEvents,clusterVisualRecords,neighboringEntry,seekTimelineRecord,searchTimelineHistory} from '../src/openbexi_timeline_exploration.js';
 import {densityMap,projectMap} from '../src/openbexi_timeline_adaptive.js';
 import {adaptiveTickSettings,bandTicks} from '../src/openbexi_timeline_ticks.js';
 import {formatTimelineDate} from '../src/openbexi_timeline_data.js';
@@ -54,6 +54,48 @@ test('Dense clusters retain counts, warnings and every protected record',()=>{
     assert.deepEqual(clusters.filter(e=>!e.cluster).map(e=>e.id).sort(),['0','critical','duration']);
     assert.equal(new Set(group.keys).size,19);assert.equal(records.length,22);
     assert.equal(clusterEvents(records,scale,new Set(records.map(e=>e.matchKey))).length,22);
+});
+
+test('Visual clusters preserve exact occurrence intervals, original identities and model lookup metadata',()=>{
+    const records=[event('z',5,{end:iso(base+7*3600000)}),event('a',4,{end:iso(base+8*3600000)}),
+        event('b',3,{end:iso(base+9*3600000)})];
+    const before=structuredClone(records),scale={toPixel:value=>(Date.parse(value)-base)/3600000};
+    const output=clusterVisualRecords(records,scale,new Set(),170,record=>record.id==='z');
+    assert.equal(output.length,1);const representative=output[0];
+    assert.equal(representative.id,'z');assert.equal(representative.matchKey,'z');
+    assert.equal(representative.start,records[0].start);assert.equal(representative.end,records[0].end);
+    assert.equal(representative.data,records[0].data);assert.equal(representative.render,records[0].render);
+    assert.deepEqual(representative.cluster,{from:base+3*3600000,to:base+9*3600000,count:3,keys:['a','b','z'],representative:true});
+    assert.deepEqual(records,before);
+    assert.equal(clusterVisualRecords([...records].reverse(),scale,new Set(),170)[0].id,'a','Stable identity decides a model-free representative');
+    assert.equal(clusterVisualRecords(records,scale,new Set(),0).length,3,'Disabled is the backward-compatible default');
+});
+
+test('Visual clustering partitions by projected midpoint and namespace and preserves exceptional records',()=>{
+    const events=[];
+    for(const namespace of ['first','second'])for(let i=0;i<6;i++)events.push(event(namespace+i,i<3?5:25,{namespace,
+        end:iso(base+(i<3?7:27)*3600000),data:{title:namespace+i}}));
+    events.push(event('selected',5),event('expanded',5),event('pinned',5,{data:{pinned:true}}),
+        event('parent',5,{activities:[event('child',5)]}),event('zone',5,{zone:true}),event('priority',5,{data:{priority:'critical'}}));
+    const scale={toPixel:value=>(Date.parse(value)-base)/3600000};
+    const result=clusterVisualRecords(events,scale,new Set(['selected','expanded']),20);
+    assert.equal(result.filter(record=>record.cluster).length,4);
+    assert.deepEqual(result.filter(record=>!record.cluster).map(record=>record.id).sort(),['expanded','parent','pinned','priority','selected','zone']);
+    const recovered=result.flatMap(record=>record.cluster?.keys || [record.matchKey]);
+    assert.equal(new Set(recovered).size,events.length);assert.deepEqual(recovered.sort(),events.map(record=>record.matchKey).sort());
+    for(const cluster of result.filter(record=>record.cluster))assert.equal(new Set(cluster.cluster.keys.map(key=>events.find(record=>record.matchKey===key).namespace)).size,1);
+    const expanded=clusterVisualRecords(events,scale,new Set(result.flatMap(record=>record.cluster?.keys || [])),20);
+    assert.equal(expanded.filter(record=>record.cluster).length,0);
+});
+
+test('Visual clusters expand with zoom and leave small groups and invalid positions untouched',()=>{
+    const records=Array.from({length:6},(_,i)=>event(String(i),5+i*.01,{end:iso(base+(7+i*.01)*3600000)}));
+    const wide={toPixel:value=>(Date.parse(value)-base)/3600000}, close={toPixel:value=>(Date.parse(value)-base)/3600};
+    assert.equal(clusterVisualRecords(records,wide,new Set(),10).length,1);
+    assert.equal(clusterVisualRecords(records,close,new Set(),10).length,6);
+    assert.equal(clusterVisualRecords(records.slice(0,2),wide,new Set(),170).length,2);
+    assert.equal(clusterVisualRecords(records,{toPixel:()=>NaN},new Set(),170).length,6);
+    assert.equal(clusterVisualRecords(records,null,new Set(),170).length,6);
 });
 
 test('Match navigation handles simultaneous records deterministically',()=>{
@@ -188,10 +230,14 @@ test('A dense empty interval cannot consume the nearby search budget before a fu
     } finally {globalThis.fetch=previous;}
 });
 
-async function local(records=[event('older',8),event('latest',10)]) {
+async function local(records=[event('older',8),event('latest',10)],rendering) {
     const h=await createTimelineHarness(),{OB_TIMELINE}=await h.importModule('src/openbexi_timeline.js');
     const model=JSON.parse(await fs.readFile('HBDS/templates/models/regular_timeline_earthquake.json','utf8')),t=new OB_TIMELINE();
     t.params=model.params;t.bands=model.bands;Object.assign(t.params[0],{date:iso(base+12*3600000),showCurrentTime:false});
+    if(rendering) {
+        const {resolveRendering}=await h.importModule('src/openbexi_timeline_rendering.js');
+        t.rendering=resolveRendering(rendering);
+    }
     t.staticData={events:records};t.initializeTimeline();
     return {h,t,r:t.ob_results,close(){t.ob_results.explorer.interrupt();h.close();}};
 }
@@ -407,5 +453,27 @@ test('Auto clustering reduces drawing rows while preserving original records and
         assert.equal(r.snapshot.counts.eligible.events,30);
         assert.match(r.explorer.notice.textContent,/Expanded \d+ events/);
         assert.equal(r.explorer.notice.hidden,false);
+    } finally {f.close();}
+});
+
+test('Configured visual clusters reduce duration rows without Auto scale and expand through native navigation',async()=>{
+    const source=Array.from({length:30},(_,i)=>event(String(i),12+i/10000,{end:iso(base+(13+i/10000)*3600000)}));
+    const original=structuredClone(source);
+    const f=await local(source,{recordVisuals:{enabled:true,clusterPixels:170,width:96,height:64}});const {r,t}=f;
+    try {
+        const rows=()=>t.ob_viewport.fullBands.filter(b=>!b.name.includes('overview_')).flatMap(b=>b.sessions.flatMap(s=>s.activities));
+        assert.equal(r.state.auto,false);
+        const groups=rows().filter(activity=>activity.cluster);assert.ok(groups.length>0);
+        assert.ok(rows().length<30);assert.equal(r.snapshot.counts.eligible.sessions+r.snapshot.counts.eligible.events,30);
+        assert.equal(r.projection.displayedKeys.length,30);assert.deepEqual(source,original);
+        const representative=groups[0],record=source.find(record=>record.id===representative.id);
+        assert.equal(representative.start,record.start);assert.equal(representative.end,record.end);
+        assert.equal(representative.data.title,record.data.title);
+        assert.equal(representative.cluster.representative,true);
+        const cluster=representative.cluster;
+        r.explorer.expandCluster(cluster);await waitFor(()=>!r.pending);
+        assert.ok(cluster.keys.every(key=>rows().some(record=>record.matchKey===key && !record.cluster)));
+        assert.equal(r.state.auto,false);assert.equal(r.snapshot.counts.eligible.sessions+r.snapshot.counts.eligible.events,30);
+        assert.equal(r.projection.displayedKeys.length,30);
     } finally {f.close();}
 });

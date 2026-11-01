@@ -67,7 +67,8 @@ export class TimelineModelStartup {
                 this.timeline.hbdsNamespaceId=hbds.namespaceId;this.timeline.hbdsRevision=hbds.revision;
                 this.timeline.setHbdsNamespace?.(hbds.namespace||'');
                 const providerUrl=typeof configuration.data==='string'?new URL(configuration.data,applicationRoot).href:undefined;
-                await this.timeline.applyModel(model,{providerUrl,offline:!providerUrl&&!model.dataSource&&!model.params?.[0]?.data});
+                await this.timeline.applyModel(model,{providerUrl,offline:!providerUrl&&!model.dataSource&&!model.params?.[0]?.data,
+                    ...(Object.hasOwn(this.options,'inlineData')?{inlineData:this.options.inlineData}:{})});
                 this.complete();return;
             }
             if(configuration?.model!=null && typeof configuration.model!=='string')throw new Error('The server model configuration must be a path string.');

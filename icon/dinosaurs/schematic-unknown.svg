@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Generic fossil record pictogram</title>
+  <desc id="description">Original neutral fossil symbol. The source classification does not select a suitable clade silhouette; no body shape is inferred.</desc>
+  <g fill="none" stroke="#8a9b8e" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="80" cy="62" rx="43" ry="40" stroke-width="1.7" opacity=".4"/>
+    <path d="M99 88C76 103 51 91 51 69c0-20 22-33 38-24 17 10 14 28-1 33-12 4-21-7-15-16 4-5 11-4 14 1" stroke-width="6"/>
+    <path d="m46 98 8-5m55-43 6-8M80 27v8m31 57-7-5" stroke-width="1.7"/>
+  </g>
+</svg>

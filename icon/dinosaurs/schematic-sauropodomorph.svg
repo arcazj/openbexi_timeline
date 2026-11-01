@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 160 125" role="img" aria-labelledby="title description">
+  <title id="title">Schematic sauropodomorph clade pictogram</title>
+  <desc id="description">Original simplified clade symbol based on the source classification. This is not a reconstruction of an individual genus or species.</desc>
+  <path fill="#8a9b83" stroke="#eff3eb" stroke-width=".7" stroke-linejoin="round" d="M7 80Q31 68 54 68Q68 52 88 63L101 32Q105 16 115 14L135 16 138 23 119 27 116 57Q117 70 105 79L101 109 92 111 89 82 73 83 65 110 55 110 57 83Q29 85 7 80Z"/>
+  <path d="M126 20h2M113 32l-4 17" fill="none" stroke="#64765d" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

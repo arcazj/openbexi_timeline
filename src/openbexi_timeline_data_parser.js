@@ -67,13 +67,14 @@ export function field(record, paths, fallback) {
 export function parseTimelineData(text, source = {}) {
     let payload;
     if (source.format === "simile-xml") {
-        // Legacy descriptions contain unbalanced HTML. An inert HTML document tolerates
-        // that markup; only event attributes and plain description text are retained.
+        // Legacy descriptions contain unbalanced HTML. An inert document tolerates
+        // it. Keep linked descriptions for the shared descriptor's allowlist sanitizer;
+        // plain descriptions retain their existing whitespace-normalized text.
         const document = new DOMParser().parseFromString(text, "text/html");
         if (!document.querySelector("data")) throw new Error("Expected a Simile <data> document.");
         payload = {events: [...document.querySelectorAll("event")].map(element => ({
             ...Object.fromEntries([...element.attributes].map(attribute => [attribute.name, attribute.value])),
-            description: element.textContent.trim().replace(/\s+/g, " ")
+            description: element.querySelector('a[href]') ? element.innerHTML.trim() : element.textContent.trim().replace(/\s+/g, " ")
         }))};
     } else if (!source.format || source.format === "json") {
         payload = JSON.parse(text);

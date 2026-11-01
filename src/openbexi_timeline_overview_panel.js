@@ -2,6 +2,7 @@ import {renderingFor} from './openbexi_timeline_rendering.js';
 import {formatTimelineValue} from './openbexi_timeline_data.js';
 import {bandTicks} from './openbexi_timeline_ticks.js';
 import {backgroundImageURL} from './openbexi_timeline_textures.js';
+import {POINTER_CLICK_SLOP} from './openbexi_timeline_event_interaction.js';
 
 const states = new WeakMap();
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -75,15 +76,36 @@ function createPanel(timeline) {
         timeline.reset_synced_time('new_view', state.index);
         timeline.load_data(state.index);
     };
+    const release = drag => {
+        state.drag = undefined;
+        svg.style.cursor = 'grab';
+        if (svg.hasPointerCapture?.(drag.pointer)) svg.releasePointerCapture(drag.pointer);
+    };
+    state.cancelDrag = (event, restore = true) => {
+        const drag = state.drag;
+        if (!drag || event && drag.pointer !== event.pointerId) return;
+        release(drag);
+        const mesh = timeline.ob_scene[state.index]?.getObjectByName(state.band.name);
+        if (restore && drag.moved && mesh === drag.mesh) move(drag.oldX);
+        timeline.ob_results?.endGesture();
+    };
+    const delta = (drag, event) => {
+        if (Math.hypot(event.clientX - drag.start, event.clientY - drag.startY) > POINTER_CLICK_SLOP) drag.moved = true;
+        return (event.clientX - drag.start) * drag.scale;
+    };
     svg.addEventListener('pointerdown', event => {
-        if (event.button !== 0) return;
-        timeline.ob_scene[state.index].cancelPan?.();
-        timeline.ob_results?.beginGesture();
+        if (event.button !== 0 || event.isPrimary === false || timeline.ob_results?.loading) return;
         const mesh = timeline.ob_scene[state.index].getObjectByName(state.band.name);
         if (!mesh) return;
+        for (const panel of states.get(timeline)?.values() || []) panel.cancelDrag();
+        timeline.ob_scene[state.index].cancelPan?.();
+        timeline.ob_results?.beginGesture();
         const rect = svg.getBoundingClientRect();
-        state.drag = {pointer: event.pointerId, start: event.clientX, oldX: mesh.position.x,
-            scale: state.width / (rect.width || state.width), moved: false};
+        const scale = state.width / (rect.width || state.width);
+        const pixel = (event.clientX - rect.left) * scale - state.width / 2 - mesh.position.x;
+        state.drag = {pointer: event.pointerId, start: event.clientX, startY: event.clientY, oldX: mesh.position.x,
+            mesh, band: state.band, timeScale: state.band.timeScale, width: state.width,
+            selected: timeline.pixelOffSetToBandDate(state.index, state.band, pixel), scale, moved: false};
         svg.setPointerCapture?.(event.pointerId);
         svg.style.cursor = 'grabbing';
         event.preventDefault();
@@ -91,33 +113,23 @@ function createPanel(timeline) {
     svg.addEventListener('pointermove', event => {
         const drag = state.drag;
         if (!drag || drag.pointer !== event.pointerId) return;
-        const delta = (event.clientX - drag.start) * drag.scale;
-        if (Math.abs(event.clientX - drag.start) > 3) drag.moved = true;
-        if (drag.moved) move(drag.oldX + delta);
+        const dx = delta(drag, event);
+        if (drag.moved) move(drag.oldX + dx);
     });
     svg.addEventListener('pointerup', event => {
         const drag = state.drag;
         if (!drag || drag.pointer !== event.pointerId) return;
-        state.drag = undefined;
-        svg.style.cursor = 'grab';
-        if (svg.hasPointerCapture?.(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+        if (timeline.ob_results?.loading) { state.cancelDrag(event); return; }
+        const dx = delta(drag, event);
+        release(drag);
         if (!drag.moved) {
-            const mesh = timeline.ob_scene[state.index].getObjectByName(state.band.name);
-            const rect = svg.getBoundingClientRect();
-            const pixel = (event.clientX - rect.left) * state.width / (rect.width || state.width) - state.width / 2 - mesh.position.x;
-            const selected = timeline.pixelOffSetToBandDate(state.index, state.band, pixel);
             const anchor = timeline.dateToBandPixelOffSet(state.index, state.band, timeline.ob_scene.sync_time);
-            move(anchor - timeline.dateToBandPixelOffSet(state.index, state.band, selected));
-        }
+            move(anchor - timeline.dateToBandPixelOffSet(state.index, state.band, drag.selected));
+        } else move(drag.oldX + dx);
         commit();
     });
-    svg.addEventListener('pointercancel', () => {
-        const drag = state.drag;
-        state.drag = undefined;
-        svg.style.cursor = 'grab';
-        if (drag?.moved) move(drag.oldX);
-        timeline.ob_results?.endGesture();
-    });
+    svg.addEventListener('pointercancel', state.cancelDrag);
+    svg.addEventListener('lostpointercapture', state.cancelDrag);
     svg.addEventListener('keydown', event => {
         if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
@@ -227,7 +239,7 @@ export function syncOverviewPanel(timeline, index) {
     let panels=states.get(timeline);
     if (!panels) { panels=new Map(); states.set(timeline,panels); }
     const visible=new Set(overviews.map(b=>b.name));
-    for (const [name,state] of panels) if (!visible.has(name)) { state.panel.remove();panels.delete(name); }
+    for (const [name,state] of panels) if (!visible.has(name)) { state.cancelDrag(null,false);state.panel.remove();panels.delete(name); }
     const selected=timeline.ob_viewport?overviews:overviews.slice(-1);
     selected.forEach((band,position)=>syncPanel(timeline,index,band,panels,position,selected.length));
 }
@@ -240,6 +252,7 @@ function syncPanel(timeline, index, band, panels, position, count) {
         timeline.ob_views?.mode !== 'table' && scene.getObjectByName(band.name);
     let state = panels.get(band.name);
     if (!active) {
+        state?.cancelDrag(null,false);
         const mesh=scene?.getObjectByName(band.name);
         if(mesh)mesh.visible=true;
         if (state) {
@@ -264,6 +277,8 @@ function syncPanel(timeline, index, band, panels, position, count) {
     const height = timeline.ob_viewport ? timeline.ob_viewport.overviewHeight/count : (20 + (ratio > 0 && ratio < 0.5 ? Math.max(80, timeline.height * ratio) :
         Math.max(80, Math.min(120, band.height))));
     const mesh = scene.getObjectByName(band.name);
+    if (state.drag && (state.drag.mesh !== mesh || state.drag.band !== band ||
+        state.drag.timeScale !== band.timeScale || state.drag.width !== width)) state.cancelDrag(null,false);
     // The docked panel owns this overview. A tilted camera can otherwise
     // expose a second copy from the canvas below the main bands.
     mesh.visible=false;

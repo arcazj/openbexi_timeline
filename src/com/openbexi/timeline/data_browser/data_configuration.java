@@ -48,6 +48,7 @@ public class data_configuration {
         JSONParser parser = new JSONParser();
         try {
             this.configuration = (JSONObject) parser.parse(json_sources);
+            this.configuration.put("_hbds_root",(selected.toAbsolutePath().normalize().startsWith(root)?root:selected.toAbsolutePath().getParent()).resolve("HBDS").toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -63,7 +64,7 @@ public class data_configuration {
             JSONObject snapshot;
             synchronized(this) {refreshHbds();snapshot=(JSONObject)new JSONParser().parse(configuration.toJSONString());}
             String namespace=request.getParameter("namespace");
-            if(hbds!=null&&namespace!=null&&!namespace.isBlank())
+            if(hbds!=null&&namespace!=null&&!namespace.isBlank()&&!namespace.equals("0"))
                 ((JSONArray)snapshot.get("startup configuration")).removeIf(item->!namespace.equals(((JSONObject)item).get("namespace")));
             data_configuration copy = new data_configuration(snapshot);
             copy.setConfiguration(request);
@@ -88,6 +89,7 @@ public class data_configuration {
 
     public void setConfiguration(HttpServletRequest req) {
         getConfiguration().put("userName", req.getParameter("userName"));
+        getConfiguration().put("namespaces", req.getParameter("namespaces"));
         getConfiguration().put("request", req.getParameter("ob_request"));
         getConfiguration().put("scene", req.getParameter("scene"));
         getConfiguration().put("startDate", req.getParameter("startDate"));

@@ -1,7 +1,35 @@
 import * as THREE from 'three';
+import {createRowPacker} from './openbexi_timeline_adaptive.js';
+import {renderingFor} from './openbexi_timeline_rendering.js';
+import {recordKey} from './openbexi_timeline_paging.js';
 
 const isOverview = band => band.name.includes('overview_');
 const timePerPixel = band => band.gregorianUnitLengths / band.intervalPixels;
+
+function compactVisualSource(timeline, sceneIndex, source) {
+    const records=timeline.ob_results.projection.densityRecords.filter(record=>!record.zone && timeline.ob_results.belongs(record,source));
+    const positions=records.map(record=>({record,
+        start:timeline.dateToBandPixelOffSet(sceneIndex,source,record.start),
+        end:record.end===undefined?NaN:timeline.dateToBandPixelOffSet(sceneIndex,source,record.end)}));
+    if(positions.some(item=>!Number.isFinite(item.start) || item.record.end!==undefined && !Number.isFinite(item.end)))return source;
+    positions.sort((a,b)=>a.start-b.start || (Number.isFinite(a.end)?a.end:a.start)-(Number.isFinite(b.end)?b.end:b.start) || recordKey(a.record).localeCompare(recordKey(b.record)));
+    const packer=createRowPacker(positions.length),pointRadius=Math.max(1,source.defaultEventSize || 1);
+    const trackIncrement=Math.max(3,(source.sessionHeight || 3)+2,pointRadius*2+2);
+    for(const item of positions) {
+        const duration=Number.isFinite(item.end);
+        item.row=packer.add(duration?Math.min(item.start,item.end):item.start-pointRadius,
+            duration?Math.max(item.start,item.end):item.start+pointRadius);
+    }
+    const height=Math.max(1,packer.count)*trackIncrement;
+    const sessions=positions.map(({record,start,end,row})=>{
+        const activity={...record,pixelOffSetStart:start,pixelOffSetEnd:end,
+            size:pointRadius,height:source.sessionHeight || 3,y:height/2-(row+.5)*trackIncrement};
+        return {...record,y:activity.y,height:trackIncrement,activities:[activity]};
+    });
+    // Only this overview source copy has compact rows. The main band's artwork
+    // layout, time scale, reference frame, source identity and page stay intact.
+    return {...source,sessions,height,trackIncrement,occupiedRows:packer.count,overviewCompact:true};
+}
 
 function sourceExtent(source, fitRows) {
     const full = {top: source.height / 2, bottom: -source.height / 2};
@@ -23,11 +51,15 @@ function sourceExtent(source, fitRows) {
     return Number.isFinite(top) && top > bottom ? {top, bottom} : full;
 }
 
-// The normal bands own row packing. An overview is a projection of that completed
-// layout, so grouping, overlapping sessions and search results cannot drift apart.
+// Normally the overview projects completed main rows. Optional artwork clusters
+// use compact copies of every original interval rather than representative rows.
+// Both paths preserve grouping, source identities and the existing time mapping.
 export function projectOverviewSessions(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
-    const sources = (timeline.ob_viewport?.fullBands || scene.bands).filter(band => !isOverview(band));
+    let sources = (timeline.ob_viewport?.fullBands || scene.bands).filter(band => !isOverview(band));
+    const visuals=renderingFor(timeline).recordVisuals;
+    if(visuals?.enabled && visuals.clusterPixels>0 && timeline.ob_results?.supported && timeline.ob_results.projection?.densityRecords)
+        sources=sources.map(source=>compactVisualSource(timeline,sceneIndex,source));
     scene.overviewViewports = [];
     for (const overview of scene.bands.filter(isOverview)) {
         const projectedSources = overview.sourceBands ? sources.filter(source =>
@@ -53,7 +85,7 @@ export function projectOverviewSessions(timeline, sceneIndex) {
             overview.overviewRegions.push({sourceBand: source.name, color: source.color || '#dfe7e9',
                 backgroundImage: source.backgroundImage, y: center, height, scaleX});
             let sourceSessions = source.sessions || [];
-            if (timeline.ob_results?.supported) {
+            if (timeline.ob_results?.supported && !source.overviewCompact) {
                 const laidOut = new Map(sourceSessions.flatMap(session => session.activities.map(activity => [activity.matchKey, activity])));
                 const records = timeline.ob_results.projection.densityRecords.filter(record => timeline.ob_results.belongs(record, source));
                 sourceSessions = records.map((record, recordIndex) => {

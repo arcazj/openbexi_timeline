@@ -108,7 +108,7 @@ class Storage:
 
     def profile(self, params):
         identities = [params.get("userName") or "guest", params.get("timelineName") or "timeline"]
-        if any(not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value) for value in identities):
+        if any(not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", value) for value in identities):
             raise ValueError("Invalid filter profile identity.")
         metadata = (self.config.hbds_root or self.config.root / "HBDS").resolve()
         base = metadata / "filters"
@@ -157,7 +157,10 @@ class Storage:
     def resolve(self, params):
         if "filter" in params or not params.get("timelineName") or not params.get("userName"):
             return params
-        _, body, _ = self.profile(params)
+        _, existing, _ = self.profile(params)
+        if existing is None:
+            return params
+        body = self.filters({**params, "ob_request": "readFilters"})
         if body:
             selected = next((item for item in body["openbexi_timeline"][0]["filters"] if item.get("current") == "yes"), None)
             if selected:
@@ -182,28 +185,20 @@ class Storage:
             timeline = body["openbexi_timeline"][0]
             timeline.update(name=identities[1], user=identities[0],
                             sources=[source.public() for source in self.config.sources], multiples="45")
-            if operation == "readFilters":
+            from .filter_repository import FilterRepository, repository_lock
+            repository = FilterRepository(self.config)
+            with repository_lock(repository.root):
+                filters, access = repository.apply({**params, "filter": expression}, body, operation)
+                timeline["filters"] = filters
+                timeline["filterAccess"] = access
+                selected = next((item for item in filters if item.get("current") == "yes"), None)
+                timeline["sortBy"] = selected.get("sortBy", "NONE") if selected else "NONE"
+                if operation != "readFilters":
+                    atomic_json(path, body)
                 return body
-            name = params.get("filterName", "")
-            if not name.strip() or len(name) > 512:
-                raise ValueError("Enter a filter name of at most 512 characters.")
-            filters = timeline["filters"]
-            selected = next((item for item in filters if item.get("name") == name), None)
-            if selected is not None:
-                filters.remove(selected)
-            if operation == "deleteFilter":
-                selected = filters[0] if filters else None
-            else:
-                selected = {**(selected or {}), "name": name, "filter_value": expression, "sortBy": params.get("sortBy", "NONE"),
-                            "backgroundColor": params.get("backgroundColor", "#eef1f2")}
-                filters.insert(0, selected)
-            for item in filters:
-                item["current"] = "yes" if item is selected else "no"
-            timeline["sortBy"] = selected.get("sortBy", "NONE") if selected else "NONE"
-            atomic_json(path, body)
-            return body
 
     def descriptor(self, params):
+        from .matching import flat_descriptor
         identity = params.get("event_id", "")
         if not identity.strip() or identity in ("null", "undefined", ".", "..") or re.search(r"[\\/:\x00-\x1f\x7f]", identity):
             raise ValueError("Invalid descriptor identity or start date.")
@@ -216,7 +211,7 @@ class Storage:
             committed = descriptor(source.root, identity)
             if committed is False: continue
             if committed is not None and (not requested_namespace or namespace(committed, source.namespace) == requested_namespace):
-                return {'dateTimeFormat': 'iso8601', 'event_descriptor': [committed]}, 200
+                return {'dateTimeFormat': 'iso8601', 'event_descriptor': [flat_descriptor(committed)]}, 200
             path = partition(source, params["start"]) / "descriptors" / (identity + ".json")
             if path in seen or not path.exists():
                 continue
@@ -236,7 +231,7 @@ class Storage:
                 if not isinstance(item, dict):
                     raise OSError("Invalid descriptor data.")
                 if str(item.get("id", item.get("ID", identity))) == identity and (not requested_namespace or namespace(item, source.namespace) == requested_namespace):
-                    selected.append(item)
+                    selected.append(flat_descriptor(item))
             if selected:
                 return {**body, "event_descriptor": selected}, 200
         return {"event_descriptor": [], "descriptorStatus": "not_found"}, 404

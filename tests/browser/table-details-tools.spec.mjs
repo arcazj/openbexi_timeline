@@ -56,9 +56,7 @@ test('Sort, choose columns and download every filtered table page through user c
     const errors=await setup(page);
     await showMore(page);await page.getByRole('button',{name:'Filters',exact:true}).click();
     await page.locator('.ob_filter_build_section > summary').click();
-    await page.getByLabel('Filter field',{exact:true}).selectOption('status');
-    await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
-    await page.getByLabel('Filter value',{exact:true}).fill('warning');
+    await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: status = "warning"');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Custom');
     await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();await ready(page);

@@ -28,7 +28,7 @@ argument to validate a different workspace.
 Select a **Help - ...** configuration and click **Run** to read usage in the Run
 console. Help does not load a workspace, start a server, or generate data.
 
-The former `openbexi_timeline*`, dated MCC/SOC, `data2json`, `event_generator*`,
+The former `openbexi_timeline*`, dated deployment-specific collectors, `event_generator*`,
 old individual JUnit classes, and port-8442 browser entries are obsolete local
 configurations. Remove them in **Run > Edit Configurations**; `.run` contains
 their supported replacements. Private converters remain independent plugins.
@@ -65,6 +65,15 @@ On Linux/macOS, select the environment's `bin/python` interpreter instead of
 `Scripts/python.exe` in your local run configuration.
 
 ## Collector launch troubleshooting
+
+Every collector run prints a detailed startup trace at the default INFO level
+in the IntelliJ Run console. It includes configuration/plugin loading, source
+selection, output paths, UTC dates, locks/checkpoints, first-pass progress and
+schedule decisions. Each job has an ID and timed steps; slow steps report every
+10 seconds. Existing collector run configurations need no parameter changes.
+Use `--log-file .local-private/timeline-collector/collector.log` to retain a
+rotating local copy, and `--log-level DEBUG` for detailed subsequent polls.
+Restart a running collector to load updated code.
 
 The current module is `timeline_data_collector`. Use **Help - Collector** from
 `.run`, or update an older local configuration's module to

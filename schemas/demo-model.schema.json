@@ -555,6 +555,207 @@
             }
           }
         },
+        "recordVisuals": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Optional reusable record artwork. Images and 3D assets share the existing timeline layout, selection and camera.",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Reserve artwork space and render record visuals in the shared 2D and 3D core."
+            },
+            "presentation3D": {
+              "type": "string",
+              "default": "board",
+              "enum": [
+                "board",
+                "stage"
+              ],
+              "description": "Board artwork or upright exhibits on horizontal display lanes in perspective mode."
+            },
+            "stageLaneDepth": {
+              "type": "number",
+              "default": 100,
+              "minimum": 40,
+              "maximum": 400,
+              "description": "Depth of each horizontal display lane in stage mode, in timeline units."
+            },
+            "stageSurfaceOpacity": {
+              "type": "number",
+              "default": 0.22,
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Opacity of the raised display lanes in stage mode."
+            },
+            "stageRows": {
+              "type": "number",
+              "default": 3,
+              "minimum": 1,
+              "maximum": 8,
+              "description": "Preferred number of balanced display lanes in stage mode; crowded records continue onto native pages."
+            },
+            "stageScale": {
+              "type": "number",
+              "default": 1.5,
+              "minimum": 1,
+              "maximum": 3,
+              "description": "Stage artwork display scale relative to the Scientific view; source dimensions and dates stay unchanged."
+            },
+            "manifest": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin asset manifest URL, relative to the application root."
+            },
+            "keyField": {
+              "type": "string",
+              "default": "data.title",
+              "minLength": 1,
+              "maxLength": 160,
+              "description": "Exact record field used to look up an entry in the asset manifest."
+            },
+            "caseInsensitive": {
+              "type": "boolean",
+              "default": true,
+              "description": "Match manifest entry keys without case sensitivity."
+            },
+            "imageField": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional record field containing a same-origin image URL, relative to the application root. Null uses only the manifest and fallback."
+            },
+            "fallbackImage": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null,
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+              "description": "Optional same-origin fallback image URL, relative to the application root."
+            },
+            "rotation": {
+              "type": "array",
+              "default": [
+                0,
+                0,
+                0
+              ],
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "Default asset orientation as X, Y and Z Euler angles in radians; manifest entries may override it.",
+              "items": {
+                "type": "number",
+                "minimum": -6.283185307179586,
+                "maximum": 6.283185307179586
+              }
+            },
+            "width": {
+              "type": "number",
+              "default": 128,
+              "minimum": 24,
+              "maximum": 600,
+              "description": "Normalized artwork display width in timeline pixels; does not represent physical size."
+            },
+            "height": {
+              "type": "number",
+              "default": 92,
+              "minimum": 20,
+              "maximum": 480,
+              "description": "Normalized artwork display height above the occurrence bar."
+            },
+            "gap": {
+              "type": "number",
+              "default": 18,
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Spacing between artwork, occurrence bars and neighboring rows."
+            },
+            "depth": {
+              "type": "number",
+              "default": 32,
+              "minimum": 0,
+              "maximum": 300,
+              "description": "Maximum normalized artwork depth in the perspective view."
+            },
+            "maxModels": {
+              "type": "number",
+              "default": 16,
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Maximum simultaneously rendered detailed 3D models; other records keep image or marker fallbacks."
+            },
+            "minimumModelPixels": {
+              "type": "number",
+              "default": 60,
+              "minimum": 0,
+              "maximum": 600,
+              "description": "Minimum projected artwork width before loading a detailed 3D model."
+            },
+            "clusterPixels": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 400,
+              "description": "Optional projected interval-midpoint bucket width for visual clusters; zero disables clustering without changing the time scale."
+            },
+            "selectedScale": {
+              "type": "number",
+              "default": 1,
+              "minimum": 1,
+              "maximum": 3,
+              "description": "Display-only artwork scale multiplier for the selected record."
+            },
+            "selectedLift": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 400,
+              "description": "Display-only foreground lift for selected artwork, in timeline pixels."
+            },
+            "transitionMs": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1000,
+              "description": "Artwork selection transition duration; zero disables animation."
+            },
+            "bandOpacity": {
+              "type": "number",
+              "default": 1,
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Band surface opacity when record visuals are enabled; zero retains an invisible drag surface."
+            },
+            "label2D": {
+              "type": "string",
+              "default": "Scientific",
+              "minLength": 1,
+              "maxLength": 160,
+              "description": "Label for the shared orthographic presentation."
+            },
+            "label3D": {
+              "type": "string",
+              "default": "Museum",
+              "minLength": 1,
+              "maxLength": 160,
+              "description": "Label for the shared perspective presentation."
+            }
+          }
+        },
         "layout": {
           "type": "object",
           "additionalProperties": false,

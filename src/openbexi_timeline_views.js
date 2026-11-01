@@ -6,10 +6,20 @@ const tableFields={title:'Title',start:'Start',end:'End',source:'Source',status:
 const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
 const recordSource=record=>[record?.namespace,record?.data?.namespace,record?.data?.source,record?.source]
     .find(value=>value!==undefined && value!==null && (typeof value!=='string' || value.trim()!==''));
+const plainDescriptions=new WeakMap();
+const tableDescription=data=>{
+    const source=data?.description;
+    if(typeof source!=='string' || !/<a\b/i.test(source))return source;
+    const cached=plainDescriptions.get(data);if(cached?.source===source)return cached.text;
+    const template=document.createElement('template');template.innerHTML=source;
+    template.content.querySelectorAll('script,style,iframe,object,embed').forEach(node=>node.remove());
+    const text=template.content.textContent.trim().replace(/\s+/g,' ');
+    plainDescriptions.set(data,{source,text});return text;
+};
 const recordValues=({activity,session,source})=>({
     title:activity.data.title,start:activity.start,end:activity.end,
     source:source ?? recordSource(activity) ?? recordSource(session),
-    status:activity.data.status,description:activity.data.description,id:activity.id
+    status:activity.data.status,description:tableDescription(activity.data),id:activity.id
 });
 const csvCell=value=>{
     let text=String(value ?? '');
@@ -112,6 +122,7 @@ export class TimelineViews {
         const scene = timeline.ob_scene[this.sceneIndex];
         if (!frame || !scene) return;
 
+        timeline.ob_sync_overview_control?.();
         timeline.ob_timeline_panel.dataset.viewMode = this.mode;
         for (const [mode, button] of this.buttons) {
             button.setAttribute("aria-pressed", String(mode === this.mode));

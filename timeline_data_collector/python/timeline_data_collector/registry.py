@@ -17,19 +17,24 @@ class Registration:
 
 
 class Registry:
-    def __init__(self, roots=(), *, installed=True):
+    def __init__(self, roots=(), *, installed=True, trace=None):
         self.entries = {}
         if installed:
             for entry in metadata.entry_points(group='timeline_data_collector.plugins'):
+                if trace: trace.note('loading installed plugin registration', entry_point=entry.name)
                 provider = entry.load()
                 manifest = provider.manifest()
                 self.register(manifest, None, provider)
         for selected in roots:
             root = Path(selected).resolve()
+            if trace: trace.note('scanning plugin root', path=root, exists=root.exists())
             if not root.exists(): continue
             for path in sorted(root.glob('*/plugin.json')):
+                if trace: trace.note('reading plugin manifest', path=path)
                 manifest = json.loads(path.read_text(encoding='utf-8-sig'))
                 self.register(manifest, path.parent)
+                if trace: trace.note('registered plugin', plugin=manifest['id'], version=manifest['version'],
+                                     capabilities=manifest['capabilities'], modes=manifest['supported_modes'])
 
     def register(self, manifest, root=None, loader=None):
         required = ('id', 'version', 'api_version', 'entry_point', 'capabilities', 'supported_modes')

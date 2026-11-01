@@ -38,10 +38,10 @@ export function compileFilter(encoded='') {
             }
             if(!closed)throw error(offset,'Unclosed quoted value.');
             tokens.push({text:source.slice(offset,i),value,offset,literal:true});
-        } else if('(),'.includes(c))tokens.push({text:c,offset:i++});
+        } else if('(),|'.includes(c))tokens.push({text:c,offset:i++});
         else if('=!<>'.includes(c)) {i++;if(source[i]==='=')i++;tokens.push({text:source.slice(offset,i),offset});}
         else {
-            while(i<source.length && !/\s/.test(source[i]) && !'(),=!<>"\''.includes(source[i]))i++;
+            while(i<source.length && !/\s/.test(source[i]) && !'(),|=!<>"\''.includes(source[i]))i++;
             tokens.push({text:source.slice(offset,i),offset});
         }
         if(tokens.length>512)throw error(offset,'Too many terms (maximum 512 tokens).');
@@ -86,30 +86,35 @@ export function compileFilter(encoded='') {
         if(!['number','string'].includes(typeof left))return false;
         return op==='>'?left>right:op==='>='?left>=right:op==='<'?left<right:left<=right;
     };
+    const marked=(predicate,tree)=>Object.assign(predicate,{filterTree:tree});
     const unary=()=>{
         if(++depth>32)throw error(peek().offset,'Expressions may nest up to 32 levels.');
         try {
-            if(take('NOT')){const inner=unary();return record=>!inner(record);}
+            if(take('NOT')){const inner=unary();return marked(record=>!inner(record),{kind:'not',child:inner.filterTree});}
             if(take('(')){const inner=or();require(')');return inner;}
-            if(take('EXISTS')){require('(');const key=name();require(')');return record=>field(record,key)!==undefined;}
+            if(take('EXISTS')){require('(');const key=name();require(')');return marked(record=>field(record,key)!==undefined,{kind:'exists',field:key});}
             const key=name(),token=peek(),op=token.text.toUpperCase();index++;
             if(op==='IN') {
                 require('(');const values=[literal()];while(take(','))values.push(literal());require(')');
-                return record=>values.includes(field(record,key));
+                return marked(record=>values.includes(field(record,key)),{kind:'in',field:key,values});
             }
             if(!['=','==','!=','>','>=','<','<=','CONTAINS','STARTS_WITH','ENDS_WITH'].includes(op))throw error(token.offset,'Expected a comparison, CONTAINS, STARTS_WITH, ENDS_WITH, or IN.');
-            const value=literal();return record=>compare(field(record,key),op,value);
+            const value=literal();return marked(record=>compare(field(record,key),op,value),{kind:'compare',field:key,op,value});
         } finally {depth--;}
     };
-    const and=()=>{let result=unary();while(take('AND')){const left=result,right=unary();result=record=>left(record)&&right(record);}return result;};
-    const or=()=>{let result=and();while(take('OR')){const left=result,right=and();result=record=>left(record)||right(record);}return result;};
-    const result=or();if(peek().text)throw error(peek().offset,'Unexpected token.');return result;
+    const and=()=>{let result=unary();while(take('AND')){const left=result,right=unary();result=marked(record=>left(record)&&right(record),{kind:'and',left:left.filterTree,right:right.filterTree});}return result;};
+    const or=()=>{let result=and();while(take('OR')){const left=result,right=and();result=marked(record=>left(record)||right(record),{kind:'or',left:left.filterTree,right:right.filterTree});}return result;};
+    let result=or();
+    if(take('|')){const include=result,exclude=or();result=marked(record=>include(record)&&!exclude(record),{kind:'exclude',include:include.filterTree,exclude:exclude.filterTree});}
+    if(peek().text)throw error(peek().offset,'Unexpected token.');return result;
 }
 
 export const filterSyntax = `Legacy: include|exclude. Semicolon (;) means OR; plus (+) means AND. Exclusion wins. Terms are case-sensitive regular expressions over the whole event/session, including its activities.
 Examples: status:STARTED;status:SCHEDULE   or   namespace:operations|status:CANCELLED
 
 Advanced: start with expr: to keep legacy expressions unchanged.
+An optional top-level | separates typed inclusion and exclusion conditions. Exclusion wins.
+expr: namespace = "operations" AND system = "RNG" | status = "FINISHED"
 expr: namespace = "operations" AND (status IN ("STARTED", "SCHEDULE") OR priority >= 3)
 expr: NOT status = "CANCELLED" AND title CONTAINS "Ground station"
 expr: EXISTS(data.owner) AND data.owner STARTS_WITH "Team"

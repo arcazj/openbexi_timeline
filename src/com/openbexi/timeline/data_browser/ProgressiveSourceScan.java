@@ -121,7 +121,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         ACTIVE.values().removeIf(scan -> { if (now - scan.touched <= TTL) return false; scan.close(); return true; });
         String identity = Arrays.asList(configuration.get("startup configuration"), configuration.get("userName"),
                 configuration.get("timelineName"), configuration.get("filter"), configuration.get("sortBy"),
-                configuration.get("history"), searchMode, query, scene, from, to).toString();
+                configuration.get("history"), configuration.get("namespaces"), searchMode, query, scene, from, to).toString();
         String cursor = Objects.toString(configuration.get("cursor"), "");
         if (cursor.contains("[redacted]"))
             return MatchResults.failure(query, scene, from, to,

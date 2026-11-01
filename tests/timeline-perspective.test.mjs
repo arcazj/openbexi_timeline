@@ -129,3 +129,15 @@ test('Invalid stored camera values are ignored and blocked storage reports an in
         assert.equal(reloaded.t.ob_scene[0].ob_camera.isPerspectiveCamera,true);
     } finally {reloaded?.close();f.close();}
 });
+
+test('A stage presentation ignores a saved board camera but retains appearance preferences',async()=>{
+    const f=await load();
+    try {
+        await perspective(f.t);f.p.appearance.metalness=.3;f.p.save();
+        const {resolveRendering}=await f.h.importModule('src/openbexi_timeline_rendering.js');
+        f.t.rendering=resolveRendering({recordVisuals:{enabled:true,presentation3D:'stage'}});
+        const saved=f.p.readSaved();
+        assert.equal(saved.camera,null,'A frontal board camera cannot override the horizontal stage');
+        assert.equal(saved.appearance.metalness,.3);
+    } finally {f.close();}
+});

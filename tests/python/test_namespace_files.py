@@ -2,6 +2,7 @@ from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import threading
 import unittest
@@ -55,16 +56,25 @@ class NamespaceFileTests(unittest.TestCase):
                 self.assertNotIn(name,response.json()['hbds'])
 
     def test_default_geoscience_demo_is_self_contained_and_live_workspace_is_separate(self):
+        # Exercise the released workspace independently of local user registries,
+        # model files and deployment edits in a developer's working directory.
+        public_root = self.root / 'public-demo'
+        files = json.loads((REPO / 'release/public-files.json').read_text(encoding='utf-8'))
+        for name in files:
+            if name.startswith(('HBDS/', 'examples/geoscience/')):
+                destination = public_root / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(REPO / name, destination)
         configs = []
         for filename in ('workspace.json', 'GEO_Workspace.json'):
-            workspace = REPO / 'HBDS' / filename
-            configs.append(load_configuration(workspace_files(workspace), root=REPO,
+            workspace = public_root / 'HBDS' / filename
+            configs.append(load_configuration(workspace_files(workspace), root=public_root,
                 state=self.root / filename, service_path=workspace_service(workspace), workspace_path=workspace))
         demo, live = configs
         self.assertEqual({source.namespace for source in demo.sources}, {'earthquake', 'volcano'})
         self.assertEqual({source.namespace for source in live.sources}, {'earthquake', 'volcano'})
-        self.assertTrue(all(source.root.is_relative_to(REPO / 'examples/geoscience') for source in demo.sources))
-        self.assertTrue(all(not source.root.is_relative_to(REPO) for source in live.sources))
+        self.assertTrue(all(source.root.is_relative_to(public_root / 'examples/geoscience') for source in demo.sources))
+        self.assertTrue(all(not source.root.is_relative_to(public_root) for source in live.sources))
         demo_model = NamespaceWorkspace(demo).read()[0]['models'][0]['configuration']
         live_model = NamespaceWorkspace(live).read()[0]['models'][0]['configuration']
         self.assertEqual(demo_model['params'][0]['date'], '2024-09-03T00:00:00Z')

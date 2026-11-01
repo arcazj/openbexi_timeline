@@ -144,7 +144,7 @@ class TimelineRequestLogTest {
             assertEquals(1,lines.size());assertEquals(Level.INFO,lines.get(0).getLevel());
             assertTrue(lines.get(0).getMessage().contains("outcome=empty"));
             Map<String,Object> meta=new HashMap<>(Map.of("complete",false,"nextCursor","continuation","warnings",List.of("Unreadable records"),
-                    "warningDetails",List.of(Map.of("code","record_too_large","namespace","ESOC","sourceIndex",1,"path","events.json",
+                    "warningDetails",List.of(Map.of("code","record_too_large","namespace","DEMO_ALPHA","sourceIndex",1,"path","events.json",
                             "reason","Oversized record\nextra","action","Split the record, then Refresh."))));
             attrs.clear();lines.clear();
             TimelineRequestLog.begin(request,response).sent(Map.of("events",List.of(),"timelineMatch",meta),"json_file",false);
@@ -155,7 +155,7 @@ class TimelineRequestLogTest {
             finalPage.sent(Map.of("events",List.of(),"timelineMatch",meta),"json_file",false);finalPage.finish();
             assertEquals(2,lines.size());
             assertTrue(lines.get(0).getMessage().contains("outcome=partial warnings=1"));
-            String detail=lines.get(1).getMessage();assertTrue(detail.contains("code=record_too_large source=ESOC sourceIndex=1 file=events.json"));
+            String detail=lines.get(1).getMessage();assertTrue(detail.contains("code=record_too_large source=DEMO_ALPHA sourceIndex=1 file=events.json"));
             assertTrue(detail.contains("action=Split the record, then Refresh."));
             for(LogRecord line:lines){assertEquals(Level.WARNING,line.getLevel());assertFalse(line.getMessage().contains("\n"));}
         } finally {

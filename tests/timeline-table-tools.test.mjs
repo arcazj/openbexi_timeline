@@ -18,6 +18,27 @@ const record=(id,start,extra={})=>({id,start,data:{title:id,status:'Ready'},...e
 const rows=h=>[...h.views.tablePanel.querySelectorAll('tbody tr')];
 const sort=(h,field)=>h.views.tablePanel.querySelector('[data-sort="'+field+'"]');
 
+test('Linked descriptions remain readable in table cells and CSV without changing descriptor markup',async()=>{
+    const events=[record('Linked','2026-01-01',{data:{title:'Linked',description:'Read <a href="https://example.org/report?a=1&amp;b=2">the report</a> &amp; notes.'}})];
+    const original=JSON.stringify(events),h=await setup(events);
+    try {
+        h.views.tablePanel.querySelector('[data-column="description"]').click();
+        assert.ok(rows(h)[0].textContent.includes('Read the report & notes.'));
+        assert.doesNotMatch(rows(h)[0].textContent,/<a\b|href=/);
+        let exported;
+        h.window.URL.createObjectURL=blob=>{exported=blob;return 'blob:table-export';};
+        h.window.URL.revokeObjectURL=()=>{};
+        h.window.HTMLAnchorElement.prototype.click=function(){};
+        const feedback=h.window.document.createElement('p');
+        h.views.exportTableCSV([{field:'description',label:'Description'}],feedback);
+        const text=await new Promise(resolve=>{const reader=new h.window.FileReader();reader.onload=()=>resolve(reader.result);reader.readAsText(exported);});
+        assert.match(text,/Read the report & notes\./);assert.doesNotMatch(text,/<a\b|href=/);
+        assert.equal(JSON.stringify(events),original);
+        events[0].data.description='Updated <a href="https://example.org/new">reference</a>.';
+        h.views.renderTable();assert.ok(rows(h)[0].textContent.includes('Updated reference.'));
+    }finally{h.close();}
+});
+
 test('Table sorts the complete paginated data chronologically, retains focus/selection and leaves source records intact',async()=>{
     const events=Array.from({length:21},(_,index)=>record('Record '+index,new Date(Date.UTC(2026,0,21-index)).toISOString()));
     const original=JSON.stringify(events),h=await setup(events);

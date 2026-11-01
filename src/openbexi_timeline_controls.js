@@ -82,8 +82,10 @@ export class TimelineControls {
         if(this.moreSearch)this.moreSearch.hidden=r.toolbar.hidden;
         const rowWidth=r.primaryToolbar.clientWidth;
         if(!rowWidth) {header.dataset.activityRow='secondary';return;}
-        // Opening a side panel should not change the toolbar's interaction model.
-        const compact=(this.timeline.layoutHost?.clientWidth || window.innerWidth || rowWidth)<=600;
+        // Optional artwork controls need more space. Use the available row so
+        // opening a descriptor cannot clip its camera or presentation actions.
+        const compact=(this.timeline.layoutHost?.clientWidth || window.innerWidth || rowWidth)<=600 ||
+            Boolean(this.timeline.recordVisuals && rowWidth<1200);
         this.setCompact(compact);
         if(compact) {header.dataset.activityRow='secondary';return;}
         // Reserve a readable date label independently of the current row so

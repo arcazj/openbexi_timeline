@@ -84,44 +84,26 @@ public class event_descriptor {
      * write descriptor according event id requested by the client
      */
     public void write(String description) {
-        String jsonObjectMergedHead = "{\n" +
-                "  \"dateTimeFormat\": \"iso8601\",\n" +
-                "  \"event_descriptor\": [{\n";
-        String jsonObjectMerged = "";
-
+        Path temporary = null;
         try {
-            if (!_file.getParentFile().exists())
-                _file.mkdirs();
-            if (_file.exists())
-                _file.delete();
-            Writer writer = new FileWriter(_file);
-            jsonObjectMerged += "\"id\":\"" + _event_id + "\",";
-            jsonObjectMerged += "\"start\":\"" + _start + "\",";
-            jsonObjectMerged += "\"end\":\"" + _end + "\",";
-            if (!_original_start.equals(""))
-                jsonObjectMerged += "\"original_start\":\"" + _original_start + "\",";
-            if (!_original_end.equals(""))
-                jsonObjectMerged += "\"original_end\":\"" + _original_end + "\",";
-            jsonObjectMerged += "\"data\":{";
-            jsonObjectMerged += "\"namespace\":\"" + _namespace + "\",";
-            jsonObjectMerged += "\"title\":\"" + _title + "\",";
-            if (!_platform.equals(""))
-                jsonObjectMerged += "\"platform\":\"" + _platform + "\",";
-            if (!_type.equals(""))
-                jsonObjectMerged += "\"type\":\"" + _type + "\",";
-            if (!_priority.equals(""))
-                jsonObjectMerged += "\"priority\":\"" + _priority + "\",";
-            if (!_status.equals(""))
-                jsonObjectMerged += "\"status\":\"" + _status + "\",";
-            if (!_tolerance.equals(""))
-                jsonObjectMerged += "\"tolerance\":\"" + _tolerance + "\",";
-            jsonObjectMerged += "\"description\":\"" + description + "\"";
-            jsonObjectMerged += "}";
-            jsonObjectMerged += "}]}";
-            writer.write(jsonObjectMergedHead + jsonObjectMerged);
-            writer.close();
-        } catch (Exception e) {
-            System.err.print(e.getMessage());
+            JSONObject record = new JSONObject();
+            record.put("id",_event_id);record.put("start",_start);record.put("end",_end);
+            String[][] metadata = {{"original_start",_original_start},{"original_end",_original_end},
+                    {"namespace",_namespace},{"title",_title},{"platform",_platform},{"type",_type},
+                    {"priority",_priority},{"status",_status},{"tolerance",_tolerance}};
+            for (String[] item : metadata) if (item[1] != null && !item[1].isBlank()) record.put(item[0],item[1]);
+            record.put("description",description);
+            JSONArray entries = new JSONArray();entries.add(record);
+            JSONObject document = new JSONObject(Map.of("dateTimeFormat","iso8601","event_descriptor",entries));
+            Path destination = _file.toPath();Files.createDirectories(destination.getParent());
+            temporary = Files.createTempFile(destination.getParent(),".descriptor-",".tmp");
+            Files.writeString(temporary,document.toJSONString(),java.nio.charset.StandardCharsets.UTF_8);
+            try {Files.move(temporary,destination,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
+            catch (AtomicMoveNotSupportedException ignored) {Files.move(temporary,destination,StandardCopyOption.REPLACE_EXISTING);}
+        } catch (IOException error) {
+            throw new IllegalStateException("Cannot write descriptor data.",error);
+        } finally {
+            if (temporary != null) try {Files.deleteIfExists(temporary);} catch (IOException ignored) {}
         }
     }
 
@@ -141,7 +123,7 @@ public class event_descriptor {
             if (publication != null && publication.get("retired_ids") instanceof JSONArray retired && retired.contains(_event_id)) continue;
             JSONObject committed = publication == null ? null : CollectorPublication.find((JSONArray)publication.get("events"), _event_id);
             if (committed != null && (_namespace == null || _namespace.isBlank() || MatchResults.namespace(committed, Objects.toString(source.get("namespace"), "")).equals(_namespace))) {
-                JSONArray entries = new JSONArray(); entries.add(committed);
+                JSONArray entries = new JSONArray(); entries.add(flat(committed));
                 return new JSONObject(Map.of("dateTimeFormat", "iso8601", "event_descriptor", entries));
             }
             Path file = descriptorPath(source);
@@ -161,7 +143,7 @@ public class event_descriptor {
                     String identity = Objects.toString(entry.get("id"), Objects.toString(entry.get("ID"), _event_id));
                     String namespace = MatchResults.namespace(entry, Objects.toString(source.get("namespace"), ""));
                     if (identity.equals(_event_id) && (_namespace == null || _namespace.isBlank() || namespace.equals(_namespace)))
-                        selected.add(entry);
+                        selected.add(flat(entry));
                 }
                 if (!selected.isEmpty()) {
                     JSONObject result = new JSONObject(body);
@@ -171,6 +153,19 @@ public class event_descriptor {
             } catch (ParseException | ClassCastException error) { throw new IOException("Cannot parse descriptor data.", error); }
         }
         return new JSONObject(Map.of("event_descriptor", new JSONArray(), "descriptorStatus", "not_found"));
+    }
+
+    static JSONObject flat(JSONObject record) {
+        JSONObject result = new JSONObject(record);
+        result.remove("data");
+        if (record.get("data") instanceof JSONObject metadata)
+            for (Object key : metadata.keySet()) if (!result.containsKey(key)) result.put(key,metadata.get(key));
+        if (record.get("activities") instanceof JSONArray activities) {
+            JSONArray children = new JSONArray();
+            for (Object child : activities) children.add(flat((JSONObject)child));
+            result.put("activities",children);
+        }
+        return result;
     }
 
     /**

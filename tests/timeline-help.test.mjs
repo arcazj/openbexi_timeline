@@ -234,7 +234,7 @@ test('Reset reference view restores numeric model time, all records, overview, v
         button(panel, 'Reset reference view').click();
         assert.equal(timeline.params[0].date, baseline);
         assert.equal(timeline.ob_scene.sync_time, Date.parse(baseline));
-        assert.equal(timeline.formatEventDate(timeline.ob_markerDate), '140 Ma');
+        assert.equal(timeline.formatEventDate(timeline.ob_markerDate), timeline.modelDocument.params[0].date+' Ma');
         assert.equal(timeline.ob_views.mode, 'timeline');
         assert.equal(timeline.ob_visible_view, true);
         assert.equal(timeline.ob_search_input.value, '');
@@ -261,7 +261,7 @@ test('Diagnostics refresh counts and copied output excludes private state', asyn
         let report = JSON.parse(input.value);
         assert.equal(report.counts.records, 224);
         assert.equal(report.counts.matchingRecords, 224);
-        assert.equal(report.reference.label, '140 Ma');
+        assert.equal(report.reference.label, timeline.modelDocument.params[0].date+' Ma');
         applyTimelineShareState(timeline, new URLSearchParams({search: 'PRIVATE_SEARCH', view: 'table'}));
         button(panel, 'Refresh').click();
         report = JSON.parse(input.value);

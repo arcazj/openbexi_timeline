@@ -116,6 +116,44 @@ test('Docked overview navigation follows actual time mappings and commits click,
     } finally { harness.close(); }
 });
 
+test('Overview first clicks tolerate small pointer movement without becoming a pan',async()=>{
+    const h=await load();
+    try {
+        const {timeline:t,window}=h,s=t.ob_scene[0],band=s.bands.find(b=>b.name.includes('overview_'));
+        const svg=t.ob_timeline_panel.querySelector('.ob_docked_overview svg');
+        svg.getBoundingClientRect=()=>({left:0,width:1200});
+        const mesh=s.getObjectByName(band.name);
+        const expected=t.pixelOffSetToBandDate(0,band,300-mesh.position.x).getTime();
+        const pointer=(type,x,y=50)=>{
+            const event=new window.MouseEvent(type,{button:0,clientX:x,clientY:y,bubbles:true});
+            Object.defineProperty(event,'pointerId',{value:1});svg.dispatchEvent(event);
+        };
+        pointer('pointerdown',900);pointer('pointermove',904);pointer('pointerup',904);
+        assert.equal(t.ob_scene.sync_time,expected,'A four-pixel movement keeps the original click target');
+        assert.equal(t.ob_results.gesture,false);
+    } finally {h.close();}
+});
+
+test('Unexpected Overview capture loss restores a drag and the next click works',async()=>{
+    const h=await load();
+    try {
+        const {timeline:t,window}=h,svg=t.ob_timeline_panel.querySelector('.ob_docked_overview svg');
+        svg.getBoundingClientRect=()=>({left:0,width:1200});
+        const before=t.ob_markerDate.getTime();
+        const pointer=(type,x,id=1)=>{
+            const event=new window.MouseEvent(type,{button:0,clientX:x,bubbles:true});
+            Object.defineProperty(event,'pointerId',{value:id});svg.dispatchEvent(event);
+        };
+        pointer('pointerdown',600);pointer('pointermove',650);
+        assert.notEqual(t.ob_markerDate.getTime(),before);
+        pointer('lostpointercapture',650);
+        assert.equal(t.ob_results.gesture,false,'Capture loss must not leave subsequent updates queued forever');
+        assert.equal(t.ob_markerDate.getTime(),before,'Cancelling restores the starting view');
+        pointer('pointerdown',850);pointer('pointerup',850);
+        assert.notEqual(t.ob_scene.sync_time,before,'The next first click navigates');
+    } finally {h.close();}
+});
+
 test('Panning retains overview events, zones and windows while updating actual axis coordinates', async () => {
     for (const demo of ['default-dataset', 'dinausaurs', 'jfk']) {
         const harness = await load(demo);

@@ -1,10 +1,10 @@
-import {renderingFor} from './openbexi_timeline_rendering.js';
+import {renderingFor,usesRecordStage} from './openbexi_timeline_rendering.js';
 // Shared, model-driven import and layout helpers for file-backed timelines.
 import {prepareBandScale, bandTimeToPixel} from './openbexi_timeline_scale.js';
 import {createStaticSearchMatcher} from './openbexi_timeline_matches.js';
-import {activityFootprint, createRowPacker, projectMap} from './openbexi_timeline_adaptive.js';
+import {activityFootprint, recordVisualFootprint, createRowPacker, createBalancedRowPacker, projectMap} from './openbexi_timeline_adaptive.js';
 import {recordKey, rowHeader, dateAxisHeight, configureDateAxes} from './openbexi_timeline_paging.js';
-import {clusterEvents} from './openbexi_timeline_exploration.js';
+import {clusterEvents, clusterVisualRecords} from './openbexi_timeline_exploration.js';
 import {activityLabelMetrics} from './openbexi_timeline_activity_focus.js';
 
 import {TIME_UNITS, parseTimelineDate, field} from './openbexi_timeline_data_parser.js';
@@ -126,8 +126,16 @@ export function layoutStaticSessions(timeline, sceneIndex) {
         const countActivities = record => 1 + (record.activities || []).reduce((sum, child) => sum + countActivities(child), 0);
         const packer = createRowPacker(scene.sessions.events.reduce((sum, record) => sum + countActivities(record), 0));
         const perspective=scene.ob_camera_type==='Perspective';
+        const visualConfiguration=renderingFor(timeline).recordVisuals;
+        const stage=usesRecordStage(timeline,sceneIndex);
+        const visualItems=visualConfiguration?.enabled?[]:null;
         band.activityBaseTrackIncrement ??= band.trackIncrement;
         band.trackIncrement=band.activityBaseTrackIncrement;
+        if(visualItems) {
+            band.visualBaseTopPadding ??= band.topPadding;
+            band.trackIncrement=Math.max(band.trackIncrement,(stage?visualConfiguration.stageLaneDepth:visualConfiguration.height)+visualConfiguration.gap*2+
+                band.fontSizeInt*renderingFor(timeline).activity.lineHeight+band.sessionHeight);
+        }
         const aboveLabels = band.labelPosition === 'above';
         const anchoredLabels = aboveLabels || band.labelPosition === 'inside';
         let orderedEvents = [...scene.sessions.events].sort((a, b) => {
@@ -139,7 +147,17 @@ export function layoutStaticSessions(timeline, sceneIndex) {
             if (Number.isFinite(aEnd) !== Number.isFinite(bEnd)) return Number.isFinite(aEnd) ? -1 : 1;
             return (Number.isFinite(aEnd) ? aEnd - bEnd : 0) || String(a.id).localeCompare(String(b.id));
         });
-        if(timeline.ob_results?.state?.auto && !timeline.ob_measureLayout) {
+        if(visualConfiguration?.enabled && visualConfiguration.clusterPixels>0 && !timeline.ob_measureLayout) {
+            const results=timeline.ob_results;
+            const protectedKeys=new Set([...(results?.explorer?.expanded || []),results?.selectedKey]);
+            orderedEvents=clusterVisualRecords(orderedEvents.filter(event=>event.zone ||
+                ((!band.filter || field(event,band.filter.field)===band.filter.equals) &&
+                (band.eventKind!=='duration' || event.end) && (band.eventKind!=='event' || !event.end) &&
+                (!band.groupBy || event.activities?.length || (band.groupValues.get(recordKey(event)) || 'Other')===band.groupValue))),
+                band.timeScale || {toPixel:value=>bandTimeToPixel(timeline,sceneIndex,band,value)},protectedKeys,visualConfiguration.clusterPixels,
+                event=>Boolean(timeline.recordVisuals?.assets.entry(event)?.modelURL));
+            for(const event of orderedEvents) if(event.cluster && band.groupBy) band.groupValues.set(recordKey(event),band.groupValue);
+        } else if(timeline.ob_results?.state?.auto && !timeline.ob_measureLayout) {
             const r=timeline.ob_results,protectedKeys=new Set([...r.explorer.expanded,r.selectedKey]);
             orderedEvents=clusterEvents(orderedEvents.filter(event=>(!band.filter || field(event,band.filter.field)===band.filter.equals) &&
                 (!band.groupBy || event.activities || (band.groupValues.get(recordKey(event)) || 'Other')===band.groupValue)),band.timeScale,protectedKeys);
@@ -177,12 +195,21 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                     (activity.data.lateststart || activity.data.earliestend) && activity.render.opacity === undefined)
                     activity.render.opacity = Math.max(0, Math.min(1, Number(band.uncertaintyOpacity)));
                 let footprint=occupiedWidth;
-                if(perspective) {
+                if(perspective || visualItems) {
                     activity.focusLabel=activityLabelMetrics(activity,band,scene.width,timeline.getTextWidth.bind(timeline));
-                    band.trackIncrement=Math.max(band.trackIncrement,activity.focusLabel.height+8);
-                    footprint=width+activity.focusLabel.width+12;
+                    if(perspective) {
+                        band.trackIncrement=Math.max(band.trackIncrement,activity.focusLabel.height+8);
+                        footprint=width+activity.focusLabel.width+12;
+                    }
                 }
-                const row = packer.add(x,x+footprint);
+                let visual;
+                if(visualItems) {
+                    visual=recordVisualFootprint(box,visualConfiguration,scene.width,activity.focusLabel.width);
+                    band.trackIncrement=Math.max(band.trackIncrement,
+                        (stage?visualConfiguration.stageLaneDepth:visualConfiguration.height)+visualConfiguration.gap*2+band.sessionHeight+activity.focusLabel.height);
+                    visualItems.push({activity,...visual});
+                }
+                const row = visualItems?0:packer.add(x,x+footprint);
                 if (timeline.ob_measureLayout) continue;
                 Object.assign(activity, {
                     x, original_x: x, x_relative: x + width / 2, width, total_width: occupiedWidth,
@@ -192,6 +219,16 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                     textY: durationLabelAbove ? band.fontSizeInt / 2 + band.sessionHeight / 2 + 3 : 0,
                     z: 5, row
                 });
+                if(visual) Object.assign(activity,{
+                    visualX:visual.center,visualY:visualConfiguration.gap+visualConfiguration.height/2,
+                    visualOffsetY:visualConfiguration.gap,visualWidth:visualConfiguration.width,
+                    visualHeight:visualConfiguration.height,visualDepth:visualConfiguration.depth,
+                    visualLeft:visual.left,visualRight:visual.right,
+                    textX:visual.center-(x+width/2),
+                    textY:-(band.sessionHeight/2+band.fontSizeInt/2+Math.max(3,visualConfiguration.gap/3)+
+                        Math.max(0,activity.focusLabel.height-activity.focusLabel.lineHeight)/2),
+                    total_width:visual.right-visual.left
+                });
                 activities.push(activity);
             }
             if (activities.length) {
@@ -199,10 +236,14 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 band.sessions.push(session);
             }
         }
-        band.occupiedRows = packer.count;
+        const visualPacker=stage && visualItems?.length?createBalancedRowPacker(visualItems.length,visualConfiguration.stageRows):packer;
+        if(visualItems) for(const item of visualItems.sort((a,b)=>a.left-b.left || a.right-b.right ||
+            String(a.activity.id).localeCompare(String(b.activity.id)))) item.activity.row=visualPacker.add(item.left,item.right);
+        band.occupiedRows = visualPacker.count;
         band.zoneHeaderHeight = band.zones.some(zone => zone.data?.title && zone.render?.labelPosition !== 'bottom') ? 20 : 0;
-        band.topPadding = rowHeader(band);
-        band.height = Math.max(band.height, packer.count * band.trackIncrement +
+        band.topPadding = visualItems?rowHeader({...band,topPadding:band.visualBaseTopPadding})+
+            (stage?visualConfiguration.stageLaneDepth/2:visualConfiguration.height)+visualConfiguration.gap:rowHeader(band);
+        band.height = Math.max(band.height, visualPacker.count * band.trackIncrement +
             (band.topPadding ?? band.fontSizeInt * 2) + band.fontSizeInt + dateAxisHeight(band));
     }
     if (timeline.ob_measureLayout) return;

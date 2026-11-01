@@ -19,11 +19,17 @@ async function json(resource) {
     return response.json();
 }
 async function settled(page) {
-    await page.waitForFunction(async()=>{
+    await expect.poll(()=>page.evaluate(async()=>{
         const timeline=await(await import(new URL('src/openbexi_demo.js',location.href).href)).demoReady;
         return timeline.ob_results.snapshot && !timeline.ob_results.pending &&
             timeline.ob_viewport.headerHeight===timeline.ob_timeline_header.offsetHeight;
-    });
+    }),{timeout:30000}).toBeTruthy();
+}
+async function activate(page,control,action='click') {
+    const more=page.getByRole('button',{name:'More',exact:true});
+    if(!await control.isVisible() && await more.isVisible() && await more.getAttribute('aria-expanded')==='false')await more.click();
+    await control[action]();
+    if(await more.isVisible() && await more.getAttribute('aria-expanded')==='true')await page.keyboard.press('Escape');
 }
 async function state(page) {
     return page.evaluate(async()=>{
@@ -58,8 +64,8 @@ try {
             await expect(page.locator('#demo-status')).toHaveAttribute('data-state','ready',{timeout:30000});await settled(page);
             const initial=await state(page);assert.equal(initial.records,demo.recordCount);assert.ok(initial.draws>0);
             for(const name of ['Table','Split','Timeline']) {
-                const button=page.getByRole('button',{name,exact:true});await button.click();
-                await expect(button).toHaveAttribute('aria-pressed','true');await settled(page);
+                const button=page.getByRole('button',{name,exact:true});await activate(page,button);
+                await expect(page.getByRole('button',{name,exact:true,includeHidden:true})).toHaveAttribute('aria-pressed','true');await settled(page);
                 if(name!=='Timeline') await expect(page.getByRole('region',{name:'Timeline event table',exact:true})).toBeVisible();
             }
             assert.ok(initial.query,`${demo.id}: searchable title`);
@@ -69,21 +75,21 @@ try {
                 const button=page.getByRole('button',{name,exact:true});await expect(button).toBeVisible();
                 if(await button.isEnabled()) {await button.click();await settled(page);}
             }
-            await page.getByLabel('Auto scale',{exact:true}).check();await settled(page);
-            await page.getByRole('button',{name:'Clear search',exact:true}).first().click();await settled(page);
-            await page.getByLabel('Auto scale',{exact:true}).uncheck();await settled(page);
+            await activate(page,page.getByLabel('Auto scale',{exact:true}),'check');await settled(page);
+            await activate(page,page.getByRole('button',{name:'Clear search',exact:true}).first());await settled(page);
+            await activate(page,page.getByLabel('Auto scale',{exact:true}),'uncheck');await settled(page);
             const overview=page.locator('.ob_docked_overview svg').last();
             if(await overview.isVisible()) {
                 await overview.hover();await page.mouse.wheel(0,-100);await page.mouse.wheel(0,100);await settled(page);
             }
-            await page.getByAltText('2D or 3D view',{exact:true}).click();await settled(page);
+            await activate(page,page.getByAltText('2D or 3D view',{exact:true}));await settled(page);
             assert.equal((await state(page)).camera,'PerspectiveCamera');
             if(option('--screenshots')) {
                 await fs.mkdir(option('--screenshots'),{recursive:true});
                 await page.screenshot({path:path.join(option('--screenshots'),`${demo.id}-${viewport.width}-3d.png`)});
             }
-            await page.getByAltText('2D or 3D view',{exact:true}).click();await settled(page);
-            await page.getByRole('button',{name:'Help',exact:true}).click();
+            await activate(page,page.getByAltText('2D or 3D view',{exact:true}));await settled(page);
+            await activate(page,page.getByRole('button',{name:'Help',exact:true}));
             await expect(page.getByRole('heading',{name:'Help and sharing'})).toBeVisible();
             await expect(page.getByRole('combobox',{name:'Local dataset'})).toHaveValue(demo.id);
             await page.goto(new URL('openbexi_timeline_model.html?model='+encodeURIComponent(demo.model),baseURL).href);

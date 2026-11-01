@@ -1,4 +1,6 @@
 import {compileFilter,decodeFilter,filterSyntax} from './openbexi_timeline_filter_expression.js';
+import {discoverFilterChoices} from './openbexi_timeline_filter_choices.js';
+import {createFilterBuilder,filterLabelText} from './openbexi_timeline_filter_builder.js';
 
 const element = (tag, text, attributes = {}) => {
     const node = document.createElement(tag);
@@ -9,38 +11,32 @@ const element = (tag, text, attributes = {}) => {
 const button = (label, action) => { const node=element('button',label,{type:'button'}); node.onclick=action; return node; };
 const pendingSavedFilters=new WeakMap();
 const dataOptions=new WeakMap();
+const catalogOptions=new WeakMap();
+const noAttributes=new Map();
 
-/** Discover choices from loaded records, including activities inside sessions. */
+/** Discover typed attribute values independently of the currently applied filter. */
 export function filterDataOptions(t, sceneIndex=0) {
-    const records=t.staticData?.events || t.ob_results?.remoteData?.events || t.ob_scene?.[sceneIndex]?.sessions?.events || [];
+    const records=t.filterChoiceRecords?.events || t.staticData?.events || t.ob_results?.remoteData?.events || t.ob_scene?.[sceneIndex]?.sessions?.events || [];
     let cached=dataOptions.get(records);
-    if(!cached || cached.count!==records.length) {
-        const fields=new Set(),namespaces=new Set();
-        const visit=(data,prefix='',depth=0)=>{
-            if(!data || typeof data!=='object' || depth>16)return;
-            for(const [key,value] of Object.entries(data)) {
-                if(!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(key) || ['sourceRecordKey','sortByValue','analyze'].includes(key))continue;
-                const path=prefix+key;
-                if(value && typeof value==='object' && !Array.isArray(value))visit(value,path+'.',depth+1);
-                else if(['string','number','boolean'].includes(typeof value))fields.add(path);
-            }
-        };
-        const collect=record=>{
-            if(!record || record.zone)return;
-            visit(record.data);
-            const namespace=record.namespace || record.data?.namespace;
-            if(typeof namespace==='string' && namespace.trim()){namespaces.add(namespace);fields.add('namespace');}
-            for(const child of record.activities || [])collect(child);
-        };
-        records.forEach(collect);
-        cached={count:records.length,fields:[...fields].sort(),namespaces:[...namespaces]};
-        dataOptions.set(records,cached);
+    if(!cached || cached.count!==records.length){cached={...discoverFilterChoices(records),count:records.length};dataOptions.set(records,cached);}
+    if(t.filterChoiceCatalog&&!t.staticData){
+        const catalog=t.filterChoiceCatalog;let choices=catalogOptions.get(catalog);
+        if(!choices){
+            const attributes=new Map(),fields=new Set(),excluded=new Map();
+            for(const item of catalog.namespaces){const values=new Map();attributes.set(item.namespace,values);
+                excluded.set(item.namespace,new Set((item.excluded||[]).map(attribute=>attribute.field)));
+                for(const attribute of item.attributes){fields.add(attribute.field);values.set(attribute.field,new Map(attribute.values.map(value=>[JSON.stringify(value),value])));}}
+            choices={attributes,fields:[...fields].sort(),namespaces:[...attributes.keys()].sort(),excluded};catalogOptions.set(catalog,choices);
+        }
+        cached={...choices,fields:[...new Set([...cached.fields,...choices.fields])].sort()};
     }
+    if(!t.staticData&&!t.filterChoiceCatalog)cached={...cached,attributes:noAttributes};
     const namespaces=new Set(cached.namespaces);
     for(const source of t.ob_scene?.[sceneIndex]?.sources || [])
         if(source.enable!==false && typeof source.namespace==='string' && source.namespace.trim())namespaces.add(source.namespace);
+    for(const item of t.namespaceNavigation?.getState?.().items || [])if(item.namespace)namespaces.add(item.namespace);
     if(t.hbdsNamespace)namespaces.add(t.hbdsNamespace);
-    return {fields:cached.fields,namespaces:[...namespaces].sort()};
+    return {...cached,namespaces:[...namespaces].sort()};
 }
 
 function growExpression(text) {
@@ -74,30 +70,33 @@ function syntaxHelp(t, name, expression, id) {
     return {trigger,help};
 }
 
-function renderNamespaces(t, container) {
-    const state=t.namespaceNavigation?.getState?.();
-    const items=state?.items?.length ? state.items : [{id:'current',title:t.namespace || 'Current timeline'}];
-    const active=state?.activeId ?? items[0].id;
-    const previous=document.activeElement?.dataset?.namespaceId;
-    container.replaceChildren();
-    items.forEach(item=>{
-        const tab=button(item.title || item.namespaceId || item.id,()=>{
-            if(item.id!==(t.namespaceNavigation?.getState?.().activeId ?? active))t.namespaceNavigation?.select(item.id);
-        });
-        tab.dataset.namespaceId=item.id;
-        tab.setAttribute('role','tab');
-        tab.setAttribute('aria-selected',String(item.id===active));
-        tab.tabIndex=item.id===active ? 0 : -1;
-        tab.onkeydown=event=>{
-            if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-            event.preventDefault();
-            const tabs=[...container.children],index=tabs.indexOf(tab);
-            const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
-            tabs.forEach((entry,i)=>{entry.tabIndex=i===next?0:-1;});tabs[next].focus();
+function renderNamespaces(t,container) {
+    const state=t.namespaceNavigation?.getState?.(),provider=Boolean(t.namespaceNavigation);
+    const available=state?.items?.filter(item=>item.id!=='__all__');
+    const items=available?.length?available:filterDataOptions(t).namespaces.map(namespace=>({id:namespace,namespace,title:namespace||'Current timeline'}));
+    if(!items.length)items.push({id:'',namespace:'',title:'Current timeline'});
+    const selected=Array.isArray(state?.selectedIds)?new Set(state.selectedIds):
+        state?.activeId && state.activeId!=='__all__'?new Set([state.activeId]):null;
+    const focused=document.activeElement?.dataset?.namespaceId;container.replaceChildren();
+    for(const item of items) {
+        const title=filterLabelText(item.title||item.namespaceId||item.id);
+        const input=element('input',undefined,{type:'checkbox','aria-label':'Show namespace '+title});
+        input.dataset.namespaceId=item.id;
+        input.checked=selected?selected.has(item.id):t.visibleNamespaces?t.visibleNamespaces.has(item.namespace??item.id):true;
+        input.onchange=()=>{
+            const ids=[...container.querySelectorAll('input:checked')].map(control=>control.dataset.namespaceId);
+            if(t.namespaceNavigation?.setSelected)t.namespaceNavigation.setSelected(ids);
+            else if(provider)t.namespaceNavigation.select(item.id);
+            else {
+                t.visibleNamespaces=new Set(items.filter(entry=>ids.includes(entry.id)).map(entry=>entry.namespace??entry.id));
+                if(!t.staticData&&t.ob_loader?.input){t.ob_loader.load(t.ob_loader.input,{refresh:true});return;}
+                const results=t.ob_results;results?.captureRanges();
+                if(results){results.regroupRange=results.ranges.values().next().value;results.request();}
+            }
         };
-        container.append(tab);
-    });
-    if(previous)[...container.children].find(tab=>tab.dataset.namespaceId===previous)?.focus();
+        const label=element('label',undefined,{class:'ob_filter_value'});label.append(input,element('span',title));container.append(label);
+    }
+    if(focused)[...container.querySelectorAll('input')].find(input=>input.dataset.namespaceId===focused)?.focus();
 }
 
 function observeFilterPanel(t, panel, namespaces) {
@@ -135,109 +134,15 @@ export function buildFilterClause(field, operator, value, type='text') {
     return `${field} ${operator} ${JSON.stringify(literal)}`;
 }
 
-function filterBuilder(t, sceneIndex) {
-    const group=element('fieldset',undefined,{class:'ob_new_filter ob_filter_builder'});
-    group.dataset.filterScene=String(sceneIndex);
-    const label=(caption,control)=>{const node=element('label',caption+' ');node.append(control);return node;};
-    const name=element('input',undefined,{id:'textarea_'+t.name+'_new','aria-label':'New filter name',autocomplete:'off'});
-    const clone=element('select',undefined,{'aria-label':'Clone existing filter','data-filter-clone':''});
-    const header=element('div',undefined,{class:'ob_filter_draft_header'});
-    const nameRow=element('div',undefined,{class:'ob_filter_name_row'});
-    nameRow.append(element('label','Filter name',{for:name.id}),name);
-    header.append(nameRow,label('Clone existing filter',clone));
-    const namespace=element('select',undefined,{'aria-label':'Namespace','data-filter-namespace':''});
-    const sortBy=element('select',undefined,{'aria-label':'Group by (sort_by)','data-filter-builder-sort':''});
-    const namespaceRow=label('Namespace',namespace),sortRow=label('Group by (sort_by)',sortBy);
-    namespaceRow.className=sortRow.className='ob_filter_builder_row';
-    sortBy.append(element('option','NONE',{value:'NONE'}));
-    const conditions=element('div',undefined,{class:'ob_filter_conditions'});
-    const field=element('select',undefined,{'aria-label':'Filter field'});
-    const operator=element('select',undefined,{'aria-label':'Filter operator'});
-    for(const [value,caption] of [['=','equals'],['!=','does not equal'],['CONTAINS','contains'],['STARTS_WITH','starts with'],
-        ['ENDS_WITH','ends with'],['>','greater than'],['>=','at least'],['<','less than'],['<=','at most'],['EXISTS','exists'],['MISSING','is missing']])
-        operator.append(element('option',caption,{value}));
-    const value=element('input',undefined,{'aria-label':'Filter value',placeholder:'Value'});
-    const type=element('select',undefined,{'aria-label':'Filter value type'});
-    for(const name of ['text','number','boolean'])type.append(element('option',name,{value:name}));
-    conditions.append(label('Field',field),label('Operator',operator),label('Value',value),label('Type',type));
-    const text=element('textarea',undefined,{id:'textarea2_'+t.name+'_new',class:'ob_filter_expression','aria-label':'New filter expression',rows:'1',wrap:'soft',spellcheck:'false',placeholder:'All records'});
-    const error=element('p','',{'data-filter-error':'',role:'alert',class:'ob_filter_error',id:t.name+'_new_filter_error'});error.hidden=true;
-    text.setAttribute('aria-describedby',error.id);
-    const {trigger,help}=syntaxHelp(t,'new filter',()=>text.value,t.name+'_filter_syntax_new');
-    nameRow.append(trigger);
-    let base='',generated='',invalid=false;
-    const showError=problem=>{invalid=Boolean(problem);error.textContent=problem?.message || '';error.hidden=!problem;};
-    const compose=()=>{
-        try {
-            const clauses=[];
-            if(namespace.value)clauses.push(buildFilterClause('namespace','=',namespace.value));
-            if(base){
-                if(!base.startsWith('expr:')){
-                    if(namespace.value || field.value)throw new Error('Edit this legacy expression directly in Advanced expression; clear it to use the condition controls.');
-                    return base;
-                }
-                clauses.push('('+base.slice(5).trim()+')');
-            }
-            if(field.value)clauses.push('('+buildFilterClause(field.value,operator.value,value.value,type.value)+')');
-            return clauses.length?'expr: '+clauses.join(' AND '):'';
-        } catch(problem){showError(problem);return null;}
-    };
-    const update=()=>{
-        value.disabled=type.disabled=['EXISTS','MISSING'].includes(operator.value);
-        const expression=compose();if(expression===null)return;
-        text.value=generated=expression;showError(null);growExpression(text);
-    };
-    namespace.onchange=field.onchange=operator.onchange=type.onchange=update;value.oninput=update;
-    text.oninput=()=>{
-        base=text.value;generated=text.value;namespace.value='';field.value='';value.value='';
-        showError(null);value.disabled=type.disabled=false;operator.value='=';
-    };
-    clone.onchange=()=>{
-        const saved=(t.ob_filters || []).find(filter=>filter.name===clone.value);if(!saved)return;
-        base=decodeFilter(saved.filter_value);text.value=generated=base;
-        name.value='';namespace.value='';field.value='';value.value='';operator.value='=';type.value='text';
-        // Recover this builder's namespace prefix; retain other syntax verbatim.
-        for(const option of namespace.options){
-            if(!option.value)continue;
-            const prefix='expr: '+buildFilterClause('namespace','=',option.value);
-            if(base===prefix){namespace.value=option.value;base='';break;}
-            if(base.startsWith(prefix+' AND (')){
-                const rest=base.slice(prefix.length+5);
-                let depth=0,quote='',escaped=false,whole=true;
-                for(let i=0;i<rest.length;i++){
-                    const c=rest[i];
-                    if(quote){if(escaped)escaped=false;else if(c==='\\')escaped=true;else if(c===quote)quote='';}
-                    else if(c==='"' || c==="'")quote=c;
-                    else if(c==='(')depth++;
-                    else if(c===')' && --depth===0 && i!==rest.length-1){whole=false;break;}
-                }
-                if(whole && depth===0 && !quote){namespace.value=option.value;base='expr: '+rest.slice(1,-1);break;}
-            }
-        }
-        sortBy.dataset.filterDraft='true';
-        if(![...sortBy.options].some(option=>option.value===(saved.sortBy || 'NONE')))sortBy.append(element('option',saved.sortBy,{value:saved.sortBy}));
-        sortBy.value=saved.sortBy || 'NONE';showError(null);growExpression(text);name.focus();
-    };
-    sortBy.onchange=()=>{sortBy.dataset.filterDraft='true';};
-    const save=button('Save filter',()=>{
-        if(text.value!==generated){base=text.value;generated=text.value;invalid=false;}
-        if(invalid)return;
-        t.ob_load_filters('addFilter',sceneIndex,undefined,true);
-    });save.className='ob_filter_primary';save.dataset.serverFilterSave='';
-    const cancel=button('Cancel',()=>{
-        t.ob_create_filters(sceneIndex,undefined,'select_filter');
-        t.ob_timeline_right_panel.querySelector('.ob_filter_build_section > summary')?.focus();
-    });
-    const actions=element('div',undefined,{class:'ob_filter_draft_actions'});actions.append(save,cancel);
-    group.append(header,namespaceRow,sortRow,conditions,advancedEditor(text),help,error,actions);
-    return group;
+function filterBuilder(t,sceneIndex) {
+    return createFilterBuilder(t,sceneIndex,{getOptions:()=>filterDataOptions(t,sceneIndex),growExpression,syntaxHelp});
 }
 
 /** Keep open controls current as records arrive; choices never fetch data. */
 export function refreshFilterOptions(t, sceneIndex=0) {
     const panel=t.ob_timeline_right_panel?.querySelector('.ob_filter_panel');
     if(!panel)return;
-    const {fields,namespaces}=filterDataOptions(t,sceneIndex);
+    const {fields}=filterDataOptions(t,sceneIndex);
     const replace=(select,values,selected,placeholder)=>{
         if(!select)return;
         const choices=placeholder?['',...values]:values;
@@ -247,10 +152,7 @@ export function refreshFilterOptions(t, sceneIndex=0) {
         }
         select.value=choices.includes(selected)?selected:'';
     };
-    const template=panel.querySelector('[data-filter-namespace]');
-    if(template){replace(template,namespaces,template.value,'Select a namespace');template.disabled=!namespaces.length;}
-    const field=panel.querySelector('[aria-label="Filter field"]');
-    replace(field,fields,field?.value,'Optional condition');
+    panel.querySelector('.ob_new_filter')?.refreshFilterChoices?.();
     const clone=panel.querySelector('[data-filter-clone]');
     replace(clone,(t.ob_filters || []).map(filter=>filter.name),clone?.value,'Select a saved filter');
     const sorting=panel.querySelector('#ob_sort_by');
@@ -361,7 +263,7 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     headingActions.append(button('Close',()=>t.ob_remove_setting()));heading.append(headingActions);panel.append(heading);
     const namespaceSection=element('section',undefined,{class:'ob_filter_namespaces','aria-label':'Namespaces'});
     namespaceSection.append(element('h3','Namespaces'));
-    const namespaces=element('div',undefined,{class:'ob_filter_namespace_tabs',role:'tablist','aria-label':'Namespaces'});
+    const namespaces=element('div',undefined,{class:'ob_filter_namespace_tabs',role:'group','aria-label':'Visible namespaces'});
     namespaceSection.append(namespaces);panel.append(namespaceSection);renderNamespaces(t,namespaces);
     const build=element('details',undefined,{class:'ob_filter_build_section'});
     build.open=request==='add_filter';
@@ -414,8 +316,8 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
             });
             cancel.dataset.filterAvailable='';actions.append(save,cancel);
             text.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();cancel.click();}};
-        } else actions.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
-        const remove=button('Delete',()=>t.ob_delete_filters(sceneIndex,index));remove.className='ob_filter_remove';actions.append(remove);
+        } else if(filter.canEdit!==false)actions.append(button('Edit',()=>t.ob_edit_filters(sceneIndex,index)));
+        if(filter.canEdit!==false){const remove=button('Delete',()=>t.ob_delete_filters(sceneIndex,index));remove.className='ob_filter_remove';actions.append(remove);}
         const {trigger,help}=syntaxHelp(t,filter.name,()=>text.value,`${t.name}_filter_syntax_${index}`);
         row.append(actions,text,trigger,help);fieldset.append(row);
     });
@@ -440,6 +342,8 @@ export function createFilterPanel(t, sceneIndex, filterIndex, request) {
     t.ob_timeline_right_panel.append(panel); t.ob_timeline_right_panel.style.visibility='visible';
     refreshFilterOptions(t,sceneIndex);
     observeFilterPanel(t,panel,namespaces);
+    build.addEventListener('toggle',()=>{if(build.open)build.querySelector('.ob_new_filter')?.loadFilterChoices?.();});
+    if(build.open)build.querySelector('.ob_new_filter')?.loadFilterChoices?.();
     syncFilterSelection(t);
     updateFilterAvailability(t);
     t.show_filters=false;
@@ -470,11 +374,13 @@ export function updateFilterAvailability(t) {
     const fieldset=t.ob_timeline_right_panel?.querySelector('[data-server-filters]');
     if (!fieldset) return;
     const unavailable=!t.ob_scene?.[0]?.connected;
+    const build=t.ob_timeline_right_panel.querySelector('.ob_filter_build_section');
+    if(build)build.hidden=t.ob_filter_access?.canCreate===false;
     fieldset.querySelector('[data-filter-connection]').hidden=!unavailable;
     for (const control of t.ob_timeline_right_panel.querySelectorAll('[data-server-filter-controls] input,[data-server-filter-controls] textarea:not([readonly]),[data-server-filter-controls] button:not([data-filter-available])')) {
         control.disabled=unavailable;
         control.title=unavailable ? 'Reconnect to use saved server filters.' : '';
     }
     const save=t.ob_timeline_right_panel.querySelector('[data-server-filter-save]');
-    if(save){save.disabled=unavailable;save.title=unavailable?'Reconnect to save server filters.':'';}
+    if(save){const readOnly=t.ob_filter_access?.canCreate===false;save.disabled=unavailable||readOnly;save.title=readOnly?'Guest may view and apply filters only.':unavailable?'Reconnect to save server filters.':'';}
 }

@@ -13,7 +13,7 @@ Earlier `../v2/` and `../progressive/` images record earlier checkpoints.
 | Dataset | Desktop, 1440 x 900 | Narrow, 800 x 700 |
 | --- | --- | --- |
 | Operations sample | [View](default-dataset-desktop.png) | [View](default-dataset-narrow.png) |
-| Dinosaur lifespans (Ma) | [View](dinausaurs-desktop.png) | [View](dinausaurs-narrow.png) |
+| Dinosaur occurrence intervals (Ma) | [View](dinausaurs-desktop.png) | [View](dinausaurs-narrow.png) |
 | Satellite ephemeris | [View](ephemeris-desktop.png) | [View](ephemeris-narrow.png) |
 | JFK chronology | [View](jfk-desktop.png) | [View](jfk-narrow.png) |
 | Claude Monet | [View](monet-desktop.png) | [View](monet-narrow.png) |

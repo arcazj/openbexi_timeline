@@ -1,6 +1,6 @@
 # OpenBEXI Timeline
 
-Version **2.9.2** · [Release notes](docs/release-2.9.2.md).
+Version **2.9.3** · [Release notes](docs/release-2.9.3.md).
 
 Explore events, sessions and activity histories in Timeline, Table, Split and 3D
 views. Search, filter and group records, navigate through time, and inspect their
@@ -76,6 +76,7 @@ Explore the [gallery](https://arcazj.github.io/openbexi_timeline/) in your brows
 
 - [User guide](docs/help-guide.md): controls, search, filters, status and Settings.
 - [Models and datasets](docs/demos.md) and [the live model editor](docs/model-editor.md).
+- [Record visuals](docs/record-visuals.md): shared 2D/3D artwork, layout and the dinosaur museum example.
 - [Embed a timeline](docs/embedding.md) in another application, with a satellite example.
 - [Deployment](docs/security.md) and [development and testing](docs/development.md).
 - [Documentation index](docs/README.md): all guides and reference material.

@@ -114,6 +114,25 @@ export function activityFootprint(record, band, scale, width, measure) {
     return {x, end, width: duration, textWidth, anchored, labelLeft, occupiedWidth};
 }
 
+/** Artwork may move within the visible part of a record, but its occurrence
+ * coordinates are never shortened, shifted or inferred from the illustration. */
+export function recordVisualFootprint(box, configuration, viewportWidth, labelWidth = box.textWidth) {
+    const from = box.x, to = Number.isFinite(box.end) ? box.end : from;
+    const lower = -viewportWidth / 2, upper = viewportWidth / 2;
+    const visible = to >= lower && from <= upper;
+    const halfWidth = configuration.width / 2;
+    let center = visible ? (Math.max(from, lower) + Math.min(to, upper)) / 2 : (from + to) / 2;
+    // Near a viewport edge, use a short connection to the exact source interval.
+    // A plot narrower than one visual still has a finite, centered position.
+    if (visible) {
+        const inset = Math.min(viewportWidth / 2, halfWidth + configuration.gap);
+        center = Math.max(lower + inset, Math.min(upper - inset, center));
+    }
+    const labelHalf = labelWidth / 2;
+    return {center, left: Math.min(from, center - Math.max(halfWidth, labelHalf)) - configuration.gap / 2,
+        right: Math.max(to, center + Math.max(halfWidth, labelHalf)) + configuration.gap / 2};
+}
+
 // First available row in O(log n); retains the existing lowest-row preference.
 export function createRowPacker(capacity) {
     let size = 1;
@@ -128,5 +147,16 @@ export function createRowPacker(capacity) {
         while (index > 1) { index = Math.floor(index / 2); minimum[index] = Math.min(minimum[index * 2], minimum[index * 2 + 1]); }
         count = Math.max(count, row + 1);
         return row;
+    }};
+}
+
+/** Distribute exhibits across lanes while retaining non-overlapping interval packing. */
+export function createBalancedRowPacker(capacity,lanes) {
+    lanes=Math.max(1,Math.min(capacity,Math.round(lanes)));
+    const packers=Array.from({length:lanes},()=>createRowPacker(capacity));
+    let next=0,count=0;
+    return {get count(){return count;},add(left,right){
+        const lane=next++%lanes,row=packers[lane].add(left,right)*lanes+lane;
+        count=Math.max(count,row+1);return row;
     }};
 }

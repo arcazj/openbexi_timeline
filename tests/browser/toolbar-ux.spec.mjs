@@ -72,9 +72,7 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     await expect(page.locator('.ob_view_options, .ob_saved_views')).toHaveCount(0);
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await page.locator('.ob_filter_build_section > summary').click();
-    await page.getByLabel('Filter field',{exact:true}).selectOption('status');
-    await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
-    await page.getByLabel('Filter value',{exact:true}).fill('warning');
+    await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: status = "warning"');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Custom');
     await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toEqual(['ground']);
@@ -93,9 +91,7 @@ test('Primary controls, filter builder and removable labels work at desktop and 
     expect((await state(page)).ids).toHaveLength(3);
     await page.getByAltText('Sorting and filtering',{exact:true}).click();
     await page.locator('.ob_filter_build_section > summary').click();
-    await page.getByLabel('Filter field',{exact:true}).selectOption('namespace');
-    await page.getByLabel('Filter operator',{exact:true}).selectOption('!=');
-    await page.getByLabel('Filter value',{exact:true}).fill('Operations');
+    await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: namespace != "Operations"');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Excluded_operations');
     await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     expect((await state(page)).ids).toEqual(['radio','literal']);
@@ -351,9 +347,7 @@ test('Refresh works for local records while preserving the filter',async({page})
     await find(page,'Ground station');
     await page.getByRole('button',{name:'Filters',exact:true}).click();
     await page.locator('.ob_filter_build_section > summary').click();
-    await page.getByLabel('Filter field',{exact:true}).selectOption('status');
-    await page.getByLabel('Filter operator',{exact:true}).selectOption('=');
-    await page.getByLabel('Filter value',{exact:true}).fill('warning');
+    await page.getByRole('textbox',{name:'New filter expression',exact:true}).fill('expr: status = "warning"');
     await page.getByRole('textbox',{name:'New filter name',exact:true}).fill('Custom');
     await page.getByRole('button',{name:'Save filter',exact:true}).click();await ready(page);
     await page.locator('.ob_panel_heading').getByRole('button',{name:'Close',exact:true}).click();await ready(page);

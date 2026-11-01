@@ -15,6 +15,20 @@ async function showControls(page,touch) {
     if(await more(page).isVisible() && await more(page).getAttribute('aria-expanded')==='false')await click(more(page),touch);
 }
 
+test('Overview icon hides and shows its panel on every mouse click or touch tap',async({page,isMobile})=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto('/demos.html?demo=default-dataset');await ready(page);
+    const visibleIcon=page.locator('.ob_results_utilities img.ob_view:visible,.ob_results_utilities img.ob_no_view:visible');
+    for(let attempt=0;attempt<4;attempt++) {
+        await showControls(page,isMobile);
+        await expect(visibleIcon).toHaveCount(1);
+        await click(visibleIcon,isMobile);
+        await expect(page.locator('.ob_docked_overview:visible')).toHaveCount(attempt%2===0?0:1);
+        await ready(page);
+    }
+    expect(errors).toEqual([]);
+});
+
 test('Search, view changes and event details work with touch and keyboard',async({page,isMobile})=>{
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto('/demos.html?demo=default-dataset');await ready(page);

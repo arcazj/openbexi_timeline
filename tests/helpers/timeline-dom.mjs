@@ -16,6 +16,8 @@ export async function createTimelineHarness(options = {}) {
     const context = dom.getInternalVMContext();
     const {window} = dom;
     window.structuredClone = structuredClone;
+    window.TextDecoder = TextDecoder;
+    window.TextEncoder = TextEncoder;
     if (options.calendar) vm.runInContext(await fs.readFile(path.join(root,
         'node_modules/simple-jscalendar/source/jsCalendar.min.js'), 'utf8'), context);
     const requests = [];
@@ -53,7 +55,11 @@ export async function createTimelineHarness(options = {}) {
             });
         }
     }
-    class TextureLoader { load() { return new THREE.Texture(); } }
+    class TextureLoader {
+        setCrossOrigin() { return this; }
+        setPath() { return this; }
+        load() { return new THREE.Texture(); }
+    }
     const three = new vm.SyntheticModule(Object.keys(THREE), function () {
         for (const key of Object.keys(THREE)) this.setExport(key,
             key === 'WebGLRenderer' ? WebGLRenderer : key === 'TextureLoader' ? TextureLoader : THREE[key]);

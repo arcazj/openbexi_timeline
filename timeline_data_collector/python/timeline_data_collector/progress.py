@@ -5,16 +5,16 @@ import time
 
 
 @contextmanager
-def activity(logger, label, phase, *, interval_seconds=10):
+def activity(logger, label, phase, *, interval_seconds=10, level=10, announce=True):
     started = time.monotonic()
-    logger.debug('%s: %s', label, phase)
-    if not logger.isEnabledFor(10):
+    if announce: logger.log(level, '%s: %s', label, phase)
+    if not logger.isEnabledFor(level):
         yield
         return
     stopped = threading.Event()
     def report():
         while not stopped.wait(interval_seconds):
-            logger.debug('%s: %s; still working (%ds elapsed)', label, phase, time.monotonic() - started)
+            logger.log(level, '%s: %s; still working (%ds elapsed)', label, phase, time.monotonic() - started)
     worker = threading.Thread(target=report, name='collector-progress', daemon=True)
     worker.start()
     try:

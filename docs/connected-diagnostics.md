@@ -168,7 +168,7 @@ Illustrative synthetic output:
 ```text
 INFO: timeline-response [sample-request] HTTP 200 operation=records purpose=visible batch=0 sessions=2 events=18 time=24ms outcome=loading loadId=sample-load
 WARNING: timeline-response [final-request] HTTP 200 operation=records purpose=visible batch=1 sessions=0 events=0 time=5ms outcome=partial warnings=1 loadId=sample-load
-WARNING: timeline-warning [final-request] code=record_too_large source=ESOC sourceIndex=1 file=2026/10/13/events.json reason=A record exceeds the limit of 2 Mi decoded characters. action=Split the record, then Refresh.
+WARNING: timeline-warning [final-request] code=record_too_large source=DEMO_ALPHA sourceIndex=1 file=2026/10/13/events.json reason=A record exceeds the limit of 2 Mi decoded characters. action=Split the record, then Refresh.
 ```
 
 The detailed marker comes from the client's `markerDate`; clients that omit it report

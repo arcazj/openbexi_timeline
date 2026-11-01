@@ -25,14 +25,15 @@ class FilterExpressionTest {
         assertFalse(FilterExpression.compile("expr: priority > -0").test(zero));
     }
 
-    @Test void quotedPresetsRoundTripWithSortingAndInvalidSavesKeepPreviousSettings() throws Exception {
+    @Test void quotedPresetsRoundTripWithSortingAndInvalidSavesKeepPreviousSettings(@TempDir Path root) throws Exception {
         String user="filter_test_"+UUID.randomUUID().toString().replace("-","");
-        Path file=Path.of("HBDS/filters",user+"_sample_filter_setting.json");
+        Path file=root.resolve("HBDS/filters").resolve(user+"_sample_filter_setting.json");
         JSONObject query=new JSONObject(Map.of("userName",user,"timelineName","sample","request","saveFilter",
                 "filterName","Advanced","filter","expr: title CONTAINS \"A+B | ready\"","sortBy","namespace","startup configuration",new JSONArray()));
+        query.put("_hbds_root",root.resolve("HBDS").toString());
         try {
             SavedFilters.update(new data_configuration(query));String before=Files.readString(file);
-            JSONObject next=new JSONObject(Map.of("userName",user,"timelineName","sample"));SavedFilters.resolve(next);
+            JSONObject next=new JSONObject(Map.of("userName",user,"timelineName","sample","_hbds_root",root.resolve("HBDS").toString()));SavedFilters.resolve(next);
             assertEquals(query.get("filter"),next.get("filter"));assertEquals("namespace",next.get("sortBy"));
             query.put("filter","expr: priority >");
             assertThrows(FilterExpression.Invalid.class,()->SavedFilters.update(new data_configuration(query)));
@@ -41,7 +42,7 @@ class FilterExpressionTest {
         } finally {Files.deleteIfExists(file);}
     }
     @Test void workspaceProfilesPreserveTheirLegacyFiltersWithoutSharingNewSelections(@TempDir Path root) throws Exception {
-        Path metadata=root.resolve("HBDS"),legacy=metadata.resolve("filters/guest_report_filter_setting.json");
+        Path metadata=root.resolve("HBDS"),legacy=metadata.resolve("filters/arcazj_report_filter_setting.json");
         Files.createDirectories(legacy.getParent());
         JSONObject original=new JSONObject(Map.of("namespace","0","openbexi_timeline",List.of(new JSONObject(Map.of(
                 "name","old_name","user","old_user","sources",List.of(Map.of("namespace","operations")),
@@ -49,7 +50,7 @@ class FilterExpressionTest {
         String before=original.toJSONString();Files.writeString(legacy,before);
         Files.writeString(legacy.getParent().resolve("default_filter_setting.json"),before);
         JSONObject first=new JSONObject(Map.of("_hbds_root",metadata.toString(),"_hbds_workspace",metadata.resolve("First_Workspace.json").toString(),
-                "userName","guest","timelineName","report","request","readFilters"));
+                "userName","arcazj","timelineName","report","request","readFilters"));
         JSONArray sources=new JSONArray();sources.add(new JSONObject(Map.of("namespace","operations")));first.put("startup configuration",sources);
         JSONObject second=new JSONObject(first);second.put("_hbds_workspace",metadata.resolve("Second_Workspace.json").toString());
         JSONArray otherSources=new JSONArray();otherSources.add(new JSONObject(Map.of("namespace","volcano")));second.put("startup configuration",otherSources);
@@ -62,11 +63,11 @@ class FilterExpressionTest {
         assertEquals("namespace",grouped.get("sortBy"));assertEquals("no",grouped.get("current"));
         second.put("request","saveFilter");second.put("filterName","Volcano notices");second.put("filter","expr: type = volcano");second.put("sortBy","namespace");
         SavedFilters.update(new data_configuration(second));
-        assertTrue(Files.isRegularFile(metadata.resolve("filters/workspaces/Second_Workspace/guest_report_filter_setting.json")));
+        assertTrue(Files.isRegularFile(metadata.resolve("filters/workspaces/Second_Workspace/arcazj_report_filter_setting.json")));
         assertEquals(before,Files.readString(legacy));
         SavedFilters.resolve(first);assertEquals("system:CMD",first.get("filter"));
         JSONObject restored=(JSONObject)((JSONArray)SavedFilters.update(new data_configuration(first)).get("openbexi_timeline")).get(0);
-        assertEquals("report",restored.get("name"));assertEquals("guest",restored.get("user"));
+        assertEquals("report",restored.get("name"));assertEquals("arcazj",restored.get("user"));
         first.put("request","saveFilter");first.put("filterName","Commands");SavedFilters.update(new data_configuration(first));
         second.remove("filter");SavedFilters.resolve(second);assertEquals("expr: type = volcano",second.get("filter"));
         assertEquals(before,Files.readString(legacy));

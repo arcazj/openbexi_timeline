@@ -43,14 +43,47 @@
     <a href="#deployment">Deployment</a>
   </nav>
 <h1 id="openbexi-timeline-help">OpenBEXI Timeline help</h1>
-<p>These notes describe the version 2.8.1 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the <a href="../README.md">README</a> for the demo catalog and the <a href="demos.md">demo configuration guide</a> for all model options.</p>
+<p>These notes describe the version 2.9.3 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the <a href="../README.md">README</a> for the demo catalog and the <a href="demos.md">demo configuration guide</a> for all model options.</p>
 <h2 id="user-manual">User manual</h2>
 <p>On screens up to 600 pixels wide, search, previous/next activity and status stay visible in two rows. <strong>More</strong> opens view choices, settings, filters and other controls. Escape closes the menu and returns focus to More. Selecting a view or opening a side panel also closes it.</p>
 <p>In <strong>Table</strong> or <strong>Split</strong>, each sortable heading shows <strong>↕</strong> before sorting begins. Select the heading or its arrow to sort, then select it again to reverse the order. <strong>↑</strong> and <strong>↓</strong> identify the active direction. <strong>Columns</strong> chooses the fields to display. <strong>Export CSV</strong> includes displayed columns and records across all table pages in the current results. Partial coverage is labeled as loaded records only; unread server history is not included.</p>
 <p>Hover an event's text, icon, circle or duration bar to read its complete caption. Click its text or shape to open the same <strong>Data</strong> panel in 2D or 3D. Dragging from ordinary 2D text still pans; Escape dismisses the caption.</p>
-<p>Open <strong>Build a new filter</strong> to enter a unique <strong>Filter name</strong>. Choose a <strong>Namespace</strong> and a separate <strong>Group by (sort_by)</strong> field, then build a condition with <strong>Field → Operator → Value → Type</strong> or edit <strong>Advanced expression</strong>. <strong>Clone existing filter</strong> copies a saved expression and grouping into the draft without applying it. <strong>Save filter</strong> and <strong>Cancel</strong> appear once at the bottom; Cancel discards the draft and keeps the active filter.</p>
+<p>Use the namespace checkboxes to show one or several namespaces together. Clearing every namespace shows no records.
+Open <strong>Build a new filter</strong> to enter a unique <strong>Filter name</strong> or <strong>Clone existing filter</strong>.
+The collapsed <strong>Include namespaces</strong> section sets the draft scope. Only one of Include namespaces,
+Include items and Exclude items can be expanded at a time. Opening one collapses the others without discarding the draft.
+<strong>Include items</strong> and
+<strong>Exclude items</strong> discover attributes and exact values from those namespaces. Values within one attribute
+use OR; different inclusion attributes use AND. Exclusions always win. For example, include system RNG and exclude
+status FINISHED to retain unfinished RNG sessions. No selected inclusion values means all records in the chosen
+namespaces remain eligible, subject to exclusions.</p>
+<p>Each attribute has a value search and up to three rows of checkboxes, with numbered pages for longer lists.
+Each selected namespace has a subsection under Include items and Exclude items. These start collapsed; only one
+namespace subsection can be expanded across both groups. Its header shows the selected-value count. Selections,
+searches and pages survive collapsing and reopening a subsection. Namespace choices scroll within the panel.
+The checkbox lists omit description, AsRun (including as_run and as-run), start, end, ID and title, regardless of
+capitalization or nesting. Labels show plain text from formatted values while matching uses the original values.
+Namespaces with no remaining attributes show “No selectable attributes.” Connected providers obtain values from
+the historical catalog, independently of the visible dates and active filter. The server indexes all configured
+historical files, persists the catalog locally under HBDS/filters/&lt;namespace&gt;/ and updates changed files incrementally.
+Attributes with too many distinct or mostly unique values are omitted from checkbox lists. The default limits are
+1,000 values, 200 observations and a 90% uniqueness ratio; server environment variables OPENBEXI_FILTER_MAX_VALUES,
+OPENBEXI_FILTER_MIN_SAMPLES and OPENBEXI_FILTER_UNIQUE_RATIO configure these limits. Catalog failures or partial scans
+are shown explicitly. Namespace and expression filtering occurs before records are returned by REST, SSE or WebSocket.
+<strong>Advanced expression</strong> follows checkbox edits and remains editable. Typed expressions may use
+<code>expr: namespace = "operations" AND system = "RNG" | status = "FINISHED"</code>; the conditions after
+<code>|</code> are excluded. Existing legacy regex and <code>expr:</code> filters remain supported. Complex manual
+expressions and conditions on hidden attributes are preserved in Advanced expression; use
+<strong>Clear expression</strong> to return to checkbox editing.</p>
+<p><strong>Group by (sort_by)</strong> remains independent. Creating or cloning a filter does not apply it.
+<strong>Save filter</strong> and <strong>Cancel</strong> appear once at the bottom; Cancel discards the draft and
+keeps the active filter. Namespace visibility changes preserve an open draft.</p>
+<p>The existing User panel selects the current profile. Saved filter definitions record their owners per namespace;
+the private HBDS/users/index.json registry lists those references. New filters and clones belong to their creator.
+Guest can view and apply ALL and NAMESPACE_Exclude_Nominal_RNG; its filter definitions are read-only. Admin can manage
+every filter. Migration preserves existing filter names and criteria. User selection is a UI profile mechanism.</p>
 <p>Connected loading retains up to 15,000 top-level records, 50,000 records including activities and 8 Mi JSON payload characters. File scans can continue through up to 512 pages per interval to fill the visible view and neighboring context. Providers without scan-work counters use 32 pages per visible interval and four per neighboring interval. <strong>Data limit reached</strong> identifies a limit that leaves the visible time span incompletely covered and retains accepted records. Limits outside that span remain in the status report. See <a href="progressive-loading.md">loading limits</a>.</p>
-<p><strong>Data</strong> shows a compact summary with <strong>ID</strong> first, then <strong>Namespace</strong>, status, type, dates and duration when available. All metadata and activities are displayed directly, followed by the complete formatted description at the bottom. Nothing is collapsed, and there is no description preview after Duration. Empty and duplicate fields are omitted, and descriptor Copy buttons have been removed.</p>
+<p><strong>Data</strong> shows a compact summary with <strong>ID</strong> first, then <strong>Namespace</strong>, status, type, dates and duration when available. Click either an event/session icon or its text to open the same record details in 2D or 3D; dragging continues to pan. All namespaces use the same descriptor layout, fonts, sizes and field order. Provider-specific descriptor functions no longer replace this shared panel. All metadata and activities are displayed directly, followed by the complete formatted description at the bottom. Nothing is collapsed, and there is no description preview after Duration. Empty and duplicate fields are omitted, and descriptor Copy buttons have been removed. Loading, unavailable details and retryable failures are shown in the panel.</p>
 <ul>
 <li>Use <strong>Timeline</strong>, <strong>Table</strong>, or <strong>Split</strong> on the main toolbar to change the presentation. Split places the chart beside the event table.</li>
 <li>The time cursor sits above the visible span. Table titles show their icon or the event/session color when the icon is absent or unavailable.</li>

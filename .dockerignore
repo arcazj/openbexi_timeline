@@ -40,7 +40,8 @@ json/*_reports.json
 !openbexi_timeline_embed.html
 
 # Shared metadata: include only reviewed generic assets.
-GCS_data_collector/
+*_data_collector/
+!timeline_data_collector/
 HBDS/**
 !HBDS/README.md
 !HBDS/aliases.json
@@ -109,6 +110,7 @@ HBDS/**
 **/.timeline-collector
 **/.timeline-state
 **/lib/*.jar
-MCC_COLLECTOR_RESTART.md
+*_COLLECTOR_RESTART.md
 PROJECT_ARCHITECTURE.png
 PROJECT_ARCHITECTURE.svg
+icon/private/

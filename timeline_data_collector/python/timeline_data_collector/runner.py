@@ -1,6 +1,7 @@
 """One execution path for standalone commands, dashboard actions and schedules."""
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from copy import deepcopy
 from pathlib import Path
 import logging
@@ -12,7 +13,8 @@ from .contracts import Cancelled, Context
 from .io import model_root
 from .locking import SourceLock
 from .publisher import Publisher
-from .progress import activity
+from .metadata import MetadataNormalizer
+from .tracing import StartupTrace, safe_text
 from .registry import Registry
 from .state import State
 
@@ -23,17 +25,32 @@ LOG = logging.getLogger('timeline_data_collector')
 class Runner:
     def __init__(self, configuration, *, registry=None, workers=4):
         self.configuration = configuration
-        self.registry = registry or Registry(configuration.plugin_roots)
-        self.state = State(configuration.state_root)
+        trace = StartupTrace('runner ' + configuration.workspace.name)
+        trace.note('initializing collector runner', workspace=configuration.workspace, workers=workers)
+        with trace.step('discovering plugin registrations', roots=configuration.plugin_roots):
+            self.registry = registry or Registry(configuration.plugin_roots, trace=trace)
+        with trace.step('opening durable job state', database=configuration.state_root / 'jobs.sqlite3'):
+            self.state = State(configuration.state_root)
         self.pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix='timeline-converter')
         self.active = {}
         self.guard = threading.RLock()
         self.notices = {}
         self.checkpoints = {}
+        self.traced_sources = set()
+        self.traced_selections = set()
         self.owner = uuid.uuid4().hex
         self.owner_lease = SourceLock(configuration.state_root / 'runners' / (self.owner + '.lock'))
-        if not self.owner_lease.acquire(): raise RuntimeError('Cannot acquire worker lease')
-        self.state.recover()
+        try:
+            with trace.step('acquiring runner lease', owner=self.owner):
+                if not self.owner_lease.acquire(): raise RuntimeError('Cannot acquire worker lease')
+            with trace.step('recovering interrupted jobs'):
+                recovered = self.state.recover()
+            trace.finish('runner ready', recovered_jobs=recovered)
+        except BaseException:
+            self.pool.shutdown(wait=True)
+            self.state.close()
+            self.owner_lease.release()
+            raise
 
     def refresh(self):
         current = load(self.configuration.workspace, **self.configuration.load_options)
@@ -42,24 +59,30 @@ class Runner:
         self.configuration = current
         return current
 
-    def validate(self, group, source, mode='once'):
+    def validate(self, group, source, mode='once', *, trace=None):
         if source['converter_plugin'] == 'NONE' or not group.get('enable', True) or not source.get('enable', True): return
         for role, name in (('source', source['source_plugin']), ('converter', source['converter_plugin'])):
-            manifest = self.registry.metadata(name)
-            if manifest.get('requires_source_path') and not source.get('source_path'):
-                raise ValueError(name + ' requires source_path')
-            self.registry.load(name, role, mode, source.get('options', {}))
+            with trace.step('validating and loading ' + role, plugin=name, mode=mode) if trace else nullcontext():
+                manifest = self.registry.metadata(name)
+                if manifest.get('requires_source_path') and not source.get('source_path'):
+                    raise ValueError(name + ' requires source_path')
+                self.registry.load(name, role, mode, source.get('options', {}))
+                if trace: trace.note(role + ' ready', plugin=name, version=manifest['version'])
 
     def submit(self, *, namespace=None, source=None, plugin=None, mode='once', force=False, offline=False,
                date=None, end_date=None, request_id=None, trigger='cli', revision=None, asynchronous=False):
         configuration = self.refresh()
         if revision and revision != configuration.revision: raise ValueError('Configuration changed; reload before starting conversion')
         pairs = configuration.sources(namespace, source, plugin, include_disabled=True)
-        LOG.debug('Workspace %s: %d selected sources; mode=%s', configuration.workspace.name, len(pairs), mode)
+        selection = (configuration.revision, namespace, source, plugin, mode)
+        with self.guard:
+            level = logging.DEBUG if selection in self.traced_selections else logging.INFO
+            self.traced_selections.add(selection)
+        LOG.log(level, 'Workspace %s: %d selected sources; mode=%s', safe_text(configuration.workspace.name), len(pairs), mode)
         for group, entry in pairs:
             reason = self._skip_reason(group, entry)
-            LOG.debug('%s/%s: %s; reader=%s; converter=%s', group['namespace'], entry['id'],
-                     'will skip (' + reason + ')' if reason else 'queued', entry['source_plugin'], entry['converter_plugin'])
+            LOG.log(level, '%s/%s: %s; reader=%s; converter=%s', safe_text(group['namespace']), safe_text(entry['id']),
+                    'will skip (' + reason + ')' if reason else 'queued', entry['source_plugin'], entry['converter_plugin'])
         request_id = request_id or uuid.uuid4().hex
         jobs = []
         for group, entry in pairs:
@@ -68,6 +91,9 @@ class Runner:
                            source_key=key, mode=mode, force=bool(force), offline=bool(offline), date=date, end_date=end_date,
                            trigger=trigger, configuration_revision=configuration.revision)
             job, created = self.state.create(request_id + ':' + key, request, self.owner)
+            if not created:
+                LOG.log(level, '%s/%s: reusing existing job=%s; state=%s', safe_text(group['namespace']),
+                        safe_text(entry['id']), job['id'], job['state'])
             if created:
                 cancel = threading.Event()
                 with self.guard: self.active[job['id']] = cancel
@@ -90,38 +116,60 @@ class Runner:
         acquired = False
         result = {'records_written': 0, 'records_created': 0, 'records_updated': 0, 'batches': 0}
         batches = None
+        context = None
         label = group['namespace'] + '/' + source['id']
         started = time.monotonic()
+        signature = (key, configuration.revision, request['mode'], request['force'], request['offline'])
+        with self.guard:
+            level = logging.DEBUG if signature in self.traced_sources else logging.INFO
+            self.traced_sources.add(signature)
+        trace = StartupTrace(label + ' job=' + ident, level=level)
         try:
+            trace.note('Starting ' + label, reader=source['source_plugin'], converter=source['converter_plugin'],
+                       source_path=source.get('source_path'), target_path=group['target_path'],
+                       workspace=configuration.workspace, revision=configuration.revision,
+                       mode=request['mode'], trigger=request['trigger'], offline=request['offline'], force=request['force'],
+                       start_date=request['date'], end_date=request['end_date'], date_timezone='UTC',
+                       date_selection='requested range' if request['date'] else 'converter default / all available input',
+                       settle_seconds=source.get('execution', {}).get('settle_seconds', 0),
+                       options_keys=sorted(source.get('options', {})))
             reason = self._skip_reason(group, source)
             if reason:
-                LOG.debug('Skipping %s: %s', label, reason)
+                trace.finish('Skipping ' + label, reason=reason)
                 self.state.update(ident, 'succeeded', {'skipped': True, 'reason': reason})
                 return
-            LOG.debug('Starting %s: reader=%s; converter=%s; target=%s', label,
-                     source['source_plugin'], source['converter_plugin'], group['target_path'])
-            self.validate(group, source, request['mode'])
-            if not lease.acquire():
-                LOG.debug('Skipping %s: source is already running', label)
+            self.validate(group, source, request['mode'], trace=trace)
+            with trace.step('acquiring source output lock', path=lease.path):
+                acquired = lease.acquire()
+            if not acquired:
+                trace.finish('Skipping ' + label, reason='source is already running')
                 self.state.update(ident, 'succeeded', {'skipped': True, 'reason': 'source is already running'})
                 return
-            acquired = True
             self.state.update(ident, 'running')
-            publisher = Publisher(group['target_path'], group['namespace'])
-            cached = self.checkpoints.get(key)
-            if cached is not None and cached[1] == publisher.stamp(): checkpoint = deepcopy(cached[0])
-            else:
-                checkpoint, stamp = publisher.checkpoint_snapshot(key)
-                self.checkpoints[key] = deepcopy(checkpoint), stamp
+            with trace.step('initializing publisher and metadata normalization', target=group['target_path']):
+                publisher = Publisher(group['target_path'], group['namespace'], normalizer=MetadataNormalizer.from_root(configuration.hbds_root))
+            with trace.step('restoring source checkpoint'):
+                cached = self.checkpoints.get(key)
+                reused = cached is not None and cached[1] == publisher.stamp()
+                if reused: checkpoint = deepcopy(cached[0])
+                else:
+                    checkpoint, stamp = publisher.checkpoint_snapshot(key)
+                    self.checkpoints[key] = deepcopy(checkpoint), stamp
+                trace.note('checkpoint ready', present=bool(checkpoint), cached=reused,
+                           entries=len(checkpoint), normalizer_revision=publisher.normalizer.revision)
             workdir = configuration.state_root / 'plugins' / key[:24]
-            source['_converter_version'] = self.registry.metadata(source['converter_plugin'])['version']
+            source['_converter_version'] = self.registry.metadata(source['converter_plugin'])['version'] + ':' + publisher.normalizer.revision
             source['_target_path'] = group['target_path']
             context = Context(configuration.workspace, group['namespace'], source, key, workdir, checkpoint,
                               request['date'], request['end_date'], request['offline'], request['force'], request['mode'], cancel)
+            context.trace = trace
+            trace.note('plugin working directory resolved', path=workdir)
             context.notices = self.notices.setdefault(key, {})
             converter = self.registry.load(source['converter_plugin'], 'converter', request['mode'], source.get('options', {}))
             if source['source_plugin'] == source['converter_plugin'] and hasattr(converter, 'collect'):
+                trace.note('using combined source/converter pipeline', plugin=source['converter_plugin'])
                 batches = converter.collect(context)
+                observed_batches = trace.iterate('acquiring and converting next batch', batches)
             else:
                 reader = self.registry.load(source['source_plugin'], 'source', request['mode'], source.get('options', {}))
                 def converted():
@@ -130,13 +178,16 @@ class Runner:
                     if local_reader and acquisition:
                         # Optional API-1 extension: commit remote raw-file revisions before
                         # using a converter's optimized, incremental local reader.
-                        acquisition(context)
+                        with trace.step('acquiring remote input before incremental local read', reader=source['source_plugin']):
+                            acquisition(context)
                         inputs = local_reader(context)
                     else:
                         inputs = local_reader(context) if local_reader and source['source_plugin'] == 'local' else reader.read(context)
-                    for incoming in inputs:
+                    trace.note('input reader selected', optimized_local_reader=bool(local_reader and
+                               (acquisition or source['source_plugin'] == 'local')))
+                    for incoming in trace.iterate('scanning / acquiring next input batch', inputs):
                         context.check_cancelled()
-                        with activity(LOG, label, 'converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
+                        with trace.step('converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
                             progressive = getattr(converter, 'convert_batches', None)
                             outputs = iter(progressive(incoming, context)) if progressive else iter([converter.convert(incoming, context)])
                             committed = False
@@ -157,9 +208,11 @@ class Runner:
                                 close = getattr(outputs, 'close', None)
                                 if close: close()
                 batches = converted()
-            for batch in batches:
+                observed_batches = batches
+            for batch in observed_batches:
                 context.check_cancelled()
-                with activity(LOG, label, 'publishing %d records to %s' % (len(batch.records), group['target_path'])):
+                with trace.step('publishing %d records' % len(batch.records), target=group['target_path'],
+                                snapshot=batch.snapshot, deletions=len(batch.deleted_ids), commit_input=batch.commit_input):
                     outcome = publisher.publish(key, source['id'], dict(id=source['converter_plugin'], version=self.registry.metadata(source['converter_plugin'])['version']), batch, run_id=ident)
                 context.checkpoint = dict(batch.checkpoint)
                 self.checkpoints[key] = deepcopy(batch.checkpoint), outcome.pop('_checkpoint_stamp')
@@ -169,13 +222,19 @@ class Runner:
                 result['batches'] += 1
                 if outcome['records_written'] and 'first_publication_seconds' not in result:
                     result['first_publication_seconds'] = round(time.monotonic() - started, 3)
-                    LOG.debug('%s: first output published after %.3fs', label, result['first_publication_seconds'])
+                    trace.note('first output published', elapsed_seconds=result['first_publication_seconds'])
                 self.state.update(ident, 'running', result)
-                if batch.acknowledge: batch.acknowledge()
+                if batch.acknowledge:
+                    with trace.step('acknowledging committed input'): batch.acknowledge()
+                if request['mode'] == 'stream' and result['batches'] == 1:
+                    trace.finish('stream ready; first batch committed; continuing subscription')
+                    trace.level = logging.DEBUG
             context.check_cancelled()
             result['elapsed_seconds'] = round(time.monotonic() - started, 3)
             result['metrics'] = context.metrics
             self.state.update(ident, 'succeeded', result)
+            trace.finish('conversion pass complete', batches=result['batches'], records_written=result['records_written'],
+                         records_created=result['records_created'], records_updated=result['records_updated'])
             if result['records_written'] or context.metrics.get('processed_files'):
                 counts = ', '.join('%d %s' % (count, kind) for kind, count in context.metrics.get('parsed', {}).items())
                 LOG.info('%s: Parsed %s logs from %s to %s%s; %d new, %d updated; %d files; completed in %.3f s%s',
@@ -193,7 +252,8 @@ class Runner:
             self.state.update(ident, 'cancelled', dict(result, reason='Interrupted from the command line'))
             raise
         except Exception as exc:
-            LOG.error('Failed %s: %s: %s', label, type(exc).__name__, exc)
+            trace.failure(exc)
+            if context is not None: result['metrics'] = context.metrics
             self.state.update(ident, 'failed', dict(result, error=str(exc), error_type=type(exc).__name__))
         finally:
             try:

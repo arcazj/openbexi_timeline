@@ -207,7 +207,7 @@ An empty date interval does not imply that the source directory is empty.
 
 Saved filters for named workspaces live privately in
 `HBDS/filters/workspaces/<workspace filename without extension>/` on both servers.
-Thus models with the same timeline name keep separate selections in SOC and GEO.
+Thus models with the same timeline name keep separate selections in different workspaces.
 Existing flat profiles are read only when their recorded source namespaces match
 the selected workspace; subsequent saves use the workspace directory and preserve
 the original files. A workspace without a matching profile starts with **ALL**
@@ -330,3 +330,39 @@ group, model, band and rendering relationships that still apply, update the
 generator and examples, validate the JSON, then regenerate the PNG from that same
 revision. The current pair includes the default-user update; the workspace and
 service changes above remain recommendations for the next model revision.
+
+
+## Historical filter catalogs and ownership
+
+Connected timelines obtain choices from `GET /openbexi_timeline/filter-values`
+(or `/openbexi_timeline_sse/filter-values`). This endpoint returns attributes and
+typed distinct values, without event/session payloads or view-date restrictions.
+Java and Python retain their incremental catalogs as `catalog.java[.<workspace>].json`
+and `catalog.python[.<workspace>].json` under `HBDS/filters/<namespace>/`.
+Workspaces keep independent catalogs. Content fingerprints or file stamps identify
+unchanged input; new, modified and removed files update the stored summaries.
+Stored choices remain available while a fresh Python record index is verified.
+Source and catalog failures are reported instead of claiming a complete list.
+
+`OPENBEXI_FILTER_MAX_VALUES` (default `1000`),
+`OPENBEXI_FILTER_MIN_SAMPLES` (`200`) and
+`OPENBEXI_FILTER_UNIQUE_RATIO` (`0.9`) control attribute suppression. Description,
+AsRun aliases, start, end, ID and title are always omitted from checkbox choices.
+Existing advanced expressions can continue to reference omitted attributes.
+
+Namespace selections use the `namespaces` JSON-array query parameter. `[]` means
+no records; omitting it retains the established namespace behavior. Namespace
+and expression predicates run before pagination, counts and serialization for
+REST, SSE snapshots and WebSocket queries. WebSocket JSON messages accept the
+same read-query parameters as strings; cursor continuations retain their scope.
+
+Definitions are stored beside the catalogs in `definitions[.<workspace>].json`.
+The `_all` folder holds filters for the combined namespace view. Original legacy
+profiles are preserved, and the selected user's active preset remains separate
+from shared definitions. New filters and clones belong to their creator. Guest
+can view/apply `ALL` and `NAMESPACE_Exclude_Nominal_RNG`, while admin can manage
+all definitions. The existing User panel supplies the profile identity; no new
+authentication flow is introduced. `HBDS/users/index.json` records ownership
+references, including workspace scope when applicable. Public user defaults
+remain limited to admin and guest. Catalogs, definitions and local user records
+remain private and excluded from publication and Git.

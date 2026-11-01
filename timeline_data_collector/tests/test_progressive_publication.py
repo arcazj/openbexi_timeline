@@ -70,4 +70,4 @@ class PublicationTests(unittest.TestCase):
         self.publish([event('one',description='enriched')])
         self.assertEqual(before,[(p.read_bytes(),p.stat().st_mtime_ns) for p in (report,descriptor)])
         self.assertEqual(len(self.writer.read_state()['reports']),2)
-        self.assertEqual(read_json(self.root/'2026/01/01/descriptors/one.json')['event_descriptor'][0]['data']['description'],'enriched')
+        self.assertEqual(read_json(self.root/'2026/01/01/descriptors/one.json')['event_descriptor'][0]['description'],'enriched')

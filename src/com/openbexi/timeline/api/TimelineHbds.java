@@ -282,7 +282,8 @@ public final class TimelineHbds {
         JSONObject model=index(document,"models").get(namespace.getString("modelId"));
         List<JSONObject> tabs=new ArrayList<>();for(Object item:document.getJSONArray("tabs"))if(((JSONObject)item).getBoolean("enabled"))tabs.add((JSONObject)item);
         tabs.sort(Comparator.comparingInt(item->item.getInt("order")));
-        return new JSONObject().put("revision",revision).put("namespaceId",namespaceId).put("tabs",new JSONArray(new JSONArray(tabs).toString()))
+        JSONObject namespaceNames=new JSONObject();for(Object item:document.getJSONArray("namespaces")){JSONObject value=(JSONObject)item;namespaceNames.put(value.getString("id"),value.getString("namespace"));}
+        return new JSONObject().put("revision",revision).put("namespaceId",namespaceId).put("tabs",new JSONArray(new JSONArray(tabs).toString())).put("namespaceNames",namespaceNames)
                 .put("namespace",namespace.getString("namespace"))
                 .put("modelConfiguration",copy(model.getJSONObject("configuration")));
     }

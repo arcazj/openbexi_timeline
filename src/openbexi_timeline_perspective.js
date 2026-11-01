@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import {renderingFor, PERSPECTIVE_PRESET} from './openbexi_timeline_rendering.js';
+import {renderingFor, PERSPECTIVE_PRESET, usesRecordStage} from './openbexi_timeline_rendering.js';
+import {activityCameraFrame} from './openbexi_timeline_activity_focus.js';
 
 const copy = value => JSON.parse(JSON.stringify(value));
 const radians = THREE.MathUtils.degToRad, degrees = THREE.MathUtils.radToDeg;
@@ -71,11 +72,13 @@ export class TimelinePerspective {
                 !finite(a.ambientIntensity,0,5) || !finite(a.directionalIntensity,0,5) ||
                 !finite(a.azimuth,-180,180) || !finite(a.elevation,0,90) ||
                 !finite(a.metalness,0,1) || !finite(a.roughness,0,1))return null;
-            return {camera:c || null,appearance:{...this.defaults(),...a}};
+            const presentation=renderingFor(this.timeline).recordVisuals.enabled?renderingFor(this.timeline).recordVisuals.presentation3D:'board';
+            return {camera:c && (c.presentation || 'board')===presentation?c:null,appearance:{...this.defaults(),...a}};
         } catch {return null;}
     }
 
     basis() {
+        if(usesRecordStage(this.timeline,this.index ?? 0))return activityCameraFrame(this.timeline,this.index ?? 0);
         const scene=this.timeline.ob_scene[this.index ?? 0];
         return {center:new THREE.Vector3(0,scene.ob_height/2,0),scale:Math.max(1,scene.width,scene.ob_height)};
     }
@@ -85,7 +88,8 @@ export class TimelinePerspective {
         const {center,scale}=this.basis(),camera=this.controls.object;
         const relative=v=>v.clone().sub(center).divideScalar(scale).toArray();
         this.cameraState={position:relative(camera.position),target:relative(this.controls.target),
-            up:camera.up.clone().normalize().toArray(),zoom:camera.zoom,fov:camera.fov};
+            up:camera.up.clone().normalize().toArray(),zoom:camera.zoom,fov:camera.fov,
+            presentation:usesRecordStage(this.timeline,this.index)?'stage':'board'};
     }
 
     detach(capture=true) {
@@ -114,7 +118,8 @@ export class TimelinePerspective {
             camera.up.fromArray(state.up).normalize();camera.fov=state.fov;camera.zoom=state.zoom;
         } else {
             // Preserve the model's initial roll when OrbitControls takes over.
-            camera.up.set(0,1,0).applyQuaternion(camera.quaternion).normalize();
+            if(usesRecordStage(t,index))camera.up.set(0,0,1);
+            else camera.up.set(0,1,0).applyQuaternion(camera.quaternion).normalize();
         }
         camera.updateProjectionMatrix();
         this.canvas=scene.ob_renderer.domElement;
@@ -122,6 +127,12 @@ export class TimelinePerspective {
         controls.target.copy(target);controls.cursor.copy(center);
         controls.minDistance=scale*.02;controls.maxDistance=scale*20;controls.maxTargetRadius=scale*10;
         controls.minPolarAngle=.02;controls.maxPolarAngle=Math.PI-.02;
+        if(t.recordVisuals) {
+            controls.minDistance=scale*.45;controls.maxDistance=scale*4;controls.maxTargetRadius=scale*.65;
+            controls.minPolarAngle=.3;controls.maxPolarAngle=usesRecordStage(t,index)?Math.PI*.46:Math.PI*.65;
+            controls.minAzimuthAngle=usesRecordStage(t,index)?-1.25:-.85;
+            controls.maxAzimuthAngle=usesRecordStage(t,index)?1.25:.85;
+        }
         controls.rotateSpeed=.65*renderingFor(t).camera.rotationSensitivity/.002;controls.update();
         controls.addEventListener('change',()=>{this.cameraChanged=true;this.capture();this.syncFields();t.ob_render(index);});
         controls.addEventListener('start',()=>{
@@ -220,9 +231,10 @@ export class TimelinePerspective {
     cameraValues() {
         if(!this.controls)return {};
         const camera=this.controls.object,target=this.controls.target,offset=camera.position.clone().sub(target);
+        const stage=usesRecordStage(this.timeline,this.index);
         return {x:camera.position.x,y:camera.position.y,z:camera.position.z,
             targetX:target.x,targetY:target.y,targetZ:target.z,
-            yaw:degrees(Math.atan2(offset.x,offset.z)),pitch:degrees(Math.asin(offset.y/offset.length())),zoom:camera.zoom,fov:camera.fov};
+            yaw:degrees(Math.atan2(offset.x,stage?-offset.y:offset.z)),pitch:degrees(Math.asin((stage?offset.z:offset.y)/offset.length())),zoom:camera.zoom,fov:camera.fov};
     }
 
     changeCamera(key,value) {
@@ -234,7 +246,9 @@ export class TimelinePerspective {
         else if(key==='yaw' || key==='pitch') {
             const current=this.cameraValues(),yaw=radians(key==='yaw'?value:current.yaw),pitch=radians(key==='pitch'?value:current.pitch);
             const distance=position.distanceTo(target);
-            position.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)).multiplyScalar(distance).add(target);
+            if(usesRecordStage(this.timeline,this.index))position.set(Math.sin(yaw)*Math.cos(pitch),-Math.cos(yaw)*Math.cos(pitch),Math.sin(pitch));
+            else position.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
+            position.multiplyScalar(distance).add(target);
         }
         const {scale}=this.basis();
         if(position.distanceTo(nextTarget)<scale*.02 || position.distanceTo(nextTarget)>scale*20 ||
