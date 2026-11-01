@@ -25,6 +25,12 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <!-- Keep Kafka's transitive Snappy dependency on the patched release. -->
+                <groupId>org.xerial.snappy</groupId>
+                <artifactId>snappy-java</artifactId>
+                <version>1.1.10.9</version>
+            </dependency>
+            <dependency>
                 <!-- Kafka 3.9.2's 1.10.1 is affected by GHSA-xx22-p4ch-683r. -->
                 <groupId>at.yawk.lz4</groupId>
                 <artifactId>lz4-java</artifactId>

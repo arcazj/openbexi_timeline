@@ -33,7 +33,21 @@
       "passed": 11,
       "failed": 0
     },
-    "schemasAndGeneratedContracts": "passed"
+    "schemasAndGeneratedContracts": "passed",
+    "dependencyUpdateChecks": {
+      "focusedJavascriptPassed": 21,
+      "npmAuditFindings": 0,
+      "mavenRuntimePackagesAudited": 24,
+      "mavenRuntimeAdvisories": 0,
+      "pythonBrowserIntegration": {
+        "workers": 2,
+        "initialRequests": 3,
+        "liveRefreshRequests": 3,
+        "events": 3,
+        "generatedFilters": 2,
+        "browserErrors": 0
+      }
+    }
   },
   "versionChecks": {
     "java-version": {
