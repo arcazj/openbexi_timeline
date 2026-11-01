@@ -4,7 +4,12 @@
 /.venv/
 __pycache__/
 *.egg-info/
-/.pytest_cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.hypothesis/
+*.py[cod]
 /dist/
 /build/
 /target/
@@ -32,6 +37,21 @@ __pycache__/
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Disposable scratch files and operating-system/editor caches.
+.tmp/
+.temp/
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+/tomcat.*/
 
 # Only generic root entry points belong in the public project.
 /*.html
