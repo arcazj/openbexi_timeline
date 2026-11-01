@@ -32,9 +32,9 @@ export function buildDemoReadme(catalog, baseURL = 'https://arcazj.github.io/ope
         return `[${escape(demo.title)}](${url.href})`;
     });
     if (!resources) return [
-        '<!-- LIVE_DEMOS:START -->', '## Live demos', '',
-        links.join(' ·\n'), '',
-        'Explore the [gallery](https://arcazj.github.io/openbexi_timeline/) in your browser. The [demo guide](docs/demos.md#live-demos) lists datasets, models and screenshots.',
+        '<!-- LIVE_DEMOS:START -->',
+        `**[Open the live demos](${baseURL})** — no installation required.`, '',
+        '[Browse datasets and examples](docs/demos.md#live-demos).',
         '<!-- LIVE_DEMOS:END -->'
     ].join('\n');
     const lines = [
