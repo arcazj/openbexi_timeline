@@ -26,6 +26,8 @@ descriptor consistency. It includes the public Loki acquisition introduced in
 - Public packaging removes obsolete browser launchers and uses generic examples.
   Private converters, dictionaries, operational configurations, internal endpoints,
   logs, checkpoints and generated deployment data remain excluded.
+- Dependency updates include `fast-uri` 3.1.9, `undici` 8.12.3 and
+  `snappy-java` 1.1.10.9 to resolve advisories found by the release audits.
 
 The application and collector core are **2.9.3**. Independently versioned plugins
 are `filesources` **1.0.2**, `mqtt` **1.0.1** and `loki` **1.0.1**; these tracing
