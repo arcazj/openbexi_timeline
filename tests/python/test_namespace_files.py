@@ -19,6 +19,7 @@ from openbexi_timeline_server.namespace_workspace import NamespaceWorkspace
 from openbexi_timeline_server.hbds import HBDSError
 from openbexi_timeline_server.index import TimelineIndex
 from openbexi_timeline_server.query import Queries
+from openbexi_timeline_server.storage import Storage
 
 REPO=Path(__file__).resolve().parents[2]
 
@@ -120,6 +121,28 @@ class NamespaceFileTests(unittest.TestCase):
         restarted.save(actual,'"'+revision+'"')
         self.assertEqual(json.loads(private_path.read_text()),[])
         self.assertEqual(NamespaceWorkspace(self.conf).read()[0]['users'],defaults)
+
+    def test_saved_filter_profiles_survive_configuration_restart_and_editor_save(self):
+        storage = Storage(TimelineIndex(self.conf))
+        params = {'userName': 'creator.demo', 'timelineName': 'timeline', 'namespace': 'ALPHA',
+                  'ob_request': 'addFilter', 'filterName': 'Custom', 'filter': 'system:CMD'}
+        storage.filters(params)
+        registry = self.metadata / 'users/index.json'
+        saved_users = json.loads(registry.read_text())
+        restarted = load_configuration(self.files, root=REPO, state=self.root/'restarted', service_path=self.service)
+        store = NamespaceWorkspace(restarted)
+        document, revision = store.read()
+        self.assertEqual(document['users'], saved_users)
+        self.assertEqual(next(u for u in saved_users if u['id']=='admin')['filterAccess'], 'all')
+        creator = next(u for u in saved_users if u['id']=='creator.demo')
+        self.assertIn({'namespace':'ALPHA', 'name':'Custom', 'access':'owner'}, creator['filters'])
+        store.save(document, '"'+revision+'"')
+        self.assertEqual(NamespaceWorkspace(restarted).read()[0]['users'], saved_users)
+        for field, value in [('filters', 'invalid'), ('filterAccess', 'invalid')]:
+            invalid = deepcopy(document)
+            invalid['users'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                store.save(invalid, '"'+revision+'"')
 
     def test_user_registry_rejects_duplicate_local_ids_and_missing_defaults(self):
         store=NamespaceWorkspace(self.conf)
