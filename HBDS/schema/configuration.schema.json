@@ -496,6 +496,19 @@
         "groupId": {
           "type": "string",
           "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,95}$"
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/userFilter"
+          },
+          "minItems": 0
+        },
+        "filterAccess": {
+          "type": "string",
+          "enum": [
+            "all"
+          ]
         }
       },
       "required": [
@@ -505,6 +518,33 @@
         "admin",
         "roleId",
         "groupId"
+      ],
+      "additionalProperties": false
+    },
+    "userFilter": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "access": {
+          "type": "string",
+          "enum": [
+            "view",
+            "owner"
+          ]
+        },
+        "workspace": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "namespace",
+        "name",
+        "access"
       ],
       "additionalProperties": false
     },

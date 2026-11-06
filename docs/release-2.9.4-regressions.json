@@ -1,0 +1,45 @@
+{
+  "version": "2.9.4",
+  "status": "passed",
+  "scope": "Local validation of the schema fix, version update, Python backend, Java build and JavaScript suites passed. Supplemental MQTT protocol tests were blocked by a missing local Mosquitto executable; the GitHub public-collector job installs Mosquitto. Browser integration and Windows installer validation run separately in GitHub Actions.",
+  "changeBaseline": "9b6e3ce5df4d0ec9cf4767a882d85510341ce456",
+  "tests": {
+    "javascript": {
+      "tests": 491,
+      "passed": 491,
+      "failed": 0
+    },
+    "pythonBackend": {
+      "tests": 79,
+      "passed": 79,
+      "failed": 0
+    },
+    "java": {
+      "tests": 216,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 34,
+      "build": "passed"
+    },
+    "releasePublishing": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "schemasAndGeneratedContracts": "passed",
+    "publicBoundary": "passed",
+    "geoWorkspaceStartupValidation": "passed",
+    "collectorSupplemental": {
+      "tests": 103,
+      "passed": 97,
+      "environmentErrors": 6,
+      "reason": "Mosquitto executable is unavailable locally; all six MQTT protocol tests fail during broker setup."
+    }
+  },
+  "verifiedAt": "2026-11-06T05:34:33.119558+00:00",
+  "distribution": {
+    "applicationVersion": "2.9.4",
+    "collectorVersion": "2.9.4",
+    "pluginVersions": "unchanged"
+  }
+}
