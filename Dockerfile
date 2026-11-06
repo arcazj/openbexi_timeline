@@ -7,7 +7,7 @@ COPY tools/verify-hbds-public.mjs ./tools/verify-hbds-public.mjs
 RUN node --input-type=module -e "import fs from 'node:fs/promises'; import {inspectPublicHbds} from './tools/verify-hbds-public.mjs'; for(const name of await fs.readdir('HBDS',{recursive:true})){const file='HBDS/'+name;if((await fs.stat(file)).isFile())inspectPublicHbds(file,await fs.readFile(file,'utf8'));}"
 RUN node --input-type=module -e "import fs from 'node:fs'; import {parse,stringify} from 'yaml'; for(const name of fs.readdirSync('HBDS/yaml')){if(!name.endsWith('.yml'))continue;const file='HBDS/yaml/'+name,config=parse(fs.readFileSync(file,'utf8'));config.connectors=['java_api'];if(name==='DEMO_default.yml'){config.target_path='/data/DEMO/events/yyyy/mm/dd';config.sources[0].source_path='/data/DEMO/input';}fs.writeFileSync(file,stringify(config));}const service=parse(fs.readFileSync('HBDS/service.yml','utf8'));service.connectors=[{id:'java_api',type:'http',owner:'java',host:'0.0.0.0',port:8442}];fs.writeFileSync('HBDS/service.yml',stringify(service));"
 
-FROM maven:3.9.16-eclipse-temurin-17 AS java-build
+FROM maven:3.9-eclipse-temurin-26 AS java-build
 WORKDIR /build
 COPY pom.xml ./
 COPY src ./src
