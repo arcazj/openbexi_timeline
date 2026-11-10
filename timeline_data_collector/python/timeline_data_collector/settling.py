@@ -9,8 +9,19 @@ def fingerprint(stat):
 
 
 def quiet_seconds(context):
-    if context.mode not in {'watch', 'interval'}: return 0
-    return context.source.get('execution', {}).get('settle_seconds', 0)
+    continuous = context.source.get('_continuous', False)
+    if not continuous and context.mode not in {'watch', 'interval'}: return 0
+    return context.source.get('execution', {}).get('settle_seconds', 10 if continuous else 0)
+
+
+def remember_settled(context, manifest):
+    """An internally verified rename inherits the original file's quiet period."""
+    if not quiet_seconds(context): return
+    context.workdir.mkdir(parents=True, exist_ok=True)
+    with closing(sqlite3.connect(context.workdir / 'settling.sqlite3', timeout=30)) as db, db:
+        db.execute('CREATE TABLE IF NOT EXISTS observations (path TEXT PRIMARY KEY, stamp TEXT NOT NULL, since REAL NOT NULL)')
+        db.executemany('INSERT OR REPLACE INTO observations VALUES (?,?,?)',
+                       [(str(path), stamp, time.time()-quiet_seconds(context)) for path, stamp in manifest.items()])
 
 
 def settled_manifest(context, manifest):

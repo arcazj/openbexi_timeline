@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Timeline data collector</title><link rel="stylesheet" href="/style.css"></head>
 <body><header><div><p class="eyebrow">OpenBEXI Timeline</p><h1>Data collector</h1></div><span id="connection" role="status">Connecting…</span></header>
 <main><section aria-labelledby="conversion-heading"><h2 id="conversion-heading">Convert data</h2>
+<p id="collection-status"></p>
 <form id="conversion"><div class="fields"><label>Workspace<select id="workspace"></select></label><label>Namespace<select id="namespace"></select></label><label>Source<select id="source"></select></label></div>
 <p id="source-info"></p><div class="fields"><label>Date or period<input id="date" placeholder="today (UTC) or all available input · YYYY-MM-DD"></label><label>Through date<input id="end-date" type="date"></label><label class="check"><input id="offline" type="checkbox"> Use local data only</label></div>
 <div class="actions"><button id="run" type="submit">Run conversion</button><button id="again" type="button">Run again</button></div>

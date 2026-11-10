@@ -45,6 +45,8 @@ class Acquisition:
             day += timedelta(days=1)
         # Failed discovery outlives the rolling lookback.
         days.update(row[0] for row in db.execute('SELECT day FROM discoveries WHERE checked=0 OR error<>""'))
+        if self.context.source.get('_continuous'):
+            days = {day for day in days if first.isoformat() <= day <= last.isoformat()}
         db.commit()
         client = self.client_factory(self.settings, self.context)
         for day_string in sorted(days, reverse=True):
@@ -108,19 +110,29 @@ class Acquisition:
     def tasks(self, limit, cycle):
         db = self.archive.db
         now = time.time()
+        window, bounds = '', ()
+        if self.context.source.get('_continuous'):
+            first = self.context.start_date
+            last = self.context.end_date
+            if first:
+                window += ' AND start>=?'
+                bounds += (midnight(date.fromisoformat(first)),)
+            if last:
+                window += ' AND end<=?'
+                bounds += (midnight(date.fromisoformat(last) + timedelta(days=1)),)
         turns = self.archive.get('query_turns', {})
-        queries = [row[0] for row in db.execute('SELECT DISTINCT query FROM windows WHERE checked=0 AND retry<=?', (now,))]
+        queries = [row[0] for row in db.execute('SELECT DISTINCT query FROM windows WHERE checked=0 AND retry<=?' + window, (now,) + bounds)]
         queries.sort(key=lambda query: (turns.get(query, 0), query))
         pending = []
         for query in queries[:limit]:
-            pending.append(db.execute('SELECT query,start,end FROM windows WHERE query=? AND checked=0 AND retry<=? ORDER BY start ' +
-                                      ('ASC' if cycle % 3 == 2 else 'DESC') + ' LIMIT 1', (query, now)).fetchone())
+            pending.append(db.execute('SELECT query,start,end FROM windows WHERE query=? AND checked=0 AND retry<=?' + window + ' ORDER BY start ' +
+                                      ('ASC' if cycle % 3 == 2 else 'DESC') + ' LIMIT 1', (query, now) + bounds).fetchone())
             turns[query] = max(turns.values(), default=0) + 1
         self.archive.put('query_turns', turns)
         # Reserve a quarter of capacity for late arrivals/rechecks even during catch-up.
         if cycle % 4 == 3 or not pending:
-            rescan = db.execute('SELECT query,start,end FROM windows WHERE checked>0 AND retry<=? AND checked<=? ORDER BY checked LIMIT ?',
-                                (now, now - self.settings.get('late_arrival_rescan_seconds', 300), limit)).fetchall()
+            rescan = db.execute('SELECT query,start,end FROM windows WHERE checked>0 AND retry<=? AND checked<=?' + window + ' ORDER BY checked LIMIT ?',
+                                (now, now - self.settings.get('late_arrival_rescan_seconds', 300)) + bounds + (limit,)).fetchall()
             if rescan:
                 return rescan
         return pending
@@ -189,7 +201,7 @@ class Acquisition:
                         progress = archive.status()
                         progress.update(requests=self.requests, acquired_entries=self.added, phase='acquiring')
                         write_json(archive.directory / 'status.json', progress)
-                        context.logger.info('%s/%s: Loki queried %d/%d windows; %d new entries; %d pending',
+                        context.logger.debug('%s/%s: Loki queried %d/%d windows; %d new entries; %d pending',
                                             context.namespace, context.source['id'], self.requests, budget,
                                             self.added, progress['pending_windows'])
                         self.last_report = time.monotonic()
@@ -207,7 +219,7 @@ class Acquisition:
         context.metrics['acquisition'] = status
         write_json(archive.directory / 'status.json', status)
         if self.added or archive.changed:
-            context.logger.info('%s/%s: Loki acquired %d new entries; %d raw files changed; %d windows pending',
+            context.logger.debug('%s/%s: Loki acquired %d new entries; %d raw files changed; %d windows pending',
                                 context.namespace, context.source['id'], self.added, len(archive.changed), status['pending_windows'])
         if status['archive_conflicts']:
             context.notice('loki-adoption', '%d existing raw files await complete overlapping coverage for safe adoption' % status['archive_conflicts'])
@@ -222,7 +234,7 @@ class Acquisition:
                         days.append(date.fromisoformat(part.replace('_', '-')))
                 except ValueError:
                     pass
-        if days:
+        if days and not context.source.get('_continuous'):
             context.start_date = str(min(first, min(days)))
             context.end_date = str(max(last, max(days)))
 

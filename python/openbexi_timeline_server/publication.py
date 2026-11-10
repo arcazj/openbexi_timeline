@@ -5,6 +5,7 @@ import json
 import re
 import os
 import time
+import hashlib
 
 REPORT = re.compile(r'(?:timeline_[a-f0-9]{12}_report|[^/\\]+_\d+_\d+_\d{4}-\d{2}-\d{2}T\d{2}Z)\.json$')
 
@@ -26,8 +27,34 @@ def snapshot(root):
                 if os.name != 'nt' or attempt == 5: raise
                 time.sleep(.02 * (attempt + 1))
     except FileNotFoundError: return None
-    if value.get('version') != 1 or not isinstance(value.get('events'), list): raise ValueError('Invalid collector publication')
+    if value.get('version') == 2:
+        events = []
+        for raw in part_payloads(root, value):
+            records = json.loads(raw)['events']
+            events.extend(records)
+        if len(events) != value['record_count']: raise ValueError('Publication record count mismatch')
+        value['events'] = events
+    if value.get('version') not in (1, 2) or not isinstance(value.get('events'), list): raise ValueError('Invalid collector publication')
     return value
+
+
+def part_payloads(root, value, limit=64 * 1024 * 1024):
+    """Read only parts named by the pinned index, never scan a parts directory."""
+    base = (Path(root) / '.timeline-collector').resolve()
+    total = 0
+    for part in value['event_parts']:
+        name = part['path']
+        if not re.fullmatch(r'parts/[a-f0-9]{64}\.json', name): raise ValueError('Invalid publication part path')
+        target = (base / name).resolve()
+        if not target.is_relative_to(base): raise ValueError('Publication part escapes its source')
+        with target.open('rb') as stream: raw = stream.read(limit + 1)
+        if len(raw) > limit or len(raw) != part['bytes'] or hashlib.sha256(raw).hexdigest() != part['sha256']:
+            raise ValueError('Publication part integrity check failed')
+        records = json.loads(raw)['events']
+        if len(records) != part['records']: raise ValueError('Publication part count mismatch')
+        total += len(records)
+        yield raw
+    if total != value['record_count']: raise ValueError('Publication record count mismatch')
 
 
 def inventories(root):

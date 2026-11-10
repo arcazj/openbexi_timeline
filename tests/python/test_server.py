@@ -51,6 +51,24 @@ class MatchingTests(unittest.TestCase):
 
 
 class ServerTests(unittest.TestCase):
+    def test_partitioned_publication_is_indexed_and_descriptors_remain_complete(self):
+        import hashlib
+        from openbexi_timeline_server.publication import descriptor
+        parts = []
+        for identity in ('one', 'two'):
+            raw = json.dumps({'version': 1, 'events': [event(identity)]}).encode()
+            digest = hashlib.sha256(raw).hexdigest()
+            path = self.source/'.timeline-collector/parts'/(digest+'.json')
+            path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(raw)
+            parts.append({'path': 'parts/'+digest+'.json', 'sha256': digest, 'bytes': len(raw), 'records': 1})
+        atomic_json(self.source/'.timeline-collector/publication.json',
+                    {'version': 2, 'generation': 'partitioned', 'record_count': 2, 'event_parts': parts})
+        self.index.refresh()
+        records, metadata = self.scan()
+        self.assertEqual({r['id'] for r in records}, {'one', 'two'})
+        self.assertTrue(metadata['complete'], metadata)
+        self.assertEqual(descriptor(self.source, 'two'), event('two'))
+
     def test_atomic_collector_generation_can_change_while_previous_is_indexed(self):
         from unittest.mock import patch
         snapshot=self.source/'.timeline-collector/publication.json'

@@ -75,6 +75,21 @@ class LokiTests(unittest.TestCase):
         self.run_acquisition()
         self.assertEqual(file.stat().st_mtime_ns, before)
 
+    def test_continuous_current_pass_leaves_old_windows_for_background(self):
+        self.context.source['_continuous'] = True
+        engine = Acquisition(self.context, self.client)
+        try:
+            engine.plan('old', self.start - 86400 * NS, self.start)
+            engine.plan('current', self.start, self.start + 86400 * NS)
+            tasks = engine.tasks(10, 0)
+            self.assertEqual([item[0] for item in tasks], ['current'])
+            self.context.start_date = None
+            self.context.end_date = '2026-01-01'
+            tasks = engine.tasks(10, 0)
+            self.assertEqual([item[0] for item in tasks], ['old'])
+        finally:
+            engine.archive.close()
+
     def test_saturated_single_nanosecond_keeps_gap(self):
         self.context.source['options']['loki']['max_requests_per_pass'] = 128
         self.records *= 3

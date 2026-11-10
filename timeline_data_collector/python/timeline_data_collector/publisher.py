@@ -13,6 +13,7 @@ import uuid
 from urllib.parse import quote
 from .io import atomic_write, day_path, identity, model_root, normalize, read_json, write_json, utc_now, timestamp, remove_file
 from .locking import SourceLock
+from .publication import read_publication
 from .metadata import MetadataNormalizer, descriptor_record, merge_descriptor
 
 
@@ -76,7 +77,7 @@ class Publisher:
 
     def read_state(self):
         with self.locked():
-            return self.expand_state(read_json(self.state_path, {'version': 1, 'sources': {}, 'reports': []}))
+            return self.expand_state(read_publication(self.state_path, {'version': 1, 'sources': {}, 'reports': []}))
 
     @staticmethod
     def expand_state(state):
@@ -134,10 +135,10 @@ class Publisher:
                 retained[key] = record
         return {'version': 1, 'sources': {}, 'reports': [], 'retained': retained, 'baseline_reports': reports}
 
-    def publish(self, source_key, source_id, plugin, batch, *, run_id=None):
+    def publish(self, source_key, source_id, plugin, batch, *, run_id=None, checkpoint_scope=None, preserve_missing=False):
         records = [self.normalizer.record(record, self.namespace) for record in normalize(batch.records, self.namespace, source_key)]
         with self.locked():
-            previous = read_json(self.state_path)
+            previous = read_publication(self.state_path)
             if previous is None: previous = self._baseline()
             else: previous = self.expand_state(previous)
             candidate = deepcopy(previous)
@@ -150,12 +151,18 @@ class Publisher:
                     contribution['records'] = {key: normalized(record) for key, record in contribution['records'].items()}
                 candidate['metadata_revision'] = self.normalizer.revision
             source = candidate['sources'].setdefault(source_key, {'records': {}, 'checkpoint': {}})
-            if batch.snapshot: source['records'] = {}
+            if batch.snapshot and not preserve_missing: source['records'] = {}
             for record in records:
                 source['records'][record['id']] = record
                 candidate.get('retained', {}).pop(record['id'], None)
             for key in batch.deleted_ids: source['records'].pop(str(key), None)
-            source.update(checkpoint=batch.checkpoint, source_id=source_id, plugin=plugin, run_id=run_id, last_success=utc_now())
+            checkpoint = deepcopy(batch.checkpoint)
+            if checkpoint_scope:
+                checkpoint = deepcopy(source.get('checkpoint', {}))
+                checkpoint.setdefault('_collector_scopes', {})[checkpoint_scope] = deepcopy(batch.checkpoint)
+            elif '_collector_scopes' in source.get('checkpoint', {}):
+                checkpoint['_collector_scopes'] = source['checkpoint']['_collector_scopes']
+            source.update(checkpoint=checkpoint, source_id=source_id, plugin=plugin, run_id=run_id, last_success=utc_now())
             merged = dict(candidate.get('retained', {}))
             for contribution in candidate['sources'].values():
                 for key, record in contribution['records'].items():

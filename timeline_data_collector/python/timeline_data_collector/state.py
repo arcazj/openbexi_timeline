@@ -21,6 +21,10 @@ class State:
         self.db.execute('CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, value TEXT NOT NULL)')
         if 'owner' not in {row[1] for row in self.db.execute('PRAGMA table_info(jobs)')}:
             self.db.execute('ALTER TABLE jobs ADD COLUMN owner TEXT')
+        # Polling creates a large history. Dashboard reads and restart recovery
+        # must visit recent/unfinished jobs, not scan every stored result payload.
+        self.db.execute('CREATE INDEX IF NOT EXISTS jobs_created ON jobs(created DESC)')
+        self.db.execute("CREATE INDEX IF NOT EXISTS jobs_unfinished ON jobs(status) WHERE status IN ('queued','running')")
         self.db.commit()
 
     def create(self, request_id, request, owner=None):

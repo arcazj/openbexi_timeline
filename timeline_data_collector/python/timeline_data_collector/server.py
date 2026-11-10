@@ -33,6 +33,7 @@ class Dashboard:
                 load(path, trace=trace)  # Validate without loading converters.
             self.workspaces[identity(str(path))] = path
         self.schedulers = {self.initial: Scheduler(runner)}
+        self.collector = None
         app = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -72,6 +73,11 @@ class Dashboard:
                         selected, scheduler = app.selected(workspace)
                         config = selected.refresh()
                         pairs = {(group['namespace'], source['id']) for group, source in config.sources(include_disabled=True)}
+                        keys = {source_key(group, source) for group, source in config.sources(include_disabled=True)}
+                        if app.collector:
+                            with app.collector.guard:
+                                active_schedules = [entry['ident'] for key, entry in app.collector.entries.items() if key in keys]
+                        else: active_schedules = list(scheduler.running)
                         sources = []
                         for group, source in config.sources(include_disabled=True):
                             error = None
@@ -92,9 +98,10 @@ class Dashboard:
                         self.respond(dict(csrf=app.csrf, workspace=workspace, revision=config.revision,
                                           workspaces=[dict(id=key, name=path.stem) for key, path in app.workspaces.items()],
                                           sources=sources,
-                                          jobs=[job for job in selected.state.jobs() if (job['request']['namespace'], job['request']['source']) in pairs],
-                                          schedules={key: value for key, value in selected.state.schedules().items() if (value['namespace'], value['source']) in pairs},
-                                          active_schedules=list(scheduler.running))); return
+                                          jobs=[job for job in selected.state.jobs() if job['request']['source_key'] in keys],
+                                          schedules={key: value for key, value in selected.state.schedules().items()
+                                                     if value.get('source_key') in keys or (not value.get('source_key') and (value['namespace'], value['source']) in pairs)},
+                                          continuous=app.collector is not None, active_schedules=active_schedules)); return
                     self.respond({'error': 'Not found'}, 404)
                 except (ValueError, KeyError, OSError) as exc: self.respond({'error': str(exc)}, 400)
 
@@ -126,7 +133,8 @@ class Dashboard:
                         if body.get('revision') != selected.refresh().revision: raise ValueError('Configuration changed; reload before scheduling')
                         ident = scheduler.start(body['namespace'], body['source'], body['policy'], offline=body.get('offline', False),
                                                 date=body.get('date') or None, end_date=body.get('end_date') or None,
-                                                lookback_hours=body.get('lookback_hours', 48))
+                                                lookback_hours=body.get('lookback_hours', 48),
+                                                **({'automatic': not (body.get('date') or body.get('end_date'))} if app.collector else {}))
                         self.respond({'id': ident}, 201); return
                     if route == '/api/schedules/stop': scheduler.stop(body['id']); self.respond({'stopped': True}); return
                     self.respond({'error': 'Not found'}, 404)
@@ -149,9 +157,12 @@ class Dashboard:
             running = [runner.state.get(ident) for ident in active]
             for group, source in runner.configuration.sources(include_disabled=True):
                 namespace, ident = group['namespace'], source['id']
-                matches = lambda job: job['request']['namespace'] == namespace and job['request']['source'] == ident
+                matches = lambda job: job['request']['source_key'] == source_key(group, source)
                 job = next((job for job in running if matches(job)), None) or next((job for job in jobs if matches(job)), None)
                 schedule = next((entry for entry in schedules if entry['namespace'] == namespace and entry['source'] == ident), None)
+                if self.collector:
+                    with self.collector.guard:
+                        schedule = self.collector.entries.get(source_key(group, source))
                 entry = dict(workspace=workspace, namespace=namespace, source=ident, scheduled=schedule is not None, status='idle')
                 if source['source_plugin'] == 'loki':
                     entry['acquisition'] = read_json(runner.configuration.state_root / 'plugins' /
@@ -263,20 +274,24 @@ class Dashboard:
 
     def close(self):
         self.http.server_close()
+        if self.collector: self.collector.close()
         for scheduler in self.schedulers.values(): scheduler.close()
         for key, runner in self.runners.items():
             if key != self.initial: runner.close()
 
 
-def serve(runner, *, host=None, port=None, workspaces=()):
+def serve(runner, *, host=None, port=None, workspaces=(), all_workspaces=False):
+    from .continuous import ContinuousCollector, workspace_paths
     trace = StartupTrace('server')
     settings = runner.configuration.document.get('collector_ui', {})
-    dashboard = Dashboard(runner, host=host or settings.get('host', '127.0.0.1'), port=port if port is not None else settings.get('port', 8765), workspaces=workspaces)
+    paths = workspace_paths(runner.configuration.workspace, workspaces, discover=all_workspaces)
+    dashboard = Dashboard(runner, host=host or settings.get('host', '127.0.0.1'), port=port if port is not None else settings.get('port', 8765), workspaces=paths)
     try:
         with trace.step('applying startup schedule policy'):
-            dashboard.schedulers[dashboard.initial].resume()
+            dashboard.collector = ContinuousCollector(dashboard)
+            dashboard.collector.start()
         trace.finish('Timeline data collector ready', url=dashboard.url,
-                     active_schedules=len(dashboard.schedulers[dashboard.initial].running))
+                     active_schedules=len(dashboard.collector.entries))
         dashboard.http.serve_forever(poll_interval=.2)
     finally: dashboard.close()
     return 0

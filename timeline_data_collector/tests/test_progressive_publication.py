@@ -2,6 +2,9 @@ from pathlib import Path
 import tempfile
 import unittest
 import os
+import json
+import hashlib
+from unittest.mock import patch
 from timeline_data_collector.contracts import RecordBatch
 from timeline_data_collector.io import read_json, write_json
 from timeline_data_collector.publisher import Publisher
@@ -12,6 +15,50 @@ def event(key, day='01', description='initial'):
 
 
 class PublicationTests(unittest.TestCase):
+    def test_existing_partitioned_data_survives_restored_limit(self):
+        self.publish([event('one'), event('two')])
+        original = self.writer.read_state()
+        index = read_json(self.writer.state_path)
+        records = index.pop('events')
+        raw = json.dumps({'version': 1, 'events': records}).encode()
+        digest = hashlib.sha256(raw).hexdigest()
+        part = self.writer.state_dir / 'parts' / (digest + '.json')
+        part.parent.mkdir(); part.write_bytes(raw)
+        index.update(version=2, event_parts=[dict(path='parts/'+digest+'.json',
+                     sha256=digest, bytes=len(raw), records=len(records))])
+        write_json(self.writer.state_path, index)
+        before = self.writer.state_path.read_bytes()
+        exports = {path: path.read_bytes() for path in self.root.rglob('*.json')}
+        self.assertEqual(self.writer.read_state()['events'], original['events'])
+        with patch.object(Publisher, 'MAX_SNAPSHOT_BYTES', 1200):
+            with self.assertRaisesRegex(ValueError, '64 MiB'):
+                self.publish([event('new', description='detail' * 1000)])
+        self.assertEqual(self.writer.state_path.read_bytes(), before)
+        self.assertEqual(exports, {path: path.read_bytes() for path in self.root.rglob('*.json')})
+        self.assertEqual(self.writer.read_state()['sources'], original['sources'])
+        self.assertFalse(self.writer.pending.exists())
+        # A namespace that fits the restored budget returns to the old format.
+        self.publish([event('new')])
+        committed = read_json(self.writer.state_path)
+        self.assertEqual(committed['version'], 1)
+        self.assertNotIn('event_parts', committed)
+        self.assertEqual({record['id'] for record in committed['events']}, {'one', 'two', 'new'})
+        self.assertEqual(part.read_bytes(), raw)
+
+    def test_restored_writer_does_not_create_parts_when_over_budget(self):
+        self.publish([event('one')])
+        before = self.writer.state_path.read_bytes()
+        with patch.object(Publisher, 'MAX_SNAPSHOT_BYTES', 1200):
+            with self.assertRaisesRegex(ValueError, '64 MiB'):
+                self.publish([event('new', description='detail' * 1000)])
+        self.assertEqual(self.writer.state_path.read_bytes(), before)
+        self.assertFalse((self.writer.state_dir / 'parts').exists())
+
+    def test_publication_part_path_escape_is_rejected(self):
+        write_json(self.writer.state_path, {'version': 2, 'record_count': 1, 'event_parts': [
+            {'path': '../outside.json', 'bytes': 1, 'sha256': 'x', 'records': 1}]})
+        with self.assertRaisesRegex(ValueError, 'path'): self.writer.read_state()
+
     @unittest.skipUnless(os.name=='nt','Windows file sharing regression')
     def test_atomic_replace_waits_for_a_reader_to_release_file(self):
         import ctypes,threading,time

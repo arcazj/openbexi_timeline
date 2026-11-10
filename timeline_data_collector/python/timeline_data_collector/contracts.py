@@ -50,7 +50,7 @@ class Context:
     trace: Any = None
 
     def progress(self, message, *arguments):
-        """First-pass diagnostics at INFO; unchanged polling remains at DEBUG."""
+        """Internal progress is DEBUG; completed work has a separate INFO summary."""
         from .tracing import safe_text
         message = message % arguments if arguments else message
         if self.trace: self.trace.note(message)
@@ -61,7 +61,7 @@ class Context:
         previous = self.notices.get(key)
         if message is None:
             if previous:
-                self.logger.info('%s/%s: %s available again', self.namespace, self.source['id'], key)
+                self.logger.debug('%s/%s: %s available again', self.namespace, self.source['id'], key)
                 self.notices.pop(key, None)
         elif previous != message:
             self.logger.log(level, message)

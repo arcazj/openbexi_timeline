@@ -51,6 +51,9 @@ def exception_fields(error):
     if getattr(error, 'validator', None):
         fields.update(validator=error.validator, field=list(error.absolute_path))
     if isinstance(error, OSError): fields['errno'] = error.errno
+    if isinstance(error, FileNotFoundError):
+        fields['reason'] = 'Required file does not exist'
+        if error.filename is not None: fields['path'] = error.filename
     return fields
 
 
@@ -58,8 +61,16 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
+class CollectorLogFilter(logging.Filter):
+    """Only completed-work summaries use INFO, including third-party adapters."""
+    def filter(self, record):
+        if record.levelno == logging.INFO and not getattr(record, 'collector_summary', False):
+            record.levelno, record.levelname = logging.DEBUG, 'DEBUG'
+        return record.levelno >= logging.getLogger().getEffectiveLevel()
+
+
 class StartupTrace:
-    def __init__(self, scope, *, level=logging.INFO, logger=None, heartbeat_seconds=10):
+    def __init__(self, scope, *, level=logging.DEBUG, logger=None, heartbeat_seconds=10):
         self.scope = safe_text(scope)
         self.level = level
         self.logger = logger or LOG

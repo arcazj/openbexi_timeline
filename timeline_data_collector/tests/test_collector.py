@@ -2,6 +2,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from pathlib import Path
 import hashlib
+import gzip
 import http.client
 import json
 import os
@@ -128,7 +129,7 @@ class CollectorTests(unittest.TestCase):
         self.ws.source['options'] = {'snapshot': True}; self.ws.save()
         runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
         before = {path: path.read_bytes() for path in self.ws.output.rglob('*.json')}
-        input_file.unlink(); self.ws.input.rmdir()
+        Path(str(input_file)+'.gz').unlink(); self.ws.input.rmdir()
         for missing in (True, False):
             with self.subTest(missing=missing):
                 if not missing: self.ws.input.mkdir()
@@ -142,9 +143,9 @@ class CollectorTests(unittest.TestCase):
         write_json(input_file, [event('new')])
         with self.assertLogs('timeline_data_collector', level='INFO') as logs:
             job = runner.submit()[0]
-        self.assertTrue(any('input available again' in message for message in logs.output))
+        self.assertTrue(any('Parsed' in message for message in logs.output))
         self.assertEqual(job['state'], 'succeeded', job)
-        self.assertEqual([record['id'] for record in self.ws.records()], ['new'])
+        self.assertEqual({record['id'] for record in self.ws.records()}, {'one', 'new'})
 
     def test_empty_input_does_not_read_existing_legacy_reports(self):
         self.ws.document['target_path'] = str(self.ws.input / 'output/yyyy/mm/dd'); self.ws.save()
@@ -192,7 +193,7 @@ class CollectorTests(unittest.TestCase):
         for message in ('3 selected sources', 'DEMO/disabled: will skip (source disabled',
                         'Starting DEMO/input', 'scanning local input', 'discovered 1 matching input files',
                         'checked 1/1 files', 'prepared input copies 1/1 files', 'converting 1 input items',
-                        'publishing 1 records', 'DEMO/input: Parsed', 'Skipping DEMO/missing'):
+                        'publishing 1 records', 'DEMO: Parsed', 'Skipping DEMO/missing'):
             self.assertIn(message, result.stderr)
         self.assertLess(result.stderr.index('DEMO/missing: queued'), result.stderr.index('Starting DEMO/input'))
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
@@ -263,7 +264,8 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(closed, [True])
 
     def test_first_ingestion_reads_original_file_once_and_verifies_copy(self):
-        input_file = self.ws.input / 'events.json'; write_json(input_file, [event()])
+        input_file = self.ws.input / 'events.json.gz'
+        input_file.write_bytes(gzip.compress(json.dumps([event()]).encode()))
         runner = self.runner(); original_open = Path.open
         reads = []
         def opened(path, mode='r', *args, **kwargs):
@@ -282,7 +284,7 @@ class CollectorTests(unittest.TestCase):
         runner.registry.load('local', 'source')
         def corrupted(source, destination):
             replace(source, destination)
-            if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json':
+            if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json.gz':
                 Path(destination).write_bytes(b'corrupted copy')
         with patch('timeline_file_sources.os.replace', side_effect=corrupted):
             job = runner.submit()[0]
@@ -429,7 +431,7 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         staged = list(snapshot_path(Path(self.ws.service['state_root']) / 'plugins').glob('*/inputs/*/' + name))
         self.assertEqual(len(staged), 1)
         self.assertGreater(len(str(staged[0])), 260)
-        self.assertEqual(staged[0].read_bytes(), (self.ws.input / name).read_bytes())
+        self.assertEqual(staged[0].read_bytes(), gzip.decompress((self.ws.input / (name+'.gz')).read_bytes()))
         self.assertEqual(runner.submit()[0]['result']['batches'], 0)
 
     def test_registry_rejects_duplicate_and_incompatible_plugins(self):

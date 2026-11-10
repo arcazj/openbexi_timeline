@@ -166,6 +166,9 @@ Desktop.ini
 !/timeline_data_collector/
 /.run/Collector - * - *.run.xml
 /.run/Timeline Python - *.run.xml
+/.run/Collector - SOC.run.xml
+/.run/Collector - MCC.run.xml
+/release/service.local.yml
 /tools/com/openbexi/intelsat/
 **/.venv/
 **/target/

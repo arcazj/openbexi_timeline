@@ -17,7 +17,7 @@ import ijson
 from ijson.common import ObjectBuilder
 
 from .matching import compact, digest, instant, prepare, source_key
-from .publication import inventories
+from .publication import inventories, part_payloads
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
@@ -427,7 +427,13 @@ class TimelineIndex:
             with handle_source as handle:
                 identity = source_key(path.resolve(), source.namespace, "")
                 reader = BoundedReader(handle, self.config.max_file_bytes)
-                for ordinal, value in enumerate(event_stream(reader, self.config.max_record_bytes)):
+                publication_index = json.loads(raw) if committed else None
+                def committed_records():
+                    for payload in part_payloads(source.root, publication_index, self.config.max_file_bytes):
+                        with io.BytesIO(payload) as part:
+                            yield from event_stream(BoundedReader(part, self.config.max_file_bytes), self.config.max_record_bytes)
+                values = committed_records() if publication_index and publication_index.get('version') == 2 else event_stream(reader, self.config.max_record_bytes)
+                for ordinal, value in enumerate(values):
                     if self.stopping.is_set():
                         raise InterruptedError("Indexer stopping")
                     count += 1
@@ -440,7 +446,7 @@ class TimelineIndex:
                     pending.append((key, version, instant(record["start"]), instant(record["start"] if record.get("end") is None else record["end"]), compact(record), created))
                     if len(pending) >= 512:
                         write_pending()
-                sha = reader.sha.hexdigest()
+                sha = hashlib.sha256(raw).hexdigest() if committed else reader.sha.hexdigest()
         except InterruptedError:
             with self.connect() as db:
                 db.execute("DELETE FROM records WHERE file_key=? AND version=?", (key, version))
