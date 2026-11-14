@@ -148,6 +148,23 @@ class State:
     def jobs(self, limit=200):
         with self.lock: return [self._decode(row) for row in self.db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT ?', (limit,))]
 
+    def collection_history(self, source_key):
+        """Small coverage records for one source, without the dashboard's history limit."""
+        with self.lock:
+            rows = self.db.execute('''SELECT json_extract(request,'$.date'),
+                json_extract(request,'$.end_date'), created, status,
+                COALESCE(json_extract(result,'$.batches'),0),
+                COALESCE(json_extract(result,'$.yielded'),0)
+                FROM jobs WHERE json_extract(request,'$.source_key')=?
+                AND status IN ('succeeded','failed','cancelled')
+                AND COALESCE(json_extract(request,'$.offline'),0)=0
+                AND COALESCE(json_extract(result,'$.skipped'),0)=0
+                AND COALESCE(json_extract(result,'$.input_unavailable'),0)=0
+                AND COALESCE(json_extract(result,'$.metrics.waiting_files'),0)=0''', (source_key,)).fetchall()
+        return [dict(date=first, end_date=last, started_at=started,
+                     complete=status == 'succeeded' and batches > 0 and not yielded)
+                for first, last, started, status, batches, yielded in rows]
+
     def recover(self):
         """A dead owner's OS lease distinguishes interrupted jobs from other processes."""
         with self.lock:

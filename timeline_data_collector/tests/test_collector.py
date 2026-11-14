@@ -1,5 +1,6 @@
 from __future__ import annotations
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 import hashlib
 import gzip
@@ -513,6 +514,22 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         self.assertEqual(date_range('2026'), ('2026-01-01', '2026-12-31'))
         with self.assertRaises(ValueError): date_range('2026-03-02', '2026-03-01')
         with self.assertRaises(ValueError): execution_policy({'mode':'interval', 'interval_seconds':0})
+
+    def test_past_days_selects_complete_utc_days_across_calendar_boundaries(self):
+        from timeline_data_collector.dates import repeat_range
+        for now, expected in [
+            ('2026-11-14T12:00:00+00:00', ('2026-11-07', '2026-11-13')),
+            ('2026-01-01T00:00:00+00:00', ('2025-12-25', '2025-12-31')),
+            ('2024-03-01T23:59:59+00:00', ('2024-02-23', '2024-02-29')),
+        ]:
+            with self.subTest(now=now), patch('timeline_data_collector.dates.datetime') as clock:
+                clock.now.return_value = datetime.fromisoformat(now)
+                self.assertEqual(date_range('past-7-days'), expected)
+                self.assertEqual(repeat_range('past-7-days'), expected)
+                self.assertEqual(date_range('past-1-days'), (expected[1], expected[1]))
+        for selector in ('past-0-days', 'past--1-days', 'past-1.5-days'):
+            with self.assertRaises(ValueError): date_range(selector)
+        with self.assertRaises(ValueError): date_range('past-7-days', '2026-11-13')
 
     def test_snapshot_deletion_retires_parent_and_child_descriptors(self):
         publisher = Publisher(self.ws.target, 'DEMO')

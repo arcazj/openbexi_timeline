@@ -61,10 +61,18 @@ final class EarthquakeArchiveImporter {
     }
 
     void importRange(long start, long end) throws IOException {
+        importRange(start, end, false);
+    }
+
+    void importRange(long start, long end, boolean refresh) throws IOException {
         if (start > end) throw new IllegalArgumentException("starttime must be on or before endtime");
         // Future intervals cannot be complete: events may still occur in them.
         end = Math.min(end, Instant.now().toEpochMilli() - 1);
         if (start > end) return;
+        if (refresh) {
+            importMissing(List.of(new Interval(start, end)));
+            return;
+        }
         List<Interval> missing = new ArrayList<>();
         long cursor = start;
         for (Interval range : completed) {

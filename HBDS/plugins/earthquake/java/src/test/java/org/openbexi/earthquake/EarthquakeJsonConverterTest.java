@@ -27,6 +27,7 @@ public class EarthquakeJsonConverterTest {
             arguments();
             boundariesAndMerging(root.resolve("boundaries"));
             skipAndFillGaps(root.resolve("gaps"));
+            refreshLateArrivals(root.resolve("refresh"));
             splitAndResume(root.resolve("resume"));
             failedResponses(root.resolve("failures"));
             httpRetries();
@@ -123,6 +124,24 @@ public class EarthquakeJsonConverterTest {
                 check(request.end <= midpoint, "Resume must never query the completed newer batch");
             }
             check(readHour(root).length() == features.size(), "Splitting must retain all events at the shared boundary");
+        }
+    }
+
+    private static void refreshLateArrivals(Path root) throws Exception {
+        List<JSONObject> features = new ArrayList<>();
+        try (Catalog server = new Catalog(features)) {
+            importer(server, root).importRange(BASE, BASE + 1000);
+            int requests = server.requests.size();
+            features.add(feature("late", BASE + 500));
+            importer(server, root).importRange(BASE, BASE + 1000);
+            check(server.requests.size() == requests, "Normal imports reuse cached empty intervals");
+            importer(server, root).importRange(BASE, BASE + 1000, true);
+            check(server.requests.size() > requests && readHour(root).length() == 1,
+                    "Forced catch-up must find late events inside previously completed intervals");
+            importer(server, root).importRange(BASE, BASE + 1000, true);
+            check(readHour(root).length() == 1, "Forced catch-up must preserve stable IDs");
+            check(EarthquakeJsonConverter.parseArgs(new String[]{"-refresh", "2024-03-01", "2024-03-02"})
+                    .containsKey("refresh"), "Bridge refresh flag must reach the importer");
         }
     }
 

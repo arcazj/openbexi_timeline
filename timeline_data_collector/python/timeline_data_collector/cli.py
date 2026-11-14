@@ -35,13 +35,15 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--plugin', default=plugin)
             selected.add_argument('--offline', action='store_true')
         if command == 'run':
+            selected.add_argument('--fill-gaps', action='store_true', help='Catch up GEO sources from recorded collection gaps through today, then exit')
+            selected.add_argument('--initial-days', type=int, default=7, help='Days before today to start --fill-gaps when no collection history exists (default 7)')
             selected.add_argument('--once', action='store_true', help='Complete one conversion pass, then exit (the default; does not restrict dates)')
             selected.add_argument('--mode', choices=('once', 'interval', 'watch', 'stream'), default='once')
             selected.add_argument('--interval-seconds', type=float, help='Delay between passes; watch defaults to 2 seconds, interval to 300')
             selected.add_argument('--lookback-hours', type=float, default=48, help='Late-arrival window for repeating --date today (UTC; default 48)')
             selected.add_argument('--json', action='store_true', help='Also print machine-readable job results to stdout')
             selected.add_argument('--resume-on-restart', action='store_true')
-            selected.add_argument('--date', help='Select today (UTC), YYYY, YYYY-MM or YYYY-MM-DD; a single day selects only that day unless --end-date is supplied')
+            selected.add_argument('--date', help='Select today (UTC), past-N-days (previous N complete UTC days), YYYY, YYYY-MM or YYYY-MM-DD; a single day selects only that day unless --end-date is supplied')
             selected.add_argument('--end-date', help='Inclusive last day (YYYY-MM-DD) of the range beginning at --date')
             selected.add_argument('--force', action='store_true', help='Reprocess without deleting other source contributions')
             selected.add_argument('--validate-only', action='store_true')
@@ -83,6 +85,11 @@ def main(arguments=None, *, plugin=None):
                          all_workspaces=args.all_workspaces)
         trace.phase = 'validating command options'
         if plugin and args.plugin != plugin: raise ValueError('A standalone converter cannot select a different plugin')
+        if args.command == 'run' and args.fill_gaps:
+            if args.mode != 'once' or args.offline or args.date or args.end_date:
+                raise ValueError('--fill-gaps uses online one-pass collection through today; do not combine it with --mode, --offline or explicit dates')
+            from .catchup import validate_sources
+            validate_sources(config.sources(args.namespace, args.source, args.plugin), args.initial_days)
         if args.command == 'validate' or args.validate_only:
             for group, source in config.sources(args.namespace, args.source, args.plugin, include_disabled=True):
                 trace.note('validating selected source', namespace=group['namespace'], source=source['id'],
@@ -91,6 +98,13 @@ def main(arguments=None, *, plugin=None):
             trace.finish('configuration validation complete')
             print(json.dumps({'valid': True, 'configuration_revision': config.revision})); return 0
         if args.once and args.mode != 'once': raise ValueError('--once conflicts with a repeating/streaming mode')
+        if args.fill_gaps:
+            from .catchup import collect
+            jobs = collect(runner, namespace=args.namespace, source=args.source, plugin=args.plugin,
+                           initial_days=args.initial_days, request_id=args.request_id)
+            if args.json: print(json.dumps(jobs, indent=2))
+            trace.finish('gap collection finished', jobs=len(jobs), succeeded=sum(job['state'] == 'succeeded' for job in jobs))
+            return 1 if any(job['state'] != 'succeeded' for job in jobs) else 0
         with trace.step('resolving requested UTC date range', date=args.date, end_date=args.end_date):
             first, last = date_range(args.date, args.end_date)
         trace.note('execution selected', namespace=args.namespace, source=args.source, plugin=args.plugin,

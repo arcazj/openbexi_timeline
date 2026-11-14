@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-10-16T22:59:35.996Z",
-  "modelSha256": "9a38fc10b4402ff00f4ddb7d28dc8e48baa09e65f9b59e7301d9b199b1dc27d0",
+  "generatedAt": "2026-11-14T22:01:02.538Z",
+  "modelSha256": "0f1941df14170a60c616dff728de71da4a07577950724bffa134934ef1b4efc9",
   "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
   "browser": {
-    "name": "msedge.exe",
-    "version": "155.0.4283.45",
+    "name": "chrome.exe",
+    "version": "153.0.8010.12",
     "viewport": {
       "width": 4400,
       "height": 4400
@@ -140,7 +140,7 @@
     "width": 5500,
     "height": 5500,
     "sampled": 1048576,
-    "colored": 80045,
+    "colored": 80044,
     "dark": 5156
   },
   "pageErrors": [],

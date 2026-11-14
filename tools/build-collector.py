@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tomllib
 import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -32,21 +33,19 @@ def build(selected=(), *, skip_java=False):
     projects=[ROOT/'timeline_data_collector',*(ROOT/'HBDS/plugins'/name for name in names)]
     for project in projects:
         name=project.name
+        metadata=tomllib.loads((project/'pyproject.toml').read_text())['project']
         if name in JAVA:
             if not skip_java:
                 maven=os.environ.get('MVN') or shutil.which('mvn')
                 if not maven: raise ValueError('Maven is required; set MVN to mvn.cmd or put mvn on PATH')
                 run([maven,'--batch-mode','--no-transfer-progress','-f',project/'pom.xml','verify'])
-            artifact=project/'target'/f'timeline-plugin-{name}-1.0.0.jar'
+            artifact=project/'target'/f'timeline-plugin-{name}-{metadata["version"]}.jar'
             if not artifact.is_file(): raise ValueError('Java plugin artifact is missing: '+str(artifact))
             library=project/'src'/JAVA[name]/'lib';library.mkdir(exist_ok=True)
             shutil.copyfile(artifact,library/artifact.name)
             destination=output/artifact.name;shutil.copyfile(artifact,destination)
             manifest.append({'name':destination.name,'sha256':checksum(destination),'package':name})
-        before={path.name for path in output.glob('*.whl')}
         run([sys.executable,'-m','build','--wheel','--no-isolation','--outdir',output,project])
-        import tomllib
-        metadata=tomllib.loads((project/'pyproject.toml').read_text())['project']
         prefix=metadata['name'].replace('-','_')+'-'+metadata['version']+'-'
         wheels=[path for path in output.glob('*.whl') if path.name.startswith(prefix)]
         if len(wheels)!=1: raise ValueError('Expected one independently built wheel for '+name)
