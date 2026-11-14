@@ -17,7 +17,9 @@ concurrency:
 
 jobs:
   public-collector:
-    runs-on: ubuntu-latest
+    # Keep the tested broker environment stable. The Ubuntu 26.04 image's
+    # packaged broker cannot read the fixture's temporary configuration.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
