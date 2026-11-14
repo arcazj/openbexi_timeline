@@ -10,4 +10,8 @@ timeline-convert-earthquake --workspace HBDS/GEO_Workspace.json --namespace eart
 
 Committed samples use `HBDS/workspace.json` and `NONE`; opening that demo never fetches live data.
 
+`--force` refreshes the selected online date range even when the Java importer
+has cached its coverage, allowing late arrivals and upstream corrections to be
+collected. The core's `run --fill-gaps` option uses this behavior for catch-up.
+
 See [collector setup and API contracts](../../../timeline_data_collector/README.md) for installation, UI execution, repeat policies and recovery.

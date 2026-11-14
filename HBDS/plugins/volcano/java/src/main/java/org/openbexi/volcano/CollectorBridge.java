@@ -11,6 +11,7 @@ public final class CollectorBridge {
         String[] args;
         if (request.has("input_file")) args = new String[]{"-jsonFilePath", request.getString("input_file")};
         else if (request.optBoolean("archive")) args = new String[]{"-all"};
+        else if (request.has("start_date")) args = new String[]{"-range", request.getString("start_date"), request.getString("end_date")};
         else args = new String[]{"-NewestOrRecent"};
         VolcanoJsonConverter.main(args);
         JSONArray reports = new JSONArray();

@@ -9,7 +9,14 @@ def date_range(selector=None, end=None):
         if end: raise ValueError('--end-date requires --date')
         return None, None
     selector = selector.replace('_', '-')
-    if selector.lower() == 'today':
+    past = re.fullmatch(r'past-(\d+)-days', selector.lower())
+    if past:
+        days = int(past[1])
+        if days < 1: raise ValueError('Past-day count must be positive')
+        if end: raise ValueError('A past-days selector cannot have an explicit end date')
+        today = datetime.now(timezone.utc).date()
+        first, last = today - timedelta(days=days), today - timedelta(days=1)
+    elif selector.lower() == 'today':
         first = last = datetime.now(timezone.utc).date()
     elif re.fullmatch(r'\d{4}', selector):
         first, last = date(int(selector), 1, 1), date(int(selector), 12, 31)

@@ -15,6 +15,9 @@ class Plugin:
     def collect(self, context):
         options = context.options
         request = dict(output_root=str(context.workdir / 'acquired'), namespace=context.namespace, archive=options.get('archive', False))
+        today = datetime.now(timezone.utc).date().isoformat()
+        if context.start_date and (context.start_date < today or context.force):
+            request.update(start_date=context.start_date, end_date=context.end_date or today)
         checkpoint = {}
         if options.get('input_file'):
             path = (context.workspace.parent / options['input_file']).resolve()
@@ -24,7 +27,7 @@ class Plugin:
             request['input_file'] = str(path)
         elif context.offline: raise ValueError('Offline volcano conversion requires options.input_file')
         if options.get('api_base'): request['api_base'] = options['api_base']
-        records = java_records(Path(__file__).parent, 'timeline-plugin-volcano-1.0.0.jar',
+        records = java_records(Path(__file__).parent, 'timeline-plugin-volcano-1.0.1.jar',
                                'org.openbexi.volcano.CollectorBridge', request, context)
         yield RecordBatch(records, checkpoint or {'last_acquired': datetime.now(timezone.utc).isoformat()})
 

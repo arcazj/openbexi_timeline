@@ -200,11 +200,36 @@ query strings are redacted. Failures identify the stage, exception type and code
 location; schema failures also identify the field and validation rule.
 
 Explicit standalone `run --once` commands only consider the selected workspace.
-`--date` accepts `today`, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; ranges are inclusive
-UTC calendar dates. `--offline` forbids remote acquisition. `--validate-only`
+`--date` accepts `today`, `past-N-days`, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; ranges are inclusive
+UTC calendar dates. `past-7-days` selects the previous seven complete UTC days,
+excluding today, and cannot be combined with `--end-date`. For GEO history, run
+`timeline-data-collector run --workspace HBDS/GEO_Workspace.json --date past-7-days --once`
+or use IntelliJ's **GEO_collector_7_days** configuration. Earthquakes use the dated
+USGS catalog query; volcanoes use the paginated HANS archive for the selected range.
+`--offline` forbids remote acquisition. `--validate-only`
 checks the selected configuration and plugin capabilities. `--force` reprocesses
 input and preserves other source contributions. A repeated `--request-id`
 returns the existing job; changing its parameters is an error.
+
+For GEO catch-up, use IntelliJ's **GEO_collector_fill_gaps** or:
+
+```powershell
+timeline-data-collector run --workspace HBDS/GEO_Workspace.json --fill-gaps --initial-days 7 --once
+```
+
+This online one-pass option derives earthquake and volcano coverage separately
+from durable job history, using the requested dates rather than the time a
+historical job finished. It fills recorded gaps through today (UTC), rechecks
+the latest fully covered day for late arrivals, and refreshes upstream data even
+when converter caches already cover an interval. Successful empty days count as
+checked; failures and partial current-day polls do not certify a full day.
+Each completed day is retained across restarts. A failed day stops that source's
+pass while the other source can continue. If there is no collection history,
+`--initial-days` chooses how many days before today to start (default seven,
+plus today). Retain `.local-private/timeline-collector/jobs.sqlite3` for resumption.
+The option cannot be combined with explicit dates, repeating modes, offline
+input, local input files, or full-archive mode. It does not infer completeness
+from event timestamps: a day with no events is not necessarily a collection gap.
 
 ## Configuration
 

@@ -62,11 +62,11 @@
           },
           {
             "file": "HBDS/plugins/earthquake/plugin.json",
-            "sha256": "64098632b2a2729ecb4c197926a3f70afc76a7411f231520919d341cf00ed608"
+            "sha256": "13914f9465168d6c37a55cc7b5fa66aaefc2800cd86c16d06bcaf581fc283acb"
           },
           {
             "file": "HBDS/plugins/volcano/plugin.json",
-            "sha256": "09e1774812fad2bc2b1a84056b669926a19d557ee51800235e0d9044f588c7d6"
+            "sha256": "15af037f25940d78efe3b4247fb0863701f90be59c19530379dd7e7e16686ebe"
           },
           {
             "file": "HBDS/service.yml",
@@ -1943,7 +1943,7 @@
           "pluginManifests": [
             {
               "id": "earthquake",
-              "version": "1.0.0",
+              "version": "1.0.1",
               "api_version": "1",
               "runtime": "java",
               "capabilities": [
@@ -1977,7 +1977,7 @@
             },
             {
               "id": "volcano",
-              "version": "1.0.0",
+              "version": "1.0.1",
               "api_version": "1",
               "runtime": "java",
               "capabilities": [
@@ -9099,7 +9099,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_version",
-            "value": "1.0.0"
+            "value": "1.0.1"
           },
           {
             "attributeId": "obt29_PluginManifest_api_version",
@@ -9278,7 +9278,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_version",
-            "value": "1.0.0"
+            "value": "1.0.1"
           },
           {
             "attributeId": "obt29_PluginManifest_api_version",

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
 /** Standalone regression tests; uses only the application's JSON dependency and JDK 17. */
@@ -25,6 +26,8 @@ public class VolcanoJsonConverterTest {
             TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
             paginationAndMerging(root.resolve("archive"));
             incrementalQueries(root.resolve("incremental"));
+            boundedDateRange(root.resolve("bounded"));
+            pairedNoticeTypesAndLegacyCheckpoint(root.resolve("paired"));
             resumeAfterFailure(root.resolve("resume"));
             failures(root.resolve("failures"));
             System.out.println("All volcano regression tests passed.");
@@ -125,8 +128,90 @@ public class VolcanoJsonConverterTest {
         }
     }
 
+    private static void boundedDateRange(Path root) throws Exception {
+        long first = Instant.parse("2006-11-15T00:00:00Z").getEpochSecond();
+        long last = Instant.parse("2006-11-21T23:59:59Z").getEpochSecond();
+        try (ArchiveServer server = new ArchiveServer(2, List.of(
+                new JSONArray().put(record("first", first)),
+                new JSONArray().put(record("last", last))), false, false)) {
+            server.expectedStart = first;
+            server.failPage = 1;
+            try {
+                VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-15", "2006-11-21");
+                throw new AssertionError("Expected second-page failure");
+            } catch (IOException expected) {
+                check(expected.getMessage().contains("503"), "Expected interrupted range");
+            }
+            server.failPage = -1;
+            VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-15", "2006-11-21");
+            check(server.cutoff == last, "Include the final second of the last UTC day");
+            check(server.pages.equals(List.of(0, 1, 1, 2)) && server.preflights == 1, "Resume bounded pagination without replaying saved pages");
+            check(Files.exists(root.resolve("2006/11/15/volcano_2006_11_15_00.json")), "Include first day");
+            check(find(readDay(root), "last").getString("start").contains("23:59:59 UTC 2006"), "Include last second");
+            VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-15", "2006-11-21");
+            check(server.preflights == 2, "Requery completed ranges for upstream corrections");
+            server.expectedStart = first + 86400;
+            server.total = 1;
+            server.responses = List.of(new JSONArray().put(record("last", last)));
+            VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-16", "2006-11-22");
+            check(server.preflights == 3, "A moving range must use its own checkpoint");
+            try {
+                VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-22", "2006-11-21");
+                throw new AssertionError("Reversed range must fail");
+            } catch (IllegalArgumentException expected) {
+                check(server.preflights == 3, "Reject invalid ranges before HTTP queries");
+            }
+        }
+    }
+
     private static JSONObject checkpoint(Path root) throws IOException {
         return new JSONObject(Files.readString(root.resolve(".archive-progress.json")));
+    }
+
+    private static void pairedNoticeTypesAndLegacyCheckpoint(Path root) throws Exception {
+        long from = Instant.parse("2006-11-21T00:00:00Z").getEpochSecond();
+        long through = from + 86400 - 1;
+        JSONObject regular = record("shared", MIDNIGHT).put("noticeTypeCd", "VAN")
+                .put("noticeHtml", "<p>Regular activity notice</p>");
+        JSONObject aviation = record("shared", MIDNIGHT).put("noticeTypeCd", "VV")
+                .put("permLink", "https://example.test/vona/shared").put("noticeHtml", "<p>Aviation notice</p>");
+        JSONArray page = new JSONArray().put(regular).put(aviation)
+                .put(record("other-a", MIDNIGHT + 1)).put(record("other-b", MIDNIGHT + 2)).put(record("other-c", MIDNIGHT + 3));
+        try (ArchiveServer server = new ArchiveServer(5, List.of(page), false, false)) {
+            server.expectedStart = from;
+            server.cutoff = through; // The seeded pending checkpoint already contains its preflight result.
+            var seeded = VolcanoJsonConverter.processJson(new JSONArray().put(recentNotice("shared", MIDNIGHT)).toString(), root);
+            seeded.values().iterator().next().getJSONObject(0).put("id", "legacy-regular-id");
+            VolcanoJsonConverter.saveEventsToFile(seeded);
+            JSONObject query = new JSONObject().put("obsAbbr", "").put("noticeTypeCd", "").put("volcCd", "")
+                    .put("startUnixtime", from).put("endUnixtime", through).put("searchText", "").put("pageIndex", 1);
+            JSONObject pending = new JSONObject().put("query", query).put("expected", 5)
+                    .put("seen", new JSONArray(List.of("shared", "other-a", "other-b", "other-c")));
+            Path checkpoint = root.resolve(".archive-2006-11-21_2006-11-21-progress.json");
+            Files.writeString(checkpoint, new JSONObject().put("version", 1).put("apiBase", server.url())
+                    .put("startInclusive", from).put("completedThrough", from - 1).put("pending", pending).toString());
+            VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-21", "2006-11-21");
+            check(server.pages.equals(List.of(0, 1)), "Replay old identifier-only checkpoints from page zero");
+            JSONArray events = readDay(root);
+            check(events.length() == 5, "Retain VAN and VONA with the same upstream identifier");
+            Set<String> ids = new java.util.HashSet<>();
+            for (int i = 0; i < events.length(); i++) {
+                JSONObject event = events.getJSONObject(i), data = event.getJSONObject("data");
+                check(ids.add(event.getString("id")), "Every published document needs a distinct ID");
+                if (data.getString("noticeIdentifier").equals("shared")) {
+                    if (data.getString("description").contains("/vona/")) {
+                        check(data.getString("noticeHtml").contains("Aviation"), "Keep aviation content separate");
+                        check(!event.getString("id").equals("legacy-regular-id"), "VONA must not reuse the VAN ID");
+                    } else {
+                        check(event.getString("id").equals("legacy-regular-id"), "Preserve ordinary notice IDs");
+                        check(data.getString("noticeHtml").contains("Regular"), "Keep regular content separate");
+                    }
+                }
+            }
+            VolcanoJsonConverter.processDateRange(server.url(), root, "2006-11-21", "2006-11-21");
+            check(readDay(root).length() == 5, "Repeated imports must not duplicate either document");
+            for (int i = 0; i < readDay(root).length(); i++) check(ids.contains(readDay(root).getJSONObject(i).getString("id")), "Keep IDs stable on rerun");
+        }
     }
 
     private static void failures(Path root) throws Exception {

@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 
 public class VolcanoJsonConverter {
@@ -33,6 +35,8 @@ public class VolcanoJsonConverter {
                 saveEventsToFile(eventsByFilePath);
             } else if (parsedArgs.containsKey("all")) {
                 processAllNotices(API_BASE, OUTPUT_DIR);
+            } else if (parsedArgs.containsKey("startDate")) {
+                processDateRange(API_BASE, OUTPUT_DIR, parsedArgs.get("startDate"), parsedArgs.get("endDate"));
             } else {
                 printUsageAndExit();
             }
@@ -53,6 +57,9 @@ public class VolcanoJsonConverter {
             parsedArgs.put("NewestOrRecent", "true");
         } else if (args.length == 1 && "-all".equals(args[0])) {
             parsedArgs.put("all", "true");
+        } else if (args.length == 3 && "-range".equals(args[0])) {
+            parsedArgs.put("startDate", args[1]);
+            parsedArgs.put("endDate", args[2]);
         } else {
             printUsageAndExit();
         }
@@ -66,11 +73,31 @@ public class VolcanoJsonConverter {
     }
 
     static void processAllNotices(String apiBase, Path outputDir, long through) throws IOException {
-        Path checkpoint = outputDir.resolve(CHECKPOINT_FILE);
+        processNotices(apiBase, outputDir, 0, through, outputDir.resolve(CHECKPOINT_FILE));
+    }
+
+    static void processDateRange(String apiBase, Path outputDir, String start, String end) throws IOException {
+        LocalDate first = LocalDate.parse(start), last = LocalDate.parse(end);
+        long from = first.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+        long through = last.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond() - 1;
+        through = Math.min(through, Instant.now().getEpochSecond() - 1);
+        if (first.isAfter(last)) throw new IllegalArgumentException("Invalid archive date range");
+        if (from > through) return;
+        Path checkpoint = outputDir.resolve(".archive-" + first + "_" + last + "-progress.json");
+        processNotices(apiBase, outputDir, from, through, checkpoint);
+        // Resume interrupted pages, but requery completed ranges on the next run
+        // so upstream corrections are reflected. Each moving window has its own checkpoint.
+        Files.deleteIfExists(checkpoint);
+    }
+
+    private static void processNotices(String apiBase, Path outputDir, long from, long through, Path checkpoint) throws IOException {
+        if (from < 0 || through < from) throw new IllegalArgumentException("Invalid archive date range");
         JSONObject progress = Files.exists(checkpoint)
                 ? new JSONObject(Files.readString(checkpoint, StandardCharsets.UTF_8))
-                : new JSONObject().put("version", 1).put("apiBase", apiBase).put("completedThrough", -1L);
-        if (progress.getInt("version") != 1 || !apiBase.equals(progress.getString("apiBase"))) {
+                : new JSONObject().put("version", 1).put("apiBase", apiBase)
+                        .put("startInclusive", from).put("completedThrough", from - 1);
+        if (progress.getInt("version") != 1 || !apiBase.equals(progress.getString("apiBase"))
+                || progress.optLong("startInclusive", 0) != from) {
             throw new IOException("Incompatible archive checkpoint: " + checkpoint);
         }
         if (!progress.has("pending") && progress.getLong("completedThrough") >= through) {
@@ -90,7 +117,7 @@ public class VolcanoJsonConverter {
                         .getLong("noticeTotal");
                 if (expected < 0) throw new IOException("Invalid archive notice count: " + expected);
                 pending = new JSONObject().put("query", query).put("expected", expected)
-                        .put("seen", new JSONArray());
+                        .put("seen", new JSONArray()).put("identityVersion", 2);
                 progress.put("pending", pending);
                 saveJsonToFile(checkpoint.toString(), progress);
             }
@@ -106,6 +133,14 @@ public class VolcanoJsonConverter {
         JSONObject query = pending.getJSONObject("query");
         long expected = pending.getLong("expected");
         if (expected == 0) return; // Preflight already proves this interval is empty.
+        if (pending.optInt("identityVersion", 1) < 2) {
+            // Old checkpoints collapsed a VAN and its VONA into one identifier.
+            // Replay saved pages with the corrected identity; stable output IDs
+            // make this safe, and no manual checkpoint deletion is necessary.
+            query.put("pageIndex", 0);
+            pending.put("seen", new JSONArray()).put("identityVersion", 2);
+            saveJsonToFile(checkpoint.toString(), progress);
+        }
         Set<String> seen = new HashSet<>();
         JSONArray savedIdentifiers = pending.getJSONArray("seen");
         for (int i = 0; i < savedIdentifiers.length(); i++) seen.add(savedIdentifiers.getString(i));
@@ -123,7 +158,8 @@ public class VolcanoJsonConverter {
             JSONArray notices = new JSONArray();
             for (int i = 0; i < records.length(); i++) {
                 JSONObject record = records.getJSONObject(i);
-                if (seen.add(record.getString("noticeIdentifier"))) {
+                if (seen.add(noticeIdentity(record.getString("noticeIdentifier"),
+                        record.optString("noticeTypeCd"), record.optString("permLink")))) {
                     notices.put(archiveNotice(record));
                 }
             }
@@ -179,7 +215,8 @@ public class VolcanoJsonConverter {
 
     private static JSONObject createEvent(JSONObject notice, String formattedDate) {
         JSONObject event = new JSONObject();
-        event.put("id", UUID.nameUUIDFromBytes(notice.getString("noticeIdentifier")
+        event.put("id", UUID.nameUUIDFromBytes(noticeIdentity(notice.getString("noticeIdentifier"),
+                notice.optString("noticeType"), notice.optString("notice_url"))
                 .getBytes(StandardCharsets.UTF_8)).toString());
         event.put("start", formattedDate);
         event.put("end", "");
@@ -261,7 +298,10 @@ public class VolcanoJsonConverter {
                 String key = eventKey(event);
                 JSONObject previous = merged.get(key);
                 if (previous != null) {
-                    event.put("id", previous.getString("id"));
+                    // Ordinary notice IDs retain legacy identity. Aviation
+                    // documents need their own canonical ID, including when
+                    // an older converter stored one under the ordinary ID.
+                    if (!key.endsWith(":vona")) event.put("id", previous.getString("id"));
                     JSONObject data = event.getJSONObject("data");
                     JSONObject oldData = previous.getJSONObject("data");
                     // Keep structured recent-feed metadata when backfilling search results.
@@ -289,7 +329,16 @@ public class VolcanoJsonConverter {
     private static String eventKey(JSONObject event) {
         JSONObject data = event.optJSONObject("data");
         String identifier = data == null ? "" : data.optString("noticeIdentifier", "");
-        return identifier.isEmpty() ? "id:" + event.getString("id") : "notice:" + identifier;
+        return identifier.isEmpty() ? "id:" + event.getString("id")
+                : "notice:" + noticeIdentity(identifier, data.optString("noticeType"), data.optString("description"));
+    }
+
+    private static String noticeIdentity(String identifier, String type, String link) {
+        // HANS exposes VAN and VONA documents with the same noticeIdentifier.
+        // Keep the established identity for regular notices and qualify VONA.
+        boolean aviation = type.equalsIgnoreCase("VV") || type.equalsIgnoreCase("VONA")
+                || link.toLowerCase(Locale.ROOT).contains("/vona/");
+        return aviation ? identifier + ":vona" : identifier;
     }
 
     private static void printUsageAndExit() {
@@ -298,6 +347,8 @@ public class VolcanoJsonConverter {
         System.out.println("    Fetch the newest or most recent volcano notices.");
         System.out.println("  -all");
         System.out.println("    Import missing USGS HANS history, resume interrupted pages, and fetch newer notices.");
+        System.out.println("  -range YYYY-MM-DD YYYY-MM-DD");
+        System.out.println("    Import notices within the inclusive UTC calendar date range.");
         System.exit(1);
     }
 

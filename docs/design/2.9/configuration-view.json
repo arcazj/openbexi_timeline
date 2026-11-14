@@ -109,7 +109,7 @@
   "pluginManifests": [
     {
       "id": "earthquake",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "api_version": "1",
       "runtime": "java",
       "capabilities": [
@@ -143,7 +143,7 @@
     },
     {
       "id": "volcano",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "api_version": "1",
       "runtime": "java",
       "capabilities": [

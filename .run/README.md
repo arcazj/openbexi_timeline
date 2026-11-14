@@ -8,6 +8,9 @@ directory to the project root and use the current HBDS workspace files.
 | --- | --- |
 | Timeline Java - Default / GEO | Serve committed samples / collected data on `http://127.0.0.1:8080` |
 | Timeline Python - Default / GEO | Serve the same workspaces on `http://127.0.0.1:8783` |
+| GEO_collector | Collect GEO earthquake and volcano data with the dashboard on `http://127.0.0.1:8765` |
+| GEO_collector_7_days | Collect the previous seven complete UTC days of earthquake and volcano history, then exit |
+| GEO_collector_fill_gaps | Fill recorded collection gaps through today for each GEO source, then exit |
 | Check - Java workspace / Python workspace | Validate the default workspace and exit without starting a listener |
 | Help - Timeline Java / Timeline Python | Print server options (`--help`) and exit |
 | Tests - Java | Run the project's JUnit tests; historical opt-in tests remain disabled |
@@ -21,6 +24,21 @@ argument to validate a different workspace.
 
 Select a **Help - ...** configuration and click **Run** to read usage in the Run
 console. Help does not load a workspace, start a server, or generate data.
+
+**GEO_collector_7_days** recalculates its dates on each launch. For example, a
+launch on November 14 UTC collects November 7 through November 13 inclusive.
+It writes to the GEO workspace's existing targets and retains older output.
+Progress appears in the Run console; this one-pass collector does not start a
+dashboard. Build the volcano plugin after updating its historical-range support:
+`mvn -f HBDS/plugins/volcano/pom.xml verify`.
+
+**GEO_collector_fill_gaps** reads each source's successful date coverage and
+unfinished requests from the collector's job history. It rechecks the last fully
+covered day, fills missing days, and fetches today through the latest available
+data. A current-day poll does not mark the rest of that day complete. Each day is
+recorded separately, so failed days are retried on the next launch. With no
+history it starts seven days before today; change `--initial-days 7` to choose
+that initial lookback. Both GEO Java plugins must be rebuilt after this update.
 
 The former `openbexi_timeline*`, dated deployment-specific collectors, `event_generator*`,
 old individual JUnit classes, and port-8442 browser entries are obsolete local
@@ -60,13 +78,14 @@ On Linux/macOS, select the environment's `bin/python` interpreter instead of
 
 ## Collector launch troubleshooting
 
-Create a local collector launch configuration for the desired workspace.
-It includes scheduling and health recording. Run one collector per dashboard
+Use **GEO_collector** for `HBDS/GEO_Workspace.json`, or create a local collector
+launch configuration for another workspace. It includes scheduling and health
+recording. Run one collector per dashboard
 port, or add `--allow-workspace PATH` to collect additional workspaces in the
 same process. Use `--all-workspaces` only when all neighboring workspaces are intended.
-Collector one-shot, generator, help, validation, monitor and
-backfill launch configurations have been removed. Use the CLI commands below
-for those utilities. Previous public launch files remain available in Git history.
+Use **GEO_collector_7_days** for a one-pass GEO backfill. Other collector
+one-shot, generator, help, validation and monitor utilities use the CLI commands
+below. Previous public launch files remain available in Git history.
 
 INFO reports completed work and duration. Use DEBUG for configuration/plugin
 loading, source selection, output paths, UTC dates, checkpoints and scheduling.
@@ -75,7 +94,7 @@ Use `--log-file .local-private/timeline-collector/collector.log` to retain a
 rotating local copy, and `--log-level DEBUG` for detailed diagnostics.
 Restart a running collector to load updated code.
 
-Both launchers run the `timeline_data_collector` module through its
+The GEO collector launchers run the `timeline_data_collector` module through its
 `__main__.py`, using `.venv/Scripts/python.exe`. Dashboard arguments start with `serve`, conversion
 arguments with `run`, and checks with `validate`; each uses `--workspace`.
 

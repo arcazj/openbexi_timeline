@@ -33,7 +33,7 @@ class EarthquakeJsonConverter {
             } else {
                 new EarthquakeArchiveImporter(API_BASE, OUTPUT_DIR).importRange(
                         parseTime(parsedArgs.get("starttime"), "starttime="),
-                        parseTime(parsedArgs.get("endtime"), "endtime="));
+                        parseTime(parsedArgs.get("endtime"), "endtime="), parsedArgs.containsKey("refresh"));
             }
 
             System.out.println("All events processed and saved to respective files.");
@@ -53,9 +53,10 @@ class EarthquakeJsonConverter {
             parsedArgs.put("endtime", end.toString());
         } else if (args.length == 2 && "-jsonFilePath".equals(args[0])) {
             parsedArgs.put("jsonFilePath", args[1]);
-        } else if (args.length == 3 && "-url".equals(args[0])) {
+        } else if (args.length == 3 && ("-url".equals(args[0]) || "-refresh".equals(args[0]))) {
             parsedArgs.put("starttime", args[1]);
             parsedArgs.put("endtime", args[2]);
+            if ("-refresh".equals(args[0])) parsedArgs.put("refresh", "true");
         } else if (args.length == 1 && "-all".equals(args[0])) {
             parsedArgs.put("all", "true");
         } else {
