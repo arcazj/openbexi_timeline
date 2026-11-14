@@ -46,7 +46,7 @@ def factory():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.4")
+    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.5")
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("-dataconf", "-data_conf", "--data-conf", nargs='+', help="HBDS namespace files or legacy configuration")
     selection.add_argument("--workspace", help="HBDS workspace.json containing the namespace_files startup list")
@@ -85,6 +85,10 @@ def main():
     if args.check:
         print(f"Configuration valid: {len(configuration.sources)} JSON source path(s); Java provider fallback={configuration.legacy_fallback}.")
         return
+    # Workspace listeners return before the legacy single-listener startup path.
+    # Configure application logging for both, including IDE-launched workspaces.
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    logging.getLogger("openbexi.timeline").setLevel(logging.INFO)
     if args.index_once:
         index = TimelineIndex(configuration)
         index.refresh()
@@ -110,7 +114,6 @@ def main():
             os.environ["OPENBEXI_" + key] = value
         else:
             os.environ.pop("OPENBEXI_" + key, None)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     logging.getLogger("openbexi.timeline").info(
         "Using configuration: %s; model=%s; enabled source paths=%s; listen=%s:%s",
         os.environ["OPENBEXI_DATA_CONF"], configuration.model or "default", len(configuration.sources),

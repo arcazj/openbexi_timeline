@@ -43,6 +43,10 @@ def execution_policy(value):
     if policy['overlap'] != 'skip': raise ValueError('Overlapping runs are not supported')
     policy.setdefault('resume_on_restart', False)
     if not isinstance(policy['resume_on_restart'], bool): raise ValueError('resume_on_restart must be boolean')
+    if not isinstance(policy.get('compress_sources', True), bool): raise ValueError('compress_sources must be boolean')
+    if policy.get('source_date_layout') is not None:
+        from .source_cleanup import DateLayout
+        DateLayout(policy['source_date_layout'])
     for name in ('date', 'end_date'):
         if policy.get(name) is not None and not isinstance(policy[name], str):
             raise ValueError(name + ' must be a string; quote fixed dates in YAML')
@@ -60,18 +64,24 @@ def execution_policy(value):
 def load(workspace, *, dataconf=None, service=None, hbds_root=None, trace=None):
     workspace = Path(workspace).resolve()
     root = Path(hbds_root).resolve() if hbds_root else workspace.parent
+    service_required = bool(service)
     if dataconf:
         files = [Path(item).resolve() for item in dataconf]
         service_path = Path(service).resolve() if service else root / 'service.yml'
     else:
         document = json.loads(workspace.read_text(encoding='utf-8-sig'))
+        service_required = service_required or 'service' in document
         files = [workspace.parent / item for item in document.get('namespace_files', [])]
         if not files: raise ValueError('Workspace requires namespace_files')
         service_path = Path(service).resolve() if service else workspace.parent / document.get('service', 'service.yml')
+    service_path = service_path.resolve()
     if trace:
         trace.note('configuration paths resolved', workspace=workspace, hbds_root=root,
                    namespace_files=files, service=service_path, service_exists=service_path.exists())
-    bundle = load_bundle(files, service_path if service_path.exists() else None, root, workspace, trace=trace)
+    # Explicit service references must fail at the missing file, rather than
+    # silently dropping connector, plugin and state settings in favor of defaults.
+    bundle = load_bundle(files, service_path if service_required or service_path.exists() else None,
+                         root, workspace, trace=trace)
     for group in bundle['data_sources']:
         if 'sources' not in group:
             raise ValueError('Collector requires namespace files with sources; migrate legacy combined configuration before running')

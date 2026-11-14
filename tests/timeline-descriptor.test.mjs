@@ -151,7 +151,7 @@ test('Flat descriptors override summaries, match namespaces and retain one copy 
         let requested;
         h.window.fetch=async url=>{requested=new URL(url);return new Response(JSON.stringify({event_descriptor:[
             {id:'shared-id',namespace:'Other',title:'Wrong record'},
-            {id:'shared-id',namespace:'Operations',title:'Current subject',description:'Subject only',status:'READY',satellite:'IS_9991',series:'series_99'}]}));};
+            {id:'shared-id',namespace:'Operations',title:'Current subject',description:'Subject only',status:'READY',satellite:'SAT_9991',series:'series_99'}]}));};
         const t={name:'flat',ob_timeline_right_panel:panel,ob_scene:[{descriptor:'legacy'}],ob_get_url_head:()=>'/sessions',ob_remove_descriptor:()=>cancelDescriptor(t),
             ob_createDescriptor:()=>{throw new Error('Use shared presentation');}};
         await loadDescriptor(t,0,{id:'shared-id',start:'2020-01-01T00:00:00Z',namespace:' ',data:{namespace:'Operations',title:'Old subject',description:'Old description',status:'OLD',satellite:'9991'}});
@@ -161,7 +161,7 @@ test('Flat descriptors override summaries, match namespaces and retain one copy 
         assert.match(panel.querySelector('.ob_descriptor_summary').textContent,/READY/);
         const rows=[...panel.querySelectorAll('.ob_descriptor_fields tr')];
         assert.deepEqual(rows.map(row=>row.querySelector('th').textContent),['Satellite','Series']);
-        assert.equal(rows[0].querySelector('td').textContent,'IS_9991');cancelDescriptor(t);
+        assert.equal(rows[0].querySelector('td').textContent,'SAT_9991');cancelDescriptor(t);
     } finally {h.close();}
 });
 

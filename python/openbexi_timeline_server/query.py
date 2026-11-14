@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import heapq
+import sqlite3
 import time
 import uuid
 
@@ -17,6 +19,7 @@ def envelope(params, events=None, **metadata):
 
 
 class Queries:
+    LOCK_WAIT_MS = 250
     def __init__(self, index):
         self.index, self.config = index, index.config
         self.source_filters = {}
@@ -39,19 +42,48 @@ class Queries:
 
     @staticmethod
     def snapshot(db, identifier, lower, upper, source_indices=None):
-        # Capture only files that can overlap this window, plus coverage warnings.
-        # The R-tree indexes days as exact integers; full timestamps below remove
-        # the conservative candidates at day boundaries, including BCE dates.
+        # Capture current versions that overlap the window, plus coverage warnings.
+        # The global R-tree also contains retired versions. Traversing it for a
+        # broad history request can spend the whole budget on obsolete payload
+        # pages before the cursor is even created. This covering lookup stops at
+        # the first overlapping record in each current version.
         if source_indices == []:
             return
-        source_clause = " AND source IN (" + ",".join("?" for _ in source_indices) + ")" if source_indices is not None else ""
+        source_clause = " AND f.source IN (" + ",".join("?" for _ in source_indices) + ")" if source_indices is not None else ""
         db.execute("""INSERT OR IGNORE INTO cursor_files
-            SELECT ?,key,version,source,warning FROM files WHERE (warning!='[]' OR key IN (
-              SELECT r.file_key FROM record_windows w CROSS JOIN records r ON r.id=w.id
-              WHERE w.start_day<=? AND w.end_day>=? AND r.start<=? AND r.end>=?))""" + source_clause,
-                   (identifier, upper//86400000, lower//86400000, upper, lower, *(source_indices or [])))
+            SELECT ?,f.key,f.version,f.source,f.warning FROM files f
+            WHERE (f.warning!='[]' OR EXISTS (
+              SELECT 1 FROM records r INDEXED BY records_file_window
+              WHERE r.file_key=f.key AND r.version=f.version AND r.start<=? AND r.end>=?))""" + source_clause,
+                   (identifier, upper, lower, *(source_indices or [])))
 
     def page(self, params):
+        try:
+            return self._page(params)
+        except sqlite3.OperationalError as error:
+            if (getattr(error, 'sqlite_errorcode', 0) & 255) != sqlite3.SQLITE_BUSY: raise
+            # No cursor transaction committed. Preserve an existing token exactly;
+            # a new scan uses a request-bound marker until its snapshot can be pinned.
+            return envelope(params, progressive=True, reason='index_busy', retryAfterMs=500,
+                            nextCursor=params.get('cursor') or 'pending:' + self.identity(params),
+                            recordsExamined=0, recordsReturned=0, recordsExcluded=0,
+                            revision=self.index.status()['revision'])
+
+    @staticmethod
+    def history_rows(db, identifier, last_start, last_id, lower, upper):
+        """Merge ordered, pinned versions without visiting retired records."""
+        streams = []
+        try:
+            for part in db.execute('SELECT file_key,version,source FROM cursor_files WHERE cursor=?', (identifier,)):
+                streams.append(db.execute('''SELECT id,start,? AS source FROM records INDEXED BY records_file_history
+                    WHERE file_key=? AND version=? AND (start,id)<(?,?) AND start<=? AND end>=?
+                    ORDER BY start DESC,id DESC LIMIT 4097''',
+                    (part['source'], part['file_key'], part['version'], last_start, last_id, upper, lower)))
+            yield from heapq.merge(*streams, key=lambda row: (-row['start'], -row['id']))
+        finally:
+            for stream in streams: stream.close()
+
+    def _page(self, params):
         started = time.monotonic()
         lower, upper = self.validate(params)
         predicate = compile_filter(params.get("filter", ""))
@@ -70,10 +102,13 @@ class Queries:
         if selected_namespaces == []:
             source_indices = []
         token = params.get("cursor") or ""
+        if token == 'pending:' + identity: token = ''
         with self.index.connect() as db:
             # One short transaction serializes consumption of the same cursor, including
             # requests arriving at different processes. Pages have a 250 ms work budget.
+            db.execute("PRAGMA busy_timeout=" + str(self.LOCK_WAIT_MS))
             db.execute("BEGIN IMMEDIATE")
+            slice_started = time.monotonic()
             status = self.index.get(db, "status")
             identifier, separator, raw_sequence = token.partition(":")
             row = db.execute("SELECT * FROM cursors WHERE id=?", (identifier,)).fetchone() if token else None
@@ -95,7 +130,7 @@ class Queries:
                 if state.get("done"):
                     return envelope(params, error="Loading cursor expired or unavailable. Retry the visible time window.", revision=status["revision"])
             else:
-                self.index.cleanup(db)
+                self.index.expire_cursors(db)
                 # Completed cursors are retained for retries unless capacity is needed.
                 if db.execute("SELECT count(*) FROM cursors").fetchone()[0] >= self.config.max_cursors:
                     oldest = db.execute("SELECT id FROM cursors WHERE json_extract(state,'$.done')=1 ORDER BY touched LIMIT 1").fetchone()
@@ -125,25 +160,21 @@ class Queries:
             warnings = warnings[:100]
             history = params.get("history") == "backward"
             if history:
-                # Seek directly to the next chronological record. Sorting all
-                # historical candidates on every page can exhaust the query
-                # budget before even a handful of records are examined.
-                sql = """SELECT r.id,r.start,c.source FROM records r INDEXED BY records_history
-                         JOIN cursor_files c ON r.file_key=c.file_key AND r.version=c.version
-                         WHERE c.cursor=? AND (r.start,r.id)<(?,?) AND r.start<=? AND r.end>=?
-                         ORDER BY r.start DESC,r.id DESC LIMIT 4097"""
-                arguments = (identifier, state.get("lastStart", upper+1), state["last"], upper, lower)
+                rows = self.history_rows(db, identifier, state.get("lastStart", upper+1), state["last"], lower, upper) if not state["initial"] else None
             else:
-                sql = """SELECT r.id,r.start,c.source FROM record_windows w
-                         CROSS JOIN records r ON r.id=w.id
-                         JOIN cursor_files c ON r.file_key=c.file_key AND r.version=c.version
-                         WHERE w.start_day<=? AND w.end_day>=? AND c.cursor=? AND r.id>? AND r.start<=? AND r.end>=?
+                # Seek within the pinned file versions using a covering index.
+                # Re-scanning the R-tree includes retired versions and sorts them
+                # on every page, potentially exhausting the budget before reading.
+                sql = """SELECT r.id,r.start,c.source FROM cursor_files c
+                         CROSS JOIN records r INDEXED BY records_file_window
+                           ON r.file_key=c.file_key AND r.version=c.version
+                         WHERE c.cursor=? AND r.id>? AND r.start<=? AND r.end>=?
                          ORDER BY r.id LIMIT 4097"""
-                arguments = (upper//86400000, lower//86400000, identifier, state["last"], upper, lower)
-            rows = db.execute(sql, arguments) if not (history and state["initial"]) else None
+                arguments = (identifier, state["last"], upper, lower)
+                rows = db.execute(sql, arguments)
             events, examined, size, exhausted = [], 0, 0, True
             for row_record in rows or ():
-                if examined and (examined >= 4096 or time.monotonic() - started >= .25 or len(events) >= self.config.page_size or size >= 512 * 1024):
+                if examined and (examined >= 4096 or time.monotonic() - slice_started >= .25 or len(events) >= self.config.page_size or size >= 512 * 1024):
                     exhausted = False
                     break
                 # Sort only IDs in SQLite. Fetch one payload at a time so broad
@@ -173,7 +204,7 @@ class Queries:
             state["sessions"] += sessions
             state["events"] += event_count
             state["examined"] += examined
-            state["seconds"] += time.monotonic() - started
+            state["seconds"] += time.monotonic() - slice_started
             if not done and (state["examined"] >= self.config.max_records or state["seconds"] >= self.config.max_query_seconds):
                 done = True
                 warnings.append({"code": "scan_limit", "namespace": "", "reason": "The query reached its configured work limit; coverage is partial.",

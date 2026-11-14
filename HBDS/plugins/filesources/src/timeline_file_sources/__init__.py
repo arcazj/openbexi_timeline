@@ -1,6 +1,7 @@
 """Incremental local, SFTP, S3 and Oracle readers packaged independently."""
 from pathlib import Path
 import hashlib
+import gzip
 import os
 from urllib.parse import urlsplit
 import shutil
@@ -12,6 +13,8 @@ from timeline_data_collector.contracts import InputBatch
 from timeline_data_collector.io import identity
 from timeline_data_collector.plugin import manifest_for
 from timeline_data_collector.settling import fingerprint, settled_manifest, quiet_seconds
+from timeline_data_collector.compression import prepare_sources, logical_path
+from timeline_data_collector.source_cleanup import cleanup_sources
 
 
 def snapshot_path(path):
@@ -82,16 +85,26 @@ class Plugin:
             ready = settled_manifest(context, observed)
             # A snapshot is one logical input group: partial replacement would
             # otherwise delete records owned by a file that is still uploading.
-            if options.get('snapshot') and len(ready) != len(observed): return
+            if options.get('snapshot') and not context.source.get('_continuous') and len(ready) != len(observed): return
             files = [path for path in files if str(path) in ready]
             if not files: return
+            root_is_file = root.is_file()
+            files, ready = prepare_sources(context, files, ready)
+            files, ready = cleanup_sources(context, files, ready)
+            if not files: return
+            if root_is_file and len(files) == 1: root = files[0]
         context.workdir.mkdir(parents=True, exist_ok=True)
         hashes = sqlite3.connect(context.workdir / 'input-hashes.sqlite3', timeout=30)
         hashes.execute('CREATE TABLE IF NOT EXISTS files (path TEXT PRIMARY KEY, stamp TEXT, digest TEXT, verified REAL)')
         # On first ingestion, hash and copy the same byte stream. Subsequent
         # unchanged runs only hash, avoiding unnecessary writes of the archive.
         temporary = None
-        if not context.checkpoint.get('files'):
+        continuous = context.source.get('_continuous', False)
+        limited = continuous and context.source.get('_batch_limit')
+        previous = context.checkpoint.get('files', {})
+        configuration = identity(context.source)
+        reset = context.force or context.checkpoint.get('configuration') != configuration or context.checkpoint.get('range') != [context.start_date, context.end_date]
+        if not context.checkpoint.get('files') and not continuous:
             parent = snapshot_path(context.workdir / 'preparing')
             parent.mkdir(parents=True, exist_ok=True)
             temporary = tempfile.TemporaryDirectory(dir=parent)
@@ -114,6 +127,7 @@ class Plugin:
                 if (not temporary and not context.force and cached and cached[0] == stamp
                         and time.time()-cached[2] < float(options.get('verify_seconds',300))):
                     checksums[str(path)] = cached[1]
+                    if limited and (reset or previous.get(str(path)) != cached[1]): break
                     continue
                 candidate = Path(temporary.name) / relative if temporary else None
                 if candidate: candidate.parent.mkdir(parents=True, exist_ok=True)
@@ -133,13 +147,29 @@ class Plugin:
                 checksums[str(path)] = digest.hexdigest()
                 hashes.execute('INSERT OR REPLACE INTO files VALUES (?,?,?,?)', (str(path), stamp, digest.hexdigest(), time.time()))
                 hashes.commit()
+                if limited and (reset or previous.get(str(path)) != checksums[str(path)]): break
+            if limited:
+                files, relative_paths = files[:len(checksums)], relative_paths[:len(checksums)]
             progress('checked', len(files), len(files), bytes_read, force=True)
-            checkpoint = {'files': checksums, 'configuration': identity(context.source), 'range': [context.start_date, context.end_date], 'offline': context.offline}
-            if checkpoint == context.checkpoint and not context.force:
+            checkpoint = {'files': checksums, 'configuration': configuration, 'range': [context.start_date, context.end_date], 'offline': context.offline}
+            if continuous:
+                reset = context.force or any(checkpoint.get(name) != context.checkpoint.get(name)
+                                             for name in ('configuration', 'range', 'offline'))
+                selected = [(path, relative) for path, relative in zip(files, relative_paths)
+                            if reset or previous.get(str(path)) != checksums[str(path)]]
+                files = [path for path, _ in selected]
+                relative_paths = [relative for _, relative in selected]
+                if not files:
+                    context.metrics['checkpoint_current'] = True
+                    return
+                # Keep observations for disappeared files. Their published data is retained.
+                checkpoint['files'] = {} if reset else dict(previous)
+            if not continuous and checkpoint == context.checkpoint and not context.force:
+                context.metrics['checkpoint_current'] = True
                 context.progress('Skipping %s: inputs and configuration unchanged', label)
                 return
             # Verify staged bytes before handing the immutable tree to a converter.
-            snapshot = snapshot_path(context.workdir / 'inputs' / identity(checkpoint)[:24])
+            snapshot = snapshot_path(context.workdir / 'inputs' / identity(dict(checkpoint, files=checksums))[:24])
             copies = []
             progress('preparing input copies', 0, len(files), force=True)
             for index, (path, relative) in enumerate(zip(files, relative_paths)):
@@ -159,10 +189,25 @@ class Plugin:
                 if digest.hexdigest() != checksums[str(path)]:
                     destination.unlink(missing_ok=True)
                     raise OSError('Input changed while staging: ' + path.name)
+                if destination.suffix.lower() == '.gz':
+                    # All converters keep receiving their original file format.
+                    # Only source storage uses gzip; this immutable working copy
+                    # is decoded after the compressed bytes have been verified.
+                    decoded = logical_path(destination)
+                    with gzip.open(destination, 'rb') as stream, decoded.open('wb') as output:
+                        while chunk := stream.read(1024 * 1024):
+                            context.check_cancelled()
+                            output.write(chunk)
+                    destination.unlink()
+                    destination = decoded
                 copies.append(destination)
+                if continuous:
+                    checkpoint['files'][str(path)] = checksums[str(path)]
+                    context.source['_prepared_root'] = str(snapshot)
+                    yield InputBatch([destination], dict(checkpoint, files=dict(checkpoint['files'])))
             progress('prepared input copies', len(files), len(files), force=True)
             context.source['_prepared_root'] = str(snapshot)
-            yield InputBatch(copies, checkpoint)
+            if not continuous: yield InputBatch(copies, checkpoint)
         finally:
             hashes.close()
             if temporary: temporary.cleanup()

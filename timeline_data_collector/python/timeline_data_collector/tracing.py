@@ -43,6 +43,9 @@ def exception_fields(error):
     # Exception messages can contain a CSV row, SQL, an HTTP body, or a schema
     # instance. Report the failing code/validator, never that arbitrary payload.
     fields = {'error_type': type(error).__name__}
+    from .contracts import SourceConflictError
+    if isinstance(error, SourceConflictError):
+        fields.update(reason='Conflicting record ID across sources', record_id=error.record_id, sources=error.sources)
     frame = error.__traceback__
     if frame:
         while frame.tb_next: frame = frame.tb_next
@@ -51,6 +54,9 @@ def exception_fields(error):
     if getattr(error, 'validator', None):
         fields.update(validator=error.validator, field=list(error.absolute_path))
     if isinstance(error, OSError): fields['errno'] = error.errno
+    if isinstance(error, FileNotFoundError):
+        fields['reason'] = 'Required file does not exist'
+        if error.filename is not None: fields['path'] = error.filename
     return fields
 
 
@@ -58,8 +64,17 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
+class CollectorLogFilter(logging.Filter):
+    """Keep measured summaries and bounded work progress at INFO."""
+    def filter(self, record):
+        if record.levelno == logging.INFO and not (getattr(record, 'collector_summary', False)
+                                                  or getattr(record, 'collector_progress', False)):
+            record.levelno, record.levelname = logging.DEBUG, 'DEBUG'
+        return record.levelno >= logging.getLogger().getEffectiveLevel()
+
+
 class StartupTrace:
-    def __init__(self, scope, *, level=logging.INFO, logger=None, heartbeat_seconds=10):
+    def __init__(self, scope, *, level=logging.DEBUG, logger=None, heartbeat_seconds=10):
         self.scope = safe_text(scope)
         self.level = level
         self.logger = logger or LOG
@@ -79,6 +94,7 @@ class StartupTrace:
     def step(self, phase, **fields):
         self.sequence += 1
         sequence = self.sequence
+        previous_phase = self.phase
         self.phase = phase
         started = time.monotonic()
         self.note('step %d starting: %s' % (sequence, phase), **fields)
@@ -92,6 +108,8 @@ class StartupTrace:
             raise
         else:
             self.note('step %d complete: %s' % (sequence, phase), elapsed_seconds=round(time.monotonic()-started, 3))
+        finally:
+            self.phase = previous_phase
 
     def failure(self, error, *, phase=None):
         if self.failed: return

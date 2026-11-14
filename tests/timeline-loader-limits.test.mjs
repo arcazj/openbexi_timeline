@@ -7,7 +7,7 @@ const event=id=>({id,start:instant,data:{title:'Record '+id}});
 
 // Exercise the real progressive loader without constructing thousands of GPU
 // objects. Each boundary is independent and retains the last accepted batch.
-async function loadBatches(makeBatches,{scanNeighbors=false,scanWork={}}={}) {
+async function loadBatches(makeBatches,{scanNeighbors=false,scanWork={},busyResponses=0,failPage=null,retryAfterError=false}={}) {
     const h=await createTimelineHarness();
     const {TimelineLoader}=await h.importModule('src/openbexi_timeline_loader.js');
     const range={from:Date.parse('2026-10-02T00:00:00Z'),to:Date.parse('2026-10-03T00:00:00Z')};
@@ -15,24 +15,60 @@ async function loadBatches(makeBatches,{scanNeighbors=false,scanWork={}}={}) {
     const r={state:{query:'',searchMode:'text'},visibleRanges:new Map([['main',range]]),ranges:new Map(),
         captureRanges(){},updateUI(){},explorer:{sourceChanged(){},schedule(){}},
         acceptRemote(data,metadata){accepted.push(data);this.remoteMetadata=metadata;this.complete=metadata.complete;},
-        fail(error){throw error;}};
+        fail(error){if(failPage!==null)this.error=error.message;else throw error;}};
     const t={ob_results:r,ob_scene:[{bands:[{name:'main'}],getObjectByName(){return {};}}],
         ob_connected(){},ob_not_connected(){}};
     const loader=new TimelineLoader(t),batches=makeBatches(loader.limits);
+    let failed=false;
     h.window.fetch=async address=>{
         const url=new URL(address);requests.push(url);
         if(url.searchParams.has('cancel'))return new Response('{}');
         const visible=Date.parse(url.searchParams.get('startDate'))===range.from;
         const index=Number(url.searchParams.get('cursor') || 0);
+        if(visible && index===failPage && !failed) {
+            failed=true;
+            return new Response(JSON.stringify({error:'Regular expression exceeded its processing limit; simplify it.'}),{status:400});
+        }
+        if(visible && index===1 && busyResponses>0) {
+            busyResponses--;
+            return new Response(JSON.stringify({events:[],timelineMatch:{
+                query:'',searchMode:'text',progressive:true,complete:false,nextCursor:'1',reason:'index_busy',retryAfterMs:1}}));
+        }
         const events=visible?(batches[index] || []):[];
         const nextCursor=(visible || scanNeighbors) && index<batches.length-1?String(index+1):null;
         return new Response(JSON.stringify({events,timelineMatch:{version:1,query:'',searchMode:'text',
             progressive:true,complete:!nextCursor,nextCursor,...scanWork,domain:{from:new Date(range.from).toISOString(),to:new Date(range.to).toISOString()}}}),
             {headers:{'Content-Type':'application/json'}});
     };
-    try {await loader.load('http://localhost/sessions');return {loader,r,requests,accepted};}
+    try {
+        await loader.load('http://localhost/sessions');
+        const failedCoverage=r.remoteMetadata?.coverage?.map(entry=>({...entry}));
+        const error=r.error;
+        if(retryAfterError)await loader.load('http://localhost/sessions');
+        return {loader,r,requests,accepted,failedCoverage,error};
+    }
     finally {loader.cancel();h.close();}
 }
+
+test('Failed intervals show error, retain records, and return to complete after Retry',async()=>{
+    const {r,accepted,failedCoverage,error}=await loadBatches(()=>[[event('retained')],[event('next')]],
+        {failPage:1,retryAfterError:true});
+    assert.match(error,/HTTP 400/);
+    assert.equal(failedCoverage.find(entry=>entry.from===Date.parse('2026-10-02T00:00:00Z')).state,'error');
+    assert.ok(accepted.every(data=>data.events.some(record=>record.id==='retained')));
+    assert.deepEqual(Array.from(accepted.at(-1).events,item=>item.id),['retained','next']);
+    assert.equal(r.error,'');
+    assert.ok(r.remoteMetadata.coverage.every(entry=>entry.state==='complete'));
+});
+
+test('A busy index retries the same cursor while retaining accepted records',async()=>{
+    const {accepted,requests}=await loadBatches(()=>[[event('retained')],[event('next')]],{busyResponses:2});
+    const reads=requests.filter(url=>!url.searchParams.has('cancel'));
+    assert.equal(reads.filter(url=>url.searchParams.get('cursor')==='1').length,3);
+    assert.deepEqual(Array.from(accepted.at(-1).events,item=>item.id),['retained','next']);
+    const first=accepted.findIndex(data=>data.events.some(item=>item.id==='retained'));
+    assert.ok(accepted.slice(first).every(data=>data.events.some(item=>item.id==='retained')));
+});
 
 test('Default record budget stops at 15,000 and rejects only the excess batch',async()=>{
     const {r,accepted,requests}=await loadBatches(()=>[

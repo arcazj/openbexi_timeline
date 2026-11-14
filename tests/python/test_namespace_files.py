@@ -3,6 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -268,6 +270,26 @@ class NamespaceFileTests(unittest.TestCase):
              redirect_stdout(StringIO()) as output:
             main()
         self.assertIn('Configuration valid', output.getvalue())
+
+    def test_workspace_startup_emits_application_info_logs(self):
+        workspace = self.metadata / 'workspace.json'
+        workspace.write_text(json.dumps({'namespace_files': [str(p) for p in self.files]}))
+        # A fresh interpreter exposes the default WARNING root logger; assertLogs
+        # would enable INFO itself and hide a missing startup configuration.
+        script = '''
+import logging
+from unittest.mock import patch
+from openbexi_timeline_server.__main__ import main
+async def serve(configuration, listeners):
+    logging.getLogger('openbexi.timeline').info('Workspace request logging ready')
+with patch('openbexi_timeline_server.__main__.serve_listeners', serve):
+    main()
+'''
+        result = subprocess.run([sys.executable, '-c', script, '--workspace', str(workspace),
+                                 '-serverconf', str(self.service), '--state', str(self.root / 'log-state')],
+                                cwd=REPO, capture_output=True, text=True, timeout=30)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn('INFO: Workspace request logging ready', result.stderr)
 
     def test_workspace_rejects_missing_empty_or_invalid_file_lists(self):
         workspace = self.metadata / 'workspace.json'

@@ -791,6 +791,9 @@ export class TimelineResults {
         }
         if (t.ob_scene[0].dragControls) t.ob_scene[0].dragControls.enabled = !busy;
         t.ob_perspective?.syncInteraction();
+        // Restore the Overview's own enabled state after loading clears the
+        // generic control flags, even while a server response is still pending.
+        if (!busy) t.ob_sync_overview_control?.();
         if (busy && !this.wasLoading) {
             this.focusBeforeLoad = document.activeElement;
             if (t.ob_timeline_panel.contains(this.focusBeforeLoad) || t.ob_timeline_right_panel?.contains(this.focusBeforeLoad))

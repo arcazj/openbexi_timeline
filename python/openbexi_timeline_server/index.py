@@ -17,7 +17,7 @@ import ijson
 from ijson.common import ObjectBuilder
 
 from .matching import compact, digest, instant, prepare, source_key
-from .publication import inventories
+from .publication import inventories, part_payloads
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL);
@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS records(id INTEGER PRIMARY KEY AUTOINCREMENT,file_key
 CREATE INDEX IF NOT EXISTS records_time ON records(start,end);
 CREATE INDEX IF NOT EXISTS records_history ON records(start DESC,id DESC);
 CREATE INDEX IF NOT EXISTS records_file ON records(file_key,version,id);
+CREATE INDEX IF NOT EXISTS records_file_window ON records(file_key,version,id,start,end);
+CREATE INDEX IF NOT EXISTS records_file_history ON records(file_key,version,start DESC,id DESC,end);
+CREATE INDEX IF NOT EXISTS records_retention ON records(created,id,file_key,version);
 CREATE VIRTUAL TABLE IF NOT EXISTS record_windows USING rtree_i32(id,start_day,end_day);
 CREATE TRIGGER IF NOT EXISTS records_insert AFTER INSERT ON records BEGIN
   INSERT INTO record_windows VALUES(new.id,
@@ -202,6 +205,8 @@ def strict_event_stream(reader, max_record_bytes):
 
 
 class TimelineIndex:
+    CLEANUP_BATCH_SIZE = 128
+    CLEANUP_SECONDS = 1
     def __init__(self, configuration):
         self.config = configuration
         configuration.state.mkdir(parents=True, exist_ok=True)
@@ -358,7 +363,11 @@ class TimelineIndex:
                 audit = not previous or time.time() - previous["verified"] >= self.config.verify_seconds
                 if previous and previous["stamp"] == stamp and not audit:
                     continue
-                if time.time() - stat.st_mtime < self.config.settle_seconds:
+                # Collector indexes are committed by atomic replacement, with
+                # immutable parts. Waiting for a quiet period would starve live
+                # updates whenever batches arrive faster than settle_seconds.
+                committed = path.name == 'publication.json' and path.parent.name == '.timeline-collector'
+                if not committed and time.time() - stat.st_mtime < self.config.settle_seconds:
                     warnings.append(problem(source, "source_changing", "A source file is still settling; the next scan will retry it.", path))
                     continue
                 ingested = self.ingest(key, source, path, stamp, previous)
@@ -377,7 +386,7 @@ class TimelineIndex:
                 warning_count = len(warnings) + db.execute("SELECT coalesce(sum(json_array_length(warning)),0) FROM files").fetchone()[0]
                 self.put(db, "status", {"indexing": False, "revision": revision, "warnings": warnings[:100], "warningCount": warning_count, "files": len(files), "records": total, "checkedAt": time.time()})
                 self.put(db, "lease", {"owner": self.owner, "until": 0})
-                self.cleanup(db)
+            self.cleanup()
             from .filter_catalog import FilterCatalog
             try:
                 FilterCatalog(self).refresh()
@@ -427,7 +436,35 @@ class TimelineIndex:
             with handle_source as handle:
                 identity = source_key(path.resolve(), source.namespace, "")
                 reader = BoundedReader(handle, self.config.max_file_bytes)
-                for ordinal, value in enumerate(event_stream(reader, self.config.max_record_bytes)):
+                publication_index = json.loads(raw) if committed else None
+                if committed:
+                    if publication_index.get('version') == 2:
+                        # Lookup hints change no event bytes and must not trigger
+                        # a full reindex or invalidate readers' pinned versions.
+                        parts = [{key: part[key] for key in ('path', 'sha256', 'bytes', 'records')}
+                                 for part in publication_index['event_parts']]
+                        content = ['parts', parts, publication_index['record_count']]
+                    elif publication_index.get('version') == 1 and isinstance(publication_index.get('events'), list):
+                        content = ['events', publication_index['events']]
+                    else: raise ValueError('Invalid collector publication')
+                    publication_sha = 'collector-events-v1:' + digest(content)
+                    if previous and previous['sha'] == publication_sha and previous['warning'] == '[]':
+                        # A checkpoint-only commit does not change timeline data.
+                        # Keep its indexed version and readers' pinned cursors.
+                        verified = time.time()
+                        if publication_index['version'] == 2:
+                            if verified-previous['verified'] >= self.config.verify_seconds:
+                                for payload in part_payloads(source.root, publication_index, self.config.max_file_bytes): pass
+                            else: verified = previous['verified']
+                        with self.connect() as db:
+                            db.execute('UPDATE files SET stamp=?,verified=? WHERE key=?', (stamp, verified, key))
+                        return False
+                def committed_records():
+                    for payload in part_payloads(source.root, publication_index, self.config.max_file_bytes):
+                        with io.BytesIO(payload) as part:
+                            yield from event_stream(BoundedReader(part, self.config.max_file_bytes), self.config.max_record_bytes)
+                values = committed_records() if publication_index and publication_index.get('version') == 2 else event_stream(reader, self.config.max_record_bytes)
+                for ordinal, value in enumerate(values):
                     if self.stopping.is_set():
                         raise InterruptedError("Indexer stopping")
                     count += 1
@@ -440,7 +477,7 @@ class TimelineIndex:
                     pending.append((key, version, instant(record["start"]), instant(record["start"] if record.get("end") is None else record["end"]), compact(record), created))
                     if len(pending) >= 512:
                         write_pending()
-                sha = reader.sha.hexdigest()
+                sha = publication_sha if committed else reader.sha.hexdigest()
         except InterruptedError:
             with self.connect() as db:
                 db.execute("DELETE FROM records WHERE file_key=? AND version=?", (key, version))
@@ -471,15 +508,35 @@ class TimelineIndex:
                        (key, source.index, str(path), version, stamp, sha, time.time(), compact(warnings)))
         return True
 
-    def cleanup(self, db):
-        cutoff = time.time() - self.config.cursor_ttl
-        db.execute("DELETE FROM cursors WHERE touched<?", (cutoff,))
+    def expire_cursors(self, db):
+        db.execute("DELETE FROM cursors WHERE touched<?", (time.time() - self.config.cursor_ttl,))
         db.execute("DELETE FROM cursor_files WHERE cursor NOT IN(SELECT id FROM cursors)")
-        last = self.get(db, "last_cleanup") or 0
+
+    def cleanup(self):
+        """Reclaim retired versions without holding the writer lock for a full sweep."""
+        cutoff = time.time() - self.config.cursor_ttl
+        with self.connect() as db:
+            self.expire_cursors(db)
+            last = self.get(db, "last_cleanup") or 0
         if time.time() - last < 30:
             return
-        db.execute("DELETE FROM records WHERE created<? AND NOT EXISTS(SELECT 1 FROM files WHERE files.key=records.file_key AND files.version=records.version) AND NOT EXISTS(SELECT 1 FROM cursor_files WHERE cursor_files.file_key=records.file_key AND cursor_files.version=records.version)", (cutoff,))
-        self.put(db, "last_cleanup", time.time())
+        eligible = "created<? AND NOT EXISTS(SELECT 1 FROM files WHERE files.key=records.file_key AND files.version=records.version) AND NOT EXISTS(SELECT 1 FROM cursor_files WHERE cursor_files.file_key=records.file_key AND cursor_files.version=records.version)"
+        deadline = time.monotonic() + self.CLEANUP_SECONDS
+        while not self.stopping.is_set():
+            # The covering index avoids reading old JSON payloads during the scan.
+            with self.connect() as db:
+                candidates = [row[0] for row in db.execute(
+                    "SELECT id FROM records INDEXED BY records_retention WHERE " + eligible + " LIMIT ?",
+                    (cutoff, self.CLEANUP_BATCH_SIZE))]
+            if not candidates:
+                with self.connect() as db: self.put(db, "last_cleanup", time.time())
+                return
+            with self.connect() as db:
+                # A query may have pinned a version since the read above.
+                db.execute("DELETE FROM records WHERE id IN (" + ','.join('?' for _ in candidates) + ") AND " + eligible,
+                           (*candidates, cutoff))
+            if time.monotonic() >= deadline: return
+            time.sleep(.001)  # Let waiting queries acquire the writer between batches.
 
     def rebuild(self):
         """Explicit rebuild keeps the database file and expires old cursors atomically."""

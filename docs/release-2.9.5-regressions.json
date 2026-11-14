@@ -1,0 +1,105 @@
+{
+  "version": "2.9.5",
+  "status": "passed",
+  "scope": "Local validation of the isolated public release candidate. GitHub Actions also validates supported platforms and builds and tests the final tagged installer before publication.",
+  "validatedAt": "2026-11-14T00:28:33.687548+00:00",
+  "changeBaseline": "ff4436994cf7298239f3501cc47e2e7b514713f3",
+  "tests": {
+    "javascript": {
+      "tests": 499,
+      "passed": 499,
+      "failed": 0
+    },
+    "releasePublishing": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "pythonBackend": {
+      "tests": 105,
+      "passed": 105,
+      "failed": 0
+    },
+    "publicCollectorAndPlugins": {
+      "tests": 231,
+      "passed": 231,
+      "failed": 0
+    },
+    "java": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 34,
+      "passed": 184
+    },
+    "javaPlugins": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 2
+    },
+    "browserDesktopAndNarrow": {
+      "passed": 413,
+      "skipped": 7,
+      "failed": 0,
+      "flaky": 0
+    },
+    "browserMobileFirefoxWebKit": {
+      "passed": 9,
+      "skipped": 0,
+      "failed": 0,
+      "flaky": 0
+    },
+    "syntheticPerformance": {
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0,
+      "flaky": 0
+    },
+    "javaPythonHttpParity": {
+      "passed": 11,
+      "failed": 0
+    },
+    "pythonBrowserIntegration": "passed",
+    "hbdsBrowserIntegration": "passed",
+    "javaBrowserIntegration": "passed",
+    "schemasDemoDataAndGeneratedContracts": "passed",
+    "staticPagesAllDemos": "passed",
+    "sourceArchives": "passed",
+    "windowsInstallerInstallStartupBrowserCollectorAndUninstall": "passed",
+    "dependencyAudits": {
+      "npm": "passed",
+      "javaRuntimePackages": 24,
+      "earthquakeRuntimePackages": 6,
+      "knownAdvisories": 0
+    }
+  },
+  "validationNotes": [
+    "Java skips: 33 historical manual/live-database checks are opt-in; one symbolic-link test is unavailable on this Windows host.",
+    "Seven drag checks run only in the desktop browser project; all corresponding desktop cases passed.",
+    "The first Python browser integration attempt exceeded its 30-second navigation timeout. An instrumented run and the original unchanged check both passed on rerun."
+  ],
+  "privacy": {
+    "publicFileAllowlist": 1046,
+    "sourceAndPackageAudit": "passed",
+    "reviewedChangedScreenshots": 5,
+    "privatePluginsIncluded": 0,
+    "installedFilesVerifiedAgainstPayload": 1147,
+    "upstreamPublicLibraryArtifactsVerified": 5,
+    "operationalSourceFilesPreserved": 1044
+  },
+  "distribution": {
+    "applicationVersion": "2.9.5",
+    "collectorVersion": "2.9.5",
+    "publicPlugins": {
+      "filesources": "1.0.3",
+      "timeline_json": "1.0.1",
+      "default": "1.0.0",
+      "earthquake": "1.0.0",
+      "volcano": "1.0.0",
+      "mqtt": "1.0.1",
+      "loki": "1.0.2"
+    }
+  }
+}

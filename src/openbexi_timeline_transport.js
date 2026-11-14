@@ -28,6 +28,14 @@ export function cleanTimelineURL(input) {
     return url;
 }
 
+/** A busy index has not consumed a page; keep displayed records and retry its token. */
+export function isTimelineRetry(body) {
+    const meta=body?.timelineMatch;
+    return meta?.reason==='index_busy' && meta.progressive===true && meta.complete===false && !meta.error &&
+        typeof meta.nextCursor==='string' && !!meta.nextCursor && Number.isFinite(meta.retryAfterMs) && meta.retryAfterMs>0 &&
+        Array.isArray(body.events) && body.events.length===0;
+}
+
 /** Yield between pages; index-building replies can request a bounded, cancellable pause. */
 export function waitForTimelinePage(metadata, signal) {
     const requested=Number(metadata?.retryAfterMs);

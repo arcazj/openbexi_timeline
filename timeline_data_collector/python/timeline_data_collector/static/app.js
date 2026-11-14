@@ -51,6 +51,7 @@ async function refresh(workspace = $('workspace').value) {
     const response = await fetch('/api/status' + (workspace ? '?workspace=' + encodeURIComponent(workspace) : ''));
     const value = await response.json(); if (!response.ok) throw new Error(value.error);
     state = value; options('workspace', state.workspaces.map(item => [item.id, item.name]), state.workspace); sources();
+    $('collection-status').textContent = state.continuous ? 'All workspaces are collected automatically. Today’s data has priority; historical changes are processed when current work is idle. Missing input never removes published data.' : '';
     $('jobs').replaceChildren(...state.jobs.map(job => row(`${job.request.namespace} / ${job.request.source} · ${job.state}`,
         `${job.id} · ${job.result.records_written ?? 0} records · ${job.result.error || job.result.reason || job.updated_at}`,
         job.state, ['queued','running'].includes(job.state) ? {label:'Cancel',run:() => post('/api/cancel',{job_id:job.id})} : null)));

@@ -163,7 +163,12 @@ export class TimelineExplorer {
                         r.updateUI();
                     }
                 }};
-            let found=this.historySearch?await searchTimelineHistory(input,options):await seekTimelineRecord(input,options);
+            // Manual previous-activity navigation needs the same uninterrupted
+            // archive traversal as text search, even when the search box is empty.
+            const useHistory=this.historySearch || direction==='past';
+            const historyOptions=this.historySearch?options:{...options,before:anchor,
+                range:{from:Math.max(-8640000000000000,anchor-span),to:anchor}};
+            let found=useHistory?await searchTimelineHistory(input,historyOptions):await seekTimelineRecord(input,options);
             if(found.unsupported) {
                 found=await seekTimelineRecord(input,options);
                 if(!found.record)found={...found,complete:false,unsupported:true};
@@ -173,8 +178,10 @@ export class TimelineExplorer {
             if(found.record) {r.selectedKey=null;this.moveTo(found.record,{events:found.events,metadata:found.metadata});}
             else {
                 this.outcome=found.exhausted && found.complete?'exhausted':'incomplete';
-                this.message=this.outcome==='exhausted'?`No matching records in available history through ${dateLabel(range.to)} (UTC).`:
-                    this.historySearch?'Search incomplete. '+(found.unsupported?'This server supports only a limited nearby search.':
+                this.message=this.outcome==='exhausted'?(this.historySearch?
+                    `No matching records in available history through ${dateLabel(range.to)} (UTC).`:
+                    'No earlier matching activity in available history.'):
+                    useHistory?'Search incomplete. '+(found.unsupported?'This server supports only a limited nearby search.':
                         'Some sources or files could not be fully searched.')+' Current view retained.':
                     'No activity found within the search limit. Choose another date or adjust your filters.';
                 r.updateUI();
@@ -183,8 +190,9 @@ export class TimelineExplorer {
             if(generation!==this.generation)return;
             this.seeking=false;this.controller=null;this.searchQuery=null;
             this.outcome='incomplete';
-            this.failure=error.message || 'The activity search failed.';
-            this.message=error.name==='AbortError'?'Search incomplete: a request timed out. Current view retained; try again.':`Search incomplete: ${error.message}`;
+            const timedOut=error.name==='AbortError' || error.name==='TimeoutError';
+            this.failure=timedOut?'':error.message || 'The activity search failed.';
+            this.message=timedOut?'Search incomplete: a request timed out. Current view retained; try again.':`Search incomplete: ${error.message}`;
             r.updateUI();
         }
     }

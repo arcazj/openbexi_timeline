@@ -119,6 +119,14 @@ export function prepareStaticBands(timeline, sceneIndex) {
 export function layoutStaticSessions(timeline, sceneIndex) {
     const scene = timeline.ob_scene[sceneIndex];
     const copyRecord = record => timeline.ob_measureLayout ? {...record, render:{...record.render}} : structuredClone(record);
+    const copyOwnRecord = record => {
+        const {activities, ...own} = record;
+        return copyRecord(own);
+    };
+    function* flatten(record) {
+        if (!record.structuralContext && (!record.activities?.length || record.searchMatch)) yield record;
+        for (const child of record.activities || []) yield* flatten(child);
+    }
     for (const band of scene.bands) {
         band.zones = [];
         band.sessions = [];
@@ -168,22 +176,18 @@ export function layoutStaticSessions(timeline, sceneIndex) {
             if (band.filter && field(event, band.filter.field) !== band.filter.equals) continue;
             if (band.eventKind === "duration" && !event.end) continue;
             if (band.eventKind === "event" && event.end) continue;
-            const session = copyRecord(event);
-            if (timeline.ob_results?.supported) {
-                const flatten = record => {
-                    const own = copyRecord(record); delete own.activities;
-                    const showOwn = !record.structuralContext && (!record.activities?.length || record.searchMatch);
-                    return [...(showOwn ? [own] : []), ...(record.activities || []).flatMap(flatten)];
-                };
-                session.activities = flatten(event);
-            } else session.activities = session.activities || [structuredClone(event)];
+            const supported = timeline.ob_results?.supported;
+            const candidates = supported ? flatten(event) : event.activities || [event];
             const activities = [];
-            for (const activity of session.activities) {
-                if (band.groupBy && (band.groupValues.get(recordKey(activity)) || 'Other') !== band.groupValue) continue;
-                const startTime = parseTimelineDate(activity.start);
-                const endTime = parseTimelineDate(activity.end);
+            for (const original of candidates) {
+                if (band.groupBy && (band.groupValues.get(recordKey(original)) || 'Other') !== band.groupValue) continue;
+                const startTime = parseTimelineDate(original.start);
+                const endTime = parseTimelineDate(original.end);
                 if (band.timeScale && ((Number.isFinite(endTime) ? endTime : startTime) < band.timeScale.contextFrom ||
                     startTime > band.timeScale.contextTo)) continue;
+                // Copy only eligible activities, without repeatedly copying a
+                // nested tree whose children are flattened separately.
+                const activity = supported ? copyOwnRecord(original) : copyRecord(original);
                 const box = activityFootprint(activity, band,
                     {toPixel: value => bandTimeToPixel(timeline, sceneIndex, band, value)}, scene.width, timeline.getTextWidth.bind(timeline));
                 const {x, end, width, textWidth, labelLeft, occupiedWidth} = box;
@@ -232,6 +236,7 @@ export function layoutStaticSessions(timeline, sceneIndex) {
                 activities.push(activity);
             }
             if (activities.length) {
+                const session = copyOwnRecord(event);
                 session.activities = activities;
                 band.sessions.push(session);
             }

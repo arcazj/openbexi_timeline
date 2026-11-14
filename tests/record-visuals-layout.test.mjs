@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {RENDERING_SCHEMA, RENDERING_DEFAULTS, resolveRendering, validateRendering} from '../src/openbexi_timeline_rendering.js';
 import {activityFootprint, recordVisualFootprint,createBalancedRowPacker} from '../src/openbexi_timeline_adaptive.js';
 import {layoutStaticSessions} from '../src/openbexi_timeline_data.js';
-import {packPages, pageBands} from '../src/openbexi_timeline_paging.js';
+import {packPages, pageBands, recordKey} from '../src/openbexi_timeline_paging.js';
 
 const epoch=Date.parse('2026-01-01T00:00:00Z');
 const record=(id,start,end)=>({id,start:new Date(epoch+start*1000).toISOString(),
@@ -45,6 +45,30 @@ test('Disabled artwork preserves the existing record coordinates and row sizing'
     assert.equal(band.trackIncrement,26);
     assert.equal(activities[0].x,-200); assert.equal(activities[0].width,20);
     assert.ok(activities.every(item=>item.visualX===undefined));
+    assert.equal(JSON.stringify(source),before);
+});
+
+test('Grouped nested sessions retain matching parents and children without sharing mutable source metadata',()=>{
+    const first=record('A child',100,120),second=record('B grandchild',130,140);
+    const nested={...record('Matching parent',110,150),searchMatch:true,activities:[second]};
+    const outside=record('Outside range',2000,2010);
+    const parent={...record('Root',50,2010),structuralContext:true,activities:[first,nested,outside]};
+    parent.data.details={operator:'original'};
+    const source=[parent],before=JSON.stringify(source);
+    const {timeline,scene,band}=fixture([],{enabled:false});
+    const groups=new Map([[recordKey(first),'A'],[recordKey(nested),'A'],[recordKey(second),'B'],[recordKey(outside),'B']]);
+    scene.sessions={events:source};
+    scene.bands=['A','B'].map(name=>({...band,name,groupBy:'namespace',groupValue:name,groupValues:groups}));
+    timeline.ob_results={supported:true};
+    layoutStaticSessions(timeline,0);
+    assert.deepEqual(scene.bands.map(b=>b.sessions.flatMap(s=>s.activities.map(a=>a.id))),
+        [['A child','Matching parent'],['B grandchild']]);
+    assert.ok(scene.bands.every(b=>b.sessions[0].id==='Root'));
+    const left=scene.bands[0].sessions[0],right=scene.bands[1].sessions[0];
+    assert.ok(left.activities.every(a=>!('activities' in a)));
+    left.data.details.operator='display edit';left.activities[0].data.title='display title';
+    left.render.color='#123456';
+    assert.equal(right.data.details.operator,'original');
     assert.equal(JSON.stringify(source),before);
 });
 

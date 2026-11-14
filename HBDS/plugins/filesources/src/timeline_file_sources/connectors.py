@@ -2,7 +2,6 @@
 from __future__ import annotations
 from datetime import date, datetime, timezone
 from decimal import Decimal
-import fnmatch
 import hashlib
 import json
 import logging
@@ -12,6 +11,7 @@ import stat
 import time
 from timeline_data_collector.io import expand_env, atomic_write, atomic_replace
 from timeline_data_collector.io import read_json, write_json, model_root
+from timeline_data_collector.compression import matches_filter
 from .helpers import output_directory_pattern
 from .helpers import fingerprint, FileChangedError
 
@@ -28,12 +28,7 @@ def identity(source):
 
 
 def accepted(path, source):
-    filters = source.get('filter') or {}
-    include, exclude = filters.get('include'), filters.get('exclude')
-    def matches(patterns):
-        if isinstance(patterns, str): patterns = [patterns]
-        return any(fnmatch.fnmatch(str(path).replace('\\', '/'), pattern) for pattern in patterns or [])
-    return (not include or matches(include)) and not matches(exclude)
+    return matches_filter(path, source.get('filter') or {})
 
 
 def safe_remote_path(root, name):
@@ -70,7 +65,7 @@ def local_files(root, source, excluded=(), model=None, progress=None):
                     if output_pattern and output_pattern.fullmatch(normalized): continue
                     if any(normalized == excluded_path or normalized.startswith(excluded_path + os.sep) for excluded_path in excluded): continue
                     pending.append(path)
-                elif entry.is_file(follow_symlinks=False) and not entry.name.endswith(('.part', '.tmp', '.swp')):
+                elif entry.is_file(follow_symlinks=False) and not entry.name.startswith('.') and not entry.name.endswith(('.part', '.tmp', '.swp')):
                     if accepted(path.relative_to(root).as_posix(), source): found.append(path)
     return sorted(found)
 
@@ -85,6 +80,8 @@ class ConnectorPool:
         settings = expand_env(source)
         if kind in {'local', 'json_file'}:
             root = Path(settings['source_path']).resolve()
+            if not root.exists() and root.suffix.lower() != '.gz' and Path(str(root) + '.gz').is_file():
+                root = Path(str(root) + '.gz')
             excluded = [self.root]
             if model and model_root(model) != root and model_root(model).is_relative_to(root): excluded.append(model_root(model))
             return root, local_files(root, settings, excluded, model, progress)

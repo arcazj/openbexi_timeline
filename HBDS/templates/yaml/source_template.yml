@@ -63,7 +63,7 @@ data_sources:
     key_filename: '${SFTP_KEY_FILE}'
     # password: '${SFTP_PASSWORD}'
     known_hosts: '${SFTP_KNOWN_HOSTS}'
-    data_path: /var/log/example
+    data_path: /var/lib/openbexi/raw
     poll_seconds: 30
     # Retain the original year/day/host/subsystem layout for legacy logs.
 

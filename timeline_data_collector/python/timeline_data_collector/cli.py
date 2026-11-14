@@ -13,7 +13,7 @@ from .configuration import load
 from .dates import date_range
 from .runner import Runner
 from .scheduler import Scheduler
-from .tracing import StartupTrace, UTCFormatter
+from .tracing import StartupTrace, UTCFormatter, CollectorLogFilter
 
 
 def main(arguments=None, *, plugin=None):
@@ -48,10 +48,12 @@ def main(arguments=None, *, plugin=None):
             selected.add_argument('--request-id')
         if command == 'serve':
             selected.add_argument('--host'); selected.add_argument('--port', type=int)
-            selected.add_argument('--allow-workspace', action='append', default=[], help='Additional workspace available in the UI')
+            selected.add_argument('--allow-workspace', action='append', default=[], help='Additional workspace to collect and display; repeat for multiple workspaces')
+            selected.add_argument('--all-workspaces', action='store_true', help='Also discover and collect workspace JSON files beside --workspace')
     args = parser.parse_args(argv)
     handlers = [logging.StreamHandler()]
     for handler in handlers:
+        handler.addFilter(CollectorLogFilter())
         handler.setFormatter(UTCFormatter('%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s', '%Y-%m-%dT%H:%M:%S'))
     logging.basicConfig(level=getattr(logging, args.log_level), handlers=handlers)
     runner = scheduler = None
@@ -62,6 +64,7 @@ def main(arguments=None, *, plugin=None):
             with trace.step('opening rotating local log', path=args.log_file.resolve(), max_bytes=10*1024*1024, backups=3):
                 args.log_file.parent.mkdir(parents=True, exist_ok=True)
                 file_handler = RotatingFileHandler(args.log_file, maxBytes=10*1024*1024, backupCount=3, encoding='utf-8')
+                file_handler.addFilter(CollectorLogFilter())
                 file_handler.setFormatter(handlers[0].formatter)
                 logging.getLogger().addHandler(file_handler)
         trace.note('collector starting', version=__version__, command=args.command, python=sys.version.split()[0],
@@ -76,7 +79,8 @@ def main(arguments=None, *, plugin=None):
         if args.command == 'serve':
             from .server import serve
             trace.phase = 'serving collector dashboard'
-            return serve(runner, host=args.host, port=args.port, workspaces=args.allow_workspace)
+            return serve(runner, host=args.host, port=args.port, workspaces=args.allow_workspace,
+                         all_workspaces=args.all_workspaces)
         trace.phase = 'validating command options'
         if plugin and args.plugin != plugin: raise ValueError('A standalone converter cannot select a different plugin')
         if args.command == 'validate' or args.validate_only:

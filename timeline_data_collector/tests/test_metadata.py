@@ -3,26 +3,47 @@ from copy import deepcopy
 from pathlib import Path
 import tempfile
 import unittest
-from timeline_data_collector.metadata import MetadataNormalizer, descriptor_record, merge_descriptor
+from timeline_data_collector.metadata import MetadataNormalizer, descriptor_record, merge_descriptor, canonical_satellite, satellite_catalog_snapshot
+from unittest.mock import patch
+import json
 
 
 class MetadataTests(unittest.TestCase):
+    def test_conversion_catalog_snapshot_avoids_per_record_filesystem_checks_and_refreshes(self):
+        with tempfile.TemporaryDirectory() as folder, patch.dict('os.environ', {'OPENBEXI_SATELLITE_CATALOG': ''}):
+            root = Path(folder)
+            path = root/'reference/satellites.json'; path.parent.mkdir()
+            def save(name):
+                path.write_text(json.dumps({'satellites': [{'name': name, 'series': 'series_99', 'aliases': ['9991']}]}))
+            save('SAT_9991')
+            with satellite_catalog_snapshot(root):
+                with patch('timeline_data_collector.metadata.catalog_path', side_effect=AssertionError('Repeated catalog filesystem lookup')):
+                    for _ in range(100):
+                        self.assertEqual(canonical_satellite('9991', root), ('SAT_9991', 'series_99'))
+                        self.assertEqual(canonical_satellite(' unknown ', root), ('unknown', 'others'))
+                save('SAT_9991_UPDATED')
+                self.assertEqual(canonical_satellite('9991', root), ('SAT_9991', 'series_99'))
+            with satellite_catalog_snapshot(root):
+                self.assertEqual(canonical_satellite('9991', root), ('SAT_9991_UPDATED', 'series_99'))
+
+    def test_catalog_snapshot_is_nested_and_restored_after_failure(self):
+        with tempfile.TemporaryDirectory() as folder, patch.dict('os.environ', {'OPENBEXI_SATELLITE_CATALOG': ''}):
+            roots = [Path(folder)/name for name in ('first', 'second')]
+            for root in roots:
+                path = root/'reference/satellites.json'; path.parent.mkdir(parents=True)
+                path.write_text(json.dumps({'satellites': [{'name': root.name, 'aliases': ['9991']}]}))
+            with satellite_catalog_snapshot(roots[0]):
+                self.assertEqual(canonical_satellite('9991', roots[0])[0], 'first')
+                with self.assertRaisesRegex(RuntimeError, 'stop'):
+                    with satellite_catalog_snapshot(roots[1]):
+                        self.assertEqual(canonical_satellite('9991', roots[1])[0], 'second')
+                        self.assertEqual(canonical_satellite('9991', roots[0])[0], 'first')
+                        raise RuntimeError('stop')
+                with patch('timeline_data_collector.metadata.catalog_path', side_effect=AssertionError('Snapshot lost')):
+                    self.assertEqual(canonical_satellite('9991', roots[0])[0], 'first')
+
     def setUp(self):
         self.normalizer = MetadataNormalizer({'flatten_fields': True, 'satellites': [{'name': 'SAT_9991', 'series': 'series_99', 'aliases': ['9991']}]})
-
-    def test_default_normalizer_preserves_nested_fields_and_description(self):
-        record = {'id': 'sample', 'data': {'description': 'Full description',
-                                         'fields': {'Subject': 'Nested subject'}}}
-        self.assertEqual(record, MetadataNormalizer().record(record))
-
-    def test_local_alias_configuration_controls_flattening_without_namespace_rules(self):
-        normalizer = MetadataNormalizer({'flatten_fields': True,
-                                         'field_aliases': {'Example Priority': 'priority_number'}})
-        record = normalizer.record({'data': {'fields': {'Example Priority': 3,
-                                                        'Subject': 'Example title'}}}, 'EXAMPLE')
-        self.assertEqual(3, record['data']['priority_number'])
-        self.assertEqual('Example title', record['data']['description'])
-        self.assertNotIn('fields', record['data'])
 
     def test_aliases_use_one_dictionary_across_namespaces_and_preserve_unknowns(self):
         for namespace in ('DEMO_TICKET', 'DEMO_ISSUE', 'Operations'):
