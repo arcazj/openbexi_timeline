@@ -121,6 +121,29 @@ def pattern(value, flags=0):
     except regex.error as error:
         raise ValueError("Invalid regular expression.") from error
 
+    # Saved legacy filters often contain only literals (sometimes enclosed in
+    # ordinary capture groups). Searching those with a regex deadline can reject
+    # valid requests when a large descriptor or a busy worker delays evaluation.
+    # Validation above still rejects malformed expressions. Operators, inline
+    # flags, character classes and backreferences retain the bounded matcher.
+    if not flags:
+        literal = []
+        at = 0
+        while at < len(value):
+            char = value[at]
+            if char == "\\":
+                at += 1
+                if at == len(value) or value[at].isalnum(): break
+                literal.append(value[at])
+            elif char in ".^$*+?{}[]|":
+                break
+            elif char not in "()":
+                literal.append(char)
+            at += 1
+        else:
+            text = "".join(literal)
+            return lambda candidate: text in candidate
+
     def matches(text):
         try:
             return compiled.search(text, timeout=.02) is not None
@@ -327,9 +350,16 @@ class Search:
         if len(query) > 500:
             raise ValueError("Search is limited to 500 characters.")
         self.active = bool(query) and not (self.mode == "legacy" and query == "*")
-        self.test = pattern(query.replace(";", "|").replace(" ", "|") if self.mode == "legacy" else
-                            regex.escape(query) if self.mode == "text" else query,
-                            0 if self.mode == "legacy" else regex.I) if self.active else lambda _: False
+        if not self.active:
+            self.test = lambda _: False
+        elif self.mode == "text":
+            # Match the browser's literal, case-insensitive Text mode. Regex
+            # metacharacters are ordinary text and need no regex work budget.
+            needle = query.lower()
+            self.test = lambda text: needle in text.lower()
+        else:
+            self.test = pattern(query.replace(";", "|").replace(" ", "|") if self.mode == "legacy" else query,
+                                0 if self.mode == "legacy" else regex.I)
 
     def matches(self, record):
         if not self.active or record.get("zone") is True:

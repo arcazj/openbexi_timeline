@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 import hmac
 import logging
 import os
+import re
 import sqlite3
 import time
 from urllib.parse import parse_qs, urlsplit
@@ -24,6 +25,7 @@ from starlette.websockets import WebSocketDisconnect
 from . import __version__
 from .assets import public_asset
 from .config import configuration_from_document
+from .connections import handle_peer_resets
 from .hbds import HBDSError, LIMIT, Store, _schema, changes as hbds_changes, decode as hbds_decode, legacy_configuration, projection
 from .index import TimelineIndex
 from .matching import compact, digest
@@ -31,6 +33,18 @@ from .query import Queries
 from .storage import Storage
 
 LOG = logging.getLogger("openbexi.timeline")
+
+
+def exception_location(error):
+    frame = error.__traceback__
+    while frame and frame.tb_next: frame = frame.tb_next
+    return (os.path.basename(frame.tb_frame.f_code.co_filename) + ':' + str(frame.tb_lineno)) if frame else 'unknown'
+
+
+def log_operation_failure(error, request_id=None):
+    """Identify the failing operation without logging record or request contents."""
+    LOG.error("Timeline operation failed [%s]; error_type=%s sqlite_error=%s location=%s",
+              request_id or 'background', type(error).__name__, getattr(error, 'sqlite_errorname', 'n/a'), exception_location(error))
 HOP = {"host", "connection", "transfer-encoding", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "upgrade", "content-length"}
 
 
@@ -82,11 +96,16 @@ class RequestTrace:
                 level = logging.ERROR if status >= 500 else logging.WARNING if status >= 400 or metadata.get("error") or metadata.get("warnings") else logging.INFO
                 if level >= minimum:
                     # No request URL, search text, profile, path or cursor is logged.
-                    reason = "provider_error" if status >= 500 else "invalid_request" if status >= 400 else "cursor_expired" if "cursor expired" in metadata.get("error", "") else "query_error" if metadata.get("error") else "coverage_partial" if metadata.get("warnings") else "none"
-                    LOG.log(level, "timeline-response [%s] HTTP %s outcome=%s reason=%s server processing=%d ms; returned=%s examined=%s complete=%s more=%s warnings=%s",
-                            identifier, status, "failed" if status >= 400 or metadata.get("error") else "complete" if metadata.get("complete") else "partial",
+                    reason = "provider_error" if status >= 500 else trace.get("failure_reason", "invalid_request") if status >= 400 else metadata.get("reason") or ("cursor_expired" if "cursor expired" in metadata.get("error", "") else "query_error" if metadata.get("error") else "coverage_partial" if metadata.get("warnings") else "none")
+                    codes = sorted({item['code'] for item in metadata.get('warningDetails', [])
+                                    if isinstance(item, dict) and re.fullmatch(r'[a-z_]{1,48}', str(item.get('code', '')))})[:10]
+                    method = scope.get("method", "OTHER")
+                    if method not in {"GET", "POST", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS"}: method = "OTHER"
+                    LOG.log(level, "timeline-response [%s] HTTP %s method=%s outcome=%s reason=%s server processing=%d ms; returned=%s examined=%s complete=%s more=%s warnings=%s warning_codes=%s operation=%s error_type=%s location=%s",
+                            identifier, status, method, "failed" if status >= 400 or metadata.get("error") else "complete" if metadata.get("complete") else "partial",
                             reason, round((time.monotonic()-started)*1000), metadata.get("recordsReturned", "n/a"), metadata.get("recordsExamined", "n/a"),
-                            metadata.get("complete", "n/a"), bool(metadata.get("nextCursor")), len(metadata.get("warnings", [])))
+                            metadata.get("complete", "n/a"), bool(metadata.get("nextCursor")), len(metadata.get("warnings", [])),
+                            ','.join(codes) or 'none', trace.get('operation', 'n/a'), trace.get('error_type', 'none'), trace.get('error_location', 'n/a'))
 
 
 def create_app(configuration, *, start_indexer=True):
@@ -130,12 +149,18 @@ def create_app(configuration, *, start_indexer=True):
         while not index.stopping.is_set():
             try:
                 await run_in_threadpool(index.refresh)
-            except Exception:
-                LOG.error("Source indexing failed; inspect source access, JSON and index storage.")
+            except Exception as error:
+                log_operation_failure(error)
             await asyncio.sleep(configuration.poll_seconds)
 
     @asynccontextmanager
     async def lifespan(app):
+        with handle_peer_resets():
+            async with application_lifespan(app):
+                yield
+
+    @asynccontextmanager
+    async def application_lifespan(app):
         keeper = index.connect()
         keeper.execute("SELECT count(*) FROM metadata").fetchone()
         async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=5), limits=httpx.Limits(max_connections=32, max_keepalive_connections=16), follow_redirects=False) as client:
@@ -233,6 +258,7 @@ def create_app(configuration, *, start_indexer=True):
                     LOG.warning("Invalid HBDS edit ignored; the last valid runtime configuration remains active.")
             params = await parameters(request)
             operation = params.get("ob_request") if request.method == "POST" or "_sse/" in request.url.path else None
+            request.state.operation = operation if operation in {'readFilters', 'updateFilter', 'addFilter', 'deleteFilter', 'saveFilter', 'readDescriptor', 'addEvent'} else 'query' if operation is None else 'unsupported'
             if request.method == "POST" and not operation:
                 return JSONResponse({"error": "Unsupported timeline operation."}, 400)
             if operation in {"readFilters", "updateFilter", "addFilter", "deleteFilter", "saveFilter"}:
@@ -240,7 +266,10 @@ def create_app(configuration, *, start_indexer=True):
             elif operation == "readDescriptor":
                 try:
                     body, status = await run_in_threadpool(storage.descriptor, params)
-                except ValueError:
+                except ValueError as error:
+                    request.state.failure_reason = 'invalid_descriptor'
+                    request.state.error_type = type(error).__name__
+                    request.state.error_location = exception_location(error)
                     body, status = {"event_descriptor": [], "error": "Invalid descriptor identity or start date."}, 400
                 except OSError:
                     body, status = {"event_descriptor": [], "error": "Cannot read descriptor data."}, 500
@@ -263,6 +292,9 @@ def create_app(configuration, *, start_indexer=True):
                         return Response(status_code=304, headers=headers)
                 body = await run_in_threadpool(queries.query, params)
                 request.state.timeline = body["timelineMatch"]
+                if body['timelineMatch'].get('reason') == 'index_busy':
+                    headers.pop('ETag', None)
+                    headers['Cache-Control'] = 'no-store'
                 # Revision may change while initial indexing finishes.
                 headers["X-Timeline-Revision"] = body["timelineMatch"].get("revision", state["revision"])
                 return JSONResponse(body, headers=headers)
@@ -272,9 +304,11 @@ def create_app(configuration, *, start_indexer=True):
         except PermissionError as error:
             return JSONResponse({"error": str(error)}, 403)
         except (ValueError, UnicodeError) as error:
+            request.state.error_type = type(error).__name__
+            request.state.error_location = exception_location(error)
             return JSONResponse({"error": str(error)}, 400)
-        except (OSError, RuntimeError, sqlite3.Error):
-            LOG.error("Timeline operation failed; check source and state-directory access.")
+        except (OSError, RuntimeError, sqlite3.Error) as error:
+            log_operation_failure(error, getattr(request.state, 'request_id', None))
             return JSONResponse({"error": "Cannot read or save timeline data."}, 500)
 
     async def config(request):

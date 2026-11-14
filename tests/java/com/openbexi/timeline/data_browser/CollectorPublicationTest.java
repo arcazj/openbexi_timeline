@@ -9,6 +9,52 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CollectorPublicationTest {
+    @Test void partitionedCursorKeepsItsGenerationAfterIndexReplacement() throws Exception {
+        JSONArray records = new JSONArray();
+        Set<String> expected = new HashSet<>();
+        for (int i = 0; i < 300; i++) { records.add(event("old-"+i)); expected.add("old-"+i); }
+        byte[] raw = new JSONObject(Map.of("version",1,"events",records)).toJSONString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String hash = HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(raw));
+        Path part = root.resolve(".timeline-collector/parts/"+hash+".json");
+        Files.createDirectories(part.getParent()); Files.write(part,raw);
+        write(".timeline-collector/publication.json",new JSONObject(Map.of("version",2,"generation","old","record_count",300,
+                "event_parts",array(new JSONObject(Map.of("path","parts/"+hash+".json","sha256",hash,"bytes",raw.length,"records",300))))));
+        JSONObject config = configuration(true);
+        Set<String> found = new HashSet<>();
+        int pages = 0;
+        do {
+            JSONObject page = (JSONObject)new json_files_manager(null,null,new data_configuration(config)).getData("","0");
+            for (Object item : (JSONArray)page.get("events")) found.add(((JSONObject)item).get("id").toString());
+            JSONObject metadata = (JSONObject)page.get("timelineMatch");
+            assertNull(metadata.get("error"),metadata.toJSONString());
+            config.put("cursor",metadata.get("nextCursor"));
+            if (pages++ == 0) {
+                assertNotNull(config.get("cursor"));
+                write(".timeline-collector/publication.json",new JSONObject(Map.of("version",1,"generation","new","events",array(event("new")))));
+            }
+            if (config.get("cursor") == null) assertEquals(true,metadata.get("complete"),metadata.toJSONString());
+            assertTrue(pages < 20);
+        } while (config.get("cursor") != null);
+        assertEquals(expected,found);
+        assertEquals(Set.of("new"),read(true));
+    }
+
+    @Test void partitionedPublicationReadsCompleteEventsAndRejectsCorruption() throws Exception {
+        JSONArray parts = new JSONArray();
+        for (String id : List.of("one", "two")) {
+            byte[] raw = new JSONObject(Map.of("version", 1, "events", array(event(id)))).toJSONString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            String hash = HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(raw));
+            String name = "parts/"+hash+".json";
+            Path path = root.resolve(".timeline-collector/"+name); Files.createDirectories(path.getParent()); Files.write(path,raw);
+            parts.add(new JSONObject(Map.of("path",name,"sha256",hash,"bytes",raw.length,"records",1)));
+        }
+        write(".timeline-collector/publication.json",new JSONObject(Map.of("version",2,"generation","parts","record_count",2,"event_parts",parts)));
+        for (boolean progressive : List.of(false,true)) assertEquals(Set.of("one","two"),read(progressive));
+        assertEquals("two", CollectorPublication.find((JSONArray)CollectorPublication.read(root).get("events"),"two").get("id"));
+        Files.writeString(root.resolve(".timeline-collector/"+((JSONObject)parts.get(0)).get("path")), "broken");
+        assertThrows(java.io.IOException.class, () -> CollectorPublication.read(root));
+    }
+
     @TempDir Path root;
     JSONObject event(String id) {
         return new JSONObject(Map.of("id",id,"start","2026-09-12T12:00:00Z","end","","data",new JSONObject(Map.of("title",id))));

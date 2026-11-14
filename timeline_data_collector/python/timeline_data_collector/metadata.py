@@ -1,5 +1,7 @@
 """Shared metadata normalization; operational dictionaries remain deployment-local."""
 from collections import Counter
+from contextlib import contextmanager
+from contextvars import ContextVar
 from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
@@ -158,10 +160,31 @@ def _compiled_catalog(path, stamp):
     return MetadataNormalizer(_read_catalog(path, stamp)).lookup
 
 
+_SATELLITE_CATALOG = ContextVar('collector_satellite_catalog', default=None)
+
+
+def _satellite_lookup(root):
+    path = catalog_path(root)
+    if not path.is_file(): return {}
+    stat = path.stat()
+    return _compiled_catalog(str(path), (stat.st_mtime_ns, stat.st_size))
+
+
+@contextmanager
+def satellite_catalog_snapshot(root=None):
+    """Pin the dictionary for a conversion; refresh it at the next pass.
+
+    Legacy parsers look up satellites on individual log lines. The scoped
+    dictionary avoids resolving/statting the same file millions of times.
+    Context-local state keeps simultaneous workspaces and nested calls separate.
+    """
+    selected = _SATELLITE_CATALOG.set((root, _satellite_lookup(root)))
+    try: yield
+    finally: _SATELLITE_CATALOG.reset(selected)
+
+
 def canonical_satellite(value, root=None):
     """Legacy adapters use the same dictionary without constructing it per record."""
-    path = catalog_path(root)
-    if not path.is_file(): return str(value).strip(), 'others'
-    stat = path.stat()
-    lookup = _compiled_catalog(str(path), (stat.st_mtime_ns, stat.st_size))
+    selected = _SATELLITE_CATALOG.get()
+    lookup = selected[1] if selected is not None and selected[0] == root else _satellite_lookup(root)
     return lookup.get(token(value), (str(value).strip(), 'others'))

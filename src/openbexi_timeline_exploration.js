@@ -1,4 +1,4 @@
-import {cleanTimelineURL, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
+import {cleanTimelineURL, isTimelineRetry, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
 import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
 import {recordKey} from './openbexi_timeline_paging.js';
@@ -107,7 +107,7 @@ export function clusterVisualRecords(events, scale, protectedKeys=new Set(), cel
 
 // A history cursor owns one archive traversal. Each request is bounded, but
 // empty pages do not impose a cutoff on the total history that can be searched.
-export async function searchTimelineHistory(input,{query,range,signal,onProgress,timeout=15000}) {
+export async function searchTimelineHistory(input,{query,range,signal,onProgress,timeout=15000,before}) {
     const request=cleanTimelineURL(input);
     for(const key of ['cursor','cancel','ob_request'])request.searchParams.delete(key);
     for(const [key,value] of Object.entries({search:query,progressive:'1',matchProtocol:'1',history:'backward',purpose:'seek-past',
@@ -133,10 +133,15 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
             const meta=json.timelineMatch;
             if(meta?.nextCursor) {const next=new URL(request);next.searchParams.set('cursor',meta.nextCursor);cursorURL=next.href;}
             else cursorURL=null;
-            signal?.throwIfAborted();pages++;
+            signal?.throwIfAborted();
             if(!Array.isArray(json.events) || !meta || meta.query!==query || typeof meta.hasCondition!=='boolean' || meta.error)
                 throw new Error(meta?.error || 'This source cannot search timeline history.');
             validateSearchMode(meta,request.searchParams.get('searchMode'),query);
+            if(isTimelineRetry(json)) {
+                request.searchParams.set('cursor',meta.nextCursor);
+                await waitForTimelinePage(meta,signal);continue;
+            }
+            pages++;
             // Older deployments expose only neighboring-window searches.
             if(!meta.history)return {unsupported:true,complete:false};
             const history=meta.history;
@@ -150,6 +155,7 @@ export async function searchTimelineHistory(input,{query,range,signal,onProgress
             const visit=records=>{for(const record of records) {
                 const bounds=recordRange(record);
                 if(!record.zone && Number.isFinite(bounds.from) && bounds.from<=range.to &&
+                    (before===undefined || bounds.to<before) &&
                     (!meta.hasCondition || record.searchMatch===true))candidates.push(record);
                 visit(record.activities || []);
             }};
@@ -202,7 +208,6 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
                 let json;
                 try {json=await readTimelineResponse(await fetchTimeline(request,{signal:controller.signal,headers:{Accept:'application/json'}}),'Find timeline activity');}
                 finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
-                pages++;windowPages++;
                 const meta=json.timelineMatch;
                 if(meta?.nextCursor) {const next=new URL(request);next.searchParams.set('cursor',meta.nextCursor);cursorURL=next.href;}
                 else cursorURL=null;
@@ -210,6 +215,11 @@ export async function seekTimelineRecord(input,{query,range,direction='past',sig
                 if(!Array.isArray(json.events) || !meta || meta.query!==query || typeof meta.hasCondition!=='boolean' || meta.error)
                     throw new Error(meta?.error || 'This source cannot search neighboring intervals.');
                 validateSearchMode(meta,request.searchParams.get('searchMode'),query);
+                if(isTimelineRetry(json)) {
+                    request.searchParams.set('cursor',meta.nextCursor);
+                    await waitForTimelinePage(meta,signal);continue;
+                }
+                pages++;windowPages++;
                 const candidates=[];
                 const visit=records=>{for(const record of records){const bounds=recordRange(record);
                     if(!record.zone && (!meta.hasCondition || record.searchMatch===true) &&

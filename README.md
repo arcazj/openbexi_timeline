@@ -9,7 +9,7 @@
 Explore events in Timeline, Table, Split and 3D views. Search, filter, group and
 inspect records, or connect your own data.
 
-Version **2.9.4** · [Release notes](docs/release-2.9.4.md).
+Version **2.9.5** · [Release notes](docs/release-2.9.5.md).
 
 ## Quick start
 

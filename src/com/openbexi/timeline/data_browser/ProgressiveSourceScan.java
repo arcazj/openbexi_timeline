@@ -103,6 +103,8 @@ final class ProgressiveSourceScan implements AutoCloseable {
     private List<JSONObject> collected;
     private List<SourceRecordCache.Record> cached;
     private int cachedIndex;
+    private Iterator<?> committedRecords;
+    private int committedOrdinal;
     private int currentOrdinal;
     private long fileStart;
     private JSONObject last;
@@ -309,8 +311,12 @@ final class ProgressiveSourceScan implements AutoCloseable {
                     close(); break;
                 }
                 try {
-                    if (reader == null && cached == null && !openNext()) break;
-                    if(cached!=null) {
+                    if (reader == null && cached == null && committedRecords == null && !openNext()) break;
+                    if (committedRecords != null) {
+                        while (committedRecords.hasNext() && !budget())
+                            accept((JSONObject)committedRecords.next(), ++committedOrdinal);
+                        if (!committedRecords.hasNext()) closeFile();
+                    } else if(cached!=null) {
                         while(cachedIndex<cached.size() && !budget()) {
                             var record=cached.get(cachedIndex++);accept(record.value(),record.ordinal());
                         }
@@ -435,6 +441,16 @@ final class ProgressiveSourceScan implements AutoCloseable {
         if (history && directory.partition != null) checkingRange = directory.partition.range();
         currentFile=canonical;fileStamp=SourceRecordCache.Stamp.of(attributes);
         fileStart=bytes;
+        fileIdentity = UUID.nameUUIDFromBytes((canonical + ":" + directory.namespace)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
+        if (committed && Long.valueOf(2).equals(directory.origin.publication.get("version"))) {
+            // The index has no events array. Use the validated generation pinned
+            // when this scan opened, including across later cursor pages.
+            committedRecords = ((JSONArray)directory.origin.publication.get("events")).iterator();
+            committedOrdinal = 0;
+            bytes += attributes.size();
+            return true;
+        }
         var indexed = SourceFileIndex.get(canonical, fileStamp);
         if (indexed != null && indexed.outside(from, to)) {
             indexedFilesSkipped++;
@@ -446,8 +462,6 @@ final class ProgressiveSourceScan implements AutoCloseable {
             if (indexed.problem() != null) report(indexed.problem());
             return false;
         }
-        fileIdentity = UUID.nameUUIDFromBytes((canonical + ":" + directory.namespace)
-                .getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();
         var entry=SourceRecordCache.get(canonical,fileStamp);
         if(entry!=null){
             if(entry.from()>to || entry.to()<from) {
@@ -614,6 +628,7 @@ final class ProgressiveSourceScan implements AutoCloseable {
         if (reader != null) try { reader.close(); } catch (IOException ignored) {}
         reader = null; parser = null; handler = null;
         cached=null;collected=null;
+        committedRecords=null;
         fileIndex=null;fileProblem=null;
     }
     public void close() {

@@ -11,11 +11,20 @@ class Cancelled(Exception):
     """Cooperative cancellation; a committed batch is never rolled back."""
 
 
+class SourceConflictError(ValueError):
+    def __init__(self, record_id, sources):
+        self.record_id, self.sources = str(record_id), list(sources)
+        super().__init__('Conflicting record ID across sources: ' + self.record_id + ' (' + ', '.join(self.sources) + ')')
+
+
 @dataclass
 class InputBatch:
     items: list[Any] = field(default_factory=list)
     checkpoint: dict = field(default_factory=dict)
     acknowledge: Callable[[], None] | None = None
+    # Rechecking unchanged committed input may wait for historical conversion.
+    # Changed input and explicit forced replays retain current-work priority.
+    revalidate_only: bool = False
 
 
 @dataclass
@@ -48,9 +57,11 @@ class Context:
     metrics: dict = field(default_factory=dict)
     notices: dict = field(default_factory=dict)
     trace: Any = None
+    work_progress: Any = None
+    history_revisions: dict | None = None
 
     def progress(self, message, *arguments):
-        """First-pass diagnostics at INFO; unchanged polling remains at DEBUG."""
+        """Internal progress is DEBUG; completed work has a separate INFO summary."""
         from .tracing import safe_text
         message = message % arguments if arguments else message
         if self.trace: self.trace.note(message)
@@ -61,7 +72,7 @@ class Context:
         previous = self.notices.get(key)
         if message is None:
             if previous:
-                self.logger.info('%s/%s: %s available again', self.namespace, self.source['id'], key)
+                self.logger.debug('%s/%s: %s available again', self.namespace, self.source['id'], key)
                 self.notices.pop(key, None)
         elif previous != message:
             self.logger.log(level, message)

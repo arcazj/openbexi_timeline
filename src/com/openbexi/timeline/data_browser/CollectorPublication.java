@@ -6,6 +6,8 @@ import org.json.simple.parser.JSONParser;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /** Committed collector data is readable without the collector or any plugin installed. */
 public final class CollectorPublication {
@@ -28,10 +30,37 @@ public final class CollectorPublication {
         if (bytes.length > maxBytes) throw new IOException("Collector publication exceeds its read budget");
         try {
             JSONObject value = (JSONObject)new JSONParser().parse(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
-            if (!Long.valueOf(1).equals(value.get("version")) || !(value.get("events") instanceof JSONArray))
+            if (Long.valueOf(2).equals(value.get("version"))) {
+                JSONArray events = new JSONArray();
+                if (!(value.get("event_parts") instanceof JSONArray parts)) throw new IOException("Missing publication parts");
+                Path base = path.getParent().toRealPath();
+                for (Object item : parts) {
+                    JSONObject part = (JSONObject)item;
+                    String relative = Objects.toString(part.get("path"), "");
+                    if (!relative.matches("parts/[a-f0-9]{64}\\.json")) throw new IOException("Invalid publication part path");
+                    Path target = base.resolve(relative).toRealPath();
+                    if (!target.startsWith(base)) throw new IOException("Publication part escapes its source");
+                    if (Files.size(target) > maxBytes) throw new IOException("Publication part exceeds its read budget");
+                    byte[] payload;
+                    try (InputStream stream = Files.newInputStream(target)) {
+                        payload = stream.readNBytes((int)Math.min(Integer.MAX_VALUE, maxBytes + 1));
+                    }
+                    if (payload.length > maxBytes || !Long.valueOf(payload.length).equals(part.get("bytes")) ||
+                            !HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload)).equals(part.get("sha256")))
+                        throw new IOException("Publication part integrity check failed");
+                    JSONObject document = (JSONObject)new JSONParser().parse(new String(payload, java.nio.charset.StandardCharsets.UTF_8));
+                    JSONArray records = (JSONArray)document.get("events");
+                    if (records == null || !Long.valueOf(records.size()).equals(part.get("records")))
+                        throw new IOException("Publication part count mismatch");
+                    events.addAll(records);
+                }
+                if (!Long.valueOf(events.size()).equals(value.get("record_count"))) throw new IOException("Publication record count mismatch");
+                value.put("events", events);
+            }
+            if ((!Long.valueOf(1).equals(value.get("version")) && !Long.valueOf(2).equals(value.get("version"))) || !(value.get("events") instanceof JSONArray))
                 throw new IOException("Invalid collector publication");
             return value;
-        } catch (org.json.simple.parser.ParseException | ClassCastException error) { throw new IOException("Invalid collector publication", error); }
+        } catch (org.json.simple.parser.ParseException | ClassCastException | NoSuchAlgorithmException error) { throw new IOException("Invalid collector publication", error); }
     }
     public static boolean excluded(Path root, Path file, JSONObject publication) {
         if (publication == null && !Files.exists(root.resolve(".timeline-collector/pending.json"))) return false;

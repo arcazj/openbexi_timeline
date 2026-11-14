@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "timeline-plugin-timeline_json"
-version = "1.0.0"
+version = "1.0.1"
 description = "OpenBEXI Timeline timeline_json plugin"
 requires-python = ">=3.12"
 readme = "README.md"

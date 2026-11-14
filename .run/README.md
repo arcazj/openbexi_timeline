@@ -8,14 +8,8 @@ directory to the project root and use the current HBDS workspace files.
 | --- | --- |
 | Timeline Java - Default / GEO | Serve committed samples / collected data on `http://127.0.0.1:8080` |
 | Timeline Python - Default / GEO | Serve the same workspaces on `http://127.0.0.1:8783` |
-| Collector - Demo / GEO | Open the collector dashboard on `http://127.0.0.1:8765`, with all three workspaces selectable |
-| Collector - GEO once | Collect live earthquake and volcano data once with the saved checkpoints, then exit |
-| Generator - Demo | Generate sessions and zones offline in `.local-private/events/DEMO_GENERATOR` |
 | Check - Java workspace / Python workspace | Validate the default workspace and exit without starting a listener |
-| Check - Collector plugins | Validate the GEO workspace and plugin configuration without ingestion |
 | Help - Timeline Java / Timeline Python | Print server options (`--help`) and exit |
-| Help - Collector | Print the collector command list (`--help`) and exit |
-| Help - Collector server / Generator | Print dashboard (`serve --help`) / conversion (`run --help`) options and exit |
 | Tests - Java | Run the project's JUnit tests; historical opt-in tests remain disabled |
 | Browser - Timeline (Java) / Model editor (Java) / Demos | Debug a page served by the Java server on port 8080 |
 
@@ -50,7 +44,7 @@ interpreter. IntelliJ also requires its SDK name to match the registered entry.
 If yours has a different name, select your existing project interpreter in each
 Python configuration under **Run > Edit Configurations**. Keep the Java module
 on JDK 21; changing its module SDK to Python would break the Java launchers.
-Collector and generator entries read `JAVA_HOME` from the ignored local file
+Collector entries read `JAVA_HOME` from the ignored local file
 `.local-private/intellij.env`. Create it with your JDK location, for example:
 
 ```dotenv
@@ -66,19 +60,23 @@ On Linux/macOS, select the environment's `bin/python` interpreter instead of
 
 ## Collector launch troubleshooting
 
-Every collector run prints a detailed startup trace at the default INFO level
-in the IntelliJ Run console. It includes configuration/plugin loading, source
-selection, output paths, UTC dates, locks/checkpoints, first-pass progress and
-schedule decisions. Each job has an ID and timed steps; slow steps report every
-10 seconds. Existing collector run configurations need no parameter changes.
+Create a local collector launch configuration for the desired workspace.
+It includes scheduling and health recording. Run one collector per dashboard
+port, or add `--allow-workspace PATH` to collect additional workspaces in the
+same process. Use `--all-workspaces` only when all neighboring workspaces are intended.
+Collector one-shot, generator, help, validation, monitor and
+backfill launch configurations have been removed. Use the CLI commands below
+for those utilities. Previous public launch files remain available in Git history.
+
+INFO reports completed work and duration. Use DEBUG for configuration/plugin
+loading, source selection, output paths, UTC dates, checkpoints and scheduling.
+Slow DEBUG steps report progress every 10 seconds.
 Use `--log-file .local-private/timeline-collector/collector.log` to retain a
-rotating local copy, and `--log-level DEBUG` for detailed subsequent polls.
+rotating local copy, and `--log-level DEBUG` for detailed diagnostics.
 Restart a running collector to load updated code.
 
-The current module is `timeline_data_collector`. Use **Help - Collector** from
-`.run`, or update an older local configuration's module to
-`timeline_data_collector` and its interpreter to
-`.venv/Scripts/python.exe`. Dashboard arguments start with `serve`, conversion
+Both launchers run the `timeline_data_collector` module through its
+`__main__.py`, using `.venv/Scripts/python.exe`. Dashboard arguments start with `serve`, conversion
 arguments with `run`, and checks with `validate`; each uses `--workspace`.
 
 Verify the installation from the project root:

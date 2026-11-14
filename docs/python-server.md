@@ -31,6 +31,37 @@ Windows convenience launcher:
 
 `--index-once` prepares or updates the saved index before accepting UI traffic. Without it, the server immediately accepts requests, publishes records as source files become available, and reports partial coverage until initial indexing finishes. The UI honors increasing retry delays up to two seconds. A completed empty window has no continuation cursor and stops loading.
 
+Queries wait at most 250 ms for the index writer. Temporary SQLite contention
+returns an incomplete page with `reason=index_busy`, a continuation token and a
+500 ms retry hint; the UI retries automatically without advancing or losing the
+current page. These waiting responses are not cached. Retired index records are
+removed in small background transactions, never during a timeline query, while
+current records and snapshots pinned by active cursors are preserved. Unexpected
+server failures log the request ID, exception class, SQLite error code name and
+code location without including request or record contents.
+
+Forward pages use a covering index for the cursor's pinned file versions, so
+retired versions do not consume the query budget on every continuation. Restart
+the server to add this index to an existing database. Response logs include
+warning codes (for example, `scan_limit`), the operation, and validation locations
+for rejected requests. On Windows, a peer reset during Proactor socket shutdown
+finishes socket cleanup and logs at DEBUG; unrelated exceptions remain visible.
+
+New queries also select overlapping files from their current versions through
+that covering index. Broad backward-history searches no longer traverse retired
+records in the global interval index while creating their first cursor. This
+avoids first-page timeouts during frequent collector updates; existing cursors
+still retain the file versions they originally selected. Apply this query fix
+by restarting the Python timeline server; no target deletion or collector reset
+is needed.
+
+Workspace and legacy launches both enable application logging. Completed sessions
+requests print `timeline-response ... HTTP 200 method=GET` (or `method=POST`),
+with the request ID, operation and processing time. Request URLs, search text and
+record contents are omitted. `server.log_level` and the browser's `traceLevel`
+still control which responses appear; use `INFO` to see successful requests.
+Restart the Python timeline server after changing its logging code.
+
 An index records its owning workspace. After that workspace's data paths change, restarting rebuilds the derived index automatically. A state directory owned by another workspace is rejected. For indexes created before workspace ownership was recorded, stop the server and archive the old state directory before restarting with changed paths.
 
 The generic example does not include operational data. Populate its `target_path` directories through the collector/import workflow, or point a private namespace configuration at existing timeline JSON files. Missing sources produce explicit coverage warnings.
@@ -64,6 +95,12 @@ Default limits are 10,000 source files, 64 MiB per source file, 2 MiB per record
 
 Historical search shares the configured `max_records` and `max_query_seconds` limits. An archive larger than the default 100,000 examined records may need higher limits to search its full history; a `scan_limit` warning means older matches can remain unread. History pages use a chronological index so each page continues from the previous timestamp and record identity.
 
+Text searches use literal, case-insensitive matching, consistent with the browser.
+Simple legacy filter terms also use direct text matching; large descriptions do
+not subject these literal checks to the regex timeout. Actual regular expressions
+retain their processing limit. A failed loading interval is marked `error` in the
+status report, keeps already loaded records, and can be resumed with Retry.
+
 ## Routes and compatibility
 
 | Route / operation | Python behavior |
@@ -86,6 +123,20 @@ The modern UI's `matchProtocol=1` contract is the compatibility target. Full ses
 Intentional differences from legacy quirks: missing/invalid time ranges return 400 rather than synthetic demo events; event creation writes valid escaped JSON and correct source namespaces rather than reproducing the old writer's trailing commas; operational file/index failures are reported without private paths. Python's bounded `regex` engine supports the tested legacy patterns and Java `\Q...\E` literals, but arbitrary Java-specific regular expressions need validation before migration. Old custom clients relying on Java's unannotated search/color behavior should continue using Java until adapted to `matchProtocol=1`.
 
 Legacy descriptor reads accept json-simple's optional separators and literal control characters while preserving string contents. Source event streams retry literal control characters using a bounded streaming reader without duplicating an already returned prefix. Truncated documents and other unsupported syntax continue to report partial coverage or descriptor errors; source files are never rewritten by these readers.
+
+Partitioned collector publications include optional descriptor ID lists for each
+immutable part, including nested activities. A descriptor request reads and
+checksum-verifies the matching part instead of decoding the entire namespace.
+Older publications and missing or inconsistent hints fall back to a verified
+scan. The collector adds hints at its next publication, without rewriting
+unchanged event parts or forcing a timeline reindex.
+Hints are omitted if they would exceed the publication index's byte budget.
+
+Backward history pages merge chronological streams from the cursor's pinned file
+versions. Obsolete versions retained for other readers are not scanned. The
+covering index is created automatically at server startup; its first creation
+can take longer on a large existing database. Filters, equal-timestamp ordering,
+cursor replay and coverage warnings retain the same behavior.
 
 ## Java fallback, HTTPS and rollback
 

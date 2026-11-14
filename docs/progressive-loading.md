@@ -53,6 +53,11 @@ Overview has its own linear zoom span; its context follows the main interval to
 keep the visible-window indicator centered. Zooming Overview does not change the
 main range or analysis scope. See [request and diagnostic examples](connected-diagnostics.md).
 
+Grouped layout checks each activity's group and time range before copying its
+display metadata. Only eligible activities are copied when flattening nested
+sessions; child trees are not copied and discarded at every parent.
+Display records remain independent of source metadata and of other bands.
+
 ## Historical search
 
 Auto scale distinguishes completed empty intervals from incomplete coverage.
@@ -94,9 +99,12 @@ sessions endpoint. Continuations keep the same query, source configuration,
 filter, search mode, Sort by and end date; cancellation releases the cursor. Older servers
 without this history protocol fall back to a nearby search of up to eight
 expanding windows, 32 pages and 20 seconds. An empty fallback result explicitly
-remains incomplete. **Find previous activity** and **Find next activity** retain
-their directional navigation behavior; they do not claim an exhaustive archive
-search. No new server endpoint is required.
+remains incomplete. **Find previous activity** also uses backward history, even
+with an empty search box, so gaps between days do not stop it at the nearby-search
+limit. It selects a matching record ending before the selected record's start or
+the view's center, retaining the filters and zoom. **Cancel search** stops it and
+releases its cursor. **Find next activity** keeps its bounded forward search.
+No new server endpoint is required.
 
 Historical responses add `timelineMatch.history`:
 

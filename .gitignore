@@ -81,7 +81,7 @@ Desktop.ini
 !/yaml/sources_default_test.yml
 !/yaml/sources_earthquake.yml
 !/yaml/tomcat.yml
-/tools/com/intelsat/
+/tools/com/*/
 
 # HBDS is private by default. Only reviewed generic definitions/templates are public.
 /HBDS/*
@@ -166,7 +166,9 @@ Desktop.ini
 !/timeline_data_collector/
 /.run/Collector - * - *.run.xml
 /.run/Timeline Python - *.run.xml
-/tools/com/openbexi/intelsat/
+/.run/Collector - *.run.xml
+/release/service.local.yml
+/tools/com/openbexi/*/
 **/.venv/
 **/target/
 **/build/

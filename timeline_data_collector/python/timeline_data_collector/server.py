@@ -33,6 +33,7 @@ class Dashboard:
                 load(path, trace=trace)  # Validate without loading converters.
             self.workspaces[identity(str(path))] = path
         self.schedulers = {self.initial: Scheduler(runner)}
+        self.collector = None
         app = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -40,14 +41,19 @@ class Dashboard:
 
             def respond(self, value, status=200, content_type='application/json; charset=utf-8'):
                 raw = value if isinstance(value, bytes) else json.dumps(value).encode()
-                self.send_response(status)
-                self.send_header('Content-Type', content_type)
-                self.send_header('Content-Length', str(len(raw)))
-                self.send_header('Cache-Control', 'no-store')
-                self.send_header('X-Content-Type-Options', 'nosniff')
-                self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'")
-                self.end_headers()
-                self.wfile.write(raw)
+                try:
+                    self.send_response(status)
+                    self.send_header('Content-Type', content_type)
+                    self.send_header('Content-Length', str(len(raw)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.send_header('X-Content-Type-Options', 'nosniff')
+                    self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'")
+                    self.end_headers()
+                    self.wfile.write(raw)
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    # A closed browser/watchdog connection cannot receive an error
+                    # response. Collection and other dashboard requests continue.
+                    self.close_connection = True
 
             def authorized(self, write=False):
                 allowed = {f'127.0.0.1:{app.http.server_port}', f'localhost:{app.http.server_port}'}
@@ -72,6 +78,11 @@ class Dashboard:
                         selected, scheduler = app.selected(workspace)
                         config = selected.refresh()
                         pairs = {(group['namespace'], source['id']) for group, source in config.sources(include_disabled=True)}
+                        keys = {source_key(group, source) for group, source in config.sources(include_disabled=True)}
+                        if app.collector:
+                            with app.collector.guard:
+                                active_schedules = [entry['ident'] for key, entry in app.collector.entries.items() if key in keys]
+                        else: active_schedules = list(scheduler.running)
                         sources = []
                         for group, source in config.sources(include_disabled=True):
                             error = None
@@ -92,9 +103,10 @@ class Dashboard:
                         self.respond(dict(csrf=app.csrf, workspace=workspace, revision=config.revision,
                                           workspaces=[dict(id=key, name=path.stem) for key, path in app.workspaces.items()],
                                           sources=sources,
-                                          jobs=[job for job in selected.state.jobs() if (job['request']['namespace'], job['request']['source']) in pairs],
-                                          schedules={key: value for key, value in selected.state.schedules().items() if (value['namespace'], value['source']) in pairs},
-                                          active_schedules=list(scheduler.running))); return
+                                          jobs=[job for job in selected.state.jobs() if job['request']['source_key'] in keys],
+                                          schedules={key: value for key, value in selected.state.schedules().items()
+                                                     if value.get('source_key') in keys or (not value.get('source_key') and (value['namespace'], value['source']) in pairs)},
+                                          continuous=app.collector is not None, active_schedules=active_schedules)); return
                     self.respond({'error': 'Not found'}, 404)
                 except (ValueError, KeyError, OSError) as exc: self.respond({'error': str(exc)}, 400)
 
@@ -126,7 +138,8 @@ class Dashboard:
                         if body.get('revision') != selected.refresh().revision: raise ValueError('Configuration changed; reload before scheduling')
                         ident = scheduler.start(body['namespace'], body['source'], body['policy'], offline=body.get('offline', False),
                                                 date=body.get('date') or None, end_date=body.get('end_date') or None,
-                                                lookback_hours=body.get('lookback_hours', 48))
+                                                lookback_hours=body.get('lookback_hours', 48),
+                                                **({'automatic': not (body.get('date') or body.get('end_date'))} if app.collector else {}))
                         self.respond({'id': ident}, 201); return
                     if route == '/api/schedules/stop': scheduler.stop(body['id']); self.respond({'stopped': True}); return
                     self.respond({'error': 'Not found'}, 404)
@@ -145,13 +158,18 @@ class Dashboard:
             scheduler = self.schedulers[workspace]
             with scheduler.guard: schedules = list(scheduler.running.values())
             jobs = runner.state.jobs(200)
+            failures = runner.state.failures()
+            recoveries = runner.state.recoveries()
             with runner.guard: active = list(runner.active)
             running = [runner.state.get(ident) for ident in active]
             for group, source in runner.configuration.sources(include_disabled=True):
                 namespace, ident = group['namespace'], source['id']
-                matches = lambda job: job['request']['namespace'] == namespace and job['request']['source'] == ident
+                matches = lambda job: job['request']['source_key'] == source_key(group, source)
                 job = next((job for job in running if matches(job)), None) or next((job for job in jobs if matches(job)), None)
                 schedule = next((entry for entry in schedules if entry['namespace'] == namespace and entry['source'] == ident), None)
+                if self.collector:
+                    with self.collector.guard:
+                        schedule = self.collector.entries.get(source_key(group, source))
                 entry = dict(workspace=workspace, namespace=namespace, source=ident, scheduled=schedule is not None, status='idle')
                 if source['source_plugin'] == 'loki':
                     entry['acquisition'] = read_json(runner.configuration.state_root / 'plugins' /
@@ -167,7 +185,6 @@ class Dashboard:
                                  date=job['request']['date'], end_date=job['request']['end_date'])
                     state = job['state']
                     entry['status'] = state if state in {'running', 'queued', 'failed'} else 'watching' if schedule else 'idle'
-                    if state == 'failed': alerts.append(namespace+'/'+ident+': '+job['result'].get('error', 'conversion failed'))
                     if state == 'running':
                         elapsed = (now-datetime.fromisoformat(job['updated_at'])).total_seconds()
                         entry['seconds_without_progress'] = round(elapsed, 1)
@@ -178,6 +195,18 @@ class Dashboard:
                         entry['status'] = 'settling'
                     notices = runner.notices.get(job['request']['source_key'], {})
                     if state == 'succeeded' and notices.get('input'): entry['status'] = 'waiting_input'
+                unresolved = [item for item in failures if matches(item)]
+                pending_recovery = [item for item in recoveries if matches(item)]
+                if pending_recovery:
+                    entry['pending_recovery'] = [dict(job_id=item['id'], scope=runner.state.failure_scope(item['request']),
+                        reason='Publication capacity recovered; this earlier failed scope still needs a completed replay.')
+                        for item in pending_recovery]
+                if enabled and unresolved:
+                    entry['failures'] = [dict(job_id=item['id'], scope=runner.state.failure_scope(item['request']),
+                                              error=item['result'].get('error', 'conversion failed')) for item in unresolved]
+                    if entry['status'] not in {'running', 'queued', 'stalled'}: entry['status'] = 'failed'
+                    for failure in entry['failures']:
+                        alerts.append(namespace+'/'+ident+' ['+failure['scope']+']: '+failure['error'])
                 if enabled and not schedule:
                     saved = [value for value in runner.state.schedules().values() if value['namespace'] == namespace and value['source'] == ident]
                     if any(value.get('enabled') and value['policy'].get('resume_on_restart') for value in saved):
@@ -188,8 +217,8 @@ class Dashboard:
                     entry['publication_bytes'] = stat.st_size
                     entry['publication_limit_bytes'] = Publisher.MAX_SNAPSHOT_BYTES
                     entry['last_publication_utc'] = datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()
-                    if enabled and stat.st_size >= Publisher.MAX_SNAPSHOT_BYTES * .85:
-                        alerts.append(namespace+': publication is approaching its snapshot size limit')
+                    # Inline publications migrate to bounded immutable parts on
+                    # growth. Their current size is not a capacity failure.
                 except FileNotFoundError: pass
                 sources.append(entry)
         return dict(status='degraded' if alerts else 'ok', checked_at=now.isoformat(), server_pid=os.getpid(), sources=sources, alerts=alerts)
@@ -263,20 +292,24 @@ class Dashboard:
 
     def close(self):
         self.http.server_close()
+        if self.collector: self.collector.close()
         for scheduler in self.schedulers.values(): scheduler.close()
         for key, runner in self.runners.items():
             if key != self.initial: runner.close()
 
 
-def serve(runner, *, host=None, port=None, workspaces=()):
+def serve(runner, *, host=None, port=None, workspaces=(), all_workspaces=False):
+    from .continuous import ContinuousCollector, workspace_paths
     trace = StartupTrace('server')
     settings = runner.configuration.document.get('collector_ui', {})
-    dashboard = Dashboard(runner, host=host or settings.get('host', '127.0.0.1'), port=port if port is not None else settings.get('port', 8765), workspaces=workspaces)
+    paths = workspace_paths(runner.configuration.workspace, workspaces, discover=all_workspaces)
+    dashboard = Dashboard(runner, host=host or settings.get('host', '127.0.0.1'), port=port if port is not None else settings.get('port', 8765), workspaces=paths)
     try:
         with trace.step('applying startup schedule policy'):
-            dashboard.schedulers[dashboard.initial].resume()
+            dashboard.collector = ContinuousCollector(dashboard)
+            dashboard.collector.start()
         trace.finish('Timeline data collector ready', url=dashboard.url,
-                     active_schedules=len(dashboard.schedulers[dashboard.initial].running))
+                     active_schedules=len(dashboard.collector.entries))
         dashboard.http.serve_forever(poll_interval=.2)
     finally: dashboard.close()
     return 0

@@ -13,7 +13,9 @@ import uuid
 from urllib.parse import quote
 from .io import atomic_write, day_path, identity, model_root, normalize, read_json, write_json, utc_now, timestamp, remove_file
 from .locking import SourceLock
+from .publication import read_publication, encode_publication
 from .metadata import MetadataNormalizer, descriptor_record, merge_descriptor
+from .contracts import SourceConflictError
 
 
 def legacy_document(path):
@@ -32,11 +34,12 @@ def legacy_document(path):
 
 
 class Publisher:
-    # Matches the timeline backends' default materialized-file budget.
+    # Per index/part, matching the timeline backends' default file budget.
     MAX_SNAPSHOT_BYTES = 64 * 1024 * 1024
-    def __init__(self, target, namespace, *, normalizer=None):
+    def __init__(self, target, namespace, *, normalizer=None, recovery=None):
         self.target, self.namespace = str(target), namespace
         self.normalizer = normalizer or MetadataNormalizer()
+        self.recovery = recovery
         self.root = model_root(target)
         if self.root == self.root.parent: raise ValueError('Output cannot be a filesystem root')
         self.state_dir = self.root / '.timeline-collector'
@@ -76,7 +79,7 @@ class Publisher:
 
     def read_state(self):
         with self.locked():
-            return self.expand_state(read_json(self.state_path, {'version': 1, 'sources': {}, 'reports': []}))
+            return self.expand_state(read_publication(self.state_path, {'version': 1, 'sources': {}, 'reports': []}))
 
     @staticmethod
     def expand_state(state):
@@ -104,7 +107,7 @@ class Publisher:
 
     def _baseline(self):
         """Retain materialized data during first adoption; never delete legacy files."""
-        retained, reports, scanned_bytes = {}, [], 0
+        retained, reports = {}, []
         for path in sorted(self.root.rglob('*.json')):
             relative = path.relative_to(self.root)
             if any(part.startswith('.') or part.startswith('descriptors') or 'noises' in part for part in relative.parts): continue
@@ -113,8 +116,8 @@ class Publisher:
             if any(part.lower().endswith(('_legacy', '_backup', '.bak')) for part in relative.parts[:-1]):
                 reports.append(relative.as_posix())
                 continue
-            scanned_bytes += path.stat().st_size
-            if scanned_bytes > self.MAX_SNAPSHOT_BYTES: raise ValueError('Existing namespace exceeds the 64 MiB collector snapshot budget; materialized data is preserved')
+            if path.stat().st_size > self.MAX_SNAPSHOT_BYTES:
+                raise ValueError('Existing report exceeds the per-file collector budget; materialized data is preserved')
             # Legacy Java JSON permits literal controls and trailing separators.
             document = legacy_document(path)
             if not isinstance(document, dict) or not isinstance(document.get('events'), list): continue
@@ -134,13 +137,26 @@ class Publisher:
                 retained[key] = record
         return {'version': 1, 'sources': {}, 'reports': [], 'retained': retained, 'baseline_reports': reports}
 
-    def publish(self, source_key, source_id, plugin, batch, *, run_id=None):
+    @staticmethod
+    def report_name(namespace, hour, values):
+        countable = [item for item in values if item.get('zone') not in (True, 'zone')]
+        sessions = sum(isinstance(item.get('activities'), list) or item.get('data', {}).get('kind') == 'session'
+                       for item in countable)
+        return '%s_%d_%d_%s.json' % (quote(namespace, safe=''), sessions, len(countable)-sessions, hour)
+
+    def publish(self, source_key, source_id, plugin, batch, *, run_id=None, checkpoint_scope=None, preserve_missing=False, adopt_sources=()):
         records = [self.normalizer.record(record, self.namespace) for record in normalize(batch.records, self.namespace, source_key)]
         with self.locked():
-            previous = read_json(self.state_path)
+            previous = read_publication(self.state_path)
             if previous is None: previous = self._baseline()
             else: previous = self.expand_state(previous)
-            candidate = deepcopy(previous)
+            # Published records are immutable during this transaction. Copy the
+            # ownership maps we edit, and replace changed records with normalized
+            # values; do not copy every historical payload for a small update.
+            candidate = dict(previous)
+            candidate['retained'] = dict(previous.get('retained', {}))
+            candidate['sources'] = {key: dict(value, records=dict(value['records']))
+                                    for key, value in previous['sources'].items()}
             if candidate.get('metadata_revision') != self.normalizer.revision:
                 def normalized(record):
                     namespace = record.get('namespace') or record.get('data', {}).get('namespace') or self.namespace
@@ -150,17 +166,38 @@ class Publisher:
                     contribution['records'] = {key: normalized(record) for key, record in contribution['records'].items()}
                 candidate['metadata_revision'] = self.normalizer.revision
             source = candidate['sources'].setdefault(source_key, {'records': {}, 'checkpoint': {}})
-            if batch.snapshot: source['records'] = {}
+            # Explicit maintenance operation: transfer ownership within this
+            # namespace while preserving every published record and checkpoint.
+            for old_key in adopt_sources:
+                if old_key == source_key: raise ValueError('Cannot adopt the destination source')
+                old = candidate['sources'][old_key]
+                for key, record in old['records'].items():
+                    if record.get('data', {}).get('namespace', self.namespace) != self.namespace:
+                        raise ValueError('Cannot transfer records between namespaces')
+                    if key in source['records'] and source['records'][key] != record:
+                        raise SourceConflictError(key, [source_id, old.get('source_id', old_key)])
+                    source['records'][key] = record
+                old['records'] = {}
+            if batch.snapshot and not preserve_missing: source['records'] = {}
             for record in records:
                 source['records'][record['id']] = record
                 candidate.get('retained', {}).pop(record['id'], None)
             for key in batch.deleted_ids: source['records'].pop(str(key), None)
-            source.update(checkpoint=batch.checkpoint, source_id=source_id, plugin=plugin, run_id=run_id, last_success=utc_now())
+            checkpoint = deepcopy(batch.checkpoint)
+            if checkpoint_scope:
+                checkpoint = deepcopy(source.get('checkpoint', {}))
+                checkpoint.setdefault('_collector_scopes', {})[checkpoint_scope] = deepcopy(batch.checkpoint)
+            elif '_collector_scopes' in source.get('checkpoint', {}):
+                checkpoint['_collector_scopes'] = source['checkpoint']['_collector_scopes']
+            source.update(checkpoint=checkpoint, source_id=source_id, plugin=plugin, run_id=run_id, last_success=utc_now())
             merged = dict(candidate.get('retained', {}))
-            for contribution in candidate['sources'].values():
+            owners = {key: 'retained legacy input' for key in merged}
+            for owner_key, contribution in candidate['sources'].items():
+                owner = contribution.get('source_id', owner_key) + ' [' + owner_key[:12] + ']'
                 for key, record in contribution['records'].items():
-                    if key in merged and merged[key] != record: raise ValueError('Conflicting record ID across sources: ' + key)
+                    if key in merged and merged[key] != record: raise SourceConflictError(key, [owners[key], owner])
                     merged[key] = record
+                    owners[key] = owner
             old_records = {item['id']: item for item in previous.get('events', [])}
             changed = {key for key, value in merged.items() if old_records.get(key) != value}
             removed = old_records.keys() - merged.keys()
@@ -195,10 +232,7 @@ class Publisher:
             for (directory, namespace, hour), values in hours.items():
                 # Match timeline session classification, counting top-level items
                 # only. Child activities have their own descriptors, not counts.
-                countable = [item for item in values if item.get('zone') not in (True, 'zone')]
-                sessions = sum(isinstance(item.get('activities'), list) or item.get('data', {}).get('kind') == 'session'
-                               for item in countable)
-                report_name = '%s_%d_%d_%s.json' % (quote(namespace, safe=''), sessions, len(countable)-sessions, hour)
+                report_name = self.report_name(namespace, hour, values)
                 report = directory / report_name
                 relative = report.relative_to(self.root).as_posix()
                 reports.append(relative)
@@ -231,20 +265,28 @@ class Publisher:
                 return result
             retired = set(previous.get('retired_ids', [])) | identities(previous.get('events', []))
             retired.difference_update(identities(merged.values()))
-            # Both timeline servers read this single atomic snapshot. Dated files remain
+            # Both timeline servers pin this atomic publication index. Dated files remain
             # compatible exports; readers never observe a partially written generation.
             candidate.update(generation=generation, reports=sorted(reports), report_layout='namespace-hour-v1', record_count=len(merged), updated_at=utc_now(),
                              dateTimeFormat='iso8601', events=ordered_records, retired_ids=sorted(retired))
+            if 'recovery_pending_ids' in candidate:
+                candidate['recovery_pending_ids'] = sorted(set(candidate['recovery_pending_ids']) - merged.keys())
             compact = dict(candidate, ownership_format='ids-v1')
             compact['sources'] = {key: dict({k:v for k,v in value.items() if k != 'records'}, record_ids=sorted(value['records']))
                                   for key,value in candidate['sources'].items()}
             compact['retained_ids'] = sorted(compact.pop('retained', {}))
-            snapshot = json.dumps(compact, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
-            if len(snapshot) > self.MAX_SNAPSHOT_BYTES:
-                raise ValueError('Namespace snapshot exceeds the 64 MiB budget; the last committed output and checkpoint are preserved')
+            snapshot, parts = encode_publication(compact, self.MAX_SNAPSHOT_BYTES,
+                                                  previous=previous, changed_ids=changed | removed)
             # Validate and stage all bytes before touching any visible output.
             prepared = {path: None if value is None else json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
                         for path, value in outputs.items()}
+            # Parts are immutable and old generations remain readable by readers
+            # that pinned an earlier index. Only new parts enter the rollback journal.
+            for name, raw in parts.items():
+                path = self._owned_path('.timeline-collector/' + name)
+                if path.exists():
+                    if path.read_bytes() != raw: raise ValueError('Publication part integrity check failed')
+                else: prepared[path] = raw
             journal = {'generation': generation, 'files': []}
             unchanged = []
             for path, raw in prepared.items():
@@ -267,6 +309,8 @@ class Publisher:
             except BaseException:
                 self._recover()
                 raise
+            if self.recovery:
+                self.recovery.remember(self, json.loads(snapshot) if parts or compact.get('version') == 2 else compact, ordered_records)
             return {'generation_id': generation, 'records_written': len(records),
                     'metadata_warnings': dict(self.normalizer.issues),
                     '_checkpoint_stamp': self.stamp(),

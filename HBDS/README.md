@@ -128,7 +128,7 @@ Use `<timeline>_Workspace.json` for additional local timelines. For example:
 Namespace and service references resolve relative to the workspace file. Both
 servers accept `--workspace HBDS/<timeline>_Workspace.json`; `-serverconf` overrides
 its `service` field. Older workspace files without `service` select
-`service.local.yml` when present, otherwise `service.yml`. Public workspaces
+`../release/service.local.yml` when present, otherwise `service.yml`. Public workspaces
 explicitly select `service.yml` to remain independent of private deployments.
 Use either `--workspace` or `-dataconf`.
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "timeline-plugin-loki"
-version = "1.0.1"
+version = "1.0.2"
 description = "Recoverable daily Loki acquisition for OpenBEXI Timeline"
 requires-python = ">=3.12"
 readme = "README.md"

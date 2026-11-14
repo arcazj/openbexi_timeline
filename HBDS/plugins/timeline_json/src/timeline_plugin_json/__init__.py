@@ -17,6 +17,7 @@ class Plugin:
             context.check_cancelled()
             if isinstance(item, Path):
                 if item.suffix.lower() not in {'.json', '.jsonl', '.ndjson', '.gz'}: continue
+                context.metrics['processed_files'] = context.metrics.get('processed_files', 0) + 1
                 raw = gzip.decompress(item.read_bytes()) if item.suffix.lower() == '.gz' else item.read_bytes()
                 if item.suffix.lower() in {'.jsonl', '.ndjson'} or item.name.lower().endswith(('.jsonl.gz', '.ndjson.gz')):
                     for line in raw.decode('utf-8-sig').splitlines():
@@ -27,6 +28,12 @@ class Plugin:
             elif isinstance(item, str): document = json.loads(item)
             else: document = item
             records.extend(normalize(document, context.namespace, context.source_key))
+        days = [timestamp(record['start']).date().isoformat() for record in records]
+        if days:
+            context.metrics['start_date'] = min(context.metrics.get('start_date', min(days)), min(days))
+            context.metrics['end_date'] = max(context.metrics.get('end_date', max(days)), max(days))
+        parsed = context.metrics.setdefault('parsed', {})
+        parsed['records'] = parsed.get('records', 0) + len(records)
         if context.start_date: records = [record for record in records if timestamp(record.get('end') or record['start']).date().isoformat() >= context.start_date]
         if context.end_date: records = [record for record in records if timestamp(record['start']).date().isoformat() <= context.end_date]
         return RecordBatch(records, batch.checkpoint, snapshot=context.options.get('snapshot', False), acknowledge=batch.acknowledge)

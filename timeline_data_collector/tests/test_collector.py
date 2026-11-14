@@ -2,6 +2,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from pathlib import Path
 import hashlib
+import gzip
 import http.client
 import json
 import os
@@ -92,6 +93,73 @@ class CollectorTests(unittest.TestCase):
             self.assertTrue(runner.submit()[0]['result']['skipped'])
         self.assertFalse(self.ws.output.exists())
 
+    def test_ownership_transfer_preserves_records_and_allows_canonical_updates(self):
+        from timeline_data_collector.contracts import SourceConflictError
+        publisher = Publisher(self.ws.target, 'DEMO')
+        publisher.publish('canonical', 'input', 'json', RecordBatch([event()], {'cursor': 1}))
+        publisher.publish('retired', 'download', 'json', RecordBatch([event(), event('retained')], {'cursor': 2}))
+        before = publisher.read_state()
+        updated = event(); updated['data']['age'] = '10'
+        with self.assertRaises(SourceConflictError) as caught:
+            publisher.publish('canonical', 'input', 'json', RecordBatch([updated]))
+        self.assertIn('input', str(caught.exception)); self.assertIn('download', str(caught.exception))
+        publisher.publish('canonical', 'input', 'json', RecordBatch(checkpoint={'cursor': 1}),
+                          preserve_missing=True, adopt_sources=['retired'])
+        adopted = publisher.read_state()
+        self.assertEqual(adopted['events'], before['events'])
+        self.assertEqual(adopted['sources']['retired']['records'], {})
+        self.assertEqual(adopted['sources']['retired']['checkpoint'], {'cursor': 2})
+        self.assertEqual(set(adopted['sources']['canonical']['records']), {'one', 'retained'})
+        publisher.publish('canonical', 'input', 'json', RecordBatch([updated], snapshot=True), preserve_missing=True)
+        after = {item['id']: item for item in publisher.read_state()['events']}
+        self.assertEqual(set(after), {'one', 'retained'})
+        self.assertEqual(after['one']['data']['age'], '10')
+        self.assertEqual(after['retained'], next(item for item in before['events'] if item['id']=='retained'))
+
+    def test_health_retains_historical_failure_after_successful_current_polls(self):
+        runner = self.runner(); dashboard = Dashboard(runner, port=0)
+        self.addCleanup(dashboard.close)
+        group, source = runner.configuration.sources()[0]
+        request = dict(source_key=source_key(group, source), namespace='DEMO', source='input',
+                       date=None, end_date=None, checkpoint_scope='history:all')
+        failed, _ = runner.state.create('failed-history', request)
+        runner.state.update(failed['id'], 'failed', {'error':'Conflicting record ID across sources: one'})
+        for i in range(205):
+            current, _ = runner.state.create('current-'+str(i), dict(request, checkpoint_scope='current'))
+            runner.state.update(current['id'], 'succeeded', {'batches': 1 if i==0 else 0})
+        health = dashboard.health()
+        self.assertEqual(health['status'], 'degraded')
+        self.assertIn('[history:all]', health['alerts'][0])
+        recovered, _ = runner.state.create('recovered-history', request)
+        runner.state.update(recovered['id'], 'succeeded', {'batches':1})
+        self.assertEqual(dashboard.health()['alerts'], [])
+
+    def test_startup_reconciles_old_capacity_alert_and_health_keeps_replay_backlog(self):
+        from timeline_data_collector.state import State
+        from timeline_data_collector.publication import encode_publication
+        runner = Runner(load(self.ws.path)); self.addCleanup(runner.close)
+        group, source = runner.configuration.sources()[0]
+        key = source_key(group, source)
+        job, _ = runner.state.create('old-capacity', dict(source_key=key, checkpoint_scope='history:2026-01-01',
+                                                        namespace='DEMO', source='input', date='2026-01-01', end_date='2026-01-01'))
+        runner.state.update(job['id'], 'failed', {'error':State.LEGACY_SNAPSHOT_ERROR})
+        writer = Publisher(self.ws.target, 'DEMO')
+        writer.publish(key, 'input', 'timeline_json', RecordBatch([event()], checkpoint={'offset':1}))
+        value = read_json(writer.state_path); value['version'] = 2
+        raw, parts = encode_publication(value)
+        for name, payload in parts.items():
+            part = writer.state_dir/name; part.parent.mkdir(exist_ok=True); part.write_bytes(payload)
+        writer.state_path.write_bytes(raw)
+        original = writer.state_path.read_bytes()
+        restarted = Runner(load(self.ws.path)); self.addCleanup(restarted.close)
+        dashboard = Dashboard(restarted, port=0); self.addCleanup(dashboard.close)
+        health = dashboard.health()
+        self.assertEqual(health['alerts'], [])
+        self.assertEqual(health['status'], 'ok')
+        self.assertEqual(health['sources'][0]['pending_recovery'][0]['scope'], 'history:2026-01-01')
+        self.assertEqual(restarted.state.get(job['id'])['state'], 'failed')
+        self.assertEqual(writer.state_path.read_bytes(), original)
+
     def test_repeat_reuses_checkpoint_until_publication_changes(self):
         write_json(self.ws.input / 'events.json', [event()])
         runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
@@ -128,7 +196,7 @@ class CollectorTests(unittest.TestCase):
         self.ws.source['options'] = {'snapshot': True}; self.ws.save()
         runner = self.runner(); self.assertEqual(runner.submit()[0]['state'], 'succeeded')
         before = {path: path.read_bytes() for path in self.ws.output.rglob('*.json')}
-        input_file.unlink(); self.ws.input.rmdir()
+        Path(str(input_file)+'.gz').unlink(); self.ws.input.rmdir()
         for missing in (True, False):
             with self.subTest(missing=missing):
                 if not missing: self.ws.input.mkdir()
@@ -142,9 +210,9 @@ class CollectorTests(unittest.TestCase):
         write_json(input_file, [event('new')])
         with self.assertLogs('timeline_data_collector', level='INFO') as logs:
             job = runner.submit()[0]
-        self.assertTrue(any('input available again' in message for message in logs.output))
+        self.assertTrue(any('Parsed' in message for message in logs.output))
         self.assertEqual(job['state'], 'succeeded', job)
-        self.assertEqual([record['id'] for record in self.ws.records()], ['new'])
+        self.assertEqual({record['id'] for record in self.ws.records()}, {'one', 'new'})
 
     def test_empty_input_does_not_read_existing_legacy_reports(self):
         self.ws.document['target_path'] = str(self.ws.input / 'output/yyyy/mm/dd'); self.ws.save()
@@ -192,7 +260,7 @@ class CollectorTests(unittest.TestCase):
         for message in ('3 selected sources', 'DEMO/disabled: will skip (source disabled',
                         'Starting DEMO/input', 'scanning local input', 'discovered 1 matching input files',
                         'checked 1/1 files', 'prepared input copies 1/1 files', 'converting 1 input items',
-                        'publishing 1 records', 'DEMO/input: Parsed', 'Skipping DEMO/missing'):
+                        'publishing 1 records', 'DEMO: Parsed', 'Skipping DEMO/missing'):
             self.assertIn(message, result.stderr)
         self.assertLess(result.stderr.index('DEMO/missing: queued'), result.stderr.index('Starting DEMO/input'))
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
@@ -263,7 +331,8 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(closed, [True])
 
     def test_first_ingestion_reads_original_file_once_and_verifies_copy(self):
-        input_file = self.ws.input / 'events.json'; write_json(input_file, [event()])
+        input_file = self.ws.input / 'events.json.gz'
+        input_file.write_bytes(gzip.compress(json.dumps([event()]).encode()))
         runner = self.runner(); original_open = Path.open
         reads = []
         def opened(path, mode='r', *args, **kwargs):
@@ -282,7 +351,7 @@ class CollectorTests(unittest.TestCase):
         runner.registry.load('local', 'source')
         def corrupted(source, destination):
             replace(source, destination)
-            if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json':
+            if 'inputs' in Path(destination).parts and Path(destination).name == 'events.json.gz':
                 Path(destination).write_bytes(b'corrupted copy')
         with patch('timeline_file_sources.os.replace', side_effect=corrupted):
             job = runner.submit()[0]
@@ -429,7 +498,7 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         staged = list(snapshot_path(Path(self.ws.service['state_root']) / 'plugins').glob('*/inputs/*/' + name))
         self.assertEqual(len(staged), 1)
         self.assertGreater(len(str(staged[0])), 260)
-        self.assertEqual(staged[0].read_bytes(), (self.ws.input / name).read_bytes())
+        self.assertEqual(staged[0].read_bytes(), gzip.decompress((self.ws.input / (name+'.gz')).read_bytes()))
         self.assertEqual(runner.submit()[0]['result']['batches'], 0)
 
     def test_registry_rejects_duplicate_and_incompatible_plugins(self):
@@ -510,6 +579,24 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         status, second = request('POST', '/api/jobs', body, headers); self.assertEqual(status, 202)
         self.assertEqual(first['jobs'][0]['id'], second['jobs'][0]['id'])
         self.assertEqual(request('POST', '/api/jobs', dict(body, request_id='new', revision='stale'), headers)[0], 400)
+
+    def test_interrupted_idle_check_clears_after_local_input_matches_committed_checkpoint(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        self.ws.source['execution'] = {'settle_seconds': 0}
+        self.ws.save()
+        runner = self.runner()
+        options = dict(date='2026-01-01', end_date='2026-01-01', checkpoint_scope='current')
+        committed = runner.submit(**options)[0]
+        self.assertEqual(committed['state'], 'succeeded', committed)
+        interrupted, _ = runner.state.create('interrupted-idle', committed['request'])
+        runner.state.update(interrupted['id'], 'failed', {'error': runner.state.INTERRUPTED_ERROR})
+        publication = (self.ws.output / '.timeline-collector/publication.json').read_bytes()
+        recovered = runner.submit(**options)[0]
+        self.assertEqual(recovered['state'], 'succeeded', recovered)
+        self.assertEqual(recovered['result']['batches'], 0)
+        self.assertTrue(recovered['result']['metrics']['checkpoint_current'])
+        self.assertEqual(runner.state.failures(), [])
+        self.assertEqual((self.ws.output / '.timeline-collector/publication.json').read_bytes(), publication)
 
 
 if __name__ == '__main__': unittest.main()
