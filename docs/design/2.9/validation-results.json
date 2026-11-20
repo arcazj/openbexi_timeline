@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-20T22:36:05.814Z",
+  "generatedAt": "2026-11-20T23:03:26.033Z",
   "modelSha256": "ae8fa9ecf0011f6f1a9dcc538ddbdf68b861e9b1423604fbe415e50979bc571a",
   "referenceCommit": "51b61998c12597cd435680158f185c81af2fa9ce",
   "browser": {
@@ -140,7 +140,7 @@
     "width": 5500,
     "height": 5500,
     "sampled": 1048576,
-    "colored": 80045,
+    "colored": 80044,
     "dark": 5156
   },
   "pageErrors": [],

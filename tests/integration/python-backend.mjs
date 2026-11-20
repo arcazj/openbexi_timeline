@@ -6,11 +6,12 @@ import net from 'node:net';
 import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {chromium,expect} from '@playwright/test';
+import {resolvePython} from '../helpers/python-command.mjs';
 
 const root=process.cwd(),temporary=await fs.mkdtemp(path.join(os.tmpdir(),'timeline-python-browser-'));
 const publicRoot=path.join(temporary,'public');
 const version=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8')).version;
-const python=process.env.PYTHON || path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
+const python=await resolvePython(root);
 // Serve reviewed assets from a disposable root so filter writes and default
 // profiles cannot read or modify a developer's private deployment settings.
 const publicFiles=JSON.parse(await fs.readFile(path.join(root,'release/public-files.json'),'utf8'));

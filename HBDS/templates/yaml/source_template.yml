@@ -6,13 +6,14 @@
 # Collector dependencies are installed with the selected HBDS/plugins packages.
 # For multiple inputs, use a data_path list or repeated namespace entries
 # sharing one output model. data_path: [] keeps a namespace import-only.
-# Python timeline settings, installation and Java fallback: docs/python-server.md
+# Python timeline settings and installation: docs/python-server.md
 # The timeline reads materialized data_model outputs; the collector owns inputs/credentials.
 # timeline_server:
 #   host: 127.0.0.1
 #   port: 8783
 #   state: .local-private/python-timeline
-#   java_url: http://127.0.0.1:8080
+# Secure listeners below require TIMELINE_KEYSTORE and TIMELINE_KEYSTORE_PASSWORD.
+# Set TIMELINE_KEY_ALIAS when selecting a specific keystore identity.
 server:
   poll_seconds: 5       # Pause between completed scans; CLI flags override YAML.
   settle_seconds: 5     # Stable-file delay; zero processes immediately.
@@ -33,7 +34,7 @@ data_sources:
     type: local
     enable: true
     data_path: ./data/incoming
-    # legacy = original Java log converters; timeline_json = event/session JSON.
+    # legacy retains the configured log converter; timeline_json reads event/session JSON.
     # Existing json_file configurations default to legacy for compatibility.
     format: timeline_json
     filter:

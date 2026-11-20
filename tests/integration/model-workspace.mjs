@@ -14,12 +14,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
+import {resolvePython} from '../helpers/python-command.mjs';
 
 const expect = playwrightExpect.configure({timeout: 15_000});
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const pythonCommand = process.env.OPENBEXI_PYTHON || path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+const pythonCommand = await resolvePython(root);
 const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC';
-await fs.access(pythonCommand);
 const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'openbexi-workspace-integration-'));
 const ownedTemporary = await fs.realpath(temporary);
 const storage = path.join(temporary, 'data');
@@ -94,6 +94,7 @@ async function startPython() {
 }
 
 async function connect(target, token) {
+    await expect.poll(() => target.evaluate(() => Boolean(window.modelEditor))).toBe(true);
     await target.locator('#connect').click();
     await target.locator('#dialog-input').fill(token);
     await target.getByRole('button', {name: 'Continue', exact: true}).click();

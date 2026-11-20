@@ -63,8 +63,18 @@ try {
     if (Test-Path -LiteralPath (Join-Path $installDir 'runtime')) { throw 'Obsolete Java runtime remains in Python installation.' }
     if (Get-ChildItem -LiteralPath $installDir -File -Recurse | Where-Object { $_.Extension -in '.jar','.class','.java' }) { throw 'Java artifact found in Python installation.' }
     Remove-Item Env:JAVA_HOME -ErrorAction SilentlyContinue
-    & (Join-Path $installDir 'python/python.exe') (Join-Path $ProjectRoot 'tools/test-installed-collector.py') (Join-Path $dataDir 'HBDS/workspace.json')
-    if ($LASTEXITCODE -ne 0) { throw 'Installed collector conversion or stable rerun failed.' }
+    $collectorOutput = Join-Path $testRoot 'collector-validation.log'
+    $collectorErrors = Join-Path $testRoot 'collector-validation-errors.log'
+    $validation = Start-Process -FilePath (Join-Path $installDir 'python/python.exe') -ArgumentList "`"$(Join-Path $ProjectRoot 'tools/test-installed-collector.py')`"", "`"$(Join-Path $dataDir 'HBDS/workspace.json')`"" -WindowStyle Hidden -PassThru -Wait -RedirectStandardOutput $collectorOutput -RedirectStandardError $collectorErrors
+    Get-Content -LiteralPath $collectorOutput, $collectorErrors | ForEach-Object { Write-Host $_ }
+    if ($validation.ExitCode -ne 0) { throw 'Installed collector conversion or stable rerun failed.' }
+    # Run real WS/WSS handshakes using the isolated embedded interpreter and its
+    # installed dependencies; ASGI-only tests cannot detect missing WS backends.
+    $transportOutput = Join-Path $testRoot 'transport-validation.log'
+    $transportErrors = Join-Path $testRoot 'transport-validation-errors.log'
+    $transport = Start-Process -FilePath (Join-Path $installDir 'python/python.exe') -ArgumentList '-m', 'unittest', 'discover', '-s', "`"$(Join-Path $ProjectRoot 'tests/python')`"", '-p', 'test_legacy_listener_startup.py', '-v' -WindowStyle Hidden -PassThru -Wait -RedirectStandardOutput $transportOutput -RedirectStandardError $transportErrors
+    Get-Content -LiteralPath $transportOutput, $transportErrors | ForEach-Object { Write-Host $_ }
+    if ($transport.ExitCode -ne 0) { throw 'Installed HTTP, TLS, WS or WSS transport regression failed.' }
     & (Join-Path $installDir 'timeline-convert-default.cmd') --version
     if ($LASTEXITCODE -ne 0) { throw 'Portable standalone converter launcher failed.' }
     $collectorListener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)

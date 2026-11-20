@@ -15,6 +15,7 @@ import httpx
 import yaml
 from cryptography.hazmat.primitives.serialization import Encoding
 from openbexi_timeline_server.tls import load_keystore
+from websockets.sync.client import connect
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -68,6 +69,12 @@ class LegacyListenerStartup(unittest.TestCase):
                                     time.sleep(.05)
                         response = client.get(urls[1] + '/openbexi_timeline_sse/sessions', params=dict(startDate='2024-01-01T00:00:00Z', endDate='2024-01-02T00:00:00Z'), headers={'Accept': 'application/json'})
                         self.assertEqual(200, response.status_code, response.text)
+                    for base in urls:
+                        websocket_url = base.replace('http', 'ws', 1) + '/openbexi_timeline_ws/sessions'
+                        options = dict(ssl=context) if websocket_url.startswith('wss:') else {}
+                        with connect(websocket_url, proxy=None, open_timeout=5, **options) as websocket:
+                            websocket.send(json.dumps(dict(startDate='2024-01-01T00:00:00Z', endDate='2024-01-02T00:00:00Z')))
+                            self.assertEqual([], json.loads(websocket.recv(timeout=5))['events'])
                     self.assertEqual(original, config.read_bytes())
                 finally:
                     if os.name == 'nt' and process.poll() is None:

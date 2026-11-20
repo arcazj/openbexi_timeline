@@ -29,7 +29,7 @@ async function fixture(t, options = {}) {
     }
     if(options.extended) {
         const names=[`openbexi-timeline-${version}-source.zip`,
-            ...(version==='2.9.7'?[]:['openbexi_timeline.json','openbexi_timeline.png','architecture-overview.png']),
+            'openbexi_timeline.json','openbexi_timeline.png','architecture-overview.png',
             'regression-results.json',`release-${version}.md`];
         const sums=[];
         for(const name of names) {
@@ -123,10 +123,10 @@ test('2.9 requires passing regression evidence even when hashes match', async t 
     await assert.rejects(f.run(),/regressions must pass/);assert.deepEqual(f.mutations,[]);
 });
 
-test('2.9.7 publishes current ZIP, notes and evidence without obsolete diagram requirements', async t => {
+test('2.9.7 publishes current ZIP, diagrams, notes and evidence', async t => {
     const f=await fixture(t,{version:'2.9.7',extended:true});await f.run();
     assert.deepEqual(f.tags(),['2.9.7','v2.6.0','v2.5.2']);
-    assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,11);
+    assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,17);
 });
 
 test('prefixed release tags are rejected before remote publication', async t => {

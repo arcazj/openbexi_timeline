@@ -67,7 +67,7 @@ export async function publishRelease(root, env = process.env, fetcher = fetch) {
         const manifest=JSON.parse(await fs.readFile(path.join(root,'dist/release-assets.json'),'utf8'));
         const required=[`openbexi-timeline-${version}-source.zip`, 'SHA256SUMS',
             'regression-results.json', `release-${version}.md`];
-        if(compareTags(tag,'2.9.7')<0) required.push('openbexi_timeline.json','openbexi_timeline.png','architecture-overview.png');
+        required.push('openbexi_timeline.json','openbexi_timeline.png','architecture-overview.png');
         if(manifest.version!==version || required.some(name=>!manifest.files.includes(name))) throw new Error('Incomplete 2.9 release manifest');
         for(const name of manifest.files) {
             if(path.basename(name)!==name || !/^[A-Za-z0-9_.-]+$/.test(name)) throw new Error('Invalid release asset path');

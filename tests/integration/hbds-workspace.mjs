@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {hbdsFixture} from '../helpers/hbds-fixture.mjs';
 import {stringify} from 'yaml';
+import {resolvePython} from '../helpers/python-command.mjs';
 
 const expect=playwrightExpect.configure({timeout:45000}),root=fileURLToPath(new URL('../../',import.meta.url));
 const backend='Python';
@@ -50,7 +51,7 @@ let child,browser,exitCode,log,primary,started=Date.now();
 const checked=message=>{checks.push(message);console.log('PASS: '+message);};
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function startServer(){
-    let executable=process.env.OPENBEXI_PYTHON||path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
+    const executable=await resolvePython(root);
     const environment={...process.env,OPENBEXI_API_TOKEN:token,OPENBEXI_API_DATA_DIR:path.join(serverDirectory,'api-data'),PYTHONPATH:path.join(root,'python')};delete environment.OPENBEXI_JAVA_URL;delete environment.OPENBEXI_HBDS_CONFIG;
     let args=['-m','openbexi_timeline_server','--data-conf',configurationFile,'--root',root,'--state',path.join(directory,'state'),'--host','127.0.0.1','--port',String(port)];
     if(native){

@@ -683,8 +683,13 @@ class ServerTests(unittest.TestCase):
                 client.get("/openbexi_timeline/sessions", params={**PARAMS, "traceLevel": "ERROR"})
 
     def test_template_and_configuration_validation(self):
-        template = load_configuration(REPO / "HBDS/templates/yaml/source_template.yml", root=self.root)
+        from unittest.mock import patch
+        with patch.dict('os.environ', {'TIMELINE_KEYSTORE': str(self.root / 'template.p12'),
+                                       'TIMELINE_KEYSTORE_PASSWORD': 'synthetic-template-password'}):
+            template = load_configuration(REPO / "HBDS/templates/yaml/source_template.yml", root=self.root)
         self.assertGreater(len(template.sources), 1)
+        self.assertEqual({8443, 8445}, {item['port'] for item in template.connectors})
+        self.assertTrue(all(item['owner'] == 'python' for item in template.connectors))
         path = self.root / "config.yml"
         path.write_text('data_sources:\n  - type: json_file\n    namespace: demo\n    data_model: [data/yyyy/mm/dd, data/archive]\n    filter:\n      include: ["*.json"]\n  - enable: false\n    data_model: ${ABSENT_DISABLED_VARIABLE}\n', encoding="utf-8")
         self.assertEqual(2, len(load_configuration(path, root=self.root).sources))

@@ -15,6 +15,14 @@ try {
         return timeline && !timeline.ob_results.pending && timeline.ob_scene[0].ob_renderer;
     }, null, {timeout: 60_000});
     assert.ok(await page.locator('canvas').count(), 'The installed app renders a timeline.');
+    const websocket = await page.evaluate(base => new Promise((resolve, reject) => {
+        const socket = new WebSocket(base.replace(/^http/, 'ws') + '/openbexi_timeline_ws/sessions');
+        const timer = setTimeout(() => { socket.close(); reject(new Error('Installed WebSocket transport timed out.')); }, 5000);
+        socket.onopen = () => socket.send(JSON.stringify({startDate: '2024-01-01T00:00:00Z', endDate: '2024-01-02T00:00:00Z'}));
+        socket.onmessage = event => { clearTimeout(timer); socket.close(); resolve(JSON.parse(event.data)); };
+        socket.onerror = () => { clearTimeout(timer); socket.close(); reject(new Error('Installed WebSocket transport failed.')); };
+    }), base);
+    assert.ok(Array.isArray(websocket.events), 'The installed WebSocket transport returns timeline records.');
     assert.deepEqual(errors, []);
     for (const resource of ['/api/v1/health', '/api/v1/datasets', '/openbexi_timeline_model.html']) {
         assert.equal((await page.request.get(base + resource)).status(), 200, resource);

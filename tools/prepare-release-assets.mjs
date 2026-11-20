@@ -12,6 +12,9 @@ const publicPackages=new Set(['openbexi_timeline_server','timeline_data_collecto
 const names=['windows-x64-setup.exe','source.zip','source.tar.gz'].map(suffix=>`openbexi-timeline-${version}-${suffix}`);
 for(const [from,to] of [
     [`docs/release-${version}.md`,`release-${version}.md`],
+    ['docs/design/2.9/openbexi_timeline.json','openbexi_timeline.json'],
+    ['docs/design/2.9/openbexi_timeline.png','openbexi_timeline.png'],
+    ['docs/design/2.9/architecture-overview.png','architecture-overview.png'],
     [evidencePath,'regression-results.json']]) {
     await fs.copyFile(path.join(root,from),path.join(dist,to)); names.push(to);
 }
