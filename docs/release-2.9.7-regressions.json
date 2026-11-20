@@ -1,0 +1,194 @@
+{
+  "version": "2.9.7",
+  "status": "passed",
+  "verifiedAt": "2026-11-20T23:29:50.402808+00:00",
+  "testedRuntimeCommit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
+  "scope": "Python server, public collectors, browser application, retained-release upgrade, packaging and public distribution boundary. Deployment-specific evidence remains local.",
+  "environment": {
+    "local": "Windows x64",
+    "python": "3.12",
+    "bundledPython": "3.13.16",
+    "node": "24",
+    "ciPython": [
+      "3.12",
+      "3.13"
+    ],
+    "ciPlatforms": [
+      "ubuntu-24.04",
+      "ubuntu-latest",
+      "windows-2025"
+    ]
+  },
+  "tests": {
+    "javascript": {
+      "total": 500,
+      "passed": 500,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pythonServerWindows": {
+      "total": 164,
+      "passed": 163,
+      "failed": 0,
+      "skipped": 1,
+      "skipReason": "Windows symbolic-link creation requires OS permission."
+    },
+    "publicCollector": {
+      "total": 272,
+      "passed": 272,
+      "failed": 0,
+      "skipped": 0,
+      "realMqttBroker": true
+    },
+    "releasePublishing": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "browser": {
+      "status": "passed",
+      "total": 420,
+      "distinctPassed": 413,
+      "failed": 0,
+      "skipped": 7,
+      "initialPassed": 412,
+      "initialFailed": 1,
+      "focusedRerunPassed": 4,
+      "note": "The long-running test worker held the previous Java API label while documentation changed. All API explorer cases passed at desktop and narrow widths against the frozen candidate.",
+      "skipReason": "Drag work is measured once at desktop size; narrow resize has separate coverage."
+    },
+    "collectorReferenceParity": {
+      "status": "passed",
+      "generatedTopLevelRecords": 2104,
+      "coverage": [
+        "seeded identities and historical dates",
+        "earthquake archive recovery and corrections",
+        "distinct volcano ground and aviation notices",
+        "resume and rerun output equivalence"
+      ]
+    },
+    "pythonServerLinux": {
+      "total": 164,
+      "passed": 161,
+      "failed": 0,
+      "skipped": 3,
+      "skipReason": "Windows Proactor-specific cases ran and passed on Windows."
+    },
+    "browserCi": {
+      "total": 420,
+      "passed": 413,
+      "failed": 0,
+      "skipped": 7,
+      "skipReason": "Desktop drag measurements are not repeated in the narrow project; resize has separate coverage."
+    }
+  },
+  "integration": {
+    "nativeApiBrowser": {
+      "status": "passed",
+      "checks": 6,
+      "unchangedRecords": 27,
+      "historyVersions": 2,
+      "loopbackAiCalls": 1,
+      "browserErrors": 0
+    },
+    "twoWorkerBrowser": "passed",
+    "hbdsWorkspace": {
+      "status": "passed",
+      "checks": 11
+    },
+    "transportProtocols": {
+      "status": "passed",
+      "protocols": [
+        "HTTP",
+        "TLS",
+        "WS",
+        "WSS"
+      ],
+      "testedWithEmbeddedPython": true
+    },
+    "windowsInstaller": {
+      "status": "passed",
+      "cleanInstall": true,
+      "legacyServiceMigration": true,
+      "publicPlugins": 7,
+      "generatedRecords": 83,
+      "forcedRerunNewRecords": 0,
+      "forcedRerunUpdatedRecords": 0,
+      "uninstallPreservesUserData": true
+    },
+    "published296Upgrade": {
+      "status": "passed",
+      "resourceTypes": 6,
+      "unchangedRecords": 28,
+      "savedUserTokenPreserved": true,
+      "configurationBytesPreserved": true,
+      "javaRuntimeRemoved": true
+    },
+    "sourceArchives": {
+      "status": "passed",
+      "publicFiles": 943,
+      "runtimeAndCollectorSmoke": "passed",
+      "javaAndPrivateMaterialExcluded": true
+    },
+    "browserCompatibility": {
+      "status": "passed",
+      "engines": [
+        "Chromium",
+        "Firefox",
+        "WebKit"
+      ]
+    }
+  },
+  "privacy": {
+    "sourceDistribution": "explicit public file manifest",
+    "publicWheels": "nine reviewed Python packages",
+    "historicalSourceReview": "passed",
+    "retained296Assets": "verified",
+    "deploymentSpecificFixturesAndLogsPublished": false
+  },
+  "limitations": [
+    "MongoDB operations are covered with driver-contract fixtures; a live external MongoDB deployment was not available.",
+    "Remote collection completion depends on upstream availability; running a continuous collector does not prove every historical day is complete."
+  ],
+  "githubVerification": {
+    "status": "passed",
+    "runId": 44834468114,
+    "url": "https://github.com/arcazj/openbexi_timeline/actions/runs/44834468114",
+    "commit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
+    "jobs": [
+      {
+        "name": "browser-compatibility",
+        "conclusion": "success"
+      },
+      {
+        "name": "python-api",
+        "conclusion": "success"
+      },
+      {
+        "name": "python-container",
+        "conclusion": "success"
+      },
+      {
+        "name": "public-collector",
+        "conclusion": "success"
+      },
+      {
+        "name": "python-backend",
+        "conclusion": "success"
+      },
+      {
+        "name": "browser-regressions",
+        "conclusion": "success"
+      },
+      {
+        "name": "data-and-unit-tests",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "releaseMetadataOnlyChanges": [
+    "docs/release-2.9.7-regressions.json",
+    "docs/design/2.9/regression-results.json",
+    "release/public-files.json"
+  ]
+}
