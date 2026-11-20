@@ -42,6 +42,15 @@ python -m pip list
 python -m pip inspect
 ```
 
+The Windows socket accept compatibility helper in
+`python/openbexi_timeline_server/connections.py` adapts the AcceptEx setup from
+[CPython 3.13.16](https://github.com/python/cpython/blob/v3.13.16/Lib/asyncio/windows_events.py).
+Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.
+Its [PSF-2.0 license](licenses/PSF-2.0.txt) is included in the source distribution
+and server wheel. The adaptation closes pending sockets on failure or cancellation,
+retries transient peer disconnects, and scopes the compatibility guard to the
+application's running Proactor loop without changing subprocess support.
+
 The existing repository includes example datasets, images, and icons. Their
 presence in a public repository does not establish commercial redistribution
 rights. The owner must review provenance and permissions for the selected paid

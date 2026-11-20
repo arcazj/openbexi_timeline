@@ -20,6 +20,9 @@ record formats. The previous 2.9.6 release remains available for rollback.
   Public packages contain generic extension points and synthetic test fixtures.
 - The Windows installer bundles the Python server, collector and public plugins.
   Upgrade validation covers existing user data and legacy connector configuration.
+- Windows listeners recover when a client disconnects during connection setup.
+  Pending sockets are closed on failure or cancellation, and genuine startup
+  errors remain visible.
 - Active package versions, documentation, design artifacts and downloads use 2.9.7.
   Published branches are consolidated onto master; retained releases are 2.9.6
   and 2.9.7.

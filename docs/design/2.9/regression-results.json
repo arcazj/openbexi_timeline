@@ -1,6 +1,6 @@
 {
   "version": "2.9.7",
-  "status": "passed",
+  "status": "pending",
   "verifiedAt": "2026-11-20T23:29:50.402808+00:00",
   "testedRuntimeCommit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
   "scope": "Python server, public collectors, browser application, retained-release upgrade, packaging and public distribution boundary. Deployment-specific evidence remains local.",
@@ -151,7 +151,7 @@
     "Remote collection completion depends on upstream availability; running a continuous collector does not prove every historical day is complete."
   ],
   "githubVerification": {
-    "status": "passed",
+    "status": "superseded by Windows accept recovery candidate",
     "runId": 44834468114,
     "url": "https://github.com/arcazj/openbexi_timeline/actions/runs/44834468114",
     "commit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
@@ -190,5 +190,6 @@
     "docs/release-2.9.7-regressions.json",
     "docs/design/2.9/regression-results.json",
     "release/public-files.json"
-  ]
+  ],
+  "pendingReason": "Windows accept-reset recovery and expanded installed-runtime checks require final candidate verification."
 }
