@@ -41,14 +41,19 @@ class Dashboard:
 
             def respond(self, value, status=200, content_type='application/json; charset=utf-8'):
                 raw = value if isinstance(value, bytes) else json.dumps(value).encode()
-                self.send_response(status)
-                self.send_header('Content-Type', content_type)
-                self.send_header('Content-Length', str(len(raw)))
-                self.send_header('Cache-Control', 'no-store')
-                self.send_header('X-Content-Type-Options', 'nosniff')
-                self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'")
-                self.end_headers()
-                self.wfile.write(raw)
+                try:
+                    self.send_response(status)
+                    self.send_header('Content-Type', content_type)
+                    self.send_header('Content-Length', str(len(raw)))
+                    self.send_header('Cache-Control', 'no-store')
+                    self.send_header('X-Content-Type-Options', 'nosniff')
+                    self.send_header('Content-Security-Policy', "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'")
+                    self.end_headers()
+                    self.wfile.write(raw)
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    # A closed browser/watchdog connection cannot receive an error
+                    # response. Collection and other dashboard requests continue.
+                    self.close_connection = True
 
             def authorized(self, write=False):
                 allowed = {f'127.0.0.1:{app.http.server_port}', f'localhost:{app.http.server_port}'}
@@ -153,6 +158,8 @@ class Dashboard:
             scheduler = self.schedulers[workspace]
             with scheduler.guard: schedules = list(scheduler.running.values())
             jobs = runner.state.jobs(200)
+            failures = runner.state.failures()
+            recoveries = runner.state.recoveries()
             with runner.guard: active = list(runner.active)
             running = [runner.state.get(ident) for ident in active]
             for group, source in runner.configuration.sources(include_disabled=True):
@@ -178,7 +185,6 @@ class Dashboard:
                                  date=job['request']['date'], end_date=job['request']['end_date'])
                     state = job['state']
                     entry['status'] = state if state in {'running', 'queued', 'failed'} else 'watching' if schedule else 'idle'
-                    if state == 'failed': alerts.append(namespace+'/'+ident+': '+job['result'].get('error', 'conversion failed'))
                     if state == 'running':
                         elapsed = (now-datetime.fromisoformat(job['updated_at'])).total_seconds()
                         entry['seconds_without_progress'] = round(elapsed, 1)
@@ -189,6 +195,18 @@ class Dashboard:
                         entry['status'] = 'settling'
                     notices = runner.notices.get(job['request']['source_key'], {})
                     if state == 'succeeded' and notices.get('input'): entry['status'] = 'waiting_input'
+                unresolved = [item for item in failures if matches(item)]
+                pending_recovery = [item for item in recoveries if matches(item)]
+                if pending_recovery:
+                    entry['pending_recovery'] = [dict(job_id=item['id'], scope=runner.state.failure_scope(item['request']),
+                        reason='Publication capacity recovered; this earlier failed scope still needs a completed replay.')
+                        for item in pending_recovery]
+                if enabled and unresolved:
+                    entry['failures'] = [dict(job_id=item['id'], scope=runner.state.failure_scope(item['request']),
+                                              error=item['result'].get('error', 'conversion failed')) for item in unresolved]
+                    if entry['status'] not in {'running', 'queued', 'stalled'}: entry['status'] = 'failed'
+                    for failure in entry['failures']:
+                        alerts.append(namespace+'/'+ident+' ['+failure['scope']+']: '+failure['error'])
                 if enabled and not schedule:
                     saved = [value for value in runner.state.schedules().values() if value['namespace'] == namespace and value['source'] == ident]
                     if any(value.get('enabled') and value['policy'].get('resume_on_restart') for value in saved):
@@ -199,8 +217,8 @@ class Dashboard:
                     entry['publication_bytes'] = stat.st_size
                     entry['publication_limit_bytes'] = Publisher.MAX_SNAPSHOT_BYTES
                     entry['last_publication_utc'] = datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()
-                    if enabled and stat.st_size >= Publisher.MAX_SNAPSHOT_BYTES * .85:
-                        alerts.append(namespace+': publication is approaching its snapshot size limit')
+                    # Inline publications migrate to bounded immutable parts on
+                    # growth. Their current size is not a capacity failure.
                 except FileNotFoundError: pass
                 sources.append(entry)
         return dict(status='degraded' if alerts else 'ok', checked_at=now.isoformat(), server_pid=os.getpid(), sources=sources, alerts=alerts)

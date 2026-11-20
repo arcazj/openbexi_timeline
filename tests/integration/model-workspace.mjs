@@ -1,5 +1,5 @@
 /**
- * Real browser -> Java API regression. Build Java first with `mvn package` or `mvn verify`.
+ * Real browser -> Python API regression. Install the server with `python -m pip install -e .`.
  * Install Chromium with `npx playwright install chromium`, or configure Playwright's browser path.
  * All users, data and credentials are synthetic. AI uses an ephemeral loopback mock only.
  */
@@ -17,18 +17,16 @@ import assert from 'node:assert/strict';
 
 const expect = playwrightExpect.configure({timeout: 15_000});
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const javaCommand = process.env.JAVA_HOME
-    ? path.join(process.env.JAVA_HOME, 'bin', process.platform === 'win32' ? 'java.exe' : 'java') : 'java';
+const pythonCommand = process.env.OPENBEXI_PYTHON || path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
 const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC';
-await fs.access(path.join(root, 'target/classes/com/openbexi/timeline/api/ApiServer.class'));
-await fs.access(path.join(root, 'target/runtime'));
+await fs.access(pythonCommand);
 const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'openbexi-workspace-integration-'));
 const ownedTemporary = await fs.realpath(temporary);
 const storage = path.join(temporary, 'data');
 const systemToken = crypto.randomBytes(40).toString('hex');
 const modelId = 'browser-smoke-' + crypto.randomUUID();
 const checks = [], errors = [], failedRequests = [], requests = [];
-let browser, context, page, java, javaExit, javaError, javaLog, base;
+let browser, context, page, server, serverExit, serverError, serverLog, base;
 let providerCalls = 0, passed = false;
 
 const provider = http.createServer(async (request, response) => {
@@ -63,7 +61,7 @@ async function api(method, resource, token = systemToken, body, etag, expected =
     return {data: text ? JSON.parse(text) : null, etag: response.headers.get('etag')};
 }
 
-async function startJava() {
+async function startPython() {
     await new Promise(resolve => provider.listen(0, '127.0.0.1', resolve));
     await fs.mkdir(path.join(storage, '.ai'), {recursive: true});
     const config = path.join(storage, '.ai/providers.json');
@@ -78,21 +76,21 @@ async function startJava() {
     base = `http://127.0.0.1:${port}`;
     const environment = {...process.env, OPENBEXI_API_TOKEN: systemToken, OPENBEXI_API_DATA_DIR: storage, OPENBEXI_AI_CONFIG: config};
     for (const name of ['OPENBEXI_API_WRITE_TOKEN', 'OPENBEXI_API_READ_TOKEN', 'OPENBEXI_CONFIG_ROOTS', 'OPENBEXI_API_CORS_ORIGINS']) delete environment[name];
-    javaLog = createWriteStream(path.join(temporary, 'java-server.log'));
-    java = spawn(javaCommand, [
-        `-Dopenbexi.api.port=${port}`, `-Dopenbexi.api.root=${root}`, `-Djava.io.tmpdir=${temporary}`,
-        '-cp', ['target/classes', 'target/runtime/*'].join(path.delimiter), 'com.openbexi.timeline.api.ApiServer'
+    serverLog = createWriteStream(path.join(temporary, 'python-server.log'));
+    server = spawn(pythonCommand, [
+        '-m', 'openbexi_timeline_server', '--api-only', '--root', root, '--data-directory', storage,
+        '--state', path.join(temporary, 'server-state'), '--host', '127.0.0.1', '--port', String(port)
     ], {cwd: root, env: environment, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
-    java.stdout.pipe(javaLog, {end: false}); java.stderr.pipe(javaLog, {end: false});
-    java.on('error', error => {javaError = error;});
-    javaExit = new Promise(resolve => java.once('close', resolve));
+    server.stdout.pipe(serverLog, {end: false}); server.stderr.pipe(serverLog, {end: false});
+    server.on('error', error => {serverError = error;});
+    serverExit = new Promise(resolve => server.once('close', resolve));
     for (let attempt = 0; attempt < 100; attempt++) {
-        if (javaError) throw javaError;
-        if (java.exitCode !== null) throw new Error('Java API exited during startup; inspect java-server.log.');
+        if (serverError) throw serverError;
+        if (server.exitCode !== null) throw new Error('Python API exited during startup; inspect python-server.log.');
         try {if ((await fetch(base + '/api/v1/health', {signal: AbortSignal.timeout(1000)})).ok) return;} catch {}
         await new Promise(resolve => setTimeout(resolve, 200));
     }
-    throw new Error('Java API startup timed out.');
+    throw new Error('Python API startup timed out.');
 }
 
 async function connect(target, token) {
@@ -109,7 +107,7 @@ async function previewValue(expression) {
 }
 
 try {
-    await startJava();
+    await startPython();
     const admin = (await api('POST', 'access/users', systemToken, {id: 'integration-admin', workspaceIds: ['default']}, null, 201)).data;
     const reader = (await api('POST', 'access/users', systemToken, {id: 'integration-reader', workspaceIds: ['default']}, null, 201)).data;
     await api('POST', 'datasets', systemToken, {id: modelId, sourceId: 'monet'}, null, 201);
@@ -209,9 +207,9 @@ try {
 } finally {
     await context?.tracing.stop(passed ? {} : {path: path.join(temporary, 'trace.zip')}).catch(() => {});
     await browser?.close();
-    if (java && java.exitCode === null) java.kill();
-    if (javaExit) await javaExit;
-    if (javaLog) await new Promise(resolve => javaLog.end(resolve));
+    if (server && server.exitCode === null) server.kill();
+    if (serverExit) await serverExit;
+    if (serverLog) await new Promise(resolve => serverLog.end(resolve));
     provider.closeAllConnections();
     if (provider.listening) await new Promise(resolve => provider.close(resolve));
     // Only remove the directory this invocation created. Preserve failed-run diagnostics privately.

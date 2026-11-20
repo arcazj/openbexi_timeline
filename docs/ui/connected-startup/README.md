@@ -20,6 +20,6 @@ values, preventing mixed legacy time zones from inverting ranges in the browser.
 
 Public regression coverage is in
 [timeline-results.test.mjs](../../../tests/timeline-results.test.mjs) and
-[MatchProtocolTest.java](../../../tests/java/com/openbexi/timeline/data_browser/MatchProtocolTest.java).
+[the historical 2.9.6 Java matching tests](https://github.com/arcazj/openbexi_timeline/blob/2.9.6/tests/java/com/openbexi/timeline/data_browser/MatchProtocolTest.java).
 Tests use generic configuration and synthetic records rather than private files
 or running deployment services.

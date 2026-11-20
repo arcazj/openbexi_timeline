@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $appRoot = Join-Path $PSScriptRoot 'app'
-$runtime = Join-Path $PSScriptRoot 'runtime\bin\java.exe'
+$runtime = Join-Path $PSScriptRoot 'python\python.exe'
 $runtimeService = $null
 New-Item -ItemType Directory -Force -Path $DataDirectory | Out-Null
 $DataDirectory = (Resolve-Path -LiteralPath $DataDirectory).Path
@@ -14,15 +14,18 @@ New-Item -ItemType Directory -Force -Path $hbdsDirectory | Out-Null
 $hbdsConfiguration = Join-Path $hbdsDirectory 'openbexi_timeline.hbds.json'
 $namespaceConfiguration = Join-Path $hbdsDirectory 'yaml/DEMO_default.yml'
 $legacyWorkspace = (Test-Path -LiteralPath $hbdsConfiguration) -and !(Test-Path -LiteralPath $namespaceConfiguration)
-$javaArgs = @(
-    "-Dopenbexi.api.port=$Port",
-    "`"-Dopenbexi.api.root=$appRoot`"",
-    "`"-Dopenbexi.api.dataDir=$DataDirectory`"",
-    '-cp', "`"$appRoot\lib\*`""
+$pythonArgs = @(
+    '-m', 'openbexi_timeline_server',
+    '--root', "`"$appRoot`"",
+    '--data-directory', "`"$DataDirectory`"",
+    '--hbds-root', "`"$hbdsDirectory`"",
+    '--state', "`"$(Join-Path $DataDirectory 'server-state')`"",
+    '--host', '127.0.0.1'
 )
 if ($legacyWorkspace) {
-    # Keep existing desktop workspaces readable until explicitly migrated.
-    $javaArgs = @("`"-Dopenbexi.hbds.config=$hbdsConfiguration`"") + $javaArgs + @('com.openbexi.timeline.api.ApiServer')
+    # The native Python API reads the existing model/access/HBDS layout.
+    # Keep user files in place when upgrading an older desktop installation.
+    $pythonArgs += '--api-only'
 } else {
     foreach ($directory in @('yaml','models','filters','users','groups','roles')) {
         New-Item -ItemType Directory -Force -Path (Join-Path $hbdsDirectory $directory) | Out-Null
@@ -56,7 +59,7 @@ collector_ui:
   port: 8765
 connectors:
   - id: desktop
-    owner: java
+    owner: python
     type: http
     host: 127.0.0.1
     port: $Port
@@ -76,7 +79,9 @@ workspace, destination, requested = pathlib.Path(sys.argv[1]), pathlib.Path(sys.
 selection = json.loads(workspace.read_text(encoding='utf-8-sig'))
 source = workspace.parent / selection.get('service', 'service.desktop.yml')
 service = yaml.safe_load(source.read_text(encoding='utf-8-sig'))
-listener = next(item for item in service['connectors'] if item['id'] == 'desktop' and item['owner'] == 'java')
+listener = next(item for item in service['connectors'] if item['id'] == 'desktop' and item['owner'] in ('java', 'python'))
+# Migrate ownership only in this launch's copy. Preserve custom services on disk.
+listener['owner'] = 'python'
 if requested: listener['port'] = requested
 destination.write_text(yaml.safe_dump(service, sort_keys=False), encoding='utf-8')
 print(listener['port'])
@@ -84,14 +89,14 @@ print(listener['port'])
     $effectivePort = $prepareService | & (Join-Path $PSScriptRoot 'python/python.exe') - $desktopWorkspace $runtimeService $requestedPort
     if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the selected desktop service.' }
     $Port = [int]$effectivePort
-    $javaArgs[0] = "-Dopenbexi.api.port=$Port"
-    $javaArgs += @('com.openbexi.timeline.server.openbexi_timeline', '--workspace', "`"$desktopWorkspace`"", '-serverconf', "`"$runtimeService`"", '--hbds-root', "`"$hbdsDirectory`"", '--root', "`"$appRoot`"")
+    $pythonArgs += @('--workspace', "`"$desktopWorkspace`"", '-serverconf', "`"$runtimeService`"")
 }
+$pythonArgs += @('--port', $Port)
 # Never attach to another process merely because it owns the selected port.
 $probe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
 try { $probe.Start() } catch { throw "Port $Port is already in use. Close the other instance or launch with -Port <number>." }
 finally { $probe.Stop() }
-$server = Start-Process -FilePath $runtime -ArgumentList $javaArgs -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $DataDirectory 'server.log') -RedirectStandardError (Join-Path $DataDirectory 'server-error.log')
+$server = Start-Process -FilePath $runtime -ArgumentList $pythonArgs -WorkingDirectory $appRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $DataDirectory 'server.log') -RedirectStandardError (Join-Path $DataDirectory 'server-error.log')
 try {
     $ready = $false
     for ($attempt = 0; $attempt -lt 60; $attempt++) {

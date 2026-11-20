@@ -25,7 +25,7 @@ try {
     const response = await fetch(new URL('datasets', api));
     if (!response.ok) throw new Error('Dataset discovery failed.');
     for (const dataset of (await response.json()).items) { const option = element('option', dataset.title); option.value = dataset.id; select.append(option); }
-    select.disabled = false; button.disabled = false; status.textContent = 'Java API v1 is available.';
+    select.disabled = false; button.disabled = false; status.textContent = 'API v1 is available.';
 } catch { status.textContent = 'Live queries are unavailable on this host. Start npm run api and open this page on port 8781. The endpoint reference remains available.'; }
 button.addEventListener('click', async () => {
     button.disabled = true;

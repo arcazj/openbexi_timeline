@@ -7,9 +7,11 @@ import unittest
 from unittest.mock import patch
 
 from test_collector import Workspace, event
-from timeline_data_collector.compression import compress_file, matches_filter
+from timeline_data_collector.compression import compress_file, matches_filter, prepare_sources
 from timeline_data_collector.configuration import load, execution_policy
-from timeline_data_collector.contracts import Cancelled
+from timeline_data_collector.contracts import Cancelled, Context
+from timeline_data_collector.progress import WorkProgress
+from timeline_data_collector.tracing import StartupTrace
 from timeline_data_collector.io import write_json
 from timeline_data_collector.runner import Runner
 from timeline_data_collector.settling import fingerprint
@@ -35,6 +37,28 @@ class CompressionTests(unittest.TestCase):
         self.assertEqual(gzip.decompress(self.archive.read_bytes()), raw)
         self.assertEqual(self.archive.stat().st_mtime_ns, stamp)
         self.assertEqual(list(self.root.glob('.collector-*.tmp')), [])
+
+    def test_preparation_progress_counts_finished_files_before_the_summary(self):
+        other = self.root/'second.log'; other.write_bytes(b'second source\n')
+        files = [self.source, other]
+        manifest = {str(path): fingerprint(path.stat()) for path in files}
+        context = Context(self.root, 'DEMO', {'id': 'input', 'source_plugin': 'local'},
+                          'input', self.root/'work', {})
+        progress = context.work_progress = WorkProgress(context, StartupTrace('test'), {}, 0)
+        seen = []
+        def observed(*args, **options):
+            stage = progress.current
+            self.assertEqual(stage.name, 'compressing and deduplicating sources')
+            self.assertEqual(stage.file_unit, 'files checked')
+            self.assertEqual(len(stage.inputs), 2)
+            seen.append(len(stage.completed))
+            return compress_file(*args, **options)
+        with patch('timeline_data_collector.compression.compress_file', side_effect=observed):
+            result, ready = prepare_sources(context, files, manifest)
+        self.assertEqual(seen, [0, 1])
+        self.assertIsNone(progress.current)
+        self.assertEqual(len(ready), 2)
+        self.assertTrue(all(path.suffix == '.gz' for path in result))
 
     def test_identical_duplicate_keeps_existing_archive_byte_for_byte(self):
         self.archive.write_bytes(gzip.compress(self.source.read_bytes(), mtime=123))
@@ -103,7 +127,7 @@ class CompressionTests(unittest.TestCase):
         self.assertTrue(matches_filter('a/input.log.gz', {'include': '*.gz'}))
 
     def test_partial_journal_line_stays_plain_until_completed(self):
-        self.source = self.root / 'journalctl_gns_cron.json'
+        self.source = self.root / 'journalctl_sample_cron.json'
         self.source.write_bytes(b'{"MESSAGE":')
         with self.assertRaisesRegex(OSError, 'incomplete'): self.compress()
         self.assertEqual(self.source.read_bytes(), b'{"MESSAGE":')
@@ -158,7 +182,7 @@ class CollectorCompressionTests(unittest.TestCase):
         write_json(source, [event()])
         excluded = self.ws.input / 'keep.json'; write_json(excluded, [event('excluded')])
         spreadsheet = self.ws.input / 'keep.xlsx'; spreadsheet.write_bytes(b'PK already compressed')
-        output = self.ws.input / 'GCS_data'
+        output = self.ws.input / 'Sample_data'
         output.mkdir(); write_json(output / 'keep.json', {'events': []})
         original_output = (output / 'keep.json').read_bytes()
         self.ws.document['target_path'] = str(output / 'yyyy/mm/dd')

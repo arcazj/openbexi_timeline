@@ -114,7 +114,7 @@ npx playwright show-report
   reload, the inline heading, all three viewport sizes, read-only denial and save
   conflicts; demo and standalone launches retain the full document manager.
   Browser API fixtures test failures and stale writes deterministically.
-  After `mvn verify`, `npm run test:integration` also exercises a real local Java
+  After installing the [Python server](python-server.md), `npm run test:integration` exercises a real local Python
   server and mock AI provider with isolated synthetic data and credentials.
 - Search, previous/next activity, view locking and Resync exercise local and
   connected records. Selected activities glow without changing their size;
@@ -173,12 +173,12 @@ npx playwright show-report
   collapses, and selecting a dataset opens it without a separate button.
 - The API reference renders the checked-in OpenAPI contract on a static server.
   Separate explorer checks mock only health, dataset discovery, and event responses
-  to verify query encoding, response status, and safe text rendering. The Java API
+  to verify query encoding, response status, and safe text rendering. The Python API
   integration tests exercise the actual server and persistence.
 - The HBDS Editor previews every demo with the actual renderer. Checks
   cover live property edits, invalid drafts, import/export, undo/redo, YAML
   preservation, delayed loads, preview cleanup, camera settings and applying
-  changes to the originating timeline. Java tests cover authenticated server-file
+  changes to the originating timeline. Python tests cover authenticated server-file
   CRUD, validation, persistence, conflicts and references.
 
 The regular `npm run test:demos` suite also exercises all seven demos' responsive
@@ -186,8 +186,8 @@ layout, and covers detailed scale/projection and panel behavior in the DOM harne
 
 Use the Chromium build installed for the locked Playwright dependency.
 `npx playwright test --list` lists the current scenarios. Catalog checks compare
-28 reviewed images across desktop and narrow layouts; the separate Java suite
-runs with Maven. See [development and validation](development.md),
+28 reviewed images across desktop and narrow layouts. Run the server suite with
+`python -m unittest discover -s tests/python -v`. See [development and validation](development.md),
 [current captures](ui/overview/README.md) and [descriptor scenarios](ui/navigation-details/README.md).
 
 Cursor placement, table icons, color fallback, selection animation, reduced
@@ -229,22 +229,23 @@ them into documentation or reviewed baselines.
    validate the demo catalog and models, check the generated README, and run tests.
 2. Windows Chromium: run all browser checks and publish report/trace artifacts.
    A separate compatibility job runs phone touch checks and Firefox/WebKit workflows.
-3. Java 17: run `mvn --batch-mode verify`, including the API tests, and audit the
-   resolved runtime dependency graph against OSV advisories.
+3. Python 3.12/3.13: run server, API and collector tests, including isolated
+   database adapters, a real local MQTT broker, and two-worker browser integration.
+4. Docker: build the Python image and check its health endpoint and bundled demo assets.
 
 Actions are pinned to commit hashes, workflow permissions are read-only, and
-Dependabot proposes weekly npm, Maven, and GitHub Actions updates.
+Dependabot proposes weekly npm, pip, Docker and GitHub Actions updates.
 
 See [Playwright visual comparisons](https://playwright.dev/docs/test-snapshots) and
 [CI configuration](https://playwright.dev/docs/ci) for the underlying tooling.
 
-### 2.2.2 regressions
+### Historical 2.2.2 regression evidence
 
 `progressive-ui.spec.mjs`, `calendar-loading.spec.mjs`, and `viewport-v2.spec.mjs`
 cover orange toolbar warnings, absence of automatic search popups, keyboard
 access to failure details, retry/drag recovery, responsive filter syntax help,
 quoted expressions, inline validation and retained Sort by at both viewport sizes.
-Java HTTP tests separately cover SSE route POST requests, saved and explicit
+The Java HTTP tests at that release separately covered SSE route POST requests, saved and explicit
 server filters, source exclusions, conditional reads, live edits and deletions.
 Java and JavaScript read the same filter-expression fixtures with explicit
 expected record IDs.

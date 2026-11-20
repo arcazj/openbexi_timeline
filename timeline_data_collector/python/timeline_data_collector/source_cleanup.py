@@ -13,10 +13,13 @@ from zoneinfo import ZoneInfo
 
 from .compression import BLOCK, COMPRESSED, _locked, _unchanged, logical_path, matches_filter
 from .io import identity, model_root
-from .settling import fingerprint, remember_settled
+from .settling import fingerprint, remember_settled, source_date_revisions
+from .progress import source_activity, tracked_files
 
 
 DATE_TOKEN = re.compile(r'(?<![a-z])(yyyy|mm|dd)(?![a-z])', re.I)
+AUDIT_SECONDS = 1.0
+AUDIT_FILES = 100
 
 
 class DateLayout:
@@ -155,7 +158,18 @@ def move_verified(path, stamp, destination, check):
         if temporary is not None: temporary.unlink(missing_ok=True)
 
 
+@source_activity('checking source timestamps and cross-directory duplicates')
 def cleanup_sources(context, files, manifest, *, bounded=True):
+    files, manifest = _cleanup_sources(context, files, manifest, bounded=bounded)
+    if context.source.get('_priority') == 'current' and context.history_revisions is not None:
+        observed = source_date_revisions(context.source, manifest)
+        context.metrics['pending_history_dates'] = [dict(date=day, modified_ns=value['modified_ns'])
+            for day, value in observed.items() if day != context.start_date and
+            context.history_revisions.get(day) != value['revision']]
+    return files, manifest
+
+
+def _cleanup_sources(context, files, manifest, *, bounded=True):
     model = context.source.get('execution', {}).get('source_date_layout')
     # An output date template never opts a source into destructive source cleanup.
     if not model or context.source.get('_priority') == 'current': return files, manifest
@@ -167,7 +181,6 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
     if not root.is_dir(): return files, manifest
     target = model_root(context.source['_target_path'])
     filters = context.options.get('filter', {})
-    soc = context.source.get('converter_plugin') == 'DEMO'
     zone_name = context.source.get('timezone', context.options.get('timezone', 'UTC'))
     zone = timezone.utc if zone_name == 'UTC' else ZoneInfo(zone_name)
     signature = identity(['source-cleanup-v2-record-times', layout.model, zone_name, filters])
@@ -175,12 +188,14 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
     started = time.monotonic(); moved = removed = inspected = 0
     selected = set(map(Path, files)); ready = dict(manifest); changed = {}
     checked_parents = set()
+    audit_paths = set()
+    audit_seconds = 0.0
 
     def allowed(path, *, fresh=False):
         if not path.is_relative_to(root) or path.is_relative_to(target): return False
         relative = path.relative_to(root)
         if any(part.startswith('.') for part in relative.parts) or not layout.locate(relative): return False
-        if not matches_filter(relative, filters, basename=soc, case_sensitive=soc): return False
+        if not matches_filter(relative, filters): return False
         if path.suffix.lower() in COMPRESSED - {'.gz'} or path.suffix.lower() in ('.tmp', '.part', '.swp'): return False
         verified_parents = []
         for parent in (path, *path.parents):
@@ -194,13 +209,22 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
         return True
 
     def observe(db, path, stamp):
-        row = db.execute('SELECT stamp,digest,day,scope,size,verified FROM files WHERE path=? AND signature=?', (str(path), signature)).fetchone()
-        if row and row[0] == stamp and not context.force and 0 <= time.time()-row[5] < verify_seconds: return row[:5]
+        nonlocal audit_seconds
+        row = cached.get(str(path))
+        unchanged = row and row[0] == stamp
+        if unchanged and not context.force:
+            if 0 <= time.time()-row[5] < verify_seconds: return row[:5]
+            # Revalidate the oldest unchanged inputs in small portions. A large
+            # date must not spend every idle turn rereading its entire archive.
+            # New/replaced revisions always get a full inspection immediately.
+            if str(path) not in audit_paths or audit_seconds >= AUDIT_SECONDS: return row[:5]
+        inspection_started = time.monotonic()
         digest, day, size = inspect_contents(path, stamp, zone, context.check_cancelled)
+        if unchanged: audit_seconds += time.monotonic() - inspection_started
         _, tail = layout.locate(path.relative_to(root))
         scope = identity([tail.parent.as_posix(), logical_path(tail).suffix.lower()])
         row = stamp, digest, day, scope, size
-        db.execute('INSERT OR REPLACE INTO files VALUES (?,?,?,?,?,?,?,?)', (str(path), signature, *row, time.time()))
+        db.execute('INSERT OR REPLACE INTO files(path,signature,stamp,digest,day,scope,size,verified) VALUES (?,?,?,?,?,?,?,?)', (str(path), signature, *row, time.time()))
         if not day: context.progress('Source cleanup left %s unchanged: incomplete input or timestamps missing, ambiguous, or spanning UTC dates', path)
         return row
 
@@ -209,12 +233,44 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
         db.execute('CREATE TABLE IF NOT EXISTS files (path TEXT PRIMARY KEY, signature TEXT, stamp TEXT, digest TEXT, day TEXT, scope TEXT, size INTEGER, verified REAL NOT NULL DEFAULT 0)')
         if 'verified' not in {row[1] for row in db.execute('PRAGMA table_info(files)')}:
             db.execute('ALTER TABLE files ADD COLUMN verified REAL NOT NULL DEFAULT 0')
+        columns = {row[1] for row in db.execute('PRAGMA table_info(files)')}
+        if 'cleaned' not in columns:
+            db.execute('ALTER TABLE files ADD COLUMN cleaned INTEGER NOT NULL DEFAULT 0')
+        if 'attempted' not in columns:
+            db.execute('ALTER TABLE files ADD COLUMN attempted REAL NOT NULL DEFAULT 0')
         db.execute('CREATE INDEX IF NOT EXISTS contents ON files(signature,scope,digest,day)')
+        db.execute('CREATE INDEX IF NOT EXISTS verification ON files(signature,verified)')
+        # Read cache metadata in batches. Thousands of unchanged archive files
+        # must not consume the poll before a new revision reaches inspection.
+        cached = {}
+        names = [str(path) for path in selected]
+        for offset in range(0, len(names), 500):
+            group = names[offset:offset+500]
+            cached.update((row[0], row[1:]) for row in db.execute(
+                'SELECT path,stamp,digest,day,scope,size,verified,cleaned,attempted FROM files '
+                'WHERE signature=? AND path IN (' + ','.join('?' for _ in group) + ')', (signature, *group)))
+        audit_order = {}
+        if not context.force:
+            cutoff = time.time()-verify_seconds
+            for name, row in sorted(cached.items(), key=lambda item: (item[1][5], item[0])):
+                if row[5] <= cutoff and ready.get(name) == row[0]:
+                    audit_order[name] = len(audit_order)
+                    audit_paths.add(name)
+                    if len(audit_paths) >= AUDIT_FILES: break
         observations = []
-        for path in sorted(selected):
+        def priority(path):
+            name = str(path); row = cached.get(name)
+            if context.force or not row or row[0] != ready.get(name): return (0, 0, name)
+            if not row[6]: return (1, row[7], name)
+            return (2, audit_order.get(name, 0), name)
+        pending = [path for path in selected if context.force or str(path) not in cached or
+                   cached[str(path)][0] != ready.get(str(path)) or not cached[str(path)][6] or str(path) in audit_paths]
+        ordered = sorted(pending, key=priority)
+        inspection_started = time.monotonic()
+        for path in tracked_files(context, ordered):
             context.check_cancelled()
             if not allowed(path): continue
-            if bounded and context.source.get('_continuous') and time.monotonic()-started >= 1: break
+            if observations and bounded and context.source.get('_continuous') and time.monotonic()-inspection_started >= 1: break
             try:
                 stamp = ready[str(path)]
                 row = observe(db, path, stamp); inspected += 1
@@ -223,10 +279,17 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
         # Prefer an existing correctly dated copy, including a differently named
         # one; index the selected unit before choosing survivors.
         handled = set()
+        mutation_started = time.monotonic()
         for path, row in observations:
+            if handled and bounded and context.source.get('_continuous') and time.monotonic()-mutation_started >= 1: break
             stamp, digest, day, scope, size = row
-            if not day or (scope, digest, day) in handled: continue
+            if not day:
+                db.execute('UPDATE files SET cleaned=1 WHERE path=? AND stamp=?', (str(path), stamp))
+                continue
+            if (scope, digest, day) in handled: continue
             handled.add((scope, digest, day)); context.check_cancelled()
+            db.execute('UPDATE files SET attempted=? WHERE signature=? AND scope=? AND digest=? AND day=?',
+                       (time.time(), signature, scope, digest, day))
             candidates = []
             for name, old_stamp in db.execute('SELECT path,stamp FROM files WHERE signature=? AND scope=? AND digest=? AND day=?', (signature, scope, digest, day)):
                 candidate = Path(name)
@@ -255,14 +318,23 @@ def cleanup_sources(context, files, manifest, *, bounded=True):
                     db.execute('DELETE FROM files WHERE path=?', (str(survivor),))
                     selected.discard(survivor); ready.pop(str(survivor), None)
                     survivor, survivor_stamp = destination, fingerprint(destination.stat())
-                    db.execute('INSERT OR REPLACE INTO files VALUES (?,?,?,?,?,?,?,?)', (str(survivor), signature, survivor_stamp, digest, day, scope, size, time.time()))
+                    db.execute('INSERT OR REPLACE INTO files(path,signature,stamp,digest,day,scope,size,verified) VALUES (?,?,?,?,?,?,?,?)', (str(survivor), signature, survivor_stamp, digest, day, scope, size, time.time()))
                     selected.add(survivor); ready[str(survivor)] = survivor_stamp; changed[str(survivor)] = survivor_stamp
+                completed = True
                 for _, _, _, duplicate, duplicate_stamp, _ in candidates:
                     if duplicate == survivor or not duplicate.exists(): continue
-                    if not allowed(duplicate, fresh=True) or not allowed(survivor, fresh=True): continue
+                    if bounded and context.source.get('_continuous') and moved+removed and time.monotonic()-mutation_started >= 1: break
+                    if not allowed(duplicate, fresh=True) or not allowed(survivor, fresh=True):
+                        completed = False
+                        continue
                     if remove_duplicate(duplicate, duplicate_stamp, survivor, survivor_stamp, context.check_cancelled):
                         db.execute('DELETE FROM files WHERE path=?', (str(duplicate),))
                         selected.discard(duplicate); ready.pop(str(duplicate), None); removed += 1
+                    else: completed = False
+                else:
+                    if completed:
+                        db.execute('UPDATE files SET cleaned=1 WHERE signature=? AND scope=? AND digest=? AND day=?',
+                                   (signature, scope, digest, day))
             except (OSError, EOFError) as error: context.progress('Deferring source cleanup for %s: %s', path, error)
     if changed: remember_settled(context, changed)
     context.metrics.update(cleanup_inspected=inspected, source_files_moved=moved, source_duplicates_removed=removed)

@@ -2,7 +2,7 @@
 
 Each namespace has one YAML file, named `<namespace>_<model_name>.yml`. Its
 `namespace` and `model` fields define its identity; underscores in either name are
-allowed. Java, Python, the collector and HBDS Editor use the same files.
+allowed. The Python server, collector and HBDS Editor use the same files.
 
 ```text
 openbexi_timeline/
@@ -41,7 +41,7 @@ namespace: DEMO
 model: models/default.json
 enable: true
 target_path: ../../.local-private/events/DEMO/yyyy/mm/dd
-connectors: [java_api, python_api]
+connectors: [python_api]
 sources:
   - id: incoming
     source_path: ../../examples/DEMO/input
@@ -83,7 +83,7 @@ using the canonical fields and namespace files.
 [`service.yml`](service.yml) defines listeners by ID, owner, protocol, host and
 port. Namespace files reference their IDs. A process starts each enabled,
 referenced listener owned by that backend once, even when namespaces share it.
-Java and Python may run together on different ports. Conflicting bindings fail.
+Independent Python workspaces may run on different ports. Conflicting bindings fail.
 `enable: false` retains a listener without binding it.
 
 From the timeline project root:
@@ -95,15 +95,12 @@ From the timeline project root:
 # Python: default listener http://127.0.0.1:8783
 .venv/Scripts/python.exe -m openbexi_timeline_server -dataconf HBDS/yaml/DEMO_default.yml -serverconf HBDS/service.yml --hbds-root HBDS
 
-# Java: after Maven compilation and runtime dependency copying; default port 8080
-java -cp "target/classes;target/runtime/*" com.openbexi.timeline.server.openbexi_timeline -dataconf HBDS/yaml/DEMO_default.yml -serverconf HBDS/service.yml --hbds-root HBDS
-
 # Collector: open the dashboard for the live geoscience workspace.
 # Install the core and plugins as described in timeline_data_collector/README.md.
 .venv/Scripts/python.exe -m timeline_data_collector serve --workspace HBDS/GEO_Workspace.json
 ```
 
-For the timeline servers, pass additional namespace filenames after `-dataconf`, before the next option.
+For the timeline server, pass additional namespace filenames after `-dataconf`, before the next option.
 `-data_conf` and `--data-conf` remain accepted aliases. Use `-serverconf
 HBDS/service.local.yml` for private deployment settings. The PowerShell launcher
 accepts an array of filenames; IntelliJ configurations include default examples.
@@ -125,25 +122,22 @@ Use `<timeline>_Workspace.json` for additional local timelines. For example:
 {"schemaVersion": 1, "name": "Example_Workspace", "service": "service.yml", "namespace_files": ["yaml/DEMO_default.yml"]}
 ```
 
-Namespace and service references resolve relative to the workspace file. Both
-servers accept `--workspace HBDS/<timeline>_Workspace.json`; `-serverconf` overrides
+Namespace and service references resolve relative to the workspace file. The
+server accepts `--workspace HBDS/<timeline>_Workspace.json`; `-serverconf` overrides
 its `service` field. Older workspace files without `service` select
-`service.local.yml` when present, otherwise `service.yml`. Public workspaces
+`../release/service.local.yml` when present, otherwise `service.yml`. Public workspaces
 explicitly select `service.yml` to remain independent of private deployments.
 Use either `--workspace` or `-dataconf`.
 
 In IntelliJ, use the shared configurations in [`.run`](../.run/README.md):
-**Timeline Java - Default** serves the committed samples; **Timeline Java - GEO**
+**Timeline Python - Default** serves the committed samples; **Timeline Python - GEO**
 serves collected earthquake and volcano data. Both use `service.yml` and the
-default browser address `http://127.0.0.1:8080/openbexi_timeline.html`.
-The obsolete `openbexi_timeline*` launches using `-data_conf yaml/sources_*.yml`
-can be removed. Those legacy templates request TLS listeners and require
-`TIMELINE_KEYSTORE` and `TIMELINE_KEYSTORE_PASSWORD`.
+default browser address `http://127.0.0.1:8783/openbexi_timeline.html`.
 
 **Generator - Demo** replaces the old `event_generator` and
 `event_generator_zone` launches. It runs the `default` collector plugin once,
 offline, with a fixed seed, and writes sessions and zones under
-`.local-private/events/DEMO_GENERATOR`. To view them, launch either server with
+`.local-private/events/DEMO_GENERATOR`. To view them, launch the Python server with
 `--workspace HBDS/Generator_Workspace.json`. The collector dashboard also offers
 this workspace alongside the demo and GEO workspaces.
 
@@ -154,35 +148,24 @@ those same files. Python indexes use a separate default state directory for each
 workspace. Listener and namespace-list changes take effect after restart.
 
 ```powershell
-# Build Java classes, the JAR and runtime dependencies using JDK 17 or newer.
-mvn --batch-mode --no-transfer-progress verify
-
-# Both launchers default to the committed demo samples.
-./tools/start-java-server.ps1 -Check
+# Validate and launch the committed demo samples.
 ./tools/start-python-server.ps1 -Check
-./tools/start-java-server.ps1
 ./tools/start-python-server.ps1
 
-# Select live openbexi_quake data under /data with either backend.
-./tools/start-java-server.ps1 -Workspace HBDS/GEO_Workspace.json -Check
+# Select live collected GEO output.
 ./tools/start-python-server.ps1 -Workspace HBDS/GEO_Workspace.json -Check
+./tools/start-python-server.ps1 -Workspace HBDS/GEO_Workspace.json
 
-# Build the distributable Python server package.
-.venv/Scripts/python.exe -m pip wheel --no-deps --wheel-dir dist/python .
+# Build all public Python packages.
+.venv/Scripts/python.exe tools/build-collector.py
 ```
 
-Run the two launch commands in separate terminals. Java's shell/batch launcher
-also selects the workspace by default. Set `JAVA_HOME` to the installed JDK if
-the system `java` command points to an older runtime. `groups/index.json` contains
-group metadata; it is not the server's namespace startup list.
-After startup, each active workspace listener logs `Web UI ready: <URL>`. Open
-that link to load its workspace in `openbexi_timeline.html`; no HTML setting is
-needed in `workspace.json`. The default/GEO links are
-`http://127.0.0.1:8080/openbexi_timeline.html` for Java and
-`http://127.0.0.1:8783/openbexi_timeline.html` for Python. URLs use the listener's
-HTTP/HTTPS scheme, actual port and configured context path. Wildcard bind
-addresses use loopback in the browser link. Explicit Java `web_ui` overrides
-remain supported, including the optional listener-port filter.
+`groups/index.json` contains group metadata; it is not the namespace startup list.
+Each active workspace listener logs `Web UI ready: <URL>`. Open that link to load
+its workspace in `openbexi_timeline.html`. The default link is
+`http://127.0.0.1:8783/openbexi_timeline.html`. URLs use the listener's HTTP/HTTPS
+scheme, actual port and configured context path. Wildcard bind addresses use
+loopback in the browser link.
 
 The default workspace reads the reviewed samples in `examples/geoscience/`
 directly. These originated in the committed `openbexi_quake/json/` examples;
@@ -206,7 +189,7 @@ Use **Find previous activity** to locate older events.
 An empty date interval does not imply that the source directory is empty.
 
 Saved filters for named workspaces live privately in
-`HBDS/filters/workspaces/<workspace filename without extension>/` on both servers.
+`HBDS/filters/workspaces/<workspace filename without extension>/` in the Python server.
 Thus models with the same timeline name keep separate selections in different workspaces.
 Existing flat profiles are read only when their recorded source namespaces match
 the selected workspace; subsequent saves use the workspace directory and preserve
@@ -218,15 +201,14 @@ Both configurations and the reviewed demo samples may be committed. Generated
 `/data` content is excluded from Git, Docker build input and source releases.
 The live paths are read at runtime; their contents are never copied into the demo.
 
-HTTPS uses `tls.certfile`/`tls.keyfile` for Python, or `tls.keystore` and
-`tls.password_env` for Java. Keystore passwords come from the named environment
-variable. TLS files resolve relative to the service YAML. Native Python listener
+HTTPS uses PEM `tls.certfile` and `tls.keyfile`. TLS files resolve relative to the
+service YAML. Native Python listener
 sets currently run with one worker; legacy single-listener worker launches remain
 supported. Listener and ingestion changes require a restart.
 
 ## HBDS Editor
 
-Open **Settings → HBDS Editor** on either running backend. The editor projects the
+Open **Settings → HBDS Editor** on the running server. The editor projects the
 loaded YAML files and models into one workspace. Selecting a namespace selects
 its model and tabs. Model changes refresh affected tabs; unrelated tabs and
 event identities stay intact. Models can be shared between namespaces.
@@ -288,7 +270,7 @@ credentials, private endpoints and user records other than the unchanged
 Do not add operational names, paths or data to
 commits, change logs, release notes or public test fixtures.
 
-Run Java, Python, browser/editor, migration, connector and isolated HTTP parity
+Run Python, browser/editor, migration, connector and isolated HTTP parity
 tests after changes. Test duplicate listeners, missing files, failed saves,
 namespace isolation, restart recovery and cache invalidation. Benchmark startup,
 first results and complete warm queries on a fixed synthetic dataset and report
@@ -337,8 +319,8 @@ service changes above remain recommendations for the next model revision.
 Connected timelines obtain choices from `GET /openbexi_timeline/filter-values`
 (or `/openbexi_timeline_sse/filter-values`). This endpoint returns attributes and
 typed distinct values, without event/session payloads or view-date restrictions.
-Java and Python retain their incremental catalogs as `catalog.java[.<workspace>].json`
-and `catalog.python[.<workspace>].json` under `HBDS/filters/<namespace>/`.
+Python retains its incremental catalogs as `catalog.python[.<workspace>].json`
+under `HBDS/filters/<namespace>/`. Legacy catalog files remain local during upgrades.
 Workspaces keep independent catalogs. Content fingerprints or file stamps identify
 unchanged input; new, modified and removed files update the stored summaries.
 Stored choices remain available while a fresh Python record index is verified.

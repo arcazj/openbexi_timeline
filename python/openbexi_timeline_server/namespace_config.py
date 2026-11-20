@@ -181,11 +181,12 @@ def validate_service(document, path=None):
         if item['type'] not in ('http','no_secure'):
             tls = item.get('tls')
             if not isinstance(tls, dict): raise ValueError('Secure connector requires tls settings')
-            fields = ('certfile','keyfile') if item['owner'] == 'python' else ('keystore',)
+            pem = all(tls.get(field) for field in ('certfile','keyfile'))
+            fields = ('certfile','keyfile') if pem else ('keystore',)
             for field in fields:
                 tls[field] = resolved_path(tls.get(field), base)
-            if item['owner'] == 'java' and not isinstance(tls.get('password_env'), str):
-                raise ValueError('Java TLS requires password_env')
+            if not pem and not isinstance(tls.get('password_env'), str):
+                raise ValueError('Keystore TLS requires password_env')
     return value
 
 
@@ -216,6 +217,11 @@ def load_bundle(paths, service_path=None, hbds_root=None, workspace_path=None):
     if len({os.path.normcase(str(p)) for p in resolved}) != len(resolved):
         raise ValueError('Configuration file was specified more than once')
     service = validate_service(read_yaml(service_path), service_path) if service_path else {}
+    # Preserve connector IDs, ports and on-disk user settings during upgrades.
+    # The Python runtime owns both current and historical connector selections.
+    for connector in service.get('connectors', []):
+        if connector.get('owner') == 'java':
+            connector['owner'] = 'python'
     entries, names, targets = [], set(), set()
     for path in resolved:
         document = read_yaml(path)

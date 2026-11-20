@@ -1,46 +1,31 @@
 # Dependency and deployment security
 
-The September 2026 maintenance replaces the old Java dependency set while preserving Java 17 and the `javax.servlet` interface. Run builds with a currently patched Java 17 distribution; an old local JDK that compiles successfully is not a secure production runtime.
+OpenBEXI Timeline 2.9.7 runs its server and public collectors in Python. The
+browser uses the npm lockfile; Python runtime versions are recorded in
+`requirements.lock`, public package metadata and
+`release/windows/collector-requirements.txt`. The Windows installer includes its
+own pinned Python runtime and verifies downloaded runtime and package hashes.
 
-| Component | Previous | Updated | Reason |
-| --- | --- | --- | --- |
-| Embedded Tomcat | 9.0.85 | 9.0.122 | Current Tomcat 9 maintenance release; incorporates the published HTTP/2 and authentication fixes while retaining Servlet 4 compatibility. See [Tomcat advisories](https://tomcat.apache.org/security-9.html). |
-| Kafka client | 3.7.0 | 3.9.2 | Preserves the 3.x client API and incorporates fixes for configuration access, OAuth URL handling, logging disclosure, and producer buffer handling. See [Kafka advisories](https://kafka.apache.org/community/cve-list/). |
-| Kafka's LZ4 dependency | 1.10.1 in Kafka 3.9.2 | 1.11.4 | Explicit dependency management includes the native-library extraction and decompression fixes in 1.11.4, plus the earlier XXHash bounds fix. See the [maintainer advisories](https://github.com/yawkat/lz4-java/security/advisories). |
-| MongoDB driver | 5.1.0 | 5.12.0 | Updates the driver and keeps its core/BSON modules aligned through the sync driver dependency. |
-| JSON / SnakeYAML / jsoup | 20240303 / 2.2 / 1.17.2 | 20260814 / 2.7 / 1.23.2 | Updates the existing parsing libraries. |
-| JUnit | Mixed 4.x and 5.x milestones in production | Jupiter 5.14.4, tests only | Removes test libraries from production and runs the isolated Java tests under `tests/java`. |
+## Validate and review dependencies
 
-Unused direct Jackson annotations and JMX agent dependencies were removed. `json-simple` remains for compatibility with the legacy adapters; its accidental JUnit runtime dependency is excluded. The old checked-in JMX exporter binary is retired. Exporter configuration, when needed, is an explicit deployment choice: use a current [Prometheus JMX Exporter](https://prometheus.github.io/jmx_exporter/) release on a restricted monitoring interface. The application does not enable unauthenticated remote JMX.
-
-## Java test sources
-
-The repository's JUnit classes live under `tests/java` and use JUnit Jupiter with test-only dependencies. The application source tree `src` compiles without JUnit or Maven file exclusions, including in IntelliJ. After updating an existing checkout, reload the Maven project and rebuild to refresh the source roots and remove stale classes. The historical `test_timeline` class stays in `src` because the legacy server uses it at runtime; it does not use JUnit.
-
-Optional local converter tests belong in `tests/local-java`, marked as a test source folder in IntelliJ. That folder stays ignored with the private converter sources and is separate from the Maven test suite.
-
-The four `Legacy*Test` classes preserve historical manual checks. They compile with the regular tests but run only when `-Dopenbexi.legacyTests=true` is explicitly set. They depend on developer configuration and fixtures, and some write YAML/filter files or access MongoDB; prepare an isolated test environment before opting in. The regular suite uses temporary storage or isolated database doubles and does not enable these checks.
-
-## Repeatable audit
-
-With Java 17, Maven, and Node 24 installed:
+Use Python 3.12+ and Node.js 24 in an isolated development environment:
 
 ```sh
-mvn --batch-mode --no-transfer-progress verify
-mvn --batch-mode --no-transfer-progress dependency:list -DincludeScope=runtime -DoutputFile=target/runtime-dependencies.txt
-node tools/audit-java-dependencies.mjs
-npm audit
+python -m pip install -r requirements.lock -r timeline_data_collector/requirements-test.txt -e . -e timeline_data_collector
+python -m pip check
+python -m unittest discover -s tests/python -v
+python tools/test-collector.py
+npm ci
+npm audit --audit-level=moderate
+npm test
+npm run test:integration
 ```
 
-The audit sends only public Maven package coordinates and versions to the [OSV API](https://google.github.io/osv.dev/api/). It fails on advisories, network errors, or an incomplete response. It writes a dated report to `target/dependency-audit-osv.json`. The first scan of the updated set returned **zero known advisories across 24 resolved runtime packages**. This is a point-in-time dependency scan, not a claim that the application, host OS, container, or deployment has no vulnerabilities. GitHub recalculates its own alerts after the manifests are pushed.
-
-Automated dependency updates and CI repeat the checks. Review advisories against the deployed configuration and rerun tests when updating a version. Kafka OAuth deployments should explicitly allow only trusted token/JWKS endpoints using `org.apache.kafka.sasl.oauthbearer.allowed.urls`; upgrading the 3.x client alone does not restrict its backward-compatible default.
-
-## Database safety
-
-The legacy MongoDB adapter no longer drops a collection when adding or removing events. It validates an entire incoming batch before any mutation, requires scalar stable `id`/`_id` values, inserts individual records, and updates/deletes through exact single-record selectors. Invalid or missing identifiers never become broad MongoDB queries. Empty batches do nothing. Updates do not upsert missing records.
-
-Historical aggregate documents remain readable; no automatic database rewrite occurs. New inserts use one document per event and MongoDB's unique `_id` constraint. Adapter batches are not transactions: a database error during a valid batch can leave earlier operations applied. These legacy methods are not the authenticated REST write implementation. The isolated regression tests verify that unrelated records survive additions, updates, and deletions without requiring a live database.
+Dependency versions and successful tests are evidence for the tested build;
+they are not a claim that future advisories or deployment vulnerabilities cannot
+exist. Review Python, npm, container and operating-system advisories when updating
+or deploying. Automated dependency updates cover npm, pip, containers and Actions.
+Use public or synthetic fixtures in diagnostics, following the [privacy guide](privacy.md).
 
 ## Deployment
 
@@ -51,37 +36,59 @@ docker build -t openbexi-timeline .
 docker run --rm -p 127.0.0.1:8442:8442 -v openbexi-data:/data openbexi-timeline
 ```
 
-Open [the local gallery](http://localhost:8442/demos.html). The named volume
-stores managed data; configure a TLS reverse proxy and API tokens for a deployed
-service as described in the [REST API guide](rest-api.md).
+The container runs the Python API as an unprivileged user. The volume retains
+managed data. Use a trusted TLS reverse proxy and API tokens for a remote service;
+see the [REST API guide](rest-api.md).
 
-The container builds the Java classes and copies the runtime dependency set directly from Maven. It installs browser dependencies from the npm lockfile and runs on a maintained Java 17 image as an unprivileged user. Do not reuse an old manually assembled application JAR after updating `pom.xml`.
+For a source checkout, create a Python environment and install the application.
+Launch `bash openbexi_timeline.sh --workspace HBDS/workspace.json`, or
+`openbexi_timeline.bat --workspace HBDS/workspace.json` on Windows. The launchers
+select the repository `.venv`, or the `OPENBEXI_PYTHON` interpreter override.
+`OPENBEXI_TIMELINE_HOME` selects another installation root. Explicit path arguments
+are resolved from the caller's directory. With no arguments, selection uses
+`OPENBEXI_HBDS_CONFIG`, `OPENBEXI_TIMELINE_CONFIG`, the historical
+`OPENBEXI_TIMELINE_DATA_PATH`, then the bundled default workspace.
 
-The native launchers use the same compiled classes and runtime JARs. Build with `mvn --batch-mode --no-transfer-progress verify`, then run `bash openbexi_timeline.sh -data_conf "path/to/config.yml"` or `openbexi_timeline.bat -data_conf "C:\path\to\config.yml"`. Maven's package phase removes obsolete JARs from **only** `target/runtime` and copies the current resolved runtime set there; this prevents an older dependency from remaining on the wildcard classpath after an upgrade. Stop a native server before rebuilding its runtime, especially on Windows where running JARs can be locked.
+Existing HTTP connector IDs and ports remain usable when their old owner is
+`java`; the Python runtime adapts that setting in memory. Secure listeners accept
+PEM `tls.certfile`/`tls.keyfile` or existing JKS/PKCS12 `tls.keystore`,
+`tls.password_env` and optional `tls.key_alias` settings. Source stores and user
+configuration files are not rewritten. Keystore keys are converted into password-
+encrypted PEM files in restricted temporary storage, loaded into the SSL context,
+and removed before the listener starts. Passwords and key material are never
+logged.
 
-The launchers preserve existing environment variables. `JDK_HOME`, then `JAVA_HOME`, select Java (otherwise the PATH Java is used). `OPENBEXI_TIMELINE_HOME` optionally selects the installation; otherwise the script's directory is used. Explicit configuration arguments take priority, followed by `OPENBEXI_TIMELINE_CONFIG`, the legacy `OPENBEXI_TIMELINE_DATA_PATH` configuration-file variable, and `yaml/sources_startup.yml`. Relative explicitly supplied paths are resolved from the caller's directory. JVM settings such as `JAVA_TOOL_OPTIONS` and the REST token variables pass through unchanged.
+JKS support covers Sun JKS versions 1 and 2 with the store password protecting the
+private key, matching the former launcher. PKCS12 supports explicit `key_alias` selection, including a nonprimary private
+key in a multi-key Java store. JCEKS and provider-specific JKS protection are rejected. TLS startup
+fails on wrong passwords, corrupt stores, unsupported formats or mismatched keys;
+it never falls back to an unencrypted listener.
 
-`yaml/sources_startup.yml` is a local deployment file and is not shipped with the
-release. Supply an existing configuration explicitly or through the environment.
-The launchers report a missing file before starting Java. Public examples under
-`yaml/` describe connector and source settings; adapt their data paths and TLS
-settings for your installation. The static demo gallery needs no deployment YAML.
+Static files are served through an explicit public-asset allowlist. Repository
+internals, deployment YAML, arbitrary JSON, source code, build output, dotfiles,
+directory listings and unpublished symlink targets are unavailable. New public
+asset locations require deliberate changes in `python/openbexi_timeline_server/assets.py`.
 
-Both Java launchers serve static files through an explicit public-asset allowlist. Browser modules, dependency assets, models, the catalog, `json/test-data`, documentation, schemas, and icons remain public. Repository internals, deployment YAML, arbitrary JSON files, Java sources, build output, dotfiles, and directory listings are unavailable. Symlinks cannot expose an unpublished file or escape the document root. The two existing browser view-test files remain available; other tests and developer tools are linked through GitHub. Add new public asset locations to `PublicAssetServlet` deliberately.
+Keep writable API data outside the static application root. Supply tokens through
+environment variables or the deployment's secret manager. Never place credentials
+in shared URLs or checked-in configuration. Back up the private data directory
+before upgrades. The Windows upgrade replaces application-owned runtime files and
+retains user data; uninstall also retains that data.
 
-Keep writable API data outside the static document root, provide tokens through environment variables or the deployment's secret manager, and terminate TLS at a trusted reverse proxy. Never place credentials in shared URLs or checked-in configuration. See [REST API deployment](rest-api.md) for role tokens and storage settings.
+Managed models use workspace membership and explicit model grants. User tokens
+are stored as hashes; the system administrator token remains a recovery
+credential. Reader/writer service tokens apply only to unscoped models. Model
+administrators edit only their scoped configuration documents; global documents
+require the system administrator. See [model access](model-access.md).
 
-Managed models can use explicit workspace membership and model grants. User
-tokens are stored as hashes; the system administrator service token remains a
-recovery credential. Legacy reader/writer service tokens apply only to unscoped
-models. Configure grants before distributing a managed model, and back up the
-private access state with its datasets. Model administrators can edit only their
-scoped configuration documents; global deployment documents require the system
-administrator. See [model access](model-access.md) for the boundaries and setup.
+Writes validate complete input, require current ETags, and use local process and
+filesystem locks plus atomic replacement. Use storage that supports local file
+locking and atomic rename. This is single-host persistence, not a distributed
+database. Configuration references block unsafe renames and deletion.
 
-AI providers are disabled until configured by the operator. Keys stay on the
-server, provider endpoints cannot be supplied by browser requests, and model
-administration plus a workspace AI entitlement are required for generation.
-Requests have input/output limits, timeouts and in-memory rate/concurrency limits.
-Provider proposals require user review and cannot mutate datasets. See
+AI assistance is disabled until configured by the operator. Keys remain on the
+server; browser requests cannot choose provider endpoints. Model administrator
+access and workspace AI entitlement are required. Input/output limits, timeouts,
+and in-memory hourly/concurrency limits bound requests. Proposals require user
+review and cannot mutate datasets. Limits apply per server worker. See
 [AI assistance](ai-assistance.md) for configuration and privacy details.

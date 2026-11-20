@@ -30,11 +30,11 @@ The test uses its own local fixture server. It checks page dimensions, plot/tabl
 overflow, all seven demos, keyboard focus, viewport resizing, and persistence of
 custom geometry. Node tests separately traverse every table page and every packed
 detail page, and check complete overview scope, session continuation, and anchors.
-Current validation totals, loading measurements, and reproduction commands are in
-the [release notes](../../release-2.0.md) and
+The original validation totals, loading measurements, and reproduction commands are in
+the [historical 2.0 release notes](https://github.com/arcazj/openbexi_timeline/blob/2.9.6/docs/release-2.0.md) and
 [latest evidence](../progressive/README.md). The browser checks include reviewed
 desktop/narrow baselines, page and panel geometry, custom preferences, drag and
-coast cancellation, grouping, and loading/Cancel/Retry. Java integration checks
+coast cancellation, grouping, and loading/Cancel/Retry. Historical Java integration checks
 exercise the JSON-file provider using temporary synthetic sources.
 
 The captured browser is an installed compatibility fallback, not the browser

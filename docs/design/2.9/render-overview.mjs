@@ -58,7 +58,7 @@ parts.push('<path d="M1750 671 L1750 347 L1794 347" stroke="#8092aa" stroke-widt
 arrow(2051, 415, 2051, 454);
 box(1800, 460, 502, 112, 'Materialized JSON', ['/data/<namespace>/yyyy/mm/dd'], '#047857', '#ecfdf5');
 arrow(2051, 575, 2051, 614);
-box(1800, 620, 502, 155, 'Timeline  ·  Java and Python', ['Sessions, events, activities and zones', 'Default: All  |  earthquake  |  volcano', 'Keep by_namespace and existing controls'], '#be185d', '#fff1f6');
+box(1800, 620, 502, 155, 'Timeline  ·  Python server', ['Sessions, events, activities and zones', 'Default: All  |  earthquake  |  volcano', 'Keep by_namespace and existing controls'], '#be185d', '#fff1f6');
 
 panel(64, 854, 720, 250, 'Repeat and recovery', '#b45309');
 lines(98, 951, ['Run again reprocesses the selected inputs.', 'Interval runs wait for completion and never overlap.', 'Streaming keeps one active subscription.', 'Failures preserve the last valid published generation.'], 23, '#34445b', 34);
@@ -72,7 +72,7 @@ const steps = [
     ['Implement and migrate', ['Plugin contracts + CLI + UI', 'Preserve paths and record identities']],
     ['Prove compatibility', ['Both APIs, browser and private suites', 'Replay, recovery, fixtures and counts']],
     ['Build and verify assets', ['Windows installer + ZIP + tar.gz', 'Notes, checksums and HBDS diagrams']],
-    ['Publish v2.9.0', ['Verify uploaded asset hashes', 'Retain historical release tags']]
+    ['Publish 2.9.7', ['Verify uploaded asset hashes', 'Keep releases 2.9.6 and 2.9.7']]
 ];
 steps.forEach(([title, details], index) => {
     const x = 98 + index * 560;

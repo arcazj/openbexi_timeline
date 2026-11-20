@@ -99,37 +99,24 @@
               "required": [
                 "tls"
               ],
-              "allOf": [
-                {
-                  "if": {
-                    "properties": {
-                      "owner": {
-                        "const": "java"
-                      }
+              "properties": {
+                "tls": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "keystore",
+                        "password_env"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "certfile",
+                        "keyfile"
+                      ]
                     }
-                  },
-                  "then": {
-                    "properties": {
-                      "tls": {
-                        "required": [
-                          "keystore",
-                          "password_env"
-                        ]
-                      }
-                    }
-                  },
-                  "else": {
-                    "properties": {
-                      "tls": {
-                        "required": [
-                          "certfile",
-                          "keyfile"
-                        ]
-                      }
-                    }
-                  }
+                  ]
                 }
-              ]
+              }
             }
           }
         ]

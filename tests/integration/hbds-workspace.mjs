@@ -1,4 +1,4 @@
-/** Real Python (default) or Java (--java) API + Chromium with disposable generic HBDS fixtures. */
+/** Real Python API + Chromium with disposable generic HBDS fixtures. */
 import {chromium,expect as playwrightExpect} from '@playwright/test';
 import {spawn} from 'node:child_process';
 import {createWriteStream} from 'node:fs';
@@ -13,13 +13,13 @@ import {hbdsFixture} from '../helpers/hbds-fixture.mjs';
 import {stringify} from 'yaml';
 
 const expect=playwrightExpect.configure({timeout:45000}),root=fileURLToPath(new URL('../../',import.meta.url));
-const backend=process.argv.includes('--java')?'Java':'Python';
+const backend='Python';
 const workspaceStartup=process.argv.includes('--workspace');
 const native=process.argv.includes('--namespace-files')||workspaceStartup;
 const betaModelId=native?'model_beta':'model-beta';
 await fs.mkdir(path.join(root,'target'),{recursive:true});
 const directory=await fs.mkdtemp(path.join(root,'target','.hbds-e2e-'));
-const serverDirectory=backend==='Java'?await fs.mkdtemp(path.join(os.tmpdir(),'openbexi-hbds-browser-')):directory;
+const serverDirectory=await fs.mkdtemp(path.join(os.tmpdir(),'openbexi-hbds-browser-'));
 const configurationFile=path.join(directory,'example.hbds.json'),token=crypto.randomBytes(32).toString('hex');
 const fixture=await hbdsFixture(),model=JSON.parse(await fs.readFile(path.join(root,'HBDS/templates/models/demos/monet.json'),'utf8'));
 model.dataSource.url='json/test-data/monet.json';for(const entity of fixture.models)entity.configuration=structuredClone(model);
@@ -51,26 +51,18 @@ const checked=message=>{checks.push(message);console.log('PASS: '+message);};
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function startServer(){
     let executable=process.env.OPENBEXI_PYTHON||path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
-    const environment={...process.env,OPENBEXI_API_TOKEN:token,PYTHONPATH:path.join(root,'python')};delete environment.OPENBEXI_JAVA_URL;delete environment.OPENBEXI_HBDS_CONFIG;
+    const environment={...process.env,OPENBEXI_API_TOKEN:token,OPENBEXI_API_DATA_DIR:path.join(serverDirectory,'api-data'),PYTHONPATH:path.join(root,'python')};delete environment.OPENBEXI_JAVA_URL;delete environment.OPENBEXI_HBDS_CONFIG;
     let args=['-m','openbexi_timeline_server','--data-conf',configurationFile,'--root',root,'--state',path.join(directory,'state'),'--host','127.0.0.1','--port',String(port)];
-    const portFile=path.join(serverDirectory,'port-'+crypto.randomUUID()+'.txt');
-    if(backend==='Java'){
-        executable=process.env.JAVA_HOME?path.join(process.env.JAVA_HOME,'bin',process.platform==='win32'?'java.exe':'java'):'java';
-        environment.OPENBEXI_API_DATA_DIR=path.join(serverDirectory,'api-data');environment.OPENBEXI_HBDS_CONFIG=configurationFile;
-        args=['-cp',[path.join(root,'target/test-classes'),path.join(root,'target/classes'),path.join(root,'target/runtime/*')].join(path.delimiter),'com.openbexi.timeline.data_browser.PythonBaselineServer',serverDirectory,configurationFile,portFile,root];
-        await fs.access(path.join(root,'target/test-classes/com/openbexi/timeline/data_browser/PythonBaselineServer.class'));
-    }
     if(native){
         delete environment.OPENBEXI_HBDS_CONFIG;
         const options=workspaceStartup?['--workspace',selectedWorkspace,'--root',root]:['-dataconf',...namespaceFiles,'-serverconf',path.join(metadata,'service.yml'),'--hbds-root',metadata,'--root',root];
-        args=backend==='Java'?['-cp',[path.join(root,'target/classes'),path.join(root,'target/runtime/*')].join(path.delimiter),'com.openbexi.timeline.server.openbexi_timeline',...options]:['-m','openbexi_timeline_server',...options,'--state',path.join(directory,'state')];
+        args=['-m','openbexi_timeline_server',...options,'--state',path.join(directory,'state')];
     }
     log=createWriteStream(path.join(directory,'server.log'),{flags:'a'});exitCode=undefined;
     child=spawn(executable,args,{cwd:root,env:environment,windowsHide:true,stdio:['ignore','pipe','pipe']});
     child.stdout.pipe(log,{end:false});child.stderr.pipe(log,{end:false});child.on('exit',code=>{exitCode=code;});let error;child.on('error',value=>{error=value;});
     for(let retry=0;retry<120;retry++){
         if(error)throw error;if(exitCode!==undefined)throw new Error(backend+' backend exited before readiness; see disposable server.log.');
-        if(backend==='Java'&&!native)try{base='http://127.0.0.1:'+Number(await fs.readFile(portFile,'utf8'));}catch{await pause(250);continue;}
         try{const response=await fetch(base+'/openbexi_timeline/config',{signal:AbortSignal.timeout(1000)});if(response.ok&&(await response.json()).hbds)return;}catch{}
         await pause(250);
     }
@@ -122,7 +114,7 @@ try{
     assert.deepEqual(browserErrors,[]);
     if(workspaceStartup){assert.equal(await fs.readFile(path.join(metadata,'workspace.json'),'utf8'),unrelatedWorkspace);checked('named workspace saves and restarts preserve the unrelated default workspace');}
     const report={status:'passed',backend,checks,recordsPerTab:27,datasetRequests:{initial:1,afterTabRename:1,afterSecondTab:2,afterOneModelUpdate:3},browserErrors,durationMs:Date.now()-started};
-    await fs.writeFile(path.join(root,native?'target/hbds-native-'+backend.toLowerCase()+'-browser.json':backend==='Java'?'target/hbds-java-browser-integration.json':'target/hbds-browser-integration.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+    await fs.writeFile(path.join(root,native?'target/hbds-native-'+backend.toLowerCase()+'-browser.json':'target/hbds-browser-integration.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
 }catch(error){
     if(primary){console.error(JSON.stringify({checks,browserErrors,requests,frames:await primary.locator('iframe').evaluateAll(frames=>frames.map(frame=>{const timeline=frame.contentWindow.openbexiTimeline;return {url:frame.src,text:frame.contentDocument?.body?.innerText?.slice(0,1600),namespace:timeline?.hbdsNamespaceId,source:timeline?.modelDocument?.dataSource,localSource:timeline?.localSource,records:timeline?.staticData?.events?.length,error:timeline?.ob_results?.error?.message,counts:timeline?.ob_results?.snapshot?.counts};})).catch(()=>[])},null,2));await primary.screenshot({path:path.join(directory,'failure.png')}).catch(()=>{});}
     throw error;

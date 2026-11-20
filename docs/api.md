@@ -1,6 +1,6 @@
 # OpenBEXI Timeline REST API
 
-API v1 runs at `/api/v1` in the Java server. Its contract version is independent of the application release.
+API v1 runs at `/api/v1` in the Python server. Its contract version is independent of the application release.
 
 - [Setup, authentication, CRUD examples, and storage semantics](rest-api.md)
 - [Offline endpoint reference and optional live public-query explorer](api.html)

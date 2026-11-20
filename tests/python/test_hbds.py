@@ -226,7 +226,7 @@ class HBDSTests(unittest.TestCase):
                 with self.subTest(changed=changed):
                     self.assertEqual(401, client.get("/api/v1/hbds", headers={**headers, **changed}).status_code)
             self.assertEqual(403, client.get("/api/v1/hbds", headers={**headers, "Authorization": "Bearer reader-test-token-12345678901234567890"}).status_code)
-            self.assertEqual(503, client.get("/api/v1/me", headers=headers).status_code)
+            self.assertEqual(401, client.get("/api/v1/me", headers=headers).status_code)
         with TestClient(app, base_url="http://127.0.0.1", client=("192.0.2.10", 50000)) as remote:
             self.assertEqual(401, remote.get("/api/v1/hbds", headers=headers).status_code)
 

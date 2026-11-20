@@ -17,6 +17,9 @@ from .metadata import MetadataNormalizer
 from .tracing import StartupTrace, safe_text
 from .registry import Registry
 from .state import State
+from .progress import WorkProgress
+from .settling import source_date_revisions
+from .target_recovery import TargetRecovery
 
 
 LOG = logging.getLogger('timeline_data_collector')
@@ -36,6 +39,9 @@ class Runner:
         self.guard = threading.RLock()
         self.notices = {}
         self.checkpoints = {}
+        self.history_revisions = {}
+        self.target_recoveries = {}
+        self.before_current_conversion = None
         self.traced_sources = set()
         self.traced_selections = set()
         self.owner = uuid.uuid4().hex
@@ -45,6 +51,9 @@ class Runner:
                 if not self.owner_lease.acquire(): raise RuntimeError('Cannot acquire worker lease')
             with trace.step('recovering interrupted jobs'):
                 recovered = self.state.recover()
+            with trace.step('checking publication capacity recovery'):
+                for group, source in configuration.sources():
+                    self._reconcile_snapshot_failures(source_key(group, source), group, source)
             trace.finish('runner ready', recovered_jobs=recovered)
         except BaseException:
             self.pool.shutdown(wait=True)
@@ -59,6 +68,12 @@ class Runner:
         self.configuration = current
         return current
 
+    def _reconcile_snapshot_failures(self, key, group, source):
+        count = self.state.reconcile_snapshot_failures(key, model_root(group['target_path']) / '.timeline-collector/publication.json')
+        if count:
+            LOG.info('%s/%s: partitioned publication verified; resolved %d obsolete snapshot capacity alerts; earlier failed work remains pending replay',
+                     group['namespace'], source['id'], count)
+
     def validate(self, group, source, mode='once', *, trace=None):
         if source['converter_plugin'] == 'NONE' or not group.get('enable', True) or not source.get('enable', True): return
         for role, name in (('source', source['source_plugin']), ('converter', source['converter_plugin'])):
@@ -71,7 +86,7 @@ class Runner:
 
     def submit(self, *, namespace=None, source=None, plugin=None, mode='once', force=False, offline=False,
                date=None, end_date=None, request_id=None, trigger='cli', revision=None, asynchronous=False,
-               checkpoint_scope=None, batch_limit=None):
+               checkpoint_scope=None, batch_limit=None, cancellation=None):
         configuration = self.refresh()
         if revision and revision != configuration.revision: raise ValueError('Configuration changed; reload before starting conversion')
         pairs = configuration.sources(namespace, source, plugin, include_disabled=True)
@@ -98,7 +113,7 @@ class Runner:
                 LOG.log(level, '%s/%s: reusing existing job=%s; state=%s', safe_text(group['namespace']),
                         safe_text(entry['id']), job['id'], job['state'])
             if created:
-                cancel = threading.Event()
+                cancel = cancellation if cancellation is not None else threading.Event()
                 with self.guard: self.active[job['id']] = cancel
                 if asynchronous: self.pool.submit(self._execute, job['id'], deepcopy(group), deepcopy(entry), cancel, configuration)
                 else: self._execute(job['id'], deepcopy(group), deepcopy(entry), cancel, configuration)
@@ -120,6 +135,7 @@ class Runner:
         result = {'records_written': 0, 'records_created': 0, 'records_updated': 0, 'batches': 0}
         batches = None
         context = None
+        progress = None
         label = group['namespace'] + '/' + source['id']
         started = time.monotonic()
         signature = (key, configuration.revision, request['mode'], request['force'], request['offline'])
@@ -150,7 +166,16 @@ class Runner:
                 return
             self.state.update(ident, 'running')
             with trace.step('initializing publisher and metadata normalization', target=group['target_path']):
-                publisher = Publisher(group['target_path'], group['namespace'], normalizer=MetadataNormalizer.from_root(configuration.hbds_root))
+                with self.guard:
+                    recovery = self.target_recoveries.setdefault((model_root(group['target_path']), group['namespace']), TargetRecovery())
+                publisher = Publisher(group['target_path'], group['namespace'], normalizer=MetadataNormalizer.from_root(configuration.hbds_root), recovery=recovery)
+            with trace.step('checking for deleted target files'):
+                repaired = recovery.repair(publisher)
+                if repaired['files_restored']:
+                    result['target_files_restored'] = repaired['files_restored']
+                    LOG.info('%s: restored %d deleted target files from committed records', group['namespace'], repaired['files_restored'])
+                if repaired['checkpoints_reset']:
+                    LOG.warning('%s: publication data was deleted; preserved surviving records and reset affected source checkpoints for automatic replay', group['namespace'])
             with trace.step('restoring source checkpoint'):
                 scope = request.get('checkpoint_scope')
                 cache_key = (key, scope) if scope else key
@@ -159,6 +184,13 @@ class Runner:
                 if reused: checkpoint = deepcopy(cached[0])
                 else:
                     checkpoint, stamp = publisher.checkpoint_snapshot(key)
+                    if scope == 'current':
+                        self.history_revisions[key] = {}
+                        for name, saved in checkpoint.get('_collector_scopes', {}).items():
+                            if name.startswith('history:'):
+                                day = name.removeprefix('history:')
+                                revision = source_date_revisions(source, saved.get('files', {})).get(day)
+                                if revision: self.history_revisions[key][day] = revision['revision']
                     if scope: checkpoint = checkpoint.get('_collector_scopes', {}).get(scope, {})
                     else: checkpoint = {name: value for name, value in checkpoint.items() if name != '_collector_scopes'}
                     self.checkpoints[cache_key] = deepcopy(checkpoint), stamp
@@ -174,10 +206,16 @@ class Runner:
             context = Context(configuration.workspace, group['namespace'], source, key, workdir, checkpoint,
                               request['date'], request['end_date'], request['offline'], request['force'], request['mode'], cancel)
             context.trace = trace
+            progress = context.work_progress = WorkProgress(context, trace, result, started)
+            progress.start()
             trace.note('plugin working directory resolved', path=workdir)
             context.notices = self.notices.setdefault(key, {})
+            context.notice('target recovery', None if not repaired['records_pending'] else
+                           '%s: %d deleted records awaiting automatic source replay' % (group['namespace'], repaired['records_pending']))
             converter = self.registry.load(source['converter_plugin'], 'converter', request['mode'], source.get('options', {}))
             if source['source_plugin'] == source['converter_plugin'] and hasattr(converter, 'collect'):
+                if source.get('_priority') == 'current' and self.before_current_conversion:
+                    self.before_current_conversion(context)
                 trace.note('using combined source/converter pipeline', plugin=source['converter_plugin'])
                 batches = converter.collect(context)
                 observed_batches = trace.iterate('acquiring and converting next batch', batches)
@@ -185,6 +223,7 @@ class Runner:
                 reader = self.registry.load(source['source_plugin'], 'source', request['mode'], source.get('options', {}))
                 def converted():
                     local_reader = getattr(converter, 'read_local', None)
+                    if local_reader: context.history_revisions = self.history_revisions.get(key, {})
                     acquisition = getattr(reader, 'acquire', None)
                     if local_reader and acquisition:
                         # Optional API-1 extension: commit remote raw-file revisions before
@@ -198,6 +237,9 @@ class Runner:
                                (acquisition or source['source_plugin'] == 'local')))
                     for incoming in trace.iterate('scanning / acquiring next input batch', inputs):
                         context.check_cancelled()
+                        if (source.get('_priority') == 'current' and self.before_current_conversion
+                                and not incoming.revalidate_only):
+                            self.before_current_conversion(context)
                         with trace.step('converting %d input items with %s' % (len(incoming.items), source['converter_plugin'])):
                             progressive = getattr(converter, 'convert_batches', None)
                             outputs = iter(progressive(incoming, context)) if progressive else iter([converter.convert(incoming, context)])
@@ -222,16 +264,21 @@ class Runner:
                 observed_batches = batches
             for batch in observed_batches:
                 context.check_cancelled()
+                publication_started = time.monotonic()
                 with trace.step('publishing %d records' % len(batch.records), target=group['target_path'],
                                 snapshot=batch.snapshot, deletions=len(batch.deleted_ids), commit_input=batch.commit_input):
                     outcome = publisher.publish(key, source['id'], dict(id=source['converter_plugin'], version=self.registry.metadata(source['converter_plugin'])['version']), batch, run_id=ident,
                                                 checkpoint_scope=scope, preserve_missing=True)
+                self._reconcile_snapshot_failures(key, group, source)
+                if not recovery.pending: context.notice('target recovery', None)
                 context.checkpoint = dict(batch.checkpoint)
                 self.checkpoints[cache_key] = deepcopy(batch.checkpoint), outcome.pop('_checkpoint_stamp')
                 totals = ('records_written', 'records_created', 'records_updated')
                 result.update({k: v for k, v in outcome.items() if k not in totals})
                 for name in totals: result[name] += outcome.get(name, 0)
                 result['batches'] += 1
+                if not batch.commit_input and request['mode'] != 'stream':
+                    progress.published(outcome, time.monotonic() - publication_started)
                 if outcome['records_written'] and 'first_publication_seconds' not in result:
                     result['first_publication_seconds'] = round(time.monotonic() - started, 3)
                     trace.note('first output published', elapsed_seconds=result['first_publication_seconds'])
@@ -249,8 +296,10 @@ class Runner:
                     result['yielded'] = True
                     break
             context.check_cancelled()
+            progress.close()
             result['elapsed_seconds'] = round(time.monotonic() - started, 3)
             result['metrics'] = context.metrics
+            if context.notices.get('input'): result['input_unavailable'] = True
             self.state.update(ident, 'succeeded', result)
             trace.finish('conversion pass complete', batches=result['batches'], records_written=result['records_written'],
                          records_created=result['records_created'], records_updated=result['records_updated'])
@@ -269,6 +318,7 @@ class Runner:
             if context is not None: result['metrics'] = context.metrics
             self.state.update(ident, 'failed', dict(result, error=str(exc), error_type=type(exc).__name__))
         finally:
+            if progress: progress.close()
             try:
                 if batches is not None:
                     close = getattr(batches, 'close', None)

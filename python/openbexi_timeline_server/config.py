@@ -9,7 +9,7 @@ import re
 import yaml
 
 from .matching import compile_filter, digest
-from .namespace_config import load_bundle, rename_fields, read_yaml
+from .namespace_config import load_bundle, rename_fields, read_yaml, validate_service
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -69,8 +69,7 @@ class Configuration:
     verify_seconds: float = 300
     settle_seconds: float = 0
     log_level: str = "INFO"
-    java_url: str | None = None
-    legacy_fallback: bool = False
+    providers: list = field(default_factory=list)
     context_path: str = ""
     page_size: int = 256
     cursor_ttl: float = 90
@@ -152,14 +151,15 @@ def configuration_from_document(document, root, state=None, **overrides):
     if not isinstance(server, dict) or not isinstance(collector, dict):
         raise ValueError("server and timeline_server must be mappings.")
     settings = {key: collector[key] for key in ("poll_seconds", "verify_seconds", "settle_seconds", "log_level") if key in collector}
-    allowed = set(Configuration.__dataclass_fields__) - {"root", "state", "sources", "legacy_fallback", "hbds_path"}
-    unknown = set(server) - allowed - {"state"}
+    allowed = set(Configuration.__dataclass_fields__) - {"root", "state", "sources", "providers", "hbds_path"}
+    unknown = set(server) - allowed - {"state", "java_url"}
     if unknown:
         raise ValueError("Unknown timeline_server settings: " + ", ".join(sorted(unknown)))
     settings.update({key: value for key, value in server.items() if key in allowed})
     settings["model"] = document.get("model", settings.get("model"))
-    settings.update({key: value for key, value in overrides.items() if value is not None})
-    native, unsupported = [], []
+    settings.update({key: value for key, value in overrides.items() if value is not None and key != "java_url"})
+    native, providers = [], []
+    state_path = expand_path(str(state or server.get("state", ".local-private/python-timeline")), root)
     for index, source in enumerate(document["data_sources"], 1):
         if not isinstance(source, dict):
             raise ValueError(f"data_sources[{index}] must be a mapping.")
@@ -168,10 +168,16 @@ def configuration_from_document(document, root, state=None, **overrides):
             raise ValueError(f"data_sources[{index}].enable must be boolean.")
         if enabled in (False, "false"):
             continue
-        kind = source.get("type", "json_file")
-        if kind not in ("json_file", "local", "sftp", "s3", "oracle"):
-            unsupported.append(str(kind))
-            continue
+        kind = str(source.get("type", "json_file")).lower()
+        if kind in ("mongo", "mongodb"):
+            from .providers import expand
+            identity = digest(expand(source))[:24]
+            provider = dict(source, index=index, namespace=str(source.get("namespace", "")),
+                            snapshot_path=str(state_path / "providers" / f"{index}-{identity}" / "events.json"))
+            providers.append(provider)
+            source = dict(source, target_path=str(Path(provider["snapshot_path"]).parent))
+        elif kind not in ("json_file", "local", "sftp", "s3", "oracle"):
+            raise ValueError("Unsupported source provider: " + str(kind) + ". Configure a collector that materializes timeline JSON.")
         models = source.get("target_path")
         if isinstance(models, str):
             models = [models]
@@ -184,7 +190,7 @@ def configuration_from_document(document, root, state=None, **overrides):
             rule = rules.get(key, "")
             if not isinstance(rule, str) and not (isinstance(rule, list) and all(isinstance(s, str) for s in rule)):
                 raise ValueError(f"data_sources[{index}].filter.{key} must be text or a list of filename patterns.")
-            if isinstance(rule, str) and kind == "json_file":
+            if isinstance(rule, str) and kind in ("json_file", "mongo", "mongodb"):
                 compile_filter(rule)
         render = source.get("render") or {}
         if not isinstance(render, dict):
@@ -193,14 +199,13 @@ def configuration_from_document(document, root, state=None, **overrides):
             resolved = str(expand_path(model, root)).replace("\\", "/")
             prefix = re.split(r"/(?:yyyy|mm|dd)(?:/|$)", resolved, maxsplit=1)[0]
             native.append(Source(index, str(source.get("namespace", "")), resolved, Path(prefix).absolute(),
-                                 rules.get("include", "") if kind == "json_file" else "",
-                                 rules.get("exclude", "") if kind == "json_file" else "", render))
-    conf = Configuration(root, expand_path(str(state or server.get("state", ".local-private/python-timeline")), root), native, **settings)
+                                 rules.get("include", "") if kind in ("json_file", "mongo", "mongodb") else "",
+                                 rules.get("exclude", "") if kind in ("json_file", "mongo", "mongodb") else "", render))
+    if not settings.get('connectors') and not settings.get('namespace_files'):
+        settings['connectors'] = legacy_connectors(document, root, settings.get('host', '127.0.0.1'))
+    conf = Configuration(root, state_path, native, providers=providers, **settings)
     if conf.model is not None and (not isinstance(conf.model, str) or not conf.model.strip()):
         raise ValueError("model must be a nonempty path string.")
-    conf.legacy_fallback = bool(unsupported)
-    if unsupported and not conf.java_url:
-        raise ValueError("These source providers require timeline_server.java_url for Java fallback: " + ", ".join(sorted(set(unsupported))))
     for key in ("port", "page_size", "max_cursors", "max_files", "max_file_bytes", "max_record_bytes", "max_records"):
         value = getattr(conf, key)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
@@ -219,10 +224,37 @@ def configuration_from_document(document, root, state=None, **overrides):
     if conf.context_path and not re.fullmatch(r"/[A-Za-z0-9_/-]+", conf.context_path):
         raise ValueError("Invalid context_path.")
     conf.context_path = conf.context_path.rstrip("/")
-    if conf.java_url:
-        from urllib.parse import urlsplit
-        url = urlsplit(conf.java_url)
-        if url.scheme not in ("http", "https") or not url.hostname or url.username or url.password or url.query or url.fragment:
-            raise ValueError("java_url must be an HTTP(S) origin/base path without credentials or query parameters.")
-        conf.java_url = conf.java_url.rstrip("/")
     return conf
+
+
+def legacy_connectors(document, root, host='127.0.0.1'):
+    """Retain combined-YAML listener ports/transports and TLS environment names."""
+    listeners = {}
+    for source in document.get('data_sources', []):
+        if source.get('enable', True) in (False, 'false'):
+            continue
+        connectors = source.get('connector', [])
+        if isinstance(connectors, str):
+            connectors = [connectors]
+        if not isinstance(connectors, list) or any(not isinstance(value, str) for value in connectors):
+            raise ValueError('Legacy source connector must be text or a text list.')
+        for value in connectors:
+            for token in value.split('|'):
+                token = token.strip()
+                if not token:
+                    continue
+                match = re.fullmatch(r'(http|https|no_secure|secure|secure_sse):(\d{1,5})', token)
+                if not match:
+                    raise ValueError('Legacy connector must use a supported protocol:port.')
+                protocol, port = match.groups()
+                identity = protocol + '_' + port
+                listener = dict(id=identity, owner='python', type=protocol, port=int(port), host=host)
+                if protocol not in ('http', 'no_secure'):
+                    if not os.getenv('TIMELINE_KEYSTORE'):
+                        raise ValueError('Legacy secure listeners require TIMELINE_KEYSTORE and TIMELINE_KEYSTORE_PASSWORD.')
+                    listener['tls'] = dict(keystore=str(expand_path(os.environ['TIMELINE_KEYSTORE'], Path(root)).resolve()),
+                                           password_env='TIMELINE_KEYSTORE_PASSWORD')
+                    if os.getenv('TIMELINE_KEY_ALIAS'):
+                        listener['tls']['key_alias'] = os.environ['TIMELINE_KEY_ALIAS']
+                listeners[identity] = listener
+    return validate_service(dict(config_version=3, connectors=list(listeners.values())))['connectors']

@@ -2,7 +2,7 @@ name: Release Windows installer
 
 on:
   push:
-    tags: ['v*']
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
   workflow_dispatch:
     inputs:
       tag:
@@ -31,7 +31,7 @@ jobs:
       - name: Validate requested tag
         shell: pwsh
         run: |
-          if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+$') { throw 'A stable vX.Y.Z tag is required.' }
+          if ($env:RELEASE_TAG -notmatch '^\d+\.\d+\.\d+$') { throw 'A stable X.Y.Z tag is required.' }
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: refs/tags/${{ env.RELEASE_TAG }}
@@ -42,11 +42,6 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: source/package-lock.json
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.13'
@@ -55,25 +50,33 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ("v$version" -ne $env:RELEASE_TAG) { throw 'Tag and package version differ.' }
+          if ($version -ne $env:RELEASE_TAG) { throw 'Tag and package version differ.' }
           if (!(Test-Path "docs/release-$version.md") -or (Get-Item "docs/release-$version.md").Length -lt 100) { throw 'Release notes are required.' }
       - run: node --test automation/tests/release-publishing.test.mjs
       - run: npm ci
         working-directory: source
       - run: npm test
         working-directory: source
-      - name: Verify Java with an explicit Windows temporary directory
+      - name: Install Python application and test dependencies
         working-directory: source
+        run: python -m pip install -r requirements.lock -r timeline_data_collector/requirements-test.txt -e . -e timeline_data_collector
+      - name: Install pinned MQTT regression broker
         shell: pwsh
         run: |
-          # The runner's default TEMP uses a short-name alias. History storage
-          # intentionally rejects paths whose real path differs from the input.
-          $javaTestTemp = Join-Path $env:GITHUB_WORKSPACE 'java-test-temp'
-          New-Item -ItemType Directory -Force -Path $javaTestTemp | Out-Null
-          # Java caches the temporary directory during VM startup, before
-          # Surefire promotes Maven user properties into test system properties.
-          $env:JAVA_TOOL_OPTIONS = "`"-Djava.io.tmpdir=$javaTestTemp`""
-          mvn --batch-mode --no-transfer-progress verify
+          $installer = Join-Path $env:RUNNER_TEMP 'mosquitto-2.1.2-install-windows-x64.exe'
+          Invoke-WebRequest 'https://mosquitto.org/files/binary/win64/mosquitto-2.1.2-install-windows-x64.exe' -OutFile $installer
+          $expectedHash = '58008ad7a22ada0b4073afa415801746e027c5f583e4fa52d0f4e9193b98d6aa'
+          if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedHash) { throw 'Mosquitto installer checksum mismatch.' }
+          $process = Start-Process -FilePath $installer -ArgumentList '/S' -WindowStyle Hidden -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Mosquitto installer failed: $($process.ExitCode)" }
+          $broker = Join-Path $env:ProgramFiles 'mosquitto/mosquitto.exe'
+          if (!(Test-Path -LiteralPath $broker -PathType Leaf)) { throw 'Mosquitto broker was not installed.' }
+          "TIMELINE_TEST_MOSQUITTO=$broker" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Verify Python server and collector
+        working-directory: source
+        run: |
+          python -m unittest discover -s tests/python -v
+          python tools/test-collector.py
       - run: npm run release:source
         working-directory: source
       - name: Build independent public collector plugins
@@ -84,7 +87,7 @@ jobs:
           python tools/build-collector.py
       - run: npm run pages:build
         working-directory: source
-      - name: Build installer with bundled Java
+      - name: Build installer with bundled Python
         shell: pwsh
         run: ./automation/tools/package-windows.ps1 -ProjectRoot ./source
       - run: npx playwright install chromium --only-shell
@@ -92,7 +95,7 @@ jobs:
       - name: Install, launch, check browser and uninstall
         shell: pwsh
         run: ./automation/tools/test-windows-installer.ps1 -ProjectRoot ./source
-      - name: Prepare diagrams, plugins, notes and complete checksums
+      - name: Prepare Python packages, notes and complete checksums
         run: node source/tools/prepare-release-assets.mjs source
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -103,7 +106,6 @@ jobs:
             source/dist/*-source.tar.gz
             source/dist/*-source.zip
             source/dist/*.whl
-            source/dist/*.jar
             source/dist/*.png
             source/dist/openbexi_timeline.json
             source/dist/regression-results.json
@@ -112,7 +114,7 @@ jobs:
             source/dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 14
-      - name: Publish complete release and retain historical tags
+      - name: Publish complete verified release
         env:
           GH_TOKEN: ${{ github.token }}
         run: node automation/tools/publish-release.mjs source

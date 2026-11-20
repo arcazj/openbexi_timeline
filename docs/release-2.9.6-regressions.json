@@ -1,0 +1,87 @@
+{
+  "version": "2.9.6",
+  "status": "passed",
+  "scope": "Local validation of an isolated copy from the public-file allowlist. GitHub Verify and Publish live demos must pass for the release commit before tagging; the tagged workflow validates the final installer before publication.",
+  "validatedAt": "2026-11-14T22:07:45.057186+00:00",
+  "changeBaseline": "7200a6b34f5257fe0981a779c299b604a4ebd360",
+  "tests": {
+    "javascript": {
+      "tests": 499,
+      "passed": 499,
+      "failed": 0
+    },
+    "releasePublishing": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "pythonBackend": {
+      "tests": 105,
+      "passed": 105,
+      "failed": 0
+    },
+    "publicCollectorAndPlugins": {
+      "tests": 243,
+      "passed": 243,
+      "failed": 0
+    },
+    "java": {
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 34,
+      "passed": 184
+    },
+    "javaGeoPlugins": {
+      "earthquake": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 1
+      },
+      "volcano": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 1
+      }
+    },
+    "browserFilterAndToolbarDesktopAndNarrow": {
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pythonBrowserIntegration": "passed",
+    "schemasDemoDataAndGeneratedContracts": "passed",
+    "hbdsModelValidationAndRendering": "passed",
+    "publicCollectorBuildAndWheelContents": "passed"
+  },
+  "validationNotes": [
+    "The initial Java run used a temporary directory inside the candidate web root. Rerunning with an external temporary directory passed all enabled Java checks.",
+    "The initial collector run passed 237 tests; six MQTT tests could not start because Mosquitto was absent. All six passed after extracting the official Mosquitto 2.1.2 Windows package into the temporary validation directory. No broker service was installed.",
+    "Java skips: 33 historical manual/live-database checks are opt-in; one symbolic-link test is unavailable on this Windows host.",
+    "The local browser selection covers filter creation, saved filters, toolbar behavior and displayed versions. Full browser, platform and installed-app validation is also enforced by the release workflows."
+  ],
+  "privacy": {
+    "publicFileAllowlist": 1053,
+    "sourceAndPackageAudit": "passed",
+    "reviewedChangedDiagrams": 2,
+    "privatePluginsIncluded": 0,
+    "excludedPersonalRunConfiguration": ".run/Timeline Python - GEO.run.xml"
+  },
+  "distribution": {
+    "applicationVersion": "2.9.6",
+    "collectorVersion": "2.9.6",
+    "publicPlugins": {
+      "filesources": "1.0.3",
+      "timeline_json": "1.0.1",
+      "default": "1.0.0",
+      "earthquake": "1.0.1",
+      "volcano": "1.0.1",
+      "mqtt": "1.0.1",
+      "loki": "1.0.2"
+    }
+  }
+}

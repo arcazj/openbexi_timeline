@@ -1,5 +1,5 @@
 import {parseTimelineData} from './openbexi_timeline_data.js';
-import {cleanTimelineURL, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
+import {cleanTimelineURL, isTimelineRetry, readTimelineResponse, waitForTimelinePage} from './openbexi_timeline_transport.js';
 import {TimelineLive} from './openbexi_timeline_live.js';
 import {fetchTimeline} from './openbexi_timeline_trace.js';
 import {validateSearchMode} from './openbexi_timeline_search.js';
@@ -229,6 +229,7 @@ export class TimelineLoader {
             for (let entry;(entry=this.next());) {
                 if (!current()) return;
                 this.activeEntry=entry;
+                if(entry.error) {delete entry.error;this.publish(generation,count,false);}
                 // Each independent scan has its own work budget. Accumulating
                 // pages across both buffers and later drags stopped otherwise
                 // healthy navigation merely because the user kept browsing.
@@ -287,11 +288,17 @@ export class TimelineLoader {
                     }
                     throw new Error(metadata.error);
                 }
-                if (metadata.nextCursor && metadata.nextCursor===entry.cursor)
-                    throw new Error('The server repeated a loading cursor. Retry the request.');
                 if (metadata.query!==r.state.query) throw new Error('The server returned a different search. Retry the request.');
                 try { validateSearchMode(metadata,r.state.searchMode,r.state.query); }
                 catch(error) { this.discardResponse(request,json); throw error; }
+                if(isTimelineRetry(json)) {
+                    entry.cursor=metadata.nextCursor;
+                    request.searchParams.set('cursor',entry.cursor);this.cursorURLs.set(entry,request.href);
+                    await waitForTimelinePage(metadata,controller.signal);
+                    continue;
+                }
+                if (metadata.nextCursor && metadata.nextCursor===entry.cursor)
+                    throw new Error('The server repeated a loading cursor. Retry the request.');
                 metadata.requestId=response.headers?.get?.('X-Request-ID') || '';
                 metadata.loadId=this.loadId;
                 metadata.clientRequestMs=Math.round(performance.now()-started);
@@ -346,7 +353,9 @@ export class TimelineLoader {
         } catch (error) {
             if (!current()) return;
             this.running=false;r.fetching=false;
-            r.fail(new Error(error.name==='AbortError'?'Connection timed out. The displayed data is retained; use Retry to reconnect.':error.message));
+            const message=error.name==='AbortError'?'Connection timed out. The displayed data is retained; use Retry to reconnect.':error.message;
+            if(this.activeEntry) {this.activeEntry.error=message;this.publish(generation,count,false);}
+            r.fail(new Error(message));
             t.ob_not_connected(0);
         } finally {if (current()) this.activeEntry=null;}
     }
@@ -359,7 +368,7 @@ export class TimelineLoader {
             complete:this.cache.every(item=>item.done && item.complete),
             loadLimited:this.cache.some(item=>item.limitRange && overlaps(item,this.visible)),
             coverage:this.cache.map(item=>({from:item.from,to:item.to,complete:item.done && item.complete,
-                state:item.limitRange?'limited':item.paused?'paused':item.done?(item.complete?'complete':'partial'):'loading',
+                state:item.error?'error':item.limitRange?'limited':item.paused?'paused':item.done?(item.complete?'complete':'partial'):'loading',
                 warnings:item.metadata?.warnings || []})),
             domain:{from:new Date(Math.min(...this.cache.map(item=>item.from))).toISOString(),
                 to:new Date(Math.max(...this.cache.map(item=>item.to))).toISOString()},

@@ -1,10 +1,9 @@
-"""Reproducible Java session/event/activity and zone generator."""
+"""Reproducible Python session/event/activity and zone generator."""
 from datetime import datetime, timezone
-from pathlib import Path
 from timeline_data_collector.contracts import RecordBatch
 from timeline_data_collector.io import identity
 from timeline_data_collector.plugin import manifest_for, standalone
-from timeline_data_collector.runtime import java_records
+from .generator import generate
 
 
 class Plugin:
@@ -18,9 +17,7 @@ class Plugin:
                        seed=options.get('seed', 0), count=options.get('count', 100), zones=options.get('zones', True))
         checkpoint = {'request': identity(request), 'version': context.source.get('_converter_version')}
         if checkpoint == context.checkpoint and not context.force: return
-        request['output_root'] = str(context.workdir / 'generated' / checkpoint['request'][:24])
-        records = java_records(Path(__file__).parent, 'timeline-plugin-default-1.0.0.jar',
-                               'com.openbexi.timeline.CollectorBridge', request, context, filter_dates=False)
+        records = generate(request, context)
         yield RecordBatch(records, checkpoint)
 
 

@@ -33,13 +33,24 @@ try {
     # state settings must survive, and workspace service selection must be honored.
     & taskkill.exe /PID $launcher.Id /T /F | Out-Null
     $customService = Join-Path $dataDir 'HBDS/service.custom.yml'
-    $settings = [IO.File]::ReadAllText((Join-Path $dataDir 'HBDS/service.desktop.yml')).Replace('roots: []','roots: [plugins]').Replace('../collector-state','../custom-collector-state')
+    $settings = [IO.File]::ReadAllText((Join-Path $dataDir 'HBDS/service.desktop.yml')).Replace('roots: []','roots: [plugins]').Replace('../collector-state','../custom-collector-state').Replace('owner: python','owner: java')
     New-Item -ItemType Directory -Force -Path (Join-Path $dataDir 'HBDS/plugins') | Out-Null
     [IO.File]::WriteAllText($customService, $settings)
     $workspaceFile = Join-Path $dataDir 'HBDS/workspace.json'
     $selection = Get-Content -LiteralPath $workspaceFile -Raw | ConvertFrom-Json
     $selection.service = 'service.custom.yml'
     [IO.File]::WriteAllText($workspaceFile, ($selection | ConvertTo-Json -Depth 4))
+    # Simulate upgrading an older installed runtime while preserving the user's
+    # selected service, saved model/access data, and collected events.
+    [IO.File]::WriteAllText((Join-Path $dataDir 'keep.txt'), 'User data survives upgrade and uninstall.')
+    foreach ($directory in @('runtime/bin','app/lib')) {
+        New-Item -ItemType Directory -Force -Path (Join-Path $installDir $directory) | Out-Null
+    }
+    [IO.File]::WriteAllText((Join-Path $installDir 'runtime/bin/java.exe'), 'obsolete runtime fixture')
+    [IO.File]::WriteAllText((Join-Path $installDir 'app/lib/obsolete.jar'), 'obsolete application fixture')
+    $upgrade = Start-Process -FilePath $installer -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOICONS', "/DIR=`"$installDir`"" -WindowStyle Hidden -PassThru -Wait
+    if ($upgrade.ExitCode -ne 0) { throw "Upgrade failed: $($upgrade.ExitCode)" }
+    if (!(Test-Path -LiteralPath (Join-Path $dataDir 'keep.txt'))) { throw 'Upgrade removed user data.' }
     $listener.Start(); $port = $listener.LocalEndpoint.Port; $listener.Stop()
     $launcher = Start-Process powershell.exe -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$installDir\Start-OpenBEXI.ps1`"", '-NoBrowser', '-Port', $port, '-DataDirectory', "`"$dataDir`"" -WindowStyle Hidden -PassThru
     $ready = $false
@@ -49,7 +60,9 @@ try {
         catch { Start-Sleep -Milliseconds 500 }
     }
     if (!$ready -or [IO.File]::ReadAllText($customService) -ne $settings) { throw 'Desktop restart changed or ignored custom service settings.' }
-    $env:JAVA_HOME = Join-Path $installDir 'runtime'
+    if (Test-Path -LiteralPath (Join-Path $installDir 'runtime')) { throw 'Obsolete Java runtime remains in Python installation.' }
+    if (Get-ChildItem -LiteralPath $installDir -File -Recurse | Where-Object { $_.Extension -in '.jar','.class','.java' }) { throw 'Java artifact found in Python installation.' }
+    Remove-Item Env:JAVA_HOME -ErrorAction SilentlyContinue
     & (Join-Path $installDir 'python/python.exe') (Join-Path $ProjectRoot 'tools/test-installed-collector.py') (Join-Path $dataDir 'HBDS/workspace.json')
     if ($LASTEXITCODE -ne 0) { throw 'Installed collector conversion or stable rerun failed.' }
     & (Join-Path $installDir 'timeline-convert-default.cmd') --version
@@ -67,7 +80,6 @@ try {
     }
     if (!$collectorReady) { throw 'Installed collector dashboard never became healthy.' }
     if (Get-ChildItem -LiteralPath $installDir -Directory -Recurse | Where-Object { $_.Name -like 'timeline_private_*' -or ($_.Name -like '*_data_collector' -and $_.Name -ne 'timeline_data_collector') }) { throw 'Private package found in installer.' }
-    [System.IO.File]::WriteAllText((Join-Path $dataDir 'keep.txt'), 'User data survives uninstall.')
 } finally {
     if ($collectorLauncher -and !$collectorLauncher.HasExited) { & taskkill.exe /PID $collectorLauncher.Id /T /F | Out-Null }
     if ($launcher -and !$launcher.HasExited) { & taskkill.exe /PID $launcher.Id /T /F | Out-Null }
@@ -80,4 +92,4 @@ try {
 for ($attempt = 0; $attempt -lt 30 -and (Test-Path -LiteralPath "$installDir\Start-OpenBEXI.ps1"); $attempt++) { Start-Sleep -Milliseconds 500 }
 if (Test-Path -LiteralPath "$installDir\Start-OpenBEXI.ps1") { throw 'Uninstall left application files behind.' }
 if (!(Test-Path -LiteralPath (Join-Path $dataDir 'keep.txt'))) { throw 'Uninstall removed user data.' }
-Write-Host 'Installer, bundled Java/Python, public plugin conversion, browser rendering and uninstall checks passed.'
+Write-Host 'Install, legacy upgrade, bundled Python, public plugin conversion, browser rendering and uninstall checks passed.'

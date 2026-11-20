@@ -2,6 +2,26 @@
 from contextlib import closing
 import sqlite3
 import time
+from pathlib import Path
+
+
+def source_date_revisions(source, manifest):
+    """Summarize an already observed manifest without another filesystem scan."""
+    model = source.get('execution', {}).get('source_date_layout')
+    if not model or not source.get('source_path'): return {}
+    from .source_cleanup import DateLayout
+    from .io import identity
+    layout, root = DateLayout(model), Path(source['source_path']).resolve()
+    groups = {}
+    for path, stamp in manifest.items():
+        # Generic readers persist content hashes, optimized readers persist stat
+        # fingerprints. Only the latter can compare an already scanned revision.
+        if not isinstance(stamp, str) or len(stamp.split(':')) != 5: continue
+        try: located = layout.locate(Path(path).relative_to(root))
+        except ValueError: continue
+        if located: groups.setdefault(located[0], {})[path] = stamp
+    return {day: {'revision': identity(files), 'modified_ns': max(int(stamp.split(':')[3]) for stamp in files.values())}
+            for day, files in groups.items()}
 
 
 def fingerprint(stat):

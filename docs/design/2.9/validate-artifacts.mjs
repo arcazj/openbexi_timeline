@@ -72,7 +72,7 @@ for (const namespace of Object.values(example.demo.namespaceFiles)) {
     assert.equal(namespace.sources[0].converter_plugin, 'NONE');
     assert.equal(namespace.sources[0].enable, false);
 }
-assert.equal(example.release.tag, 'v' + example.release.version);
+assert.equal(example.release.tag, example.release.version);
 assert.equal(example.release.state, 'planned');
 assert.ok(example.release.required_assets.some(item => item.endsWith('.zip')));
 assert.ok(example.release.required_assets.some(item => item.endsWith('.tar.gz')));

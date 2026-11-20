@@ -37,7 +37,7 @@ for(const file of [...publicAssets,...dependencies]) {
     await fs.mkdir(path.dirname(destination),{recursive:true});
     await fs.copyFile(source,destination);
 }
-// Pages has no Java API. Keep its documented disabled actions without probing a nonexistent service.
+// Pages has no backend API. Keep its documented disabled actions without probing a nonexistent service.
 const helpFile=path.join(output,'help/resources.json');
 const help=JSON.parse(await fs.readFile(helpFile,'utf8'));
 for(const section of help.sections) for(const link of section.links) delete link.probe;

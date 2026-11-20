@@ -9,12 +9,12 @@
 Explore events in Timeline, Table, Split and 3D views. Search, filter, group and
 inspect records, or connect your own data.
 
-Version **2.9.4** · [Release notes](docs/release-2.9.4.md).
+Version **2.9.7** · [Release notes](docs/release-2.9.7.md).
 
 ## Quick start
 
 **Windows:** [Download the installer](https://github.com/arcazj/openbexi_timeline/releases/latest)
-with bundled Java and Python. [Installation guide](docs/windows-installation.md).
+with a bundled Python runtime. [Installation guide](docs/windows-installation.md).
 
 **Run the demos locally** with Node.js 24:
 

@@ -11,6 +11,7 @@ import time
 import uuid
 
 from .settling import fingerprint
+from .progress import source_activity, tracked_files
 
 
 COMPRESSED = {'.gz', '.gzip', '.bz2', '.xz', '.zip', '.7z', '.rar', '.zst', '.tgz',
@@ -151,6 +152,7 @@ def compress_file(path, expected, check):
         if temporary is not None: temporary.unlink(missing_ok=True)
 
 
+@source_activity('compressing and deduplicating sources')
 def prepare_sources(context, files, manifest, *, bounded=True):
     """Normalize only the selected, settled files; remote originals are untouched."""
     if not context.source.get('execution', {}).get('compress_sources', True): return files, manifest
@@ -163,7 +165,7 @@ def prepare_sources(context, files, manifest, *, bounded=True):
     selected = set(map(Path, files))
     changed = {}
     counts = {'files_compressed': 0, 'revisions_compressed': 0, 'duplicates_removed': 0}
-    for path in sorted(selected):
+    for path in tracked_files(context, sorted(selected)):
         context.check_cancelled()
         if path.suffix.lower() in COMPRESSED or path.name.startswith('.') or path.suffix.lower() in ('.tmp', '.part', '.swp'): continue
         # Cleanup progresses across polls instead of holding up today's parsing

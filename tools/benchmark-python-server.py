@@ -1,7 +1,6 @@
-"""Reproducible real-HTTP Java/Python parity and latency benchmark using isolated data.
+"""Reproducible Python HTTP correctness and latency benchmark using isolated data.
 
-Build Java first: mvn test-compile dependency:build-classpath -Dmdep.outputFile=target/python-java-classpath.txt
-Run: python tools/benchmark-python-server.py --java <java executable> --files 1000 --records 100 --repeats 20
+Run: python tools/benchmark-python-server.py --files 1000 --records 100 --repeats 20
 """
 from __future__ import annotations
 
@@ -10,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 import datetime as dt
 import json
-import os
 from pathlib import Path
 import platform
 import socket
@@ -124,14 +122,14 @@ def measure(client, base, params, repeats, process):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--java", default="java")
     parser.add_argument("--files", type=int, default=1000)
     parser.add_argument("--records", type=int, default=100)
     parser.add_argument("--repeats", type=int, default=20)
-    parser.add_argument("--output", default="target/python-java-benchmark.json")
+    parser.add_argument("--output", default="target/python-benchmark.json")
     parser.add_argument("--publication", action="store_true", help="Serve the same fixtures through one committed collector snapshot")
     args = parser.parse_args()
-    classpath = os.pathsep.join([str(ROOT/"target/test-classes"), str(ROOT/"target/classes"), (ROOT/"target/python-java-classpath.txt").read_text().strip()])
+    if min(args.files, args.records, args.repeats) < 1: parser.error("files, records and repeats must be positive")
+    (ROOT/"target").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="timeline-benchmark-") as directory, httpx.Client(timeout=45, trust_env=False) as client:
         root = Path(directory)
         source = root/"data"
@@ -144,7 +142,7 @@ def main():
                         "data": {"title": f"Record {ordinal}", "status": "STARTED" if ordinal%2 else "SCHEDULE", "priority": ordinal%5}} for ordinal in range(args.records)]
             if index == args.files-1 and args.records >= 10:
                 records[0]["end"] = (date+dt.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
-                records[0]["activities"] = [{"id": "child", "start": records[1]["start"], "data": {"title": "Nested café warning"}},
+                records[0]["activities"] = [{"id": "child", "start": records[1]["start"], "data": {"title": "Nested cafÃ© warning"}},
                                             {"id": "outside", "start": (date+dt.timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ"), "data": {"title": "Outside"}}]
                 records[1]["end"] = ""
                 records[2]["end"] = None
@@ -166,27 +164,15 @@ def main():
         config.write_text(yaml.safe_dump({"data_sources": [{"namespace": "benchmark", "type": "json_file", "enable": True,
                                                            "data_model": (source/"yyyy/mm/dd").as_posix(), "filter": {"include": "", "exclude": ""}}],
                                           "timeline_server": {"poll_seconds": 60}}), encoding="utf-8")
-        port_file = root/"java-port"
-        def java_ready():
-            if not port_file.exists(): return False
-            try:
-                with socket.create_connection(('127.0.0.1', int(port_file.read_text())), timeout=.2): return True
-            except (OSError, ValueError): return False
         cases = [params, {**params, "filter": "expr: status = STARTED AND priority >= 2"},
                  {**params, "filter": 'expr: namespace = "benchmark" AND (status = "STARTED")', "sortBy": "status"},
                  {**params, "filter": "status:STARTED|priority:3"}, {**params, "search": "Record 1", "searchMode": "text"},
                  {**params, "search": "^Record [23]$", "searchMode": "pattern"}, {**params, "search": "Record;SCHEDULE", "searchMode": "legacy"},
-                 {**params, "filter": "expr: EXISTS(end)"}, {**params, "search": "CAFÉ", "searchMode": "text"},
-                 {**params, "filter": "|Outside"}, {**params, "history": "backward", "search": "Nested café", "searchMode": "text"}]
+                 {**params, "filter": "expr: EXISTS(end)"}, {**params, "search": "CAFÃ‰", "searchMode": "text"},
+                 {**params, "filter": "|Outside"}, {**params, "history": "backward", "search": "Nested cafÃ©", "searchMode": "text"}]
         report = {"platform": platform.platform(), "python": platform.python_version(), "files": args.files, "recordsPerFile": args.records,
                   "storage": "collector snapshot" if args.publication else "legacy dated files",
                   "warmRepeats": args.repeats, "concurrentClients": 4, "note": "Cold means a new server/cache/index; OS file cache is not flushed. Decoded bytes exclude HTTP compression."}
-        with running([args.java, "-Dopenbexi.timeline.logFormat=readable", "-cp", classpath,
-                      "com.openbexi.timeline.data_browser.PythonBaselineServer", str(root), str(config), str(port_file)], ROOT/"target/benchmark-java.log", java_ready) as process:
-            java_base = "http://127.0.0.1:" + port_file.read_text()
-            _, cold = scan(client, java_base, params)
-            report["java"] = {"cold": cold, "warm": measure(client, java_base, params, args.repeats, process)}
-            expected = [normalize(scan(client, java_base, case)[0]) for case in cases]
         port = free_port()
         python_base = f"http://127.0.0.1:{port}"
         def ready():
@@ -196,16 +182,24 @@ def main():
                 return False
         command = [sys.executable, "-m", "openbexi_timeline_server", "-data_conf", str(config), "--root", str(root), "--state", str(root/"index"), "--port", str(port)]
         with running(command, ROOT/"target/benchmark-python.log", ready) as process:
-            _, cold = scan(client, python_base, params)
+            initial, cold = scan(client, python_base, params)
+            if not cold["complete"] or len(initial) != args.records:
+                raise AssertionError("The complete last-day query must contain every fixture record exactly once")
+            if {record["id"] for record in initial} != {f"{args.files-1}-{ordinal}" for ordinal in range(args.records)}:
+                raise AssertionError("Query record identities differ from the fixture")
+            expected = [normalize(scan(client, python_base, case)[0]) for case in cases]
+            filtered = scan(client, python_base, cases[1])[0]
+            wanted_ids = {f"{args.files-1}-{i}" for i in range(args.records) if i % 2 and i % 5 >= 2}
+            if {record["id"] for record in filtered} != wanted_ids:
+                raise AssertionError("Expression filtering differs from the independently calculated fixture")
             report["pythonBackend"] = {"cold": cold, "warm": measure(client, python_base, params, args.repeats, process)}
+        with running(command, ROOT/"target/benchmark-python-restart.log", ready) as process:
+            report["pythonBackend"]["persistentRestart"] = scan(client, python_base, params)[1]
             for case, wanted in zip(cases, expected):
                 actual = normalize(scan(client, python_base, case)[0])
                 if actual != wanted:
-                    (ROOT/"target/python-parity-difference.json").write_text(json.dumps({"case": case, "java": wanted, "python": actual}, indent=2), encoding="utf-8")
-                    raise AssertionError("Java/Python response mismatch; see target/python-parity-difference.json")
-        with running(command, ROOT/"target/benchmark-python-restart.log", ready) as process:
-            report["pythonBackend"]["persistentRestart"] = scan(client, python_base, params)[1]
-        report["parityCasesPassed"] = len(cases)
+                    raise AssertionError("Persistent index changed a query result: " + json.dumps(case))
+        report["queryCasesPassed"] = len(cases)
         destination = ROOT/args.output
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")

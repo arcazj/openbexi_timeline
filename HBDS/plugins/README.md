@@ -5,8 +5,8 @@ are ignored by the public repository, Docker context and release packaging.
 Installing a private package never requires rebuilding the public collector.
 
 Each package owns `plugin.json`, `schemas/options.schema.json`, `pyproject.toml`,
-source, tests and documentation. Java converters additionally own `pom.xml` and
-`java/`. The collector discovers `*/plugin.json` under service `plugins.roots`
+source, tests and documentation. All public plugins in 2.9.7 run in Python.
+The collector discovers `*/plugin.json` under service `plugins.roots`
 and the installed entry-point group `timeline_data_collector.plugins`. An
 editable installation and its identical manifest form one registration;
 conflicting or duplicated registrations and incompatible API versions fail.
@@ -14,7 +14,7 @@ conflicting or duplicated registrations and incompatible API versions fail.
 The manifest API is **1**, documented by
 [`../schema/plugin.schema.json`](../schema/plugin.schema.json). `runtime` names
 the converter implementation. `entry_point` always identifies its Python
-adapter factory, including adapters for Java/executable implementations.
+plugin factory.
 An installed provider exposes `manifest()` without importing optional drivers.
 
 ```python
@@ -59,17 +59,15 @@ from immutable upstream keys and keep update timestamps in data, not identity.
 `snapshot=True` explicitly replaces only that source's contribution;
 `deleted_ids` removes only records that source owns. Default batches are upserts.
 
-Java adapters use API 1 request/result JSON files in private staging. Requests
-contain the output staging root and converter options. Results contain
-`{"api_version":1,"reports":["relative/report.json"]}`. Reports use the timeline
-events structure; descriptor files are merged before publication. Logs go to a
-separate bounded file. Paths escaping staging, invalid JSON, process failure,
-timeout or cancellation prevent checkpoint advancement.
+The default generator preserves its established seeded random stream, IDs,
+descriptors and activity structure. Earthquake and volcano plugins preserve
+their acquired report formats and checkpoint files across the Python migration.
+Invalid or incomplete feed responses, timeout and cancellation prevent an
+unfinished interval or page from being accepted as complete.
 
-Build with `python -m build <package>`; Java packages first run
-`mvn -f <package>/pom.xml verify` and copy their shaded JAR into their Python
-module's `lib/` before wheel creation. `tools/build-collector.py` performs these
-steps for the public allowlist. Plugins can also be built independently using
+Build with `python -m build <package>`. `tools/build-collector.py` builds the
+server, collector and public plugin wheels and rejects Java artifacts.
+Plugins can also be built independently using
 its `--plugin <name>` selector. Install a wheel with `python -m pip install` in
 the collector environment. A converter's standalone command accepts
 `--workspace`; it delegates to the shared runner and needs no dashboard server.

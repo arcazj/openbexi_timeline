@@ -12,7 +12,8 @@ timeline_server:
 connectors:
 - id: java_api
   type: http
-  owner: java
+  # Retain this connector ID for existing workspace references.
+  owner: python
   host: 127.0.0.1
   port: 8080
 - id: python_api

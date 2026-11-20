@@ -1,8 +1,9 @@
-"""One process, one priority queue, and shared ownership across all workspaces.
+"""One process, namespace current workers, and one coordinated history queue.
 
 Current-day passes precede historical work. History advances by one committed
 input batch (or one dated correlation unit), then returns to the current queue.
-No history thread competes with a current conversion for CPU or output locks.
+Changed current input interrupts history before starting conversion. Plugins
+retain their own resource locks; a slow namespace cannot block other pollers.
 """
 from collections import deque
 from datetime import date, datetime, timezone
@@ -17,7 +18,7 @@ import time
 from .configuration import execution_policy, source_key
 from .io import identity, model_root, write_json
 from .locking import SourceLock
-from .tracing import StartupTrace
+from .tracing import StartupTrace, safe_text
 
 LOG = logging.getLogger('timeline_data_collector')
 
@@ -90,7 +91,7 @@ Unknown layouts always receive a full historical pass so nothing is omitted.
                     path = Path(entry.path)
                     if entry.is_symlink() or path.is_junction(): continue
                     if entry.is_dir(follow_symlinks=False):
-                        if (entry.name.startswith('.') or entry.name in {'descriptors', 'GCS_data', 'GNS_data'}
+                        if (entry.name.startswith('.') or entry.name in {'descriptors'}
                                 or entry.name.lower().endswith(('_legacy', '_backup', '.bak'))
                                 or path.resolve() == target): continue
                         if path not in discovered:
@@ -142,8 +143,10 @@ class ManagedScheduler:
             self.running[ident] = value
             self.collector.entries[key] = dict(value, runner=self.runner, scheduler=self, ident=ident,
                 next_current=0., next_history=0., history=None, history_unit=None, stream_jobs=[], day=None,
+                pending_history={},
                 lease=lease, configuration=identity(entry))
             self.collector.order.append(key)
+            self.collector.history_order.append(key)
         self.collector.wake.set()
         return ident
 
@@ -159,6 +162,7 @@ class ManagedScheduler:
                 entry = self.collector.entries.pop(value['source_key'], None)
                 if entry: entry['lease'].release()
                 self.collector.order = deque(key for key in self.collector.order if key != value['source_key'])
+                self.collector.history_order = deque(key for key in self.collector.history_order if key != value['source_key'])
         if value:
             with self.runner.guard:
                 for job_id in list(self.runner.active):
@@ -181,16 +185,21 @@ class ContinuousCollector:
         self.guard = threading.RLock()
         self.entries = {}
         self.order = deque()
+        self.history_order = deque()
         self.current_idle = set()
         self.stop_event = threading.Event()
         self.wake = threading.Event()
         self.thread = None
         self.monitor_thread = None
+        self.namespace_threads = {}
+        self.current_jobs = set()
+        self.history_run = None
         self.health_state = None
 
     def configure(self):
         for workspace in list(self.dashboard.workspaces):
             runner, _ = self.dashboard.selected(workspace)
+            runner.before_current_conversion = self._prioritize_current
             scheduler = self.dashboard.schedulers[workspace]
             if not isinstance(scheduler, ManagedScheduler) or scheduler.collector is not self:
                 scheduler = ManagedScheduler(runner, self)
@@ -234,21 +243,44 @@ class ContinuousCollector:
         jobs = entry['runner'].submit(namespace=entry['namespace'], source=entry['source'],
             mode=entry['policy']['mode'], date=first, end_date=last,
             offline=entry['offline'], force=entry['force'], trigger='continuous',
-            checkpoint_scope=scope, batch_limit=1 if history else None,
-            asynchronous=entry['policy']['mode'] == 'stream')
+            # A dated optimized reader owns one complete correlation unit.
+            # Its final checkpoint means that date is done, not another chunk.
+            checkpoint_scope=scope, batch_limit=1 if history and first is None else None,
+            asynchronous=entry['policy']['mode'] == 'stream',
+            cancellation=entry.get('history_cancel') if history else None)
         if any(job['state'] == 'failed' for job in jobs):
             entry['next_current'] = self.clock() + max(10, entry['policy'].get('interval_seconds', 2))
             entry['next_history'] = entry['next_current']
+        if not history:
+            for job in jobs:
+                metrics = job['result'].get('metrics', {})
+                if 'pending_history_dates' in metrics:
+                    with self.guard:
+                        entry['pending_history'] = {item['date']: item['modified_ns'] for item in metrics['pending_history_dates']}
         return jobs
 
-    def step(self):
+    def _prioritize_current(self, context):
+        """Only changed inputs preempt backfill; an unchanged poll does not."""
+        with self.guard:
+            active = self.history_run
+            if not active: return
+            first = not active['cancel'].is_set()
+            active['cancel'].set()
+        if first:
+            LOG.info('%s/%s: current input ready; interrupting %s historical work at its next safe checkpoint',
+                     safe_text(context.namespace), safe_text(context.source['id']), safe_text(active['namespace']))
+        while not active['done'].wait(.1): context.check_cancelled()
+        context.check_cancelled()
+
+    def step(self, *, namespace=None, current_only=False, history_only=False):
         """Run one priority unit; exposed for deterministic scheduling tests."""
         now, today = self.clock(), self.utc_day()
         with self.guard:
             entries = [self.entries[key] for key in self.order if key in self.entries]
+            current_entries = [] if history_only else [entry for entry in entries if namespace is None or entry['namespace'] == namespace]
         # Streams wait on I/O in their own worker. A subscription is not a busy
         # historical conversion and must not prevent catch-up while it is idle.
-        for entry in entries:
+        for entry in current_entries:
             if entry['stream_jobs']:
                 if any(entry['runner'].state.get(job['id'])['state'] in {'queued', 'running'} for job in entry['stream_jobs']):
                     continue
@@ -256,14 +288,18 @@ class ContinuousCollector:
             if entry['next_current'] > now and entry['day'] == today: continue
             # A slow unchanged scan can outlast another source's poll interval.
             # Once checked, let history advance before repeating that idle poll.
-            if entry['source_key'] in self.current_idle and entry['day'] == today: continue
-            entry['day'] = today
-            if entry['automatic']:
-                first, last = (None, None) if entry['policy']['mode'] == 'stream' else (today, today)
-            else:
-                from .dates import repeat_range
-                first, last = repeat_range(entry['date'], entry['end_date'], entry['lookback_hours'])
+            if not current_only and entry['source_key'] in self.current_idle and entry['day'] == today: continue
+            with self.guard:
+                # A namespace's sources and backfill share one output owner.
+                if self.history_run and self.history_run['namespace'] == entry['namespace']: continue
+                self.current_jobs.add(entry['source_key'])
             try:
+                entry['day'] = today
+                if entry['automatic']:
+                    first, last = (None, None) if entry['policy']['mode'] == 'stream' else (today, today)
+                else:
+                    from .dates import repeat_range
+                    first, last = repeat_range(entry['date'], entry['end_date'], entry['lookback_hours'])
                 jobs = self._run(entry, first, last, 'current')
                 if entry['policy']['mode'] == 'stream': entry['stream_jobs'] = jobs
                 if entry['policy']['mode'] != 'stream' and any(
@@ -275,35 +311,64 @@ class ContinuousCollector:
             finally:
                 entry['next_current'] = max(entry['next_current'], self.clock() + entry['policy'].get('interval_seconds', 2))
                 self._rotate(entry)
+                with self.guard: self.current_jobs.discard(entry['source_key'])
             return True
+        if current_only: return False
         # Respect manual jobs as well: background work starts only in spare time.
         if any(runner.active for runner in self.dashboard.runners.values()
                if not any(item['runner'] is runner and item['stream_jobs'] for item in entries)):
-            self.current_idle.clear()
+            if not history_only: self.current_idle.clear()
             return False
-        for entry in entries:
+        # Current polling must not reset fairness between historical sources.
+        with self.guard:
+            if self.current_jobs or self.history_run: return False
+            if history_only and any(entry['source_key'] not in self.current_idle or entry['day'] != today for entry in entries):
+                return False
+            history_entries = [self.entries[key] for key in self.history_order if key in self.entries]
+            history_entries.sort(key=lambda entry: max(entry['pending_history'].values(), default=0), reverse=True)
+        for entry in history_entries:
             if not entry['automatic'] or entry['policy']['mode'] == 'stream' or entry['next_history'] > now: continue
             runner = entry['runner']
             group, source = runner.refresh().sources(entry['namespace'], entry['source'], include_disabled=True)[0]
             if runner._skip_reason(group, source): continue
             if 'generator' in runner.registry.metadata(source['converter_plugin'])['capabilities']: continue
-            if entry['history'] is None:
+            with self.guard:
+                priority_day = max(entry['pending_history'], key=entry['pending_history'].get) if entry['pending_history'] else None
+            if not priority_day and entry['history'] is None:
                 converter = runner.registry.load(source['converter_plugin'], 'converter', entry['policy']['mode'], source.get('options', {}))
                 entry['history'] = iter(historical_units(group, source, today, partitioned=hasattr(converter, 'read_local')))
-            if entry['history_unit'] is None:
+            if not priority_day and entry['history_unit'] is None:
                 try: entry['history_unit'] = next(entry['history'])
                 except StopIteration:
                     entry.update(history=None, next_history=self.clock() + entry['policy'].get('interval_seconds', 2))
                     continue
-            unit = entry['history_unit']
+            unit = (priority_day, priority_day) if priority_day else entry['history_unit']
             if unit:
                 first, last = unit
-                jobs = self._run(entry, first, last, 'history:' + (first or 'all'), history=True)
-                self.current_idle.clear()
-                if not any(job['result'].get('yielded') for job in jobs): entry['history_unit'] = None
-            self._rotate(entry)
+                with self.guard:
+                    if self.current_jobs or self.history_run: return False
+                    active = self.history_run = dict(namespace=entry['namespace'], cancel=threading.Event(), done=threading.Event())
+                    entry['history_cancel'] = active['cancel']
+                try:
+                    jobs = self._run(entry, first, last, 'history:' + (first or 'all'), history=True)
+                finally:
+                    with self.guard:
+                        self.history_run = None
+                        entry.pop('history_cancel', None)
+                        active['done'].set()
+                with self.guard: self.current_idle.clear()
+                if priority_day:
+                    if jobs and all(job['state'] == 'succeeded' and not job['result'].get('yielded') for job in jobs):
+                        entry['pending_history'].pop(priority_day, None)
+                elif jobs and all(job['state'] == 'succeeded' and not job['result'].get('yielded') for job in jobs):
+                    entry['history_unit'] = None
+            with self.guard:
+                key = entry['source_key']
+                if key in self.history_order:
+                    self.history_order.remove(key)
+                    self.history_order.append(key)
             return True
-        self.current_idle.clear()
+        if not history_only: self.current_idle.clear()
         return False
 
     def _rotate(self, entry):
@@ -316,9 +381,27 @@ class ContinuousCollector:
 
     def start(self):
         self.configure()
+        def collect_current(namespace):
+            while not self.stop_event.is_set():
+                with self.guard:
+                    if not any(entry['namespace'] == namespace for entry in self.entries.values()): return
+                try: worked = self.step(namespace=namespace, current_only=True)
+                except Exception as error:
+                    StartupTrace('continuous collector ' + namespace).failure(error)
+                    worked = False
+                if not worked: self.stop_event.wait(.2)
         def dispatch():
             while not self.stop_event.is_set():
-                try: worked = self.step()
+                try:
+                    with self.guard:
+                        for namespace in sorted({entry['namespace'] for entry in self.entries.values()}):
+                            worker = self.namespace_threads.get(namespace)
+                            if worker is None or not worker.is_alive():
+                                worker = threading.Thread(target=collect_current, args=(namespace,),
+                                    name='collector-current-' + namespace, daemon=True)
+                                self.namespace_threads[namespace] = worker
+                                worker.start()
+                    worked = self.step(history_only=True)
                 except Exception as error:
                     StartupTrace('continuous collector').failure(error)
                     worked = False
@@ -341,7 +424,7 @@ class ContinuousCollector:
                     history.write(json.dumps(health, ensure_ascii=False) + '\n')
                 state = (health['status'], tuple(sorted(health['alerts'])))
                 if state != self.health_state:
-                    if health['alerts']: LOG.warning('Collector health degraded: %d alerts; details available in the dashboard health endpoint', len(health['alerts']))
+                    if health['alerts']: LOG.warning('Collector health degraded: %s', '; '.join(safe_text(alert) for alert in health['alerts']))
                     elif self.health_state: LOG.debug('Collector health recovered')
                     self.health_state = state
             except Exception as error:
@@ -358,4 +441,5 @@ class ContinuousCollector:
                     with runner.guard:
                         for cancel in runner.active.values(): cancel.set()
                 self.thread.join(.1)
+        for worker in list(self.namespace_threads.values()): worker.join()
         if self.monitor_thread: self.monitor_thread.join()

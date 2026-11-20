@@ -12,7 +12,7 @@ from pathlib import Path
 import uvicorn
 
 from .app import create_app
-from .config import load_configuration, workspace_files, workspace_service
+from .config import Configuration, load_configuration, workspace_files, workspace_service
 from .index import TimelineIndex
 from .namespace_config import load_bundle
 
@@ -39,31 +39,42 @@ class TimelineServer(uvicorn.Server):
 
 
 def factory():
+    if os.environ.get("OPENBEXI_API_ONLY") == "1":
+        return create_app(api_configuration())
     selected=json.loads(os.environ['OPENBEXI_NAMESPACE_FILES']) if os.environ.get('OPENBEXI_NAMESPACE_FILES') else os.environ["OPENBEXI_DATA_CONF"]
     return create_app(load_configuration(selected, service_path=os.environ.get('OPENBEXI_SERVICE_CONF'),hbds_root=os.environ.get('OPENBEXI_METADATA_ROOT'),root=os.environ.get("OPENBEXI_ROOT"), state=os.environ.get("OPENBEXI_STATE"),
-                                         host=os.environ.get("OPENBEXI_HOST"), port=int(os.environ["OPENBEXI_PORT"]) if os.environ.get("OPENBEXI_PORT") else None,
-                                         java_url=os.environ.get("OPENBEXI_JAVA_URL")))
+                                         host=os.environ.get("OPENBEXI_HOST"), port=int(os.environ["OPENBEXI_PORT"]) if os.environ.get("OPENBEXI_PORT") else None))
+
+
+def api_configuration(root=None, state=None, host=None, port=None):
+    root = Path(root or os.environ.get("OPENBEXI_ROOT") or Path.cwd()).resolve()
+    storage = Path(os.environ.get("OPENBEXI_API_DATA_DIR") or Path.home() / ".openbexi-timeline" / "api")
+    return Configuration(root, Path(state or os.environ.get("OPENBEXI_STATE") or storage / ".server-index").resolve(), [],
+                         host=host or os.environ.get("OPENBEXI_HOST", "127.0.0.1"), port=port or int(os.environ.get("OPENBEXI_PORT", "8783")))
 
 
 def main():
-    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.4")
+    parser = argparse.ArgumentParser(description="OpenBEXI Timeline Python server 2.9.7")
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("-dataconf", "-data_conf", "--data-conf", nargs='+', help="HBDS namespace files or legacy configuration")
+    selection.add_argument("--api-only", action="store_true", help="Serve public demos and private resource API without a collector workspace")
     selection.add_argument("--workspace", help="HBDS workspace.json containing the namespace_files startup list")
     parser.add_argument("--root", help="Application and HBDS workspace directory (default: working directory)")
     parser.add_argument('-serverconf', '--server-conf', dest='serverconf', type=str)
     parser.add_argument('--hbds-root')
+    parser.add_argument("--data-directory", help="Writable private API data directory outside the public application root")
     parser.add_argument("--state", help="Persistent local index and cursor directory; share between workers")
     parser.add_argument("--host")
     parser.add_argument("--port", type=int)
     parser.add_argument("--workers", type=int, default=1)
-    parser.add_argument("--java-url", help="Optional Java base URL for /api/v1 and non-file providers")
     parser.add_argument("--ssl-certfile")
     parser.add_argument("--ssl-keyfile")
     parser.add_argument("--check", action="store_true", help="Validate configuration without starting the server")
     parser.add_argument("--index-once", action="store_true", help="Build/update the persistent index and exit")
     args = parser.parse_args()
     try:
+        if args.data_directory:
+            os.environ["OPENBEXI_API_DATA_DIR"] = str(Path(args.data_directory).resolve())
         if args.workspace:
             metadata = Path(args.workspace).resolve().parent
             args.data_conf = workspace_files(args.workspace)
@@ -72,10 +83,14 @@ def main():
                 args.serverconf = str(workspace_service(args.workspace))
         elif not args.data_conf:
             args.data_conf = os.environ.get('OPENBEXI_HBDS_CONFIG')
-        if not args.data_conf:
-            raise ValueError('Specify --workspace or -dataconf')
+        if not args.data_conf and not args.api_only:
+            raise ValueError('Specify --workspace, -dataconf or --api-only')
         selected=args.data_conf[0] if isinstance(args.data_conf,list) and len(args.data_conf)==1 and not args.serverconf else args.data_conf
-        configuration = load_configuration(selected, service_path=args.serverconf,hbds_root=args.hbds_root,workspace_path=args.workspace,root=args.root, state=args.state, host=args.host, port=args.port, java_url=args.java_url)
+        configuration = api_configuration(args.root, args.state, args.host, args.port) if args.api_only else load_configuration(selected, service_path=args.serverconf,hbds_root=args.hbds_root,workspace_path=args.workspace,root=args.root, state=args.state, host=args.host, port=args.port)
+        from .api import NativeAPI
+        api = NativeAPI(configuration.root)  # Validate private API storage and service token configuration.
+        if args.workers > 1 and api.ai().providers()['enabled']:
+            raise ValueError('AI assistance requires --workers 1 so quotas and cancellation share one server process.')
         if args.workers < 1 or args.workers > 32:
             raise ValueError("workers must be between 1 and 32.")
         if bool(args.ssl_certfile) != bool(args.ssl_keyfile):
@@ -83,18 +98,25 @@ def main():
     except (ValueError, OSError) as error:
         parser.error(str(error))
     if args.check:
-        print(f"Configuration valid: {len(configuration.sources)} JSON source path(s); Java provider fallback={configuration.legacy_fallback}.")
+        print(f"Configuration valid: {len(configuration.sources)} JSON source path(s); {len(configuration.providers)} native provider(s).")
         return
+    # Workspace listeners return before the legacy single-listener startup path.
+    # Configure application logging for both, including IDE-launched workspaces.
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    logging.getLogger("openbexi.timeline").setLevel(logging.INFO)
     if args.index_once:
         index = TimelineIndex(configuration)
         index.refresh()
         status = index.status()
         print(f"Index ready: {status['files']} files, {status['records']} records, {status.get('warningCount', len(status['warnings']))} coverage warnings.")
         return
-    if configuration.namespace_files:
-        bundle = load_bundle(configuration.namespace_files, configuration.service_path, configuration.hbds_root, configuration.workspace_path)
-        referenced = {ref for namespace in bundle['data_sources'] if namespace.get('enable', True)
-                      for ref in namespace.get('connectors', [])}
+    if configuration.connectors:
+        if configuration.namespace_files:
+            bundle = load_bundle(configuration.namespace_files, configuration.service_path, configuration.hbds_root, configuration.workspace_path)
+            referenced = {ref for namespace in bundle['data_sources'] if namespace.get('enable', True)
+                          for ref in namespace.get('connectors', [])}
+        else:
+            referenced = {listener['id'] for listener in configuration.connectors}
         listeners = [c for c in configuration.connectors
                      if c['owner'] == 'python' and c.get('enable', True) and c['id'] in referenced]
         if not listeners: parser.error('No Python listener is referenced by an enabled namespace')
@@ -104,13 +126,13 @@ def main():
         if args.port: listeners[0]=dict(listeners[0],port=args.port)
         asyncio.run(serve_listeners(configuration,listeners))
         return
-    for key, value in {"DATA_CONF": str(configuration.hbds_path or os.path.abspath(selected)), "ROOT": str(configuration.root), "STATE": str(configuration.state),
-                       "HOST": configuration.host, "PORT": str(configuration.port), "JAVA_URL": configuration.java_url}.items():
+    os.environ["OPENBEXI_API_ONLY"] = "1" if args.api_only else "0"
+    for key, value in {"DATA_CONF": str(configuration.hbds_path or os.path.abspath(selected or ".")), "ROOT": str(configuration.root), "STATE": str(configuration.state),
+                       "HOST": configuration.host, "PORT": str(configuration.port)}.items():
         if value is not None:
             os.environ["OPENBEXI_" + key] = value
         else:
             os.environ.pop("OPENBEXI_" + key, None)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     logging.getLogger("openbexi.timeline").info(
         "Using configuration: %s; model=%s; enabled source paths=%s; listen=%s:%s",
         os.environ["OPENBEXI_DATA_CONF"], configuration.model or "default", len(configuration.sources),
@@ -123,16 +145,14 @@ def main():
 
 async def serve_listeners(configuration,listeners):
     """Bind every listener before serving; close all on startup failure/shutdown."""
+    from .tls import listener_tls
     servers=[]; sockets=[]
     application=create_app(configuration)
     try:
         for listener in listeners:
-            tls=listener.get('tls',{})
-            options={}
-            if tls:
-                options={'ssl_certfile':tls['certfile'],'ssl_keyfile':tls['keyfile']}
-            config=uvicorn.Config(application,host=listener['host'],port=listener['port'],access_log=False,lifespan='off',**options)
-            config.load()  # Includes certificate/key validation before any socket binds.
+            with listener_tls(listener) as options:
+                config=uvicorn.Config(application,host=listener['host'],port=listener['port'],access_log=False,lifespan='off',**options)
+                config.load()  # Load TLS before binding; temporary encrypted keys are removed now.
             server=TimelineServer(config,configuration.context_path)
             server.capture_signals=lambda:nullcontext()
             servers.append(server)

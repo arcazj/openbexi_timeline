@@ -5,25 +5,26 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY HBDS ./HBDS
 COPY tools/verify-hbds-public.mjs ./tools/verify-hbds-public.mjs
 RUN node --input-type=module -e "import fs from 'node:fs/promises'; import {inspectPublicHbds} from './tools/verify-hbds-public.mjs'; for(const name of await fs.readdir('HBDS',{recursive:true})){const file='HBDS/'+name;if((await fs.stat(file)).isFile())inspectPublicHbds(file,await fs.readFile(file,'utf8'));}"
-RUN node --input-type=module -e "import fs from 'node:fs'; import {parse,stringify} from 'yaml'; for(const name of fs.readdirSync('HBDS/yaml')){if(!name.endsWith('.yml'))continue;const file='HBDS/yaml/'+name,config=parse(fs.readFileSync(file,'utf8'));config.connectors=['java_api'];if(name==='DEMO_default.yml'){config.target_path='/data/DEMO/events/yyyy/mm/dd';config.sources[0].source_path='/data/DEMO/input';}fs.writeFileSync(file,stringify(config));}const service=parse(fs.readFileSync('HBDS/service.yml','utf8'));service.connectors=[{id:'java_api',type:'http',owner:'java',host:'0.0.0.0',port:8442}];fs.writeFileSync('HBDS/service.yml',stringify(service));"
+RUN node --input-type=module -e "import fs from 'node:fs'; import {parse,stringify} from 'yaml'; for(const name of fs.readdirSync('HBDS/yaml')){if(!name.endsWith('.yml'))continue;const file='HBDS/yaml/'+name,config=parse(fs.readFileSync(file,'utf8'));config.connectors=['python_api'];if(name==='DEMO_default.yml'){config.target_path='/data/DEMO/events/yyyy/mm/dd';config.sources[0].source_path='/data/DEMO/input';}fs.writeFileSync(file,stringify(config));}const service=parse(fs.readFileSync('HBDS/service.yml','utf8'));service.connectors=[{id:'python_api',type:'http',owner:'python',host:'0.0.0.0',port:8442}];service.state_root='/data/collector-state';fs.writeFileSync('HBDS/service.yml',stringify(service));"
 
-FROM maven:3.9.16-eclipse-temurin-17 AS java-build
+FROM python:3.13-slim-bookworm AS python-dependencies
 WORKDIR /build
-COPY pom.xml ./
-COPY src ./src
-COPY schemas ./schemas
-RUN mvn --batch-mode --no-transfer-progress -Dmaven.test.skip=true package
+COPY pyproject.toml requirements.lock README.md LICENSE ./
+COPY python ./python
+COPY timeline_data_collector ./timeline_data_collector
+COPY --from=browser-dependencies /build/HBDS/plugins ./HBDS/plugins
+COPY release/windows/collector-requirements.txt ./release/windows/collector-requirements.txt
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/python -m pip install --no-cache-dir -r release/windows/collector-requirements.txt \
+       . ./timeline_data_collector ./HBDS/plugins/filesources ./HBDS/plugins/timeline_json \
+       ./HBDS/plugins/default ./HBDS/plugins/earthquake ./HBDS/plugins/volcano ./HBDS/plugins/mqtt ./HBDS/plugins/loki
 
-FROM eclipse-temurin:17-jre-noble
-RUN apt-get update \
-    && apt-get install --yes --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid 10001 openbexi \
+FROM python:3.13-slim-bookworm
+RUN groupadd --gid 10001 openbexi \
     && useradd --uid 10001 --gid openbexi --no-create-home openbexi \
-    && mkdir -p /app/tomcat /data/api /opt/openbexi
+    && mkdir -p /app /data/api /data/server-state
 WORKDIR /app
-COPY --from=java-build /build/target/classes /opt/openbexi/classes
-COPY --from=java-build /build/target/runtime /opt/openbexi/runtime
+COPY --from=python-dependencies /opt/venv /opt/venv
 COPY --from=browser-dependencies /build/node_modules ./node_modules
 COPY --from=browser-dependencies /build/HBDS/yaml ./HBDS/yaml
 COPY --from=browser-dependencies /build/HBDS/models ./HBDS/models
@@ -53,9 +54,10 @@ COPY schemas ./schemas
 COPY swagger ./swagger
 RUN chown -R openbexi:openbexi /app /data
 ENV OPENBEXI_API_DATA_DIR=/data/api
+ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 10001:10001
 EXPOSE 8442
 VOLUME ["/data", "/app/HBDS"]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl --fail --silent http://127.0.0.1:8442/api/v1/health || exit 1
-CMD ["java", "-cp", "/opt/openbexi/classes:/opt/openbexi/runtime/*", "com.openbexi.timeline.server.openbexi_timeline", "--workspace", "HBDS/workspace.json"]
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8442/api/v1/health', timeout=5).close()"
+CMD ["python", "-m", "openbexi_timeline_server", "--workspace", "HBDS/workspace.json", "--state", "/data/server-state", "--data-directory", "/data/api"]

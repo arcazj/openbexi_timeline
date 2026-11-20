@@ -17,8 +17,8 @@ Model edits refresh the preview after a short delay; tab labels and access edits
 do not reload preview data. Draft changes remain local until **Save and
 apply** validates the document and revision, then updates affected open timeline
 tabs. Tab rename/reorder preserves loaded frames; provider and listener changes
-report a pending restart. This workspace uses `/api/v1/hbds` on both Java and
-Python. See [HBDS configuration](../HBDS/README.md) for migration and ownership.
+report a pending restart. This workspace uses Python's native `/api/v1/hbds`
+route. See [HBDS configuration](../HBDS/README.md) for migration and ownership.
 
 The sections below describe the existing individual model/YAML preview tools;
 exporting or applying a local draft does not replace the canonical HBDS document.
@@ -117,12 +117,12 @@ remain manual. See [AI setup and capabilities](ai-assistance.md).
   deployment changes take effect in the server, so the editor reports restart requirements.
 
 On GitHub Pages, use local import, preview and export. Server CRUD is available when
-the page is served by a Java server with the configuration API enabled.
+the page is served by the Python server with the configuration API enabled.
 
 ## Server file CRUD
 
 Set `OPENBEXI_API_TOKEN` to an administrator token of at least 32 characters, start
-the Java server, then choose **Connect to server** in the editor. The token stays in
+the Python server, then choose **Connect to server** in the editor. The token stays in
 the editor's memory and is discarded on disconnect or closing the page.
 
 By default, new files are stored as actual `.json`, `.yml` or `.yaml` files under
@@ -131,11 +131,11 @@ They are separate from API datasets. Saving a new file does not automatically
 switch a running timeline to it; export/deploy it or configure the appropriate model.
 
 To edit existing deployment files, explicitly register their directories using
-`OPENBEXI_CONFIG_ROOTS` or the JVM property `openbexi.api.configRoots`.
+`OPENBEXI_CONFIG_ROOTS`.
 Use the platform path separator: `;` on Windows, `:` on Unix. For example:
 
 ```powershell
-$env:OPENBEXI_CONFIG_ROOTS = 'C:\projects\openbexi_timeline\models;C:\projects\openbexi_timeline\yaml'
+$env:OPENBEXI_CONFIG_ROOTS = 'C:\projects\openbexi_timeline\HBDS\models;C:\projects\openbexi_timeline\HBDS\yaml'
 ```
 
 All file listing, reading and mutation requires administrator authentication.

@@ -43,7 +43,7 @@
       {
         "id": "java_api",
         "type": "http",
-        "owner": "java",
+        "owner": "python",
         "host": "127.0.0.1",
         "port": 8080
       },
@@ -109,9 +109,9 @@
   "pluginManifests": [
     {
       "id": "earthquake",
-      "version": "1.0.0",
+      "version": "2.9.7",
       "api_version": "1",
-      "runtime": "java",
+      "runtime": "python",
       "capabilities": [
         "source",
         "converter"
@@ -143,9 +143,9 @@
     },
     {
       "id": "volcano",
-      "version": "1.0.0",
+      "version": "2.9.7",
       "api_version": "1",
-      "runtime": "java",
+      "runtime": "python",
       "capabilities": [
         "source",
         "converter"
@@ -177,9 +177,9 @@
     },
     {
       "id": "default",
-      "version": "1.0.0",
+      "version": "2.9.7",
       "api_version": "1",
-      "runtime": "java",
+      "runtime": "python",
       "capabilities": [
         "source",
         "converter",
@@ -311,14 +311,14 @@
     }
   },
   "release": {
-    "version": "2.9.0",
-    "tag": "v2.9.0",
+    "version": "2.9.7",
+    "tag": "2.9.7",
     "state": "planned",
-    "notes": "docs/release-2.9.0.md",
+    "notes": "docs/release-2.9.7.md",
     "required_assets": [
-      "openbexi-timeline-2.9.0-windows-x64-setup.exe",
-      "openbexi-timeline-2.9.0-source.zip",
-      "openbexi-timeline-2.9.0-source.tar.gz",
+      "openbexi-timeline-2.9.7-windows-x64-setup.exe",
+      "openbexi-timeline-2.9.7-source.zip",
+      "openbexi-timeline-2.9.7-source.tar.gz",
       "SHA256SUMS",
       "openbexi_timeline.json",
       "openbexi_timeline.png",

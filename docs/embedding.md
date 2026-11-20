@@ -14,7 +14,7 @@ at <http://localhost:8780/demos/embedded-earth-orbit.html>. It uses fictional da
 Run `npm ci` and `npm run pages:build`. Serve the complete `dist/pages` directory
 under a stable path, for example `/vendor/openbexi-timeline/`. Keep its relative
 directories, dependencies, license and notices together. This is a browser
-integration; no Java server or npm package publication is required.
+integration; no application server or npm package publication is required.
 
 ```html
 <div id="history" style="height:440px;min-height:300px"></div>

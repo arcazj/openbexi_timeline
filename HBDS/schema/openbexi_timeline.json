@@ -3,7 +3,7 @@
   "metadata": {
     "id": "obt29_openbexi_timeline",
     "name": "OpenBEXI Timeline 2.9 plugin architecture",
-    "version": "2.9.0",
+    "version": "2.9.7",
     "semanticVersion": 1,
     "purpose": "HBDS structure for workspaces, reusable ingestion plugins, shared execution, durable publication and unchanged timeline display.",
     "regressionTags": [
@@ -62,15 +62,15 @@
           },
           {
             "file": "HBDS/plugins/earthquake/plugin.json",
-            "sha256": "64098632b2a2729ecb4c197926a3f70afc76a7411f231520919d341cf00ed608"
+            "sha256": "562358ffffb4c91d12d4a1d3035c592a325b13430691d2c49d517006caf89029"
           },
           {
             "file": "HBDS/plugins/volcano/plugin.json",
-            "sha256": "09e1774812fad2bc2b1a84056b669926a19d557ee51800235e0d9044f588c7d6"
+            "sha256": "ca100e61d39fed4ac4fa8129542f360181667a485563becc8f7596eb2e77b949"
           },
           {
             "file": "HBDS/service.yml",
-            "sha256": "c619460cfd4e5ebc32ac6cd73e07adb3f4d62209e1818df8dbd88d6d0defee0b"
+            "sha256": "786b49c90527251ec04114bc5f9ce6afe6f310ab41d540ce55b5f40622871c3d"
           },
           {
             "file": "demos/catalog.json",
@@ -78,7 +78,7 @@
           },
           {
             "file": "docs/design/2.9/build-artifacts.mjs",
-            "sha256": "63d78da841fee22fa382b793ab45a875bc2f9e57749bc150c6362859696789c1"
+            "sha256": "164da792407f3f05e587352b0fda2316da8c06092729df0e0f7b7c1c7d000edb"
           }
         ],
         "cardinalityNotation": "source = sources per target; target = targets per source. Composition declares ownership. Workspace namespace membership is a reference, so separate workspaces may reuse a namespace.",
@@ -1877,7 +1877,7 @@
               {
                 "id": "java_api",
                 "type": "http",
-                "owner": "java",
+                "owner": "python",
                 "host": "127.0.0.1",
                 "port": 8080
               },
@@ -1943,9 +1943,9 @@
           "pluginManifests": [
             {
               "id": "earthquake",
-              "version": "1.0.0",
+              "version": "2.9.7",
               "api_version": "1",
-              "runtime": "java",
+              "runtime": "python",
               "capabilities": [
                 "source",
                 "converter"
@@ -1977,9 +1977,9 @@
             },
             {
               "id": "volcano",
-              "version": "1.0.0",
+              "version": "2.9.7",
               "api_version": "1",
-              "runtime": "java",
+              "runtime": "python",
               "capabilities": [
                 "source",
                 "converter"
@@ -2011,9 +2011,9 @@
             },
             {
               "id": "default",
-              "version": "1.0.0",
+              "version": "2.9.7",
               "api_version": "1",
-              "runtime": "java",
+              "runtime": "python",
               "capabilities": [
                 "source",
                 "converter",
@@ -2145,14 +2145,14 @@
             }
           },
           "release": {
-            "version": "2.9.0",
-            "tag": "v2.9.0",
+            "version": "2.9.7",
+            "tag": "2.9.7",
             "state": "planned",
-            "notes": "docs/release-2.9.0.md",
+            "notes": "docs/release-2.9.7.md",
             "required_assets": [
-              "openbexi-timeline-2.9.0-windows-x64-setup.exe",
-              "openbexi-timeline-2.9.0-source.zip",
-              "openbexi-timeline-2.9.0-source.tar.gz",
+              "openbexi-timeline-2.9.7-windows-x64-setup.exe",
+              "openbexi-timeline-2.9.7-source.zip",
+              "openbexi-timeline-2.9.7-source.tar.gz",
               "SHA256SUMS",
               "openbexi_timeline.json",
               "openbexi_timeline.png",
@@ -3222,9 +3222,7 @@
                 "jsonSchema": {
                   "type": "string",
                   "enum": [
-                    "python",
-                    "java",
-                    "executable"
+                    "python"
                   ]
                 }
               }
@@ -3420,9 +3418,7 @@
                 "runtime": {
                   "type": "string",
                   "enum": [
-                    "python",
-                    "java",
-                    "executable"
+                    "python"
                   ]
                 },
                 "capabilities": {
@@ -6962,7 +6958,7 @@
         "id": "obt29_TimelineAPI",
         "name": "TimelineAPI",
         "type": "roundedRectangle",
-        "description": "Existing Java or Python backend reads published JSON independently of converter installation.",
+        "description": "Python backend reads published JSON independently of converter installation.",
         "attributes": [
           {
             "id": "obt29_TimelineAPI_id",
@@ -6988,7 +6984,6 @@
                 "jsonSchema": {
                   "type": "string",
                   "enum": [
-                    "java",
                     "python"
                   ]
                 }
@@ -7060,7 +7055,6 @@
                 "owner": {
                   "type": "string",
                   "enum": [
-                    "java",
                     "python"
                   ]
                 },
@@ -7504,7 +7498,7 @@
         "id": "obt29_Release",
         "name": "Release",
         "type": "roundedRectangle",
-        "description": "Publish 2.9 as v2.9.0 only after implementation and regression gates pass. Preserve historical tags.",
+        "description": "Publish 2.9 as 2.9.7 only after implementation and regression gates pass. Retain only 2.9.6 and 2.9.7 tags.",
         "attributes": [
           {
             "id": "obt29_Release_version",
@@ -7514,7 +7508,7 @@
               "timeline": {
                 "required": true,
                 "jsonSchema": {
-                  "const": "2.9.0"
+                  "const": "2.9.7"
                 }
               }
             }
@@ -7527,7 +7521,7 @@
               "timeline": {
                 "required": true,
                 "jsonSchema": {
-                  "const": "v2.9.0"
+                  "const": "2.9.7"
                 }
               }
             }
@@ -7626,10 +7620,10 @@
               "type": "object",
               "properties": {
                 "version": {
-                  "const": "2.9.0"
+                  "const": "2.9.7"
                 },
                 "tag": {
-                  "const": "v2.9.0"
+                  "const": "2.9.7"
                 },
                 "state": {
                   "type": "string",
@@ -8927,7 +8921,7 @@
               {
                 "id": "java_api",
                 "type": "http",
-                "owner": "java",
+                "owner": "python",
                 "host": "127.0.0.1",
                 "port": 8080
               },
@@ -9099,7 +9093,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_version",
-            "value": "1.0.0"
+            "value": "2.9.7"
           },
           {
             "attributeId": "obt29_PluginManifest_api_version",
@@ -9107,7 +9101,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_runtime",
-            "value": "java"
+            "value": "python"
           },
           {
             "attributeId": "obt29_PluginManifest_capabilities",
@@ -9278,7 +9272,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_version",
-            "value": "1.0.0"
+            "value": "2.9.7"
           },
           {
             "attributeId": "obt29_PluginManifest_api_version",
@@ -9286,7 +9280,7 @@
           },
           {
             "attributeId": "obt29_PluginManifest_runtime",
-            "value": "java"
+            "value": "python"
           },
           {
             "attributeId": "obt29_PluginManifest_capabilities",

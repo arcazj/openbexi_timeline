@@ -243,7 +243,12 @@ class Storage:
         if not self.config.sources:
             raise ValueError("No writable JSON source is configured.")
         targets = set()
+        providers = {entry['index']: entry for entry in self.config.providers}
         for source in self.config.sources:
+            if source.index in providers:
+                from .providers import add_event
+                add_event(params, providers[source.index])
+                continue
             directory = partition(source, start)
             if directory in targets:
                 continue

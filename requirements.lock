@@ -12,3 +12,14 @@ regex==2026.9.29
 starlette==1.8.0
 typing_extensions==4.16.0
 uvicorn==0.54.0
+pymongo==4.20.1
+dnspython==2.9.2
+cryptography==50.0.2
+cffi==2.1.1
+pycparser==3.12
+jsonschema==4.26.0
+attrs==26.1.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.9.1
+asn1crypto==1.5.1

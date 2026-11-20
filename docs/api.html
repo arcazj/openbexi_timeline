@@ -9,9 +9,9 @@
 <h1>OpenBEXI Timeline REST API</h1><p>API v1 · OpenAPI 3.1</p>
 <p>Discover datasets and models, query events and sessions, and manage editable datasets and saved filters. This reference loads the local OpenAPI contract and requires no external scripts.</p>
 <p class="note">Bundled examples are public and read-only. Clone an example to edit it. Managed data requires a Bearer token; writer and administrator roles control changes. Every change to existing data requires its latest <code>ETag</code> in <code>If-Match</code>.</p>
-<h2 id="live">Try a public query</h2><p id="api-state" role="status">Checking whether the same-origin Java API is available…</p>
+<h2 id="live">Try a public query</h2><p id="api-state" role="status">Checking whether the same-origin Python API is available…</p>
 <div class="row"><label for="dataset">Dataset</label><select id="dataset" disabled></select><label for="search">Search</label><input id="search" maxlength="500"><button id="query" type="button" disabled>GET events</button></div>
-<p>Returns up to 10 records. This explorer sends public read requests only and does not store credentials.</p><pre id="result" aria-label="API response">Start the Java server with npm run api to enable live queries.</pre>
+<p>Returns up to 10 records. This explorer sends public read requests only and does not store credentials.</p><pre id="result" aria-label="API response">Start the Python server with npm run api to enable live queries.</pre>
 <h2>Endpoints</h2><div id="endpoints" aria-live="polite">Loading the local contract…</div>
 <h2>Time and pagination</h2><p>Use <code>from</code> and <code>to</code> for inclusive overlapping time ranges, <code>search</code> for text, <code>namespace</code> for exact source selection, and <code>kind</code> for event/session/zone. Results sort by start then ID. <code>limit</code> defaults to 100 and is at most 1000; follow <code>nextOffset</code>.</p>
 <pre>GET /api/v1/datasets/dinausaurs/events?from=165&amp;to=115

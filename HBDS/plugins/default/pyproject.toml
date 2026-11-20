@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "timeline-plugin-default"
-version = "1.0.0"
+version = "2.9.7"
 description = "OpenBEXI Timeline default plugin"
 requires-python = ">=3.12"
 readme = "README.md"
 license-files = ["LICENSE"]
 license = "LicenseRef-OpenBEXI-Commercial-Exempt-1.0"
-dependencies = ["timeline-data-collector>=2.9,<3"]
+dependencies = ["timeline-data-collector>=2.9.7,<3"]
 
 [project.entry-points."timeline_data_collector.plugins"]
 default = "timeline_plugin_default:Plugin"
@@ -19,7 +19,7 @@ default = "timeline_plugin_default:Plugin"
 where = ["src"]
 
 [tool.setuptools.package-data]
-timeline_plugin_default = ["plugin.json", "lib/*.jar"]
+timeline_plugin_default = ["plugin.json"]
 
 [project.scripts]
 timeline-convert-default = "timeline_plugin_default:main"

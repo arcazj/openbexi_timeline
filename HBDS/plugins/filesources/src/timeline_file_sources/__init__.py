@@ -159,10 +159,13 @@ class Plugin:
                             if reset or previous.get(str(path)) != checksums[str(path)]]
                 files = [path for path, _ in selected]
                 relative_paths = [relative for _, relative in selected]
-                if not files: return
+                if not files:
+                    context.metrics['checkpoint_current'] = True
+                    return
                 # Keep observations for disappeared files. Their published data is retained.
                 checkpoint['files'] = {} if reset else dict(previous)
             if not continuous and checkpoint == context.checkpoint and not context.force:
+                context.metrics['checkpoint_current'] = True
                 context.progress('Skipping %s: inputs and configuration unchanged', label)
                 return
             # Verify staged bytes before handing the immutable tree to a converter.

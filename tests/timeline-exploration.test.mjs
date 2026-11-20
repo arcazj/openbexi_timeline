@@ -118,6 +118,27 @@ function historyResponse(url,events=[],{nextCursor=null,incomplete=false,exhaust
         history:{direction:'backward',exhausted,incomplete,supported,checkingRange:{from:iso(base-114*day),to:iso(base-113*day)},filesExamined:40}}}));
 }
 
+test('Busy index retries do not repeat a consumed cursor or spend history/search page budgets',async()=>{
+    const previous=globalThis.fetch;
+    try {
+        for(const history of [false,true]) {
+            let calls=0;
+            globalThis.fetch=async input=>{
+                const url=new URL(input);
+                if(url.searchParams.has('cancel'))return new Response('{}');
+                calls++;
+                if(calls<=2)return new Response(JSON.stringify({events:[],timelineMatch:{
+                    query:'match',hasCondition:true,progressive:true,complete:false,reason:'index_busy',nextCursor:'pending',retryAfterMs:1}}));
+                assert.equal(url.searchParams.get('cursor'),'pending');
+                return (history?historyResponse:response)(url,[event('match',-1,{searchMatch:true})]);
+            };
+            const options={query:'match',range:{from:base,to:base+day},maxPages:1};
+            const result=await (history?searchTimelineHistory:seekTimelineRecord)('http://localhost/sessions',options);
+            assert.equal(result.record.id,'match');assert.equal(calls,3);
+        }
+    } finally {globalThis.fetch=previous;}
+});
+
 test('History search continues beyond 32 pages, retains source filters and sorting, and releases the remaining cursor on a match',async()=>{
     const previous=globalThis.fetch,requests=[],progress=[];let page=0;
     globalThis.fetch=async input=>{
@@ -149,6 +170,27 @@ test('Only exhaustive readable history can report no matches; partial and unsupp
         globalThis.fetch=async input=>response(input,[],'legacy-cursor');
         const result=await searchTimelineHistory('http://localhost/sessions',{query:'absent',range:{from:base,to:base+day}});
         assert.equal(result.unsupported,true);assert.equal(result.complete,false);
+    } finally {globalThis.fetch=previous;}
+});
+
+test('Previous activity history excludes current and overlapping records, including child activities',async()=>{
+    const previous=globalThis.fetch,requests=[];let page=0;
+    globalThis.fetch=async input=>{
+        const url=new URL(input);requests.push(url);
+        if(url.searchParams.has('cancel'))return new Response('{}');
+        return historyResponse(url,++page===1?[
+            event('current',12,{searchMatch:true}),
+            event('overlapping',11,{end:iso(base+13*3600000),searchMatch:true}),
+            event('zone',10,{zone:true,searchMatch:true})
+        ]:[event('session',8,{end:iso(base+13*3600000),searchMatch:true,activities:[
+            event('child',9,{searchMatch:true}),event('unmatched',10,{searchMatch:false})
+        ]})],{nextCursor:'history-'+page});
+    };
+    try {
+        const result=await searchTimelineHistory('http://localhost/sessions?filter=namespace%3Avolcano',{
+            query:'',range:{from:base,to:base+12*3600000},before:base+12*3600000});
+        assert.equal(result.record.id,'child');assert.equal(page,2);
+        assert.equal(requests.at(-1).searchParams.get('cancel'),'1');
     } finally {globalThis.fetch=previous;}
 });
 
@@ -387,7 +429,79 @@ test('Previous and next activity honor the search, advance in order and center e
     } finally {f.close();}
 });
 
-test('Adjacent activity searches announce progress through Status while the report stays closed',async()=>{
+test('Manual previous activity crosses long gaps with history and falls back only for older servers',async()=>{
+    for(const supported of [true,false]) {
+        const f=await local([]),{r,t,h}=f,requests=[];let pages=0,moved;
+        try {
+            r.explorer.interrupt();
+            t.staticData=false;t.ob_loader={url:new URL('http://localhost/sessions?filter=namespace%3Avolcano&sortBy=namespace')};
+            const original={...r.explorer.range()},anchor=(original.from+original.to)/2;
+            r.explorer.moveTo=(record,options)=>{moved={record,options};};
+            h.window.fetch=async input=>{
+                const url=new URL(input);requests.push(url);
+                if(url.searchParams.has('cancel'))return new Response('{}');
+                pages++;
+                if(!supported && url.searchParams.has('history'))return response(url,[],'unsupported-cursor');
+                const events=(!supported || pages===40)?[event('older',-25,{searchMatch:true})]:[];
+                return supported?historyResponse(url,events,{nextCursor:'history-'+pages}):response(url,events,'fallback-cursor');
+            };
+            await r.explorer.seek('past');
+            assert.equal(moved?.record.id,'older');assert.equal(r.explorer.seeking,false);
+            assert.equal(r.state.query,'');assert.equal(pages,supported?40:2);
+            assert.ok(requests.every(url=>url.searchParams.get('filter')==='namespace:volcano' && url.searchParams.get('sortBy')==='namespace'));
+            const historyRequests=requests.filter(url=>url.searchParams.has('history'));
+            assert.ok(historyRequests.every(url=>url.searchParams.get('endDate')===iso(anchor)));
+            assert.equal(requests.at(-1).searchParams.get('cancel'),'1');
+            assert.equal(requests.at(-1).searchParams.get('cursor'),supported?'history-40':'fallback-cursor');
+            if(!supported)assert.ok(requests.some(url=>url.searchParams.get('cursor')==='unsupported-cursor' && url.searchParams.has('cancel')));
+        } finally {f.close();}
+    }
+});
+
+test('Manual previous activity distinguishes exhausted history from incomplete coverage without moving',async()=>{
+    for(const incomplete of [false,true]) {
+        const f=await local([]),{r,t,h}=f;
+        try {
+            r.explorer.interrupt();t.staticData=false;
+            t.ob_loader={url:new URL('http://localhost/sessions')};
+            const original={...r.explorer.range()};
+            h.window.fetch=async input=>historyResponse(input,[],{incomplete});
+            await r.explorer.seek('past');
+            assert.equal(r.explorer.outcome,incomplete?'incomplete':'exhausted');
+            assert.match(r.explorer.message,incomplete?/Search incomplete/:/No earlier matching activity/);
+            assert.equal(r.explorer.range().from,original.from);assert.equal(r.explorer.range().to,original.to);
+        } finally {f.close();}
+    }
+});
+
+test('Activity timeouts preserve the view and allow retry without showing a raw abort error',async()=>{
+    const f=await local([event('current',12)]),{r,t,h}=f;
+    try {
+        r.explorer.interrupt();r.selectedKey=r.snapshot.entries[0].key;
+        t.staticData=false;t.ob_loader={url:new URL('http://localhost/sessions')};
+        const original={...r.explorer.range()},selected=r.selectedKey;
+        for(const name of ['AbortError','TimeoutError']) {
+            h.window.fetch=async()=>{throw new h.window.DOMException('signal is aborted without reason',name);};
+            await r.explorer.seek('past');
+            assert.equal(r.explorer.failure,'');assert.equal(r.explorer.outcome,'incomplete');
+            assert.equal(r.status.textContent,'Status: Search incomplete');
+            assert.match(r.statusExplanation.textContent,/request timed out/);
+            assert.doesNotMatch(r.statusExplanation.textContent,/signal is aborted/);
+            assert.equal(r.explorer.range().from,original.from);assert.equal(r.explorer.range().to,original.to);
+            assert.equal(r.selectedKey,selected);
+        }
+        h.window.fetch=async()=>{throw new Error('Server unavailable');};
+        await r.explorer.seek('past');
+        assert.equal(r.status.textContent,'Status: Error');assert.equal(r.explorer.failure,'Server unavailable');
+        let moved;
+        r.explorer.moveTo=record=>{moved=record;};
+        h.window.fetch=async input=>historyResponse(input,[event('previous',10,{searchMatch:true})]);
+        await r.explorer.seek('past');
+        assert.equal(moved.id,'previous');assert.equal(r.explorer.failure,'');
+    } finally {f.close();}
+});
+
+test('Activity searches announce progress through Status while the report stays closed',async()=>{
     const f=await local([event('current',12)]),{r,t,h}=f;
     let pendingSeek;
     try {
@@ -404,7 +518,8 @@ test('Adjacent activity searches announce progress through Status while the repo
             const previousRequests=requests.length;
             pendingSeek=r.explorer.seek(direction);
             await waitFor(()=>r.explorer.seeking && requests.length>previousRequests);
-            assert.equal(r.explorer.historySearch,false,'The manual activity search uses adjacent intervals');
+            assert.equal(r.explorer.historySearch,false,'Manual navigation retains its Cancel search controls');
+            assert.equal(new URL(requests.at(-1)).searchParams.get('history'),direction==='past'?'backward':null);
             assert.equal(r.details.hidden,true);
             assert.equal(r.status.textContent,'Status: Searching…');
             assert.match(r.status.title,new RegExp('Searching '+label+' intervals'));

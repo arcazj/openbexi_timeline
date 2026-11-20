@@ -60,9 +60,9 @@ class DatedCleanupTests(unittest.TestCase):
         self.assertEqual(len(files), 1)
         self.assertEqual(files[0], plain.with_name(plain.name+'.gz'))
 
-    def test_target_date_model_does_not_opt_in_gar_or_scr(self):
+    def test_target_date_model_does_not_opt_in_undated_sources(self):
         self.source['execution'] = {}
-        for namespace in ('DEMO', 'DEMO'):
+        for namespace in ('DEMO_TICKET', 'DEMO_ISSUE'):
             with self.subTest(namespace=namespace):
                 self.context.namespace = namespace
                 first = self.file(); second = self.file('2026_11_09')
@@ -98,7 +98,7 @@ class DatedCleanupTests(unittest.TestCase):
         self.assertEqual(gzip.decompress(files[0].read_bytes()), data)
 
     def test_build_headers_and_message_dates_cannot_authorize_relocation(self):
-        header = b'ver->ICMS $Header: ted10.cc,v 1.6 2005-05-27 17:22:34 luc Exp $\n'
+        header = b'ver->SAMPLE $Header: parser.cc,v 1.6 2005-05-27 17:22:34 demo Exp $\n'
         path = self.file('2026_11_09', data=header)
         self.assertEqual(self.clean([path])[0], [path])
         path.write_bytes(gzip.compress(header + b'2026-11-08 12:00:00 refers to 2005-05-27 17:22:34\n'))
@@ -135,6 +135,36 @@ class DatedCleanupTests(unittest.TestCase):
         files, _ = self.clean()
         self.assertIn('2026_11_09', files[0].parts); self.assertFalse(path.exists())
 
+    def test_new_burst_precedes_cached_archive_and_bounded_cleanup_resumes(self):
+        from timeline_data_collector.source_cleanup import inspect_contents, move_verified
+        for index in range(80):
+            self.file(name=f'old-{index:04}.log.gz', data=f'2026-11-08 12:00:00 old {index}\n'.encode())
+        self.clean()
+        incoming = [self.file('2026_11_09', f'zzz-new-{index}.log.gz',
+                    f'2026-11-08 12:00:00 new {index}\n'.encode()) for index in range(3)]
+        self.source['_continuous'] = True
+        clock = [0.0]
+        def inspect(*args):
+            result = inspect_contents(*args)
+            clock[0] += .6
+            return result
+        def move(*args):
+            result = move_verified(*args)
+            clock[0] += 1.1
+            return result
+        with patch('timeline_data_collector.source_cleanup.time.monotonic', side_effect=lambda: clock[0]), \
+                patch('timeline_data_collector.source_cleanup.inspect_contents', side_effect=inspect) as inspected, \
+                patch('timeline_data_collector.source_cleanup.move_verified', side_effect=move):
+            self.clean()
+            self.assertEqual([call.args[0] for call in inspected.call_args_list], incoming[:2])
+            self.assertEqual(sum(path.exists() for path in incoming), 2)
+            # The inspected but unpublished second input must remain pending.
+            for _ in range(3): self.clean()
+        self.assertFalse(any(path.exists() for path in incoming))
+        for path in incoming:
+            destination = self.ws.input / '2026/2026_11_08/host/component' / path.name
+            self.assertTrue(destination.exists())
+
     def test_index_finds_duplicates_from_previous_date_pass(self):
         correct = self.file(); self.clean([correct])
         duplicate = self.file('2026_11_09', 'copy.log.gz')
@@ -149,13 +179,34 @@ class DatedCleanupTests(unittest.TestCase):
             with patch('timeline_data_collector.source_cleanup.inspect_contents', wraps=inspect_contents) as inspect:
                 self.clean(); self.assertEqual(inspect.call_count, 1)
 
+    def test_oldest_audits_rotate_while_new_and_changed_inputs_are_always_rechecked(self):
+        from timeline_data_collector.source_cleanup import inspect_contents
+        paths = [self.file(name=name+'.log.gz', data=('2026-11-08 12:00:00 '+name+'\n').encode())
+                 for name in ('a', 'b', 'c')]
+        self.clean()
+        self.source['options'] = {'verify_seconds': 0}
+        paths[2].write_bytes(gzip.compress(b'2026-11-09 12:00:00 revised c\n'))
+        self.file(name='new.log.gz', data=b'2026-11-09 12:00:00 newly transferred\n')
+        with patch('timeline_data_collector.source_cleanup.AUDIT_FILES', 1), \
+                patch('timeline_data_collector.source_cleanup.inspect_contents', wraps=inspect_contents) as inspect:
+            files, _ = self.clean()
+            self.assertEqual({call.args[0].name for call in inspect.call_args_list}, {'a.log.gz', 'c.log.gz', 'new.log.gz'})
+            self.assertEqual({p.name for p in files if '2026_11_09' in p.parts}, {'c.log.gz', 'new.log.gz'})
+            inspect.reset_mock()
+            self.clean()
+            self.assertEqual([call.args[0].name for call in inspect.call_args_list], ['b.log.gz'])
+            self.context.force = True
+            inspect.reset_mock()
+            self.clean()
+            self.assertEqual(inspect.call_count, 4)
+
     def test_truncated_gzip_is_preserved_for_retry(self):
         path = self.file('2026_11_09')
         path.write_bytes(path.read_bytes()[:-5])
         self.assertEqual(self.clean()[0], [path]); self.assertTrue(path.exists())
 
     def test_incomplete_journal_stays_put_until_its_line_finishes(self):
-        path = self.file('2026_11_09', 'journalctl_gns_cron.json', b'{"__REALTIME_TIMESTAMP":"1794139200000000","MESSAGE":')
+        path = self.file('2026_11_09', 'journalctl_sample_cron.json', b'{"__REALTIME_TIMESTAMP":"1794139200000000","MESSAGE":')
         self.assertEqual(self.clean()[0], [path]); self.assertTrue(path.exists())
         with path.open('ab') as stream: stream.write(b'"complete"}\n')
         files, _ = self.clean()
@@ -202,9 +253,9 @@ class DatedCleanupTests(unittest.TestCase):
     def test_invalid_layouts_rejected_and_literal_prefix_keeps_case(self):
         for model in ('yyyy/mm', '../yyyy/mm/dd', '/yyyy/mm/dd', 'C:/yyyy/mm/dd', True):
             with self.subTest(model=model), self.assertRaises(ValueError): execution_policy({'source_date_layout':model})
-        layout = DateLayout('GCS_data/yyyy/mm/dd')
-        self.assertEqual(layout.directory('2026-11-08').as_posix(), 'GCS_data/2026/11/08')
-        self.assertEqual(layout.locate(Path('GCS_data/2026/11/08/host/input.log')),
+        layout = DateLayout('Sample_data/yyyy/mm/dd')
+        self.assertEqual(layout.directory('2026-11-08').as_posix(), 'Sample_data/2026/11/08')
+        self.assertEqual(layout.locate(Path('Sample_data/2026/11/08/host/input.log')),
                          ('2026-11-08', Path('host/input.log')))
         self.assertEqual(DateLayout('summary/yyyy/mm/dd').directory('2026-11-08').as_posix(), 'summary/2026/11/08')
 

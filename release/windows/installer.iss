@@ -25,6 +25,13 @@ CloseApplications=yes
 [Files]
 Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+; Retire only known application-owned runtime directories during an upgrade.
+; User data lives separately and is never removed here.
+Type: filesandordirs; Name: "{app}\runtime"
+Type: filesandordirs; Name: "{app}\app\lib"
+Type: filesandordirs; Name: "{app}\python"
+
 [Icons]
 Name: "{group}\OpenBEXI Timeline"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Start-OpenBEXI.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\app\favicon.ico"
 Name: "{group}\Timeline Data Collector"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Start-Data-Collector.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\app\favicon.ico"

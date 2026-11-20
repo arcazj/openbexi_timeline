@@ -24,16 +24,10 @@ foreach ($file in @('HBDS/models/default.json', 'HBDS/users/defaults.json', 'HBD
 foreach ($file in @('package.json', 'favicon.ico', 'openbexi_timeline.html', 'openbexi_timeline_earthquake.html')) {
     Copy-Item -LiteralPath (Join-Path $ProjectRoot $file) -Destination $app
 }
-New-Item -ItemType Directory -Path (Join-Path $app 'lib') | Out-Null
-Copy-Item -LiteralPath (Join-Path $ProjectRoot "target/openbexi_timeline-$version.jar") -Destination (Join-Path $app 'lib')
-Copy-Item -Path (Join-Path $ProjectRoot 'target/runtime/*.jar') -Destination (Join-Path $app 'lib')
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../release/windows/Start-OpenBEXI.ps1') -Destination $payload
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../release/windows/Start-Data-Collector.ps1') -Destination $payload
 & $Python (Join-Path $ProjectRoot 'tools/prepare-windows-collector.py') --root $ProjectRoot --payload $payload
 if ($LASTEXITCODE -ne 0) { throw 'Collector runtime packaging failed.' }
-if (!$env:JAVA_HOME) { throw 'JAVA_HOME must point to JDK 21 or later.' }
-& (Join-Path $env:JAVA_HOME 'bin/jlink.exe') --add-modules java.se,jdk.unsupported,jdk.crypto.ec,jdk.zipfs --strip-debug --no-header-files --no-man-pages --output (Join-Path $payload 'runtime')
-if ($LASTEXITCODE -ne 0) { throw 'Java runtime packaging failed.' }
 if (!$Compiler) { $Compiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe' }
 if (!(Test-Path -LiteralPath $Compiler)) { throw 'Set ISCC to the Inno Setup compiler, or use the Windows release workflow.' }
 & $Compiler "/DAppVersion=$version" "/DPayloadDir=$payload" "/DOutputDir=$dist" (Join-Path $PSScriptRoot '../release/windows/installer.iss')

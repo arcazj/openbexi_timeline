@@ -46,7 +46,7 @@ ob_timeline.loadModel("HBDS/templates/models/regular_timeline_earthquake.json");
 ```
 
 An explicit call skips server configuration discovery. Models with a local JSON data
-source continue to work on a static host without the Java backend.
+source continue to work on a static host without the Python backend.
 
 To use the server configuration, keep `new OB_TIMELINE()` and omit the `loadModel(...)`
 call. The browser requests `openbexi_timeline/config` under the application's root.
@@ -178,7 +178,7 @@ Structural validation covers dimensions, colors, band options, time units, ratio
 
 ## Hosting portability
 
-The [public gallery](https://arcazj.github.io/openbexi_timeline/) runs all seven demos on GitHub Pages. Its relative asset paths support the repository subdirectory. These demos use public JSON files and work without a Java backend or data service.
+The [public gallery](https://arcazj.github.io/openbexi_timeline/) runs all seven demos on GitHub Pages. Its relative asset paths support the repository subdirectory. These demos use public JSON files and work without a backend data service.
 
 Build and verify the same static site locally:
 

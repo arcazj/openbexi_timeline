@@ -18,7 +18,7 @@
 
 ## Setup and integration
 
-- [Python backend, Java fallback and performance](python-server.md)
+- [Python server and performance](python-server.md)
 - [Embedding API and Earth Orbit example](embedding.md)
 - [Connected setup and diagnostics](connected-diagnostics.md)
 - [REST API guide](rest-api.md) · [API reference](api.html) · [OpenAPI contract](../swagger/openapi-v1.json)
@@ -35,10 +35,7 @@
 - [Consolidated 2.4 prompt and requirements](design/2.4/implementation-prompt.md) ·
   [Delivery and validation record](design/2.4/delivery-checklist.md)
 - [Release history](https://github.com/arcazj/openbexi_timeline/releases)
-- Release notes: [2.9.4](release-2.9.4.md), [2.9.3](release-2.9.3.md), [2.9.2](release-2.9.2.md), [2.9.1](release-2.9.1.md), [2.9.0](release-2.9.0.md), [2.8.1](release-2.8.1.md), [2.8.0](release-2.8.0.md), [2.7.0](release-2.7.0.md), [2.6.1](release-2.6.1.md), [2.6.0](release-2.6.0.md), [2.5.2](release-2.5.2.md), [2.5.1](release-2.5.1.md), [2.5.0](release-2.5.0.md), [2.4.0](release-2.4.0.md), [2.3.2](release-2.3.2.md), [2.3.1](release-2.3.1.md),
-  [2.3.0](release-2.3.0.md), [2.2.3](release-2.2.3.md), [2.2.2](release-2.2.2.md),
-  [2.2.1](release-2.2.1.md), [2.2.0](release-2.2.md), [2.1.0](release-2.1.md),
-  [2.0.0](release-2.0.md)
+- Release notes: [2.9.7](release-2.9.7.md), [2.9.6](release-2.9.6.md)
 
 ## Application captures
 

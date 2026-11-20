@@ -6,7 +6,7 @@ param(
     [int]$Port = 0,
     [int]$Workers = 1,
     [string]$State = '',
-    [string]$JavaUrl = '',
+    [string]$DataDirectory = '',
     [switch]$IndexFirst,
     [switch]$Check
 )
@@ -34,7 +34,7 @@ try {
     if ($State) { $serverArgs += @('--state', $State) }
     $serverArgs += @('--workers', "$Workers")
     if ($Port) { $serverArgs += @('--port', "$Port") }
-    if ($JavaUrl) { $serverArgs += @('--java-url', $JavaUrl) }
+    if ($DataDirectory) { $serverArgs += @('--data-directory', $DataDirectory) }
     & $pythonExe @serverArgs --check
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     if ($Check) { exit 0 }

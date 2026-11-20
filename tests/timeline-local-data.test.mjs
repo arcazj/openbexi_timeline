@@ -232,3 +232,16 @@ test('A newer local load wins when an aborted older request still returns', asyn
         assert.equal(timeline.ob_results.localProgress, '');
     } finally {harness.close();}
 });
+
+
+test('deployment-local icons load without public domain-specific names and reject traversal or external URLs', () => {
+    const loaded = [];
+    const cache = new TimelineTextureCache({load(path) { loaded.push(path); return {path}; }});
+    assert.equal(cache.get('icon/private/demo.svg').path, 'icon/private/demo.svg');
+    assert.equal(cache.get('icon/private/demo.svg').path, 'icon/private/demo.svg');
+    for (const path of ['https://example.test/icon.svg', 'icon/private/../secret.svg',
+        'icon/private/%2e%2e/secret.svg', 'icon/private/demo.svg?url=other', 'icon/private/demo.html', null]) {
+        assert.equal(cache.get(path), undefined);
+    }
+    assert.deepEqual(loaded, ['icon/private/demo.svg']);
+});

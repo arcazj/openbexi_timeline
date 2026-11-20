@@ -1,11 +1,13 @@
 # Development and releases
 
-Use Node.js 24 and the locked dependencies. Java builds require JDK 17 or later
-and Maven. Start the local demo with `npm run demo` after `npm ci`.
+Use Python 3.12+ and Node.js 24 with the locked dependencies. Create and activate
+a project virtual environment, then install the Python application and public
+collector packages. Start the local demo with `npm run demo` after `npm ci`.
 
 ## Validate changes
 
 ```sh
+python -m pip install -r requirements.lock -r timeline_data_collector/requirements-test.txt -e . -e timeline_data_collector
 npm ci
 npm run demos:schemas -- --check
 npm run demos:validate
@@ -17,12 +19,14 @@ npm run test:browser
 npx playwright install firefox webkit
 npm run test:browser:compat
 npm run test:browser:performance
-mvn --batch-mode --no-transfer-progress verify
+python -m unittest discover -s tests/python -v
+python tools/test-collector.py
 npm run test:integration
 ```
 
 The [browser testing guide](browser-tests.md) explains the Windows screenshot
-baselines and review process. CI also audits npm and Java runtime dependencies.
+baselines and review process. CI also audits npm dependencies; Python runtime versions are pinned in
+`requirements.lock` and the installer dependency list.
 Use public or synthetic fixtures in tests and bug reports, following the
 [privacy guide](privacy.md).
 
@@ -34,14 +38,14 @@ cross-origin integration. Both are included in the normal test suites.
 Keep the [event/session JSON contract](event-session-contract.md) fixed. The
 frozen compatibility fixture covers legacy nested items, snapshots, numeric/BCE
 dates and extension metadata; do not regenerate it to hide a format change.
-Java tests cover scoped access and real HTTP AI requests against local mock
+Python and browser tests cover scoped access and AI requests against local mock
 providers. They do not certify live provider accounts or model availability.
 
-The integration check launches the compiled Java API, a local mock AI provider,
+The integration check launches the Python API, a local mock AI provider,
 and Chromium with synthetic credentials and temporary data. It checks the real
 editor's protected load, save, history, filters, proposal review, reader denial
-and unchanged record payloads. Build Java first; `JAVA_HOME` or `java` on PATH
-selects the runtime. No paid provider or existing dataset is used.
+and unchanged record payloads. The test uses the project virtual environment or
+`PYTHON` interpreter override. No paid provider or existing dataset is used.
 
 To verify the static site under its deployment subdirectory:
 
@@ -66,10 +70,10 @@ references before publishing.
 ## Prepare a release
 
 1. Choose the next version using the existing release sequence. Synchronize
-   `package.json`, both root versions in `package-lock.json`, `pom.xml`,
+   `package.json`, both root versions in `package-lock.json`,
    `help/resources.json`, the header in `src/openbexi_timeline.js`, and the
    version shown in both user guides. Also synchronize `pyproject.toml`, Python
-   package/CLI versions, the Java startup response and their version assertions.
+   package/CLI versions, public plugin versions, and their version assertions.
    Historical release notes and benchmark measurements retain their original
    version. The OpenAPI contract has its own version.
 2. Add `docs/release-<version>.md` with changes, upgrade information and the
@@ -82,15 +86,16 @@ references before publishing.
    GPL releases retain their original grants. See the [licensing guide](commercial-licensing.md).
 4. Run the relevant checks above and review intentional screenshot changes.
 5. Run `npm run release:source`. It creates
-   `dist/openbexi-timeline-<version>-source.tar.gz`, its `.sha256` file and
+   `dist/openbexi-timeline-<version>-source.tar.gz`, the matching source ZIP, checksums and
    `dist/SOURCE-MANIFEST.json` from the explicit public manifest.
 6. Commit the reviewed changes to `master` and push without rewriting remote
    history. Confirm the Verify and Publish live demos workflows complete
-   successfully for that commit, then tag it as `v<version>` and push the tag.
+   successfully for that commit, then tag it as `<version>` (for example `2.9.7`) and push the tag.
 7. The **Release Windows installer** workflow builds and tests the tagged source,
    then publishes its Windows installer, source archive, checksums and required
-   release notes. Historical Git tags, release records and downloads remain
-   available. Never publish
+   release notes. The retained release pair for this cleanup is `2.9.6` and `2.9.7`, with
+   `master` as the only branch. Complete and verify the new release before
+   removing superseded refs or release assets. Never publish
    a release without the installer and notes. See [Windows packaging](windows-installation.md).
    Confirm the deployed `version.json` identifies the release commit, then verify
    the live demo flows. Synchronize local tags with

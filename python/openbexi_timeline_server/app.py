@@ -1,4 +1,4 @@
-"""ASGI transport, live revisions, safe public assets and optional Java bridge."""
+"""ASGI transport, live revisions, safe public assets and native resource APIs."""
 from __future__ import annotations
 
 import asyncio
@@ -7,12 +7,12 @@ from contextlib import asynccontextmanager
 import hmac
 import logging
 import os
+import re
 import sqlite3
 import time
 from urllib.parse import parse_qs, urlsplit
 import uuid
 
-import httpx
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
@@ -23,7 +23,9 @@ from starlette.websockets import WebSocketDisconnect
 
 from . import __version__
 from .assets import public_asset
+from .api import NativeAPI
 from .config import configuration_from_document
+from .connections import handle_peer_resets
 from .hbds import HBDSError, LIMIT, Store, _schema, changes as hbds_changes, decode as hbds_decode, legacy_configuration, projection
 from .index import TimelineIndex
 from .matching import compact, digest
@@ -31,7 +33,18 @@ from .query import Queries
 from .storage import Storage
 
 LOG = logging.getLogger("openbexi.timeline")
-HOP = {"host", "connection", "transfer-encoding", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "upgrade", "content-length"}
+
+
+def exception_location(error):
+    frame = error.__traceback__
+    while frame and frame.tb_next: frame = frame.tb_next
+    return (os.path.basename(frame.tb_frame.f_code.co_filename) + ':' + str(frame.tb_lineno)) if frame else 'unknown'
+
+
+def log_operation_failure(error, request_id=None):
+    """Identify the failing operation without logging record or request contents."""
+    LOG.error("Timeline operation failed [%s]; error_type=%s sqlite_error=%s location=%s",
+              request_id or 'background', type(error).__name__, getattr(error, 'sqlite_errorname', 'n/a'), exception_location(error))
 
 
 def local_hbds_editor(request):
@@ -82,14 +95,28 @@ class RequestTrace:
                 level = logging.ERROR if status >= 500 else logging.WARNING if status >= 400 or metadata.get("error") or metadata.get("warnings") else logging.INFO
                 if level >= minimum:
                     # No request URL, search text, profile, path or cursor is logged.
-                    reason = "provider_error" if status >= 500 else "invalid_request" if status >= 400 else "cursor_expired" if "cursor expired" in metadata.get("error", "") else "query_error" if metadata.get("error") else "coverage_partial" if metadata.get("warnings") else "none"
-                    LOG.log(level, "timeline-response [%s] HTTP %s outcome=%s reason=%s server processing=%d ms; returned=%s examined=%s complete=%s more=%s warnings=%s",
-                            identifier, status, "failed" if status >= 400 or metadata.get("error") else "complete" if metadata.get("complete") else "partial",
+                    reason = "provider_error" if status >= 500 else trace.get("failure_reason", "invalid_request") if status >= 400 else metadata.get("reason") or ("cursor_expired" if "cursor expired" in metadata.get("error", "") else "query_error" if metadata.get("error") else "coverage_partial" if metadata.get("warnings") else "none")
+                    codes = sorted({item['code'] for item in metadata.get('warningDetails', [])
+                                    if isinstance(item, dict) and re.fullmatch(r'[a-z_]{1,48}', str(item.get('code', '')))})[:10]
+                    method = scope.get("method", "OTHER")
+                    if method not in {"GET", "POST", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS"}: method = "OTHER"
+                    LOG.log(level, "timeline-response [%s] HTTP %s method=%s outcome=%s reason=%s server processing=%d ms; returned=%s examined=%s complete=%s more=%s warnings=%s warning_codes=%s operation=%s error_type=%s location=%s",
+                            identifier, status, method, "failed" if status >= 400 or metadata.get("error") else "complete" if metadata.get("complete") else "partial",
                             reason, round((time.monotonic()-started)*1000), metadata.get("recordsReturned", "n/a"), metadata.get("recordsExamined", "n/a"),
-                            metadata.get("complete", "n/a"), bool(metadata.get("nextCursor")), len(metadata.get("warnings", [])))
+                            metadata.get("complete", "n/a"), bool(metadata.get("nextCursor")), len(metadata.get("warnings", [])),
+                            ','.join(codes) or 'none', trace.get('operation', 'n/a'), trace.get('error_type', 'none'), trace.get('error_location', 'n/a'))
+
+
+class TimelineCORS(CORSMiddleware):
+    async def __call__(self, scope, receive, send):
+        # Resource API origins are explicitly configured; legacy streams keep their CORS contract.
+        if scope.get("type") == "http" and "/api/v1" in scope.get("path", ""):
+            return await self.app(scope, receive, send)
+        return await super().__call__(scope, receive, send)
 
 
 def create_app(configuration, *, start_indexer=True):
+    api = NativeAPI(configuration.root)
     index = TimelineIndex(configuration)
     queries, storage = Queries(index), Storage(index)
     from .namespace_workspace import NamespaceWorkspace
@@ -118,7 +145,7 @@ def create_app(configuration, *, start_indexer=True):
                         namespace["filter"] = deepcopy(rules)
                     namespace["render"] = deepcopy(updated["render"])
             candidate = configuration_from_document(legacy_configuration(live), configuration.root, configuration.state,
-                                                    hbds_path=configuration.hbds_path, java_url=configuration.java_url)
+                                                    hbds_path=configuration.hbds_path)
             view = copy(index)
             view.config = copy(configuration)
             view.config.sources = candidate.sources
@@ -130,30 +157,34 @@ def create_app(configuration, *, start_indexer=True):
         while not index.stopping.is_set():
             try:
                 await run_in_threadpool(index.refresh)
-            except Exception:
-                LOG.error("Source indexing failed; inspect source access, JSON and index storage.")
+            except Exception as error:
+                log_operation_failure(error)
             await asyncio.sleep(configuration.poll_seconds)
 
     @asynccontextmanager
     async def lifespan(app):
+        with handle_peer_resets():
+            async with application_lifespan(app):
+                yield
+
+    @asynccontextmanager
+    async def application_lifespan(app):
         keeper = index.connect()
         keeper.execute("SELECT count(*) FROM metadata").fetchone()
-        async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=5), limits=httpx.Limits(max_connections=32, max_keepalive_connections=16), follow_redirects=False) as client:
-            app.state.java = client
-            task = asyncio.create_task(indexing()) if start_indexer and not configuration.legacy_fallback else None
-            try:
-                yield
-            finally:
-                index.stopping.set()
-                if task:
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-                # Thread-pool cancellation does not kill in-flight file reads.
-                await run_in_threadpool(release_lease)
-                keeper.close()
+        task = asyncio.create_task(indexing()) if start_indexer else None
+        try:
+            yield
+        finally:
+            index.stopping.set()
+            if task:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+            # Thread-pool cancellation does not kill in-flight file reads.
+            await run_in_threadpool(release_lease)
+            keeper.close()
 
     def release_lease():
         with index.refresh_lock, index.connect() as db:
@@ -177,32 +208,6 @@ def create_app(configuration, *, start_indexer=True):
                     params.setdefault(key, values)
         return {key: values[0] for key, values in params.items()}
 
-    async def proxy(request):
-        if not configuration.java_url:
-            return JSONResponse({"error": "This operation requires the Java administration/provider backend. Configure timeline_server.java_url."}, 503)
-        body = bytearray()
-        async for chunk in request.stream():
-            body.extend(chunk)
-            if len(body) > 2 * 1024 * 1024:
-                return JSONResponse({"error": "Request body exceeds 2 MiB."}, 413)
-        path = request.url.path.removeprefix(configuration.context_path)
-        url = configuration.java_url + path + ("?" + request.url.query if request.url.query else "")
-        headers = {k: v for k, v in request.headers.items() if k.lower() not in HOP}
-        headers["accept-encoding"] = "identity"
-        try:
-            upstream = await request.app.state.java.send(request.app.state.java.build_request(request.method, url, headers=headers, content=bytes(body)), stream=True)
-        except httpx.HTTPError:
-            return JSONResponse({"error": "The Java fallback backend is unavailable."}, 502)
-        async def stream():
-            try:
-                async for chunk in upstream.aiter_raw():
-                    yield chunk
-            finally:
-                await upstream.aclose()
-        response = StreamingResponse(stream(), upstream.status_code)
-        response.raw_headers = [(k, v) for k, v in upstream.headers.raw if k.decode().lower() not in HOP | {"x-request-id", "x-timeline-server"}]
-        return response
-
     async def live(request, params):
         async def stream():
             previous = request.headers.get("last-event-id")
@@ -223,8 +228,6 @@ def create_app(configuration, *, start_indexer=True):
         return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     async def sessions(request):
-        if configuration.legacy_fallback:
-            return await proxy(request)
         try:
             if hbds_store:
                 try:
@@ -233,6 +236,7 @@ def create_app(configuration, *, start_indexer=True):
                     LOG.warning("Invalid HBDS edit ignored; the last valid runtime configuration remains active.")
             params = await parameters(request)
             operation = params.get("ob_request") if request.method == "POST" or "_sse/" in request.url.path else None
+            request.state.operation = operation if operation in {'readFilters', 'updateFilter', 'addFilter', 'deleteFilter', 'saveFilter', 'readDescriptor', 'addEvent'} else 'query' if operation is None else 'unsupported'
             if request.method == "POST" and not operation:
                 return JSONResponse({"error": "Unsupported timeline operation."}, 400)
             if operation in {"readFilters", "updateFilter", "addFilter", "deleteFilter", "saveFilter"}:
@@ -240,7 +244,10 @@ def create_app(configuration, *, start_indexer=True):
             elif operation == "readDescriptor":
                 try:
                     body, status = await run_in_threadpool(storage.descriptor, params)
-                except ValueError:
+                except ValueError as error:
+                    request.state.failure_reason = 'invalid_descriptor'
+                    request.state.error_type = type(error).__name__
+                    request.state.error_location = exception_location(error)
                     body, status = {"event_descriptor": [], "error": "Invalid descriptor identity or start date."}, 400
                 except OSError:
                     body, status = {"event_descriptor": [], "error": "Cannot read descriptor data."}, 500
@@ -263,6 +270,9 @@ def create_app(configuration, *, start_indexer=True):
                         return Response(status_code=304, headers=headers)
                 body = await run_in_threadpool(queries.query, params)
                 request.state.timeline = body["timelineMatch"]
+                if body['timelineMatch'].get('reason') == 'index_busy':
+                    headers.pop('ETag', None)
+                    headers['Cache-Control'] = 'no-store'
                 # Revision may change while initial indexing finishes.
                 headers["X-Timeline-Revision"] = body["timelineMatch"].get("revision", state["revision"])
                 return JSONResponse(body, headers=headers)
@@ -272,15 +282,17 @@ def create_app(configuration, *, start_indexer=True):
         except PermissionError as error:
             return JSONResponse({"error": str(error)}, 403)
         except (ValueError, UnicodeError) as error:
+            request.state.error_type = type(error).__name__
+            request.state.error_location = exception_location(error)
             return JSONResponse({"error": str(error)}, 400)
-        except (OSError, RuntimeError, sqlite3.Error):
-            LOG.error("Timeline operation failed; check source and state-directory access.")
+        except (OSError, RuntimeError, sqlite3.Error) as error:
+            log_operation_failure(error, getattr(request.state, 'request_id', None))
             return JSONResponse({"error": "Cannot read or save timeline data."}, 500)
 
     async def config(request):
         result = {"model": configuration.model, "data": configuration.context_path + "/openbexi_timeline_sse/sessions",
-                             "server": {"implementation": "Python", "version": __version__, "provider": "Java" if configuration.legacy_fallback else "SQLite",
-                                        "administration": "HBDS" if hbds_store else "Java" if configuration.java_url else "unavailable"}}
+                             "server": {"implementation": "Python", "version": __version__, "provider": "SQLite",
+                                        "administration": "HBDS" if hbds_store else "Python"}}
         if hbds_store:
             try:
                 await run_in_threadpool(update_hbds_snapshot)
@@ -293,8 +305,6 @@ def create_app(configuration, *, start_indexer=True):
         return JSONResponse(result, headers={"Cache-Control": "no-store"})
 
     async def filter_values(request):
-        if configuration.legacy_fallback:
-            return await proxy(request)
         from .filter_catalog import FilterCatalog
         try:
             body = await run_in_threadpool(FilterCatalog(index).refresh)
@@ -304,9 +314,6 @@ def create_app(configuration, *, start_indexer=True):
 
     async def websocket_sessions(socket):
         await socket.accept()
-        if configuration.legacy_fallback:
-            await socket.send_json({"error": "Use the Java WebSocket endpoint for this source configuration."})
-            await socket.close(code=1003);return
         params = dict(socket.query_params)
         allowed = {"startDate", "endDate", "scene", "namespace", "namespaces", "userName", "timelineName", "filter", "search", "searchMode", "sortBy", "progressive", "cursor", "cancel", "history"}
         try:
@@ -331,6 +338,9 @@ def create_app(configuration, *, start_indexer=True):
 
     async def hbds(request):
         headers = {"Cache-Control": "no-store", "Vary": "Origin, Authorization"}
+        origin = request.headers.get("origin")
+        if origin in api.origins:
+            headers.update({"Access-Control-Allow-Origin": origin, "Access-Control-Expose-Headers": "ETag, Location, X-OpenBEXI-History-Warning"})
         try:
             supplied = request.headers.get("authorization", "")
             if not local_hbds_editor(request) and (not supplied.startswith("Bearer ") or not admin_token or not hmac.compare_digest(supplied[7:].encode(), admin_token.encode())):
@@ -360,7 +370,7 @@ def create_app(configuration, *, start_indexer=True):
                 from .hbds import validate
                 await run_in_threadpool(validate, document, configuration.root)
                 await run_in_threadpool(configuration_from_document, legacy_configuration(document), configuration.root, configuration.state,
-                                        hbds_path=configuration.hbds_path, java_url=configuration.java_url)
+                                        hbds_path=configuration.hbds_path)
                 result = await run_in_threadpool(hbds_store.save, document, request.headers.get("if-match"))
                 pending = hbds_changes(hbds_started, result["document"])
                 result.update({key: pending[key] for key in ("restartRequired", "restartReasons")})
@@ -381,7 +391,7 @@ def create_app(configuration, *, start_indexer=True):
         status = await run_in_threadpool(index.status)
         return JSONResponse({"implementation": "Python", "version": __version__, "indexing": status["indexing"],
                              "files": status["files"], "records": status["records"], "warningCount": status.get("warningCount", len(status["warnings"]))},
-                            503 if request.url.path.endswith("/ready") and status["indexing"] and not configuration.legacy_fallback else 200)
+                            503 if request.url.path.endswith("/ready") and status["indexing"] else 200)
 
     async def asset(request):
         requested = request.path_params["path"]
@@ -397,12 +407,13 @@ def create_app(configuration, *, start_indexer=True):
     routes += [Route(base + "/openbexi_timeline/filter-values", filter_values), Route(base + "/openbexi_timeline_sse/filter-values", filter_values),
                Route(base + "/openbexi_timeline/config", config), Route(base + "/health", health), Route(base + "/ready", health),
                Route(base + "/api/v1/hbds", hbds, methods=["GET", "HEAD", "PUT"]), Route(base + "/api/v1/hbds/schema", hbds, methods=["GET", "HEAD"]),
-               Route(base + "/api/v1", proxy, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]),
-               Route(base + "/api/v1/{path:path}", proxy, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]), Route(base + "/{path:path}", asset)]
+               Route(base + "/api/v1", api.__call__, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
+               Route(base + "/api/v1/{path:path}", api.__call__, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]), Route(base + "/{path:path}", asset)]
     app = Starlette(routes=routes, lifespan=lifespan)
     app.state.index, app.state.queries, app.state.storage = index, queries, storage
+    app.state.api = api
     app.add_middleware(GZipMiddleware, minimum_size=2048, compresslevel=3)
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE", "HEAD"],
+    app.add_middleware(TimelineCORS, allow_origins=["*"], allow_methods=["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE", "HEAD"],
                        allow_headers=["Content-Type", "Accept", "Authorization", "If-Match", "If-None-Match", "Last-Event-ID", "X-Requested-With"],
                        expose_headers=["X-Request-ID", "ETag", "X-Timeline-Revision", "X-Timeline-Server"])
     app.add_middleware(RequestTrace, level=configuration.log_level)

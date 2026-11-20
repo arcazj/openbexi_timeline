@@ -2,6 +2,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 import hashlib
 import json
@@ -81,6 +82,13 @@ def read_json(path, default=None):
 
 def timestamp(value):
     if not isinstance(value, str) or not value: raise ValueError('Generated records need a calendar start timestamp')
+    return _timestamp(value)
+
+
+@lru_cache(maxsize=65536)
+def _timestamp(value):
+    # A publication, its hourly reports and descriptor inventory revisit the
+    # same timestamps. Datetimes are immutable; bound reuse across batches.
     try:
         result = datetime.fromisoformat(value.replace('Z', '+00:00'))
         if result.tzinfo is None: raise ValueError('Timestamp needs a timezone')

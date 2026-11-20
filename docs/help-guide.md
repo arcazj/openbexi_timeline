@@ -1,6 +1,6 @@
 # OpenBEXI Timeline help
 
-These notes describe the version 2.9.4 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
+These notes describe the version 2.9.7 browser application and the local demos in this repository. The checked-in API specification has its own version, 1.0.0. See the [README](../README.md) for the demo catalog and the [demo configuration guide](demos.md) for all model options.
 
 ## User manual
 
@@ -26,7 +26,7 @@ These notes describe the version 2.9.4 browser application and the local demos i
 - Use **Resync** (Go to current time) to center the current date and time. Date-based models also provide a calendar; numeric timelines, such as millions of years ago, use their declared axis units instead.
 - When the red current-time line is enabled, **Current time** appears on its date axis if it fits between date labels and inside the viewport. Its position and visibility follow panning, zooming and resizing.
 
-The Help panel collects project resources and local demo choices. The local demos run from files and do not require a Java data service. They do not offer server login, saved server filters, or event creation.
+The Help panel collects project resources and local demo choices. The local demos run from files and do not require a data service. They do not offer server login, saved server filters, or event creation.
 
 In **Help**, selecting a local dataset immediately loads its default view. **Reset reference view** returns the current local demo to its model's initial date, Timeline view, default Overview setting, and first row, and clears the search.
 
@@ -156,7 +156,7 @@ Timeline info contains geometry and the maximum adaptive ratio.
 
 Trace level controls browser timeline messages and server request summaries for
 this browser: **INFO** includes information, warnings and errors; **WARNING**
-includes warnings and errors; **ERROR** includes errors only (SEVERE in Java).
+includes warnings and errors; **ERROR** includes errors only.
 INFO is the default. Changes save in this browser and apply to new requests
 without reloading records; live connections reconnect once.
 
@@ -200,7 +200,7 @@ permissions and validation still apply in either layout.
 
 Use import/export on GitHub Pages or a local static server. **Apply to original
 timeline** reloads the original page with your draft once; save or export the
-file to keep the change. An authenticated Java server also supports file
+file to keep the change. An authenticated Python server also supports file
 creation, editing, renaming and deletion. YAML deployment changes require a
 server restart. See the [editor guide](model-editor.md) and
 [rendering settings inventory](model-rendering-inventory.md).
@@ -234,9 +234,9 @@ Follow [Add a demo](demos.md#add-a-demo) to add a dataset, model, and catalog en
 | [openbexi_timeline_overview.js](../src/openbexi_timeline_overview.js), [openbexi_timeline_overview_panel.js](../src/openbexi_timeline_overview_panel.js) | Projection of normal rows, visible-range windows, and docked Overview. |
 | [openbexi_timeline_views.js](../src/openbexi_timeline_views.js) | Timeline, Table, and Split view layout and interaction. |
 | [serve-demos.mjs](https://github.com/arcazj/openbexi_timeline/blob/master/tools/serve-demos.mjs) | Local static-file server for demos and documentation. |
-| [Java server](https://github.com/arcazj/openbexi_timeline/blob/master/src/com/openbexi/timeline/server/openbexi_timeline.java) | Separate server-backed application using the Java data-source and servlet components. |
+| [Python server](python-server.md) | Indexed timeline queries, live updates, HBDS editing and the native resource API. |
 
-The static demos do not call the Java service. The [API reference](api.html) documents the checked-in Swagger contract, not a running server discovered by the demo page.
+The static demos do not call a data service. The [API reference](api.html) documents the checked-in Swagger contract, not a running server discovered by the demo page.
 
 ## Tests
 
@@ -251,8 +251,9 @@ npm run demos:readme -- --check
 The demo suite validates catalog coverage, source imports, model settings, local HTTP assets, interaction state, responsive layout, time scales, axis ticks, Overview geometry, and docked panel behavior. It uses actual scene objects and a simulated DOM, with GPU rendering and text measurement stubbed. The separate `npm run test:browser` suite renders all seven demos in Chromium/WebGL, compares reviewed screenshots at two window sizes, and checks panel boundaries, Overview toggling, scrolling, and resizing. See the [browser regression guide](browser-tests.md) for installation and baseline review instructions.
 
 After a catalog edit, `npm run demos:readme` updates the compact README links and
-the resource table in the demo guide. Run `mvn --batch-mode --no-transfer-progress
-verify` for Java and API tests. See [development and release validation](development.md)
+the resource table in the demo guide. Run `python -m unittest discover -s tests/python -v`
+for server and API tests, and `python tools/test-collector.py` for ingestion tests.
+See [development and release validation](development.md)
 for the complete workflow.
 
 ## Deployment
@@ -267,7 +268,7 @@ Open `http://localhost:8780/demos.html`. The server binds to `127.0.0.1`; `npm r
 
 Static hosting must include the page, source modules, styles, icons, demo catalog, models, datasets, and browser dependencies referenced by the page's import map. Include `help`, `docs`, `swagger`, `README.md`, and `LICENSE` to keep the Help links available. Keep their relative directory structure when hosting under a subdirectory. See [hosting portability](demos.md#hosting-portability).
 
-The Java deployment is separate. Its [Maven configuration](https://github.com/arcazj/openbexi_timeline/blob/master/pom.xml) targets Java 17, and the repository provides [Windows](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.bat) and [shell](https://github.com/arcazj/openbexi_timeline/blob/master/openbexi_timeline.sh) startup examples. Configure their installation and data paths for your environment before use. The [Kubernetes deployment](https://github.com/arcazj/openbexi_timeline/blob/master/HBDS/templates/yaml/deployment.yaml) and [service](https://github.com/arcazj/openbexi_timeline/blob/master/HBDS/templates/yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
+The connected application uses Python 3.12 or later. Follow the [Python server setup](python-server.md), or use the [Windows installer](windows-installation.md), which bundles Python. The repository also provides [Windows](../openbexi_timeline.bat) and [shell](../openbexi_timeline.sh) launchers. Configure their workspace and data paths for your environment. The [Kubernetes deployment](../HBDS/templates/yaml/deployment.yaml) and [service](../HBDS/templates/yaml/service.yaml) are examples containing environment and storage placeholders, not a deployment created by opening a local demo.
 
 ## Resource maintenance
 

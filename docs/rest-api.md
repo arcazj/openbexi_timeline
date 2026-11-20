@@ -2,11 +2,15 @@
 
 The `/api/v1` API serves all seven catalog examples and durable, editable JSON datasets. It uses the same model schema as the browser. Existing `/openbexi_timeline/sessions` and SSE endpoints keep their existing routes.
 
-Catalog examples are public and read-only. Clone an example to edit it. Managed datasets, their models, records, and saved filters require authentication even for reads. The first version uses a JSON repository with atomic file replacement and per-dataset locking; it does not advertise legacy MongoDB, Kafka, or HTTP connectors as writable REST repositories. The legacy MongoDB methods were separately corrected to operate on individual records.
+Catalog examples are public and read-only. Clone an example to edit it. Managed datasets, their models, records, and saved filters require authentication even for reads. The first version uses a JSON repository with atomic file replacement and per-dataset locking; it does not advertise legacy MongoDB, Kafka, or HTTP connectors as writable REST repositories.
 
 ## Start locally
 
-Install JDK 17 or newer and Maven, then run `npm run api` from the repository root. Open `http://localhost:8781/demos.html` or `http://localhost:8781/api/v1/health`. This development launcher listens on loopback. The main Java server also mounts `/api/v1` on its existing connectors.
+Install Python 3.12+, activate the project virtual environment and run
+`python -m pip install -r requirements.lock -e .`, followed by `npm run api`
+from the repository root. Open `http://localhost:8781/demos.html` or
+`http://localhost:8781/api/v1/health`. This development launcher listens on loopback.
+The workspace timeline server mounts the same native `/api/v1` API on its listeners.
 
 Configure tokens as environment variables before starting the server. Use independently generated random secrets of at least 32 characters:
 
@@ -20,7 +24,15 @@ Configure tokens as environment variables before starting the server. Use indepe
 
 Unset tokens grant no access. The administrator token manages workspaces, user credentials and model grants. User tokens authorize only models granted to that user in their workspace. Scoped models require an explicit grant; legacy writer/reader tokens cannot bypass it. See [model access](model-access.md) for provisioning and role examples. Use HTTPS for remote access. Send tokens only as `Authorization: Bearer ...`; do not put them in URLs, models, source control, or browser local storage. Reads of bundled examples require no token. The API does not accept client-selected filesystem paths or database connection strings.
 
-System properties `openbexi.api.root`, `openbexi.api.dataDir`, and development-only `openbexi.api.port` can override the root, storage directory, and development port. For example, `mvn compile exec:java -Dexec.mainClass=com.openbexi.timeline.api.ApiServer -Dopenbexi.api.port=8781`.
+Use `--root`, `--data-directory` and `--port` for explicit launch settings, for example:
+
+```sh
+python -m openbexi_timeline_server --api-only --root . --data-directory /private/openbexi-data --host 127.0.0.1 --port 8781
+```
+
+Existing managed datasets, access grants, history and configuration documents keep
+their storage layout when upgrading. Stop the old process and point Python at the
+same private data directory. Keep a backup before upgrading.
 
 ## Resources
 
@@ -91,7 +103,7 @@ are independent of datasets; deleting a configuration document never deletes
 events or sessions. All operations, including reads, require administrator access.
 Global documents are real files in `<API data directory>/config-files`; scoped documents use isolated `config-files-models/<modelId>` directories. Register
 existing directories explicitly with `OPENBEXI_CONFIG_ROOTS` (platform path
-separator) or `openbexi.api.configRoots`. Directory roots must not overlap.
+separator). Directory roots must not overlap.
 
 POST and PUT accept `{name, kind, text}` where `kind` is `model` or `yaml` and
 `name` is a simple filename. Documents return `id`, `name`, `kind`, `text`,
@@ -121,6 +133,10 @@ Errors use `application/problem+json` with `type`, `title`, `status`, `detail`, 
 
 ## Documentation and checks
 
-The [offline API reference](api.html) reads the checked-in [OpenAPI contract](../swagger/openapi-v1.json). Help's Live API button activates when the same-origin Java API health check succeeds; static-only demo hosting keeps it disabled.
+The [offline API reference](api.html) reads the checked-in [OpenAPI contract](../swagger/openapi-v1.json). Help's Live API button activates when the same-origin API health check succeeds; static-only demo hosting keeps it disabled.
 
-Run `npm run api:spec -- --check`, `mvn verify`, and `npm run test:demos`. Java HTTP tests start an ephemeral local Tomcat with temporary storage and exercise catalog parsing, numeric/BCE dates, permissions, CRUD, persistence, model validation, stale writes, concurrent edits, and problem responses. Browser screenshot tests cover the existing demo UI independently.
+Run `npm run api:spec -- --check`, `python -m unittest discover -s tests/python -v`,
+`npm run test:integration`, and `npm run test:demos`. Python and browser tests use
+temporary storage and cover catalog parsing, numeric/BCE dates, permissions, CRUD,
+persistence, model validation, stale writes, concurrent edits, AI proposals and
+problem responses. Browser screenshot tests cover the demo UI independently.

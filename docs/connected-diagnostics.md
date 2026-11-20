@@ -1,38 +1,27 @@
 # Connected startup and request diagnostics
 
-The embedded timeline server and API v1 share response diagnostics. Java uses
-`java.util.logging`: INFO summaries, WARNING for failed requests, FINE for extra
-transport/warning-count detail. Configure levels through normal JVM logging
-properties. Public examples below contain synthetic values.
+The Python server uses standard Python logging. Timeline requests report INFO
+summaries, WARNING for invalid requests or incomplete coverage, and ERROR for
+server failures. Public examples here contain synthetic values.
 
 ## Launch URL
 
-The existing source `connector` supplies the listening ports and transport:
+Start the workspace server with:
 
-```yaml
-data_sources:
-  - namespace: sample
-    type: json_file
-    enable: true
-    connector: "secure_sse:8441|secure:8442"
-    data_model: /data/sample/yyyy/mm/dd
+```sh
+python -m openbexi_timeline_server --workspace HBDS/workspace.json
 ```
 
-Open the desired HTML page on the chosen listener, for example
-`https://localhost:8442/openbexi_timeline_earthquake.html` for REST or the same
-page on port 8441 for live updates. HTTPS requires the deployment's configured
-certificate. The page discovers its model and data route through
-`/openbexi_timeline/config`; absolute source root paths remain on the server.
+The service YAML selects connector IDs, hosts, ports and transports. The public
+workspace includes HTTP listeners on ports 8080 and 8783, both served by Python.
+For example, open `http://127.0.0.1:8783/openbexi_timeline.html`. The startup log
+prints `Web UI ready:` followed by the listener URL. Secure listeners support PEM
+certificate/key settings and existing JKS/PKCS12 keystores, or a trusted TLS reverse
+proxy. See the [TLS storage details](security.md#deployment).
 
-No `web_ui` section is required. Older deployments may still use that optional
-section for a context path or a printed launch URL. It does not create listeners.
-When it is absent, use the connector's port and the desired page directly.
-
-Illustrative local output after successful startup:
-
-```text
-Timeline service ready: scheme=https port=8442 context= route=/openbexi_timeline/sessions
-```
+The page discovers model and data routes through `/openbexi_timeline/config`.
+Absolute source paths stay on the server. Historical connector IDs are retained
+for workspace compatibility; the current owner is Python.
 
 ## What the UI sends
 
@@ -99,85 +88,41 @@ the coherent displayed view. Local JSON continues to work without the server.
 
 ## Reading logs
 
-Every response has `X-Request-ID`. Look for the same `requestId` in a `timeline`
-log entry, then use `loadId` to follow its visible and prefetch pages. For example,
-the summary includes these fields (other fields are omitted here for readability):
-
-```json
-{"requestId":"sample-request","loadId":"sample-load","method":"GET","route":"/openbexi_timeline/sessions","operation":"records","purpose":"initial","provider":"json_file","status":200,"outcome":"loading","sessionsReturned":2,"eventsReturned":18,"batch":0,"more":true,"complete":false,"elapsedMs":24}
-```
-
-Sessions have an `activities` array or `data.kind=session`; other eligible
-records count as events, including nested activities. Zones do not count. Identity
-includes namespace and parent ancestry. Session containers and their children
-are counted separately, once each. `recordsExamined`, `recordsExcluded` and
-`recordsReturned` count **top-level scan records**; exclusions include out-of-range,
-invalid and filtered records. `uniqueSessions`/`uniqueEvents` are cumulative for
-one scan cursor, not sums across windows or retries. Replay repeats a batch with
-`cache=replay` and unchanged unique totals. Do not add overlapping window totals.
-
-Unknown counts and coverage use `unknown`, especially for unsupported providers
-and control responses. Logical error envelopes are logged as failures even with
-HTTP 200. API v1 collection semantics are documented separately; unsupported
-response-count shapes remain unknown. API v1 also classifies a record with an
-`end` as a session, matching its existing query contract; the legacy UI treats
-a flat duration without session metadata as an event. Live SSE logs describe individual snapshots,
-never an accumulated rendered count, and are limited to one summary per five
-seconds after the first snapshot. Finite requests emit one bounded summary each.
-No extra archive scan is performed for diagnostics. Structured summaries omit raw
-filters, grouping field names, record contents, credentials and source paths.
-
-### Log levels and readable summaries
-
-The default format is `readable`, including after a restart without VM overrides.
-In **Settings > Trace level**, select INFO (information, warnings and errors),
-WARNING (warnings and errors), or ERROR (errors only). INFO is the default.
-The browser saves this preference locally and sends `traceLevel=INFO`, `WARNING`
-or `ERROR` with each timeline request, including cursor pages, cancellations,
-history searches and descriptor reads. The server applies that threshold only
-to the request's diagnostics; other clients and server startup logs retain their
-own logging settings. Java labels ERROR messages as SEVERE. The same selection
-controls browser timeline console messages. Changing it does not reload records
-or discard the cache; an active live subscription reconnects once to apply it.
-Settings shows the installed UI release from the same metadata used by Help.
-
-At the normal INFO logging level, each request produces one concise response
-summary. Successful responses use INFO; partial coverage and HTTP 4xx errors use
-WARNING; HTTP 5xx, provider failures and unexpected request failures use SEVERE
-(Java's error level). Summaries include the request ID, operation, purpose, batch,
-returned counts, server processing time, outcome and load ID when available.
-When a scan ends, WARNING lines identify affected sources and relative files,
-explain the problem and suggest a fix. Cumulative file diagnostics are not
-repeated on every continuation page.
-
-GET URLs and detailed scan metrics are logged only at FINE (DEBUG). To enable
-them for troubleshooting, configure both the logger and the relevant handlers
-at FINE, and omit `traceLevel` on diagnostic requests (the UI choices deliberately
-exclude debug output). Request URLs redact private query values by default. The optional
-`-Dopenbexi.timeline.logQueryValues=true` includes allowlisted filter, grouping and
-record identifiers in these debug URLs. Credentials, cookies, authorization
-headers and cursor tokens are never included. Keep detailed runtime logs local.
-
-Structured summaries remain available with `-Dopenbexi.timeline.logFormat=json`;
-`both` explicitly enables both readable and JSON response summaries. Neither
-option promotes GET URLs to INFO. Detailed scan counters, cache/index statistics
-and date bounds remain available in the structured summary and FINE diagnostics.
-
-Illustrative synthetic output:
+Responses carry `X-Request-ID` and `X-Timeline-Server`. Match the request ID from
+the browser Network panel with the server's `timeline-response` line. The Python
+server logs bounded summaries for session requests and HTTP failures. A typical
+line includes:
 
 ```text
-INFO: timeline-response [sample-request] HTTP 200 operation=records purpose=visible batch=0 sessions=2 events=18 time=24ms outcome=loading loadId=sample-load
-WARNING: timeline-response [final-request] HTTP 200 operation=records purpose=visible batch=1 sessions=0 events=0 time=5ms outcome=partial warnings=1 loadId=sample-load
-WARNING: timeline-warning [final-request] code=record_too_large source=DEMO_ALPHA sourceIndex=1 file=2026/10/13/events.json reason=A record exceeds the limit of 2 Mi decoded characters. action=Split the record, then Refresh.
+INFO: timeline-response [sample-request] HTTP 200 method=GET outcome=partial reason=none server processing=24 ms; returned=20 examined=256 complete=False more=True warnings=0 warning_codes=none operation=records error_type=none location=n/a
 ```
 
-The detailed marker comes from the client's `markerDate`; clients that omit it report
-`unknown`. Browser `timeline-client` lines use the response's request ID and
-report loaded snapshot counts, request latency and client build time separately
-from server processing. They describe completion of scene construction, not a
-guaranteed screen-paint time. `timeline.ob_last_population` exposes these timings
-for local measurement. Counts can differ from a single batch because the client
-merges overlapping windows and nested identities.
+`returned` and `examined` count top-level scan records. `complete=False` or
+`more=True` indicates unfinished coverage. Check `timelineMatch.warningDetails`
+for source numbers, relative filenames and suggested fixes. The summary reports
+warning codes without record contents, raw queries, credentials or source paths.
+Failures report a safe error type and code location instead of private data.
+
+The response's `uniqueSessions` and `uniqueEvents` count nested identities once per
+scan; they are not sums across windows or retries. A session has activities or
+`data.kind=session`; zones do not count. API v1 also treats records with `end` as
+sessions, following its established query contract. Overlapping windows can
+contain the same records, so do not add their totals.
+
+In **Settings > Trace level**, choose INFO, WARNING or ERROR. The preference is
+saved locally and sent as `traceLevel` on timeline requests. It controls that
+request's diagnostics and browser console messages without reloading records or
+discarding the cache. A live subscription reconnects once to apply a change.
+The service's `server.log_level` supplies its default threshold. Successful
+requests use INFO, client errors and coverage warnings use WARNING, and unexpected
+failures use ERROR. Keep detailed runtime logs local.
+
+Browser `timeline-client` entries report the response request ID, snapshot counts,
+request latency and client build time. These describe scene construction, not a
+guaranteed screen-paint time. `timeline.ob_last_population` exposes those timings
+for local measurement. Counts may differ from one batch after the browser merges
+windows and nested identities. The browser's `loadId` and `purpose` remain useful
+for comparing requests in the Network panel.
 
 ### Descriptor requests and errors
 
@@ -229,7 +174,7 @@ Each scan retains up to 100 distinct details and reports when further details
 are omitted. Repeated details across loaded intervals appear once in the UI.
 Older servers continue to show their summary warnings without source details.
 
-After repairing files, click **Refresh**. Restart the Java service first if you
+After repairing files, click **Refresh**. Restart the Python service first if you
 changed its startup YAML. The refreshed report drops resolved issues; Ready
 still requires complete coverage without warnings in the visible interval.
 

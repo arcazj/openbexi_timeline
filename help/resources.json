@@ -1,5 +1,5 @@
 {
-  "version": "2.9.4",
+  "version": "2.9.7",
   "repository": "https://github.com/arcazj/openbexi_timeline",
   "sections": [
     {
@@ -45,7 +45,7 @@
           "href": "docs/api.html#live",
           "probe": "api/v1/health",
           "icon": "globe",
-          "disabledReason": "The Java REST API is not available on this host."
+          "disabledReason": "The REST API is not available on this host."
         },
         {
           "label": "Download OpenAPI",

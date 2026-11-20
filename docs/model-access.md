@@ -12,7 +12,7 @@ is unchanged: grants and ownership are stored outside events and sessions.
 
 ## Set up a protected model
 
-Start the [Java API server](rest-api.md) with `OPENBEXI_API_TOKEN` configured as a
+Start the [Python API server](rest-api.md) with `OPENBEXI_API_TOKEN` configured as a
 system administrator credential and private `OPENBEXI_API_DATA_DIR` storage.
 The default workspace already exists.
 

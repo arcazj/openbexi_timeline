@@ -1,4 +1,4 @@
-"""Exercise installed public plugins using only the installer's Python and Java."""
+"""Exercise installed public plugins using only the installer's Python."""
 from pathlib import Path
 import json
 import os
@@ -27,4 +27,4 @@ assert len(before) == 83, len(before)
 assert any(record.get('activities') for record in before)
 assert main(arguments + ['--force']) == 0
 assert publication.read_state()['events'] == before
-print('Installed collector: seven public plugins, bundled Java conversion, 83 records, stable forced rerun.')
+print('Installed collector: seven public Python plugins, 83 records, stable forced rerun.')

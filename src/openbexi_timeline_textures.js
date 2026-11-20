@@ -1,4 +1,4 @@
-// Only built-in icons are loaded; arbitrary record URLs keep the established fallback.
+// Built-in icons and deployment-local icon files share the same bounded cache.
 const icons = new Set([
     "icon/ob_error.png",
     "icon/ob_warning.png",
@@ -75,7 +75,7 @@ export class TimelineTextureCache {
     }
 
     get(image) {
-        if (!icons.has(image)) return undefined;
+        if (!icons.has(image) && !(typeof image === 'string' && /^icon\/private\/[A-Za-z0-9][A-Za-z0-9._-]*\.(?:svg|png|webp|jpe?g)$/.test(image))) return undefined;
         if (!this.entries.has(image)) {
             const entry = {};
             this.entries.set(image, entry);

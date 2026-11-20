@@ -23,7 +23,7 @@ Earlier `../v2/` and `../progressive/` images record earlier checkpoints.
 | Synthetic connected loading | [View](connected-desktop.png) | [View](connected-narrow.png) |
 
 All catalog captures use the initial date, main ranges and authored Overview
-spans in [the models](../../../models/demos/). Overview centers its context on
+spans in [the models](../../../HBDS/templates/models/demos/). Overview centers its context on
 the main interval; authored endpoints determine the span. Source records and titles
 come from [the catalog](../../../demos/catalog.json). Operations uses 12 September
 2026, 08:00–17:00 main focus and a day Overview; historical/numeric axes retain

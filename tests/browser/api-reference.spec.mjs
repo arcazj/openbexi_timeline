@@ -6,7 +6,7 @@ const methods = ['get', 'post', 'put', 'patch', 'delete'];
 const endpoints = Object.entries(spec.paths).flatMap(([path, definition]) =>
     methods.filter(method => definition[method]).map(method => method.toUpperCase() + '/api/v1' + path));
 
-test('API reference renders the local contract when the Java server is unavailable', async ({page}) => {
+test('API reference renders the local contract when the server is unavailable', async ({page}) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const health = page.waitForResponse(response => response.url().endsWith('/api/v1/health'));
@@ -39,7 +39,7 @@ test('Public API explorer encodes the selected query and renders JSON responses 
             {title: 'Invalid query', status: 400, detail: 'Search could not be applied.'}});
     });
     await page.goto('/docs/api.html');
-    await expect(page.locator('#api-state')).toHaveText('Java API v1 is available.');
+    await expect(page.locator('#api-state')).toHaveText('API v1 is available.');
     const dataset = page.getByRole('combobox', {name: 'Dataset', exact: true});
     await expect(dataset.locator('option')).toHaveText(['Claude Monet', 'Dinosaurs']);
     await dataset.selectOption('dinausaurs');

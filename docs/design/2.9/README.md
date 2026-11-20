@@ -1,7 +1,7 @@
 # OpenBEXI Timeline 2.9 HBDS plugin architecture
 
-This design describes the plugin refactor for release **2.9.0**, tagged
-**v2.9.0**. It preserves the timeline's existing sessions, events, activities,
+This design describes the plugin refactor for release **2.9.7**, tagged
+**2.9.7**. It preserves the timeline's existing sessions, events, activities,
 zones, namespace identities, display models and demo behavior. The public core,
 independent plugins and local dashboard are implemented. Application regression
 results are recorded separately in `regression-results.json`.
@@ -51,7 +51,7 @@ stream checkpoint. Replay, if supported, needs an explicit range or offset.
 **Publication and compatibility.** The common writer owns validation,
 idempotent updates, source ownership, atomic output publication and checkpoint
 advancement. Stable event/session IDs survive reruns and converter upgrades.
-Failures retain the last successful output. Both timeline APIs continue
+Failures retain the last successful output. Timeline APIs continue
 serving materialized JSON when converters are absent or unavailable.
 
 Committed demo fixtures use `NONE`, which invokes no ingestion. Live datasets
@@ -70,7 +70,7 @@ maintained locally because it includes private migration details.
 
 **Regression and release.** Capture before/after record identities, counts,
 sessions and display behavior. Verify the collector, public and private
-plugins, both Java/Python servers, all catalog demos, GEO demo/live modes,
+plugins, the Python server, all catalog demos, GEO demo/live modes,
 browser interactions, reruns, concurrent jobs, recovery and streaming replay.
 Use the existing test suites and add meaningful coverage of the new
 contracts. A failing test or unavailable required integration remains visible
@@ -84,9 +84,9 @@ Windows installation mode; test conversion as well as timeline startup.
 The release publisher verifies all required assets and hashes before publishing.
 Private packages are excluded by Git, the source manifest and package builders.
 
-Publish **v2.9.0** from the tested public commit after implementation and
+Publish **2.9.7** from the tested public commit after implementation and
 regression gates pass. Build assets from that revision, verify uploaded
-hashes and release notes, and retain historical tags. The version is shared across Java, Python, browser help and package metadata.
+hashes and release notes, and retain only 2.9.6 and 2.9.7 tags. The version is shared across Python, browser help and package metadata.
 Publication is a separate step after the required checks pass.
 
 **Reproduce the artifacts.** The native HBDS reference is pinned to commit

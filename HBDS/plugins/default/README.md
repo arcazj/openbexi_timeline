@@ -1,8 +1,8 @@
 # Deterministic session, event and zone generator
 
-The original Java `event_generator` and `event_generator_zone` implementations now live in this plugin. Build the JAR independently with `mvn verify`; `tools/build-collector.py --plugin default` includes it in the wheel. Java 21 is required (bundled in the Windows installer).
+The generator runs entirely in Python. Its seeded random stream, UUIDs, timestamps, descriptors, sessions, activities and zones preserve the previous generator's output. Build the Python wheel with `tools/build-collector.py --plugin default`; no Java runtime or compiler is required.
 
-Set both plugin roles to `default`. Options: `seed` (integer, default 0), `count` (1?100000, default 100), `zones` (boolean, default true). Use an isolated output namespace for generated tests. One-shot date ranges support at most 366 days. Templates can contain events just before the anchor day.
+Set both plugin roles to `default`. Options: `seed` (integer, default 0), `count` (1–100000, default 100), `zones` (boolean, default true). Use an isolated output namespace for generated tests. The last date may be at most 366 days after the first date, with both dates included. Templates can contain events just before the anchor day.
 
 ```sh
 timeline-convert-default --workspace HBDS/Generator_Workspace.json --date 2026-10-16 --once

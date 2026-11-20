@@ -45,7 +45,7 @@ def plan(config, hbds_root, *, legacy_base=None, model_path=None, targets=None):
         for token in ([raw] if isinstance(raw,str) else raw):
             for spec in token.split('|'):
                 protocol,port=spec.strip().rsplit(':',1); ident=f'{protocol}_{port}'
-                listener={'id':ident,'type':protocol,'port':int(port),'host':'127.0.0.1','owner':'java'}
+                listener={'id':ident,'type':protocol,'port':int(port),'host':'127.0.0.1','owner':'python'}
                 if protocol not in ('http','no_secure'):
                     # Explicit external TLS references; migration never exports credentials.
                     listener['tls']={'keystore':'${TIMELINE_KEYSTORE}','password_env':'TIMELINE_KEYSTORE_PASSWORD'}

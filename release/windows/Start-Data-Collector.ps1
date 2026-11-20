@@ -5,7 +5,6 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if (!(Test-Path -LiteralPath $Workspace)) { throw 'Launch OpenBEXI Timeline once to create the desktop workspace, or pass -Workspace <path>.' }
-$env:JAVA_HOME = Join-Path $PSScriptRoot 'runtime'
 $python = Join-Path $PSScriptRoot 'python/python.exe'
 $logs = Split-Path -Parent (Split-Path -Parent $Workspace)
 $server = Start-Process -FilePath $python -ArgumentList '-m','timeline_data_collector','serve','--workspace',"`"$Workspace`"",'--port',$Port -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logs 'collector.log') -RedirectStandardError (Join-Path $logs 'collector-error.log')

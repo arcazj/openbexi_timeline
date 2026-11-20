@@ -8,16 +8,18 @@ import {promisify} from 'node:util';
 import {chromium,expect} from '@playwright/test';
 
 const root=process.cwd(),temporary=await fs.mkdtemp(path.join(os.tmpdir(),'timeline-python-browser-'));
+const publicRoot=path.join(temporary,'public');
+const version=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8')).version;
 const python=process.env.PYTHON || path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
 // Serve reviewed assets from a disposable root so filter writes and default
 // profiles cannot read or modify a developer's private deployment settings.
 const publicFiles=JSON.parse(await fs.readFile(path.join(root,'release/public-files.json'),'utf8'));
 for(const file of publicFiles.filter(file=>/^(?:src\/[^/]+\.js$|src\/vendor\/|css\/|icon\/|help\/|schemas\/|HBDS\/|docs\/help-guide\.|demos\/catalog\.json$|release\/public-files\.json$)/.test(file))){
-    const destination=path.join(temporary,file);await fs.mkdir(path.dirname(destination),{recursive:true});
+    const destination=path.join(publicRoot,file);await fs.mkdir(path.dirname(destination),{recursive:true});
     await fs.copyFile(path.join(root,file),destination);
 }
 for(const dependency of Object.keys(JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8')).dependencies))
-    await fs.cp(path.join(root,'node_modules',dependency),path.join(temporary,'node_modules',dependency),{recursive:true});
+    await fs.cp(path.join(root,'node_modules',dependency),path.join(publicRoot,'node_modules',dependency),{recursive:true});
 const port=await new Promise(resolve=>{const server=net.createServer();server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});});
 const base=`http://127.0.0.1:${port}`,file=path.join(temporary,'data/2026/09/12/events.json');
 const records=[{id:'session',start:'2026-09-12T12:00:00Z',end:'2026-09-12T13:00:00Z',data:{title:'Ground session'},activities:[
@@ -25,10 +27,12 @@ const records=[{id:'session',start:'2026-09-12T12:00:00Z',end:'2026-09-12T13:00:
     {id:'point',start:'2026-09-12T12:15:00Z',data:{title:'Nominal point'}}];
 await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,JSON.stringify({events:records}));
 const config=path.join(temporary,'sources.yml');
+const aiConfig=path.join(temporary,'ai-disabled.json');
+await fs.writeFile(aiConfig,JSON.stringify({enabled:false}));
 await fs.writeFile(config,JSON.stringify({data_sources:[{type:'json_file',namespace:'operations',enable:true,data_model:path.join(temporary,'data/yyyy/mm/dd').replaceAll('\\','/')}],
     timeline_server:{poll_seconds:.25,settle_seconds:0,log_level:'ERROR'}}));
-const child=spawn(python,['-m','openbexi_timeline_server','-data_conf',config,'--root',temporary,'--state',path.join(temporary,'state'),'--port',String(port),'--workers','2'],
-    {cwd:root,windowsHide:true,stdio:['ignore','pipe','pipe']});
+const child=spawn(python,['-m','openbexi_timeline_server','-data_conf',config,'--root',publicRoot,'--state',path.join(temporary,'state'),'--data-directory',path.join(temporary,'api-data'),'--port',String(port),'--workers','2'],
+    {cwd:root,env:{...process.env,OPENBEXI_AI_CONFIG:aiConfig},windowsHide:true,stdio:['ignore','pipe','pipe']});
 let output='';child.stdout.on('data',chunk=>output+=chunk);child.stderr.on('data',chunk=>output+=chunk);
 let browser;
 try {
@@ -50,8 +54,8 @@ try {
     assert.ok(requests.length<=6,`Unexpected initial request count: ${requests.length}`);
     const initialRequests=requests.length;
     await page.getByAltText('Settings',{exact:true}).click();
-    await expect(page.locator('.ob_application_version')).toHaveText('OpenBEXI Timeline · Version 2.9.4');
-    await expect(page.locator('.ob_backend_version')).toHaveText('Backend: Python 2.9.4');
+    await expect(page.locator('.ob_application_version')).toHaveText(`OpenBEXI Timeline · Version ${version}`);
+    await expect(page.locator('.ob_backend_version')).toHaveText(`Backend: Python ${version}`);
     await page.getByRole('combobox',{name:'Trace level'}).selectOption('ERROR');
     await page.getByRole('button',{name:'Close settings'}).click();
     await fs.writeFile(file,JSON.stringify({events:[...records,{id:'live',start:'2026-09-12T12:25:00Z',data:{title:'Live update'}}]}));

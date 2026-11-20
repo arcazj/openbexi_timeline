@@ -1,5 +1,6 @@
 from __future__ import annotations
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 import hashlib
 import gzip
@@ -92,6 +93,73 @@ class CollectorTests(unittest.TestCase):
         with patch.object(runner.registry, 'load', side_effect=AssertionError('must bypass discovery')):
             self.assertTrue(runner.submit()[0]['result']['skipped'])
         self.assertFalse(self.ws.output.exists())
+
+    def test_ownership_transfer_preserves_records_and_allows_canonical_updates(self):
+        from timeline_data_collector.contracts import SourceConflictError
+        publisher = Publisher(self.ws.target, 'DEMO')
+        publisher.publish('canonical', 'input', 'json', RecordBatch([event()], {'cursor': 1}))
+        publisher.publish('retired', 'download', 'json', RecordBatch([event(), event('retained')], {'cursor': 2}))
+        before = publisher.read_state()
+        updated = event(); updated['data']['age'] = '10'
+        with self.assertRaises(SourceConflictError) as caught:
+            publisher.publish('canonical', 'input', 'json', RecordBatch([updated]))
+        self.assertIn('input', str(caught.exception)); self.assertIn('download', str(caught.exception))
+        publisher.publish('canonical', 'input', 'json', RecordBatch(checkpoint={'cursor': 1}),
+                          preserve_missing=True, adopt_sources=['retired'])
+        adopted = publisher.read_state()
+        self.assertEqual(adopted['events'], before['events'])
+        self.assertEqual(adopted['sources']['retired']['records'], {})
+        self.assertEqual(adopted['sources']['retired']['checkpoint'], {'cursor': 2})
+        self.assertEqual(set(adopted['sources']['canonical']['records']), {'one', 'retained'})
+        publisher.publish('canonical', 'input', 'json', RecordBatch([updated], snapshot=True), preserve_missing=True)
+        after = {item['id']: item for item in publisher.read_state()['events']}
+        self.assertEqual(set(after), {'one', 'retained'})
+        self.assertEqual(after['one']['data']['age'], '10')
+        self.assertEqual(after['retained'], next(item for item in before['events'] if item['id']=='retained'))
+
+    def test_health_retains_historical_failure_after_successful_current_polls(self):
+        runner = self.runner(); dashboard = Dashboard(runner, port=0)
+        self.addCleanup(dashboard.close)
+        group, source = runner.configuration.sources()[0]
+        request = dict(source_key=source_key(group, source), namespace='DEMO', source='input',
+                       date=None, end_date=None, checkpoint_scope='history:all')
+        failed, _ = runner.state.create('failed-history', request)
+        runner.state.update(failed['id'], 'failed', {'error':'Conflicting record ID across sources: one'})
+        for i in range(205):
+            current, _ = runner.state.create('current-'+str(i), dict(request, checkpoint_scope='current'))
+            runner.state.update(current['id'], 'succeeded', {'batches': 1 if i==0 else 0})
+        health = dashboard.health()
+        self.assertEqual(health['status'], 'degraded')
+        self.assertIn('[history:all]', health['alerts'][0])
+        recovered, _ = runner.state.create('recovered-history', request)
+        runner.state.update(recovered['id'], 'succeeded', {'batches':1})
+        self.assertEqual(dashboard.health()['alerts'], [])
+
+    def test_startup_reconciles_old_capacity_alert_and_health_keeps_replay_backlog(self):
+        from timeline_data_collector.state import State
+        from timeline_data_collector.publication import encode_publication
+        runner = Runner(load(self.ws.path)); self.addCleanup(runner.close)
+        group, source = runner.configuration.sources()[0]
+        key = source_key(group, source)
+        job, _ = runner.state.create('old-capacity', dict(source_key=key, checkpoint_scope='history:2026-01-01',
+                                                        namespace='DEMO', source='input', date='2026-01-01', end_date='2026-01-01'))
+        runner.state.update(job['id'], 'failed', {'error':State.LEGACY_SNAPSHOT_ERROR})
+        writer = Publisher(self.ws.target, 'DEMO')
+        writer.publish(key, 'input', 'timeline_json', RecordBatch([event()], checkpoint={'offset':1}))
+        value = read_json(writer.state_path); value['version'] = 2
+        raw, parts = encode_publication(value)
+        for name, payload in parts.items():
+            part = writer.state_dir/name; part.parent.mkdir(exist_ok=True); part.write_bytes(payload)
+        writer.state_path.write_bytes(raw)
+        original = writer.state_path.read_bytes()
+        restarted = Runner(load(self.ws.path)); self.addCleanup(restarted.close)
+        dashboard = Dashboard(restarted, port=0); self.addCleanup(dashboard.close)
+        health = dashboard.health()
+        self.assertEqual(health['alerts'], [])
+        self.assertEqual(health['status'], 'ok')
+        self.assertEqual(health['sources'][0]['pending_recovery'][0]['scope'], 'history:2026-01-01')
+        self.assertEqual(restarted.state.get(job['id'])['state'], 'failed')
+        self.assertEqual(writer.state_path.read_bytes(), original)
 
     def test_repeat_reuses_checkpoint_until_publication_changes(self):
         write_json(self.ws.input / 'events.json', [event()])
@@ -447,6 +515,22 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         with self.assertRaises(ValueError): date_range('2026-03-02', '2026-03-01')
         with self.assertRaises(ValueError): execution_policy({'mode':'interval', 'interval_seconds':0})
 
+    def test_past_days_selects_complete_utc_days_across_calendar_boundaries(self):
+        from timeline_data_collector.dates import repeat_range
+        for now, expected in [
+            ('2026-11-14T12:00:00+00:00', ('2026-11-07', '2026-11-13')),
+            ('2026-01-01T00:00:00+00:00', ('2025-12-25', '2025-12-31')),
+            ('2024-03-01T23:59:59+00:00', ('2024-02-23', '2024-02-29')),
+        ]:
+            with self.subTest(now=now), patch('timeline_data_collector.dates.datetime') as clock:
+                clock.now.return_value = datetime.fromisoformat(now)
+                self.assertEqual(date_range('past-7-days'), expected)
+                self.assertEqual(repeat_range('past-7-days'), expected)
+                self.assertEqual(date_range('past-1-days'), (expected[1], expected[1]))
+        for selector in ('past-0-days', 'past--1-days', 'past-1.5-days'):
+            with self.assertRaises(ValueError): date_range(selector)
+        with self.assertRaises(ValueError): date_range('past-7-days', '2026-11-13')
+
     def test_snapshot_deletion_retires_parent_and_child_descriptors(self):
         publisher = Publisher(self.ws.target, 'DEMO')
         parent = event(activities=[event('child')])
@@ -512,6 +596,24 @@ p.publish('a','input','1',RecordBatch([{'id':'two','start':'2026-01-02T12:00:00Z
         status, second = request('POST', '/api/jobs', body, headers); self.assertEqual(status, 202)
         self.assertEqual(first['jobs'][0]['id'], second['jobs'][0]['id'])
         self.assertEqual(request('POST', '/api/jobs', dict(body, request_id='new', revision='stale'), headers)[0], 400)
+
+    def test_interrupted_idle_check_clears_after_local_input_matches_committed_checkpoint(self):
+        write_json(self.ws.input / 'events.json', [event()])
+        self.ws.source['execution'] = {'settle_seconds': 0}
+        self.ws.save()
+        runner = self.runner()
+        options = dict(date='2026-01-01', end_date='2026-01-01', checkpoint_scope='current')
+        committed = runner.submit(**options)[0]
+        self.assertEqual(committed['state'], 'succeeded', committed)
+        interrupted, _ = runner.state.create('interrupted-idle', committed['request'])
+        runner.state.update(interrupted['id'], 'failed', {'error': runner.state.INTERRUPTED_ERROR})
+        publication = (self.ws.output / '.timeline-collector/publication.json').read_bytes()
+        recovered = runner.submit(**options)[0]
+        self.assertEqual(recovered['state'], 'succeeded', recovered)
+        self.assertEqual(recovered['result']['batches'], 0)
+        self.assertTrue(recovered['result']['metrics']['checkpoint_current'])
+        self.assertEqual(runner.state.failures(), [])
+        self.assertEqual((self.ws.output / '.timeline-collector/publication.json').read_bytes(), publication)
 
 
 if __name__ == '__main__': unittest.main()

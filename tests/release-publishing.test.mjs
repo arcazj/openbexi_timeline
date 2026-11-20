@@ -9,11 +9,13 @@ import {compareTags, publishRelease} from '../tools/publish-release.mjs';
 test('version ordering compares numeric components and rejects arbitrary refs', () => {
     assert.ok(compareTags('v2.10.0', 'v2.9.9') > 0);
     assert.ok(compareTags('v3.0.0', 'v2.99.99') > 0);
+    assert.equal(compareTags('2.9.6', 'v2.9.6'), 0);
+    assert.ok(compareTags('2.9.7', 'v2.9.6') > 0);
     assert.throws(() => compareTags('master', 'v2.6.1'));
 });
 
 async function fixture(t, options = {}) {
-    const version=options.version || '2.6.1', tag='v'+version;
+    const version=options.version || '2.6.1', tag=version;
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'openbexi-release-test-'));
     t.after(() => fs.rm(root, {recursive: true, force: true}));
     await fs.mkdir(path.join(root, 'dist'));
@@ -26,8 +28,9 @@ async function fixture(t, options = {}) {
         await fs.writeFile(path.join(root, 'dist', name + '.sha256'), createHash('sha256').update(bytes).digest('hex') + '  ' + name + '\n');
     }
     if(options.extended) {
-        const names=[`openbexi-timeline-${version}-source.zip`,'openbexi_timeline.json','openbexi_timeline.png',
-            'architecture-overview.png','regression-results.json',`release-${version}.md`];
+        const names=[`openbexi-timeline-${version}-source.zip`,
+            ...(version==='2.9.7'?[]:['openbexi_timeline.json','openbexi_timeline.png','architecture-overview.png']),
+            'regression-results.json',`release-${version}.md`];
         const sums=[];
         for(const name of names) {
             const bytes=Buffer.from(name==='regression-results.json'?JSON.stringify({version,status:options.pending?'pending':'passed'}):'Reviewed fixture '+name);
@@ -74,13 +77,13 @@ async function fixture(t, options = {}) {
         }
         throw new Error('Unexpected request: ' + method + ' ' + url);
     };
-    return {root, mutations, run: () => publishRelease(root, {RELEASE_TAG: tag, GH_TOKEN: 'test', GITHUB_REPOSITORY: 'test/repo'}, fetcher), tags: () => tags};
+    return {root, mutations, run: (releaseTag=tag) => publishRelease(root, {RELEASE_TAG: releaseTag, GH_TOKEN: 'test', GITHUB_REPOSITORY: 'test/repo'}, fetcher), tags: () => tags};
 }
 
 test('publishes verified installer and notes while preserving historical tags', async t => {
     const f = await fixture(t);
     await f.run();
-    assert.deepEqual(f.tags(), ['v2.6.1', 'v2.6.0', 'v2.5.2']);
+    assert.deepEqual(f.tags(), ['2.6.1', 'v2.6.0', 'v2.5.2']);
     assert.deepEqual(f.mutations.filter(call => call.method === 'DELETE'), []);
 });
 for (const option of ['uploadFailure', 'corruptUpload', 'newer']) test(option + ' preserves all older tags', async t => {
@@ -104,7 +107,7 @@ test('incorrect checksum fails before creating a release', async t => {
 
 test('2.9 publishes ZIP, diagrams and verified regression evidence', async t => {
     const f=await fixture(t,{version:'2.9.0',extended:true});await f.run();
-    assert.deepEqual(f.tags(),['v2.9.0','v2.6.0','v2.5.2']);
+    assert.deepEqual(f.tags(),['2.9.0','v2.6.0','v2.5.2']);
     assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,17);
 });
 test('2.9 rejects an incomplete manifest before creating a release', async t => {
@@ -112,10 +115,22 @@ test('2.9 rejects an incomplete manifest before creating a release', async t => 
 });
 test('patch releases publish their own versioned assets and evidence', async t => {
     const f=await fixture(t,{version:'2.9.1',extended:true});await f.run();
-    assert.deepEqual(f.tags(),['v2.9.1','v2.6.0','v2.5.2']);
+    assert.deepEqual(f.tags(),['2.9.1','v2.6.0','v2.5.2']);
     assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,17);
 });
 test('2.9 requires passing regression evidence even when hashes match', async t => {
     const f=await fixture(t,{version:'2.9.0',extended:true,pending:true});
     await assert.rejects(f.run(),/regressions must pass/);assert.deepEqual(f.mutations,[]);
+});
+
+test('2.9.7 publishes current ZIP, notes and evidence without obsolete diagram requirements', async t => {
+    const f=await fixture(t,{version:'2.9.7',extended:true});await f.run();
+    assert.deepEqual(f.tags(),['2.9.7','v2.6.0','v2.5.2']);
+    assert.equal(f.mutations.filter(call=>call.endpoint==='/assets').length,11);
+});
+
+test('prefixed release tags are rejected before remote publication', async t => {
+    const f=await fixture(t,{version:'2.9.7',extended:true});
+    await assert.rejects(f.run('v2.9.7'),/without a prefix/);
+    assert.deepEqual(f.mutations,[]);
 });

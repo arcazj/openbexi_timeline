@@ -1,6 +1,6 @@
 {
   "id": "mqtt",
-  "version": "1.0.1",
+  "version": "2.9.7",
   "api_version": "1",
   "runtime": "python",
   "capabilities": [

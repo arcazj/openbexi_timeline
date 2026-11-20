@@ -11,7 +11,7 @@ explicitly enables separate band axes.
 
 The release uses the existing GPL license. Connected resource browsing and
 transactional YAML/model editing in phases 5–6 remain planned. See the
-[release notes](docs/release-2.0.md) for scope, current verification, and packaging.
+[historical 2.0 release notes](https://github.com/arcazj/openbexi_timeline/blob/2.9.6/docs/release-2.0.md) for scope, verification at that checkpoint, and packaging.
 Private deployments and validation captures remain outside versioned files.
 
 Use available OpenBEXI earthquake/volcano screenshots and the written scenario
@@ -985,7 +985,7 @@ default. Timeline Info retains custom geometry while constraining its effective
 frame. Multiple enabled overviews use separate bounded footers. Hover borders
 retain icon dimensions, and calendar positioning respects narrow-screen panels.
 
-See [release notes](docs/release-2.0.md) and
+See [historical 2.0 release notes](https://github.com/arcazj/openbexi_timeline/blob/2.9.6/docs/release-2.0.md) and
 [real browser evidence](docs/ui/v2/README.md). The JavaScript suite contains 113
 passing tests; Maven verification passed with 42 executed tests and 34 existing
 environment-dependent skips. Browser validation uses public fixtures and the

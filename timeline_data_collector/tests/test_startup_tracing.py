@@ -18,6 +18,15 @@ from timeline_data_collector.tracing import StartupTrace, UTCFormatter
 
 
 class StartupTracingTests(unittest.TestCase):
+    def test_conflict_diagnostics_name_owners_and_id_without_record_payload(self):
+        from timeline_data_collector.contracts import SourceConflictError
+        from timeline_data_collector.tracing import exception_fields
+        fields = exception_fields(SourceConflictError('DEMO-1', ['input [aaa]', 'retired [bbb]']))
+        self.assertEqual(fields['record_id'], 'DEMO-1')
+        self.assertEqual(fields['sources'], ['input [aaa]', 'retired [bbb]'])
+        self.assertEqual(fields['reason'], 'Conflicting record ID across sources')
+        self.assertEqual(exception_fields(ValueError('PRIVATE CSV PAYLOAD')), {'error_type':'ValueError'})
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

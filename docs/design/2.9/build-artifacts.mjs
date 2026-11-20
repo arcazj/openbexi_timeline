@@ -48,7 +48,7 @@ define('Configuration', 'SourcePolicy', 'Scheduling is separate from conversion.
 }, ['mode', 'overlap', 'resume_on_restart']);
 
 define('Plugins', 'PluginManifest', 'Public API contract for an independently built package. A package may implement source and converter roles together.', {
-    id: ref, version: ref, api_version: ref, runtime: enumeration('python', 'java', 'executable'),
+    id: ref, version: ref, api_version: ref, runtime: enumeration('python'),
     capabilities: {type: 'array', items: enumeration('source', 'converter', 'generator')}, visibility: enumeration('public', 'private'),
     entry_point: ref, cli: ref, config_schema: ref, options_schema: obj, aliases: strings, requires_source_path: bool, supported_modes: {type: 'array', items: enumeration('once', 'interval', 'watch', 'stream')}
 }, ['id', 'version', 'api_version', 'runtime', 'capabilities', 'visibility', 'entry_point', 'cli', 'config_schema', 'supported_modes']);
@@ -122,8 +122,8 @@ const uiSchema = read('schemas/demo-model.schema.json');
 define('Presentation', 'DisplayModel', 'Existing timeline UI model JSON. This is distinct from the HBDS domain diagram and from an output target path.', {
     path: ref, params: {type: 'array', items: obj}, bands: {type: 'array', items: obj}, rendering: obj, dataSource: obj
 }, ['path', 'params', 'bands']);
-define('Presentation', 'TimelineAPI', 'Existing Java or Python backend reads published JSON independently of converter installation.', {
-    id: ref, owner: enumeration('java', 'python'), endpoint: ref, enabled: bool
+define('Presentation', 'TimelineAPI', 'Python backend reads published JSON independently of converter installation.', {
+    id: ref, owner: enumeration('python'), endpoint: ref, enabled: bool
 }, ['id', 'owner', 'endpoint', 'enabled']);
 define('Presentation', 'TimelineView', 'Preserves sessions/events, descriptors, colors, zones, navigation and All/namespace buttons. GEO opens with both namespaces.', {
     workspace: ref, active_scope: enumeration('all', 'namespace'), namespace: str, saved_filters: strings, grouping: str
@@ -135,8 +135,8 @@ define('Presentation', 'RegressionEvidence', 'Release gate covering record parit
     commit: ref, suites: {type: 'array', items: obj}, before_counts: obj, after_counts: obj, screenshots: strings,
     result: enumeration('pending', 'passed', 'failed', 'blocked')
 }, ['commit', 'suites', 'result']);
-define('Presentation', 'Release', 'Publish 2.9 as v2.9.0 only after implementation and regression gates pass. Preserve historical tags.', {
-    version: {const: '2.9.0'}, tag: {const: 'v2.9.0'}, state: enumeration('planned', 'draft', 'published'),
+define('Presentation', 'Release', 'Publish 2.9 as 2.9.7 only after implementation and regression gates pass. Retain only 2.9.6 and 2.9.7 tags.', {
+    version: {const: '2.9.7'}, tag: {const: '2.9.7'}, state: enumeration('planned', 'draft', 'published'),
     notes: ref, required_assets: strings, evidence: ref
 }, ['version', 'tag', 'state', 'notes', 'required_assets', 'evidence']);
 
@@ -232,8 +232,8 @@ const example = {
             mode: 'once', force: false, revision: '<revision from GET /api/status>'},
         repeat: {mode: 'interval', interval_seconds: 300, overlap: 'skip', resume_on_restart: false},
         runAgain: {force: true, streamingCheckpointReset: false}},
-    release: {version: '2.9.0', tag: 'v2.9.0', state: 'planned', notes: 'docs/release-2.9.0.md',
-        required_assets: ['openbexi-timeline-2.9.0-windows-x64-setup.exe', 'openbexi-timeline-2.9.0-source.zip', 'openbexi-timeline-2.9.0-source.tar.gz',
+    release: {version: '2.9.7', tag: '2.9.7', state: 'planned', notes: 'docs/release-2.9.7.md',
+        required_assets: ['openbexi-timeline-2.9.7-windows-x64-setup.exe', 'openbexi-timeline-2.9.7-source.zip', 'openbexi-timeline-2.9.7-source.tar.gz',
             'SHA256SUMS', 'openbexi_timeline.json', 'openbexi_timeline.png', 'architecture-overview.png'], evidence: 'regression-results.json'},
     invariants: [
         'GEO is a workspace containing earthquake and volcano namespaces, using distinct converter packages.',
@@ -289,7 +289,7 @@ const provenance = ['HBDS/GEO_Workspace.json', 'HBDS/workspace.json', 'HBDS/mode
     'HBDS/plugins/earthquake/plugin.json', 'HBDS/plugins/volcano/plugin.json', 'HBDS/service.yml', 'demos/catalog.json', 'docs/design/2.9/build-artifacts.mjs'].map(file => ({file,
     sha256: createHash('sha256').update(fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n')).digest('hex')}));
 const model = {$schema: 'https://openbexi.local/hbds/model/v2', metadata: {
-    id: id('openbexi_timeline'), name: 'OpenBEXI Timeline 2.9 plugin architecture', version: '2.9.0', semanticVersion: 1,
+    id: id('openbexi_timeline'), name: 'OpenBEXI Timeline 2.9 plugin architecture', version: '2.9.7', semanticVersion: 1,
     purpose: 'HBDS structure for workspaces, reusable ingestion plugins, shared execution, durable publication and unchanged timeline display.',
     regressionTags: ['timeline', 'plugin-contract', 'GEO', 'standalone', 'repeat', 'release-2.9'], preserveLayout: true,
     layout: {algorithm: 'none', fit: {padding: 1.1}}, font: {size: 15, family: 'Arial, sans-serif', classSize: 20, hyperclassSize: 24, attributeSize: 15, linkSize: 12},

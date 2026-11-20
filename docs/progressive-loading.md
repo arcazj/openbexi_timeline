@@ -2,7 +2,7 @@
 
 The timeline builds its frame before requesting records. Models with a local
 `dataSource` or a JSON file in `params[0].data` load that file directly, without
-contacting the Java data service. Serve those files over HTTP as usual; browser
+contacting the Python data service. Serve those files over HTTP as usual; browser
 restrictions still apply to `file:` URLs.
 
 For connected timelines, the client requests the visible interval first. After
@@ -53,6 +53,11 @@ Overview has its own linear zoom span; its context follows the main interval to
 keep the visible-window indicator centered. Zooming Overview does not change the
 main range or analysis scope. See [request and diagnostic examples](connected-diagnostics.md).
 
+Grouped layout checks each activity's group and time range before copying its
+display metadata. Only eligible activities are copied when flattening nested
+sessions; child trees are not copied and discarded at every parent.
+Display records remain independent of source metadata and of other bands.
+
 ## Historical search
 
 Auto scale distinguishes completed empty intervals from incomplete coverage.
@@ -94,9 +99,12 @@ sessions endpoint. Continuations keep the same query, source configuration,
 filter, search mode, Sort by and end date; cancellation releases the cursor. Older servers
 without this history protocol fall back to a nearby search of up to eight
 expanding windows, 32 pages and 20 seconds. An empty fallback result explicitly
-remains incomplete. **Find previous activity** and **Find next activity** retain
-their directional navigation behavior; they do not claim an exhaustive archive
-search. No new server endpoint is required.
+remains incomplete. **Find previous activity** also uses backward history, even
+with an empty search box, so gaps between days do not stop it at the nearby-search
+limit. It selects a matching record ending before the selected record's start or
+the view's center, retaining the filters and zoom. **Cancel search** stops it and
+releases its cursor. **Find next activity** keeps its bounded forward search.
+No new server endpoint is required.
 
 Historical responses add `timelineMatch.history`:
 
@@ -231,15 +239,14 @@ Use `secure_sse` for live updates; `secure_see` is not a connector name.
   window, in addition to the normal cache budget. An incomplete scan retains old
   records and reports partial coverage; narrow the view to finish reconciliation.
 
-Conditional responses and live notifications use a shared metadata inventory of
-configured JSON sources. It checks file paths, sizes and modification times,
-including creations and deletions; it does not parse event contents. Each
-inventory is cached for one second and bounded to 100,000 entries and depth 32.
-SSE checks it once per second and sends heartbeat comments while unchanged.
-Inventory errors end the stream with a clear retrying status; manual REST reads remain
-available. Slow storage can increase update latency. Changes that preserve both
-file size, modification time and file identity cannot invalidate the source cache;
-normal file writes update the modification time. A restart clears all caches.
+The Python server derives conditional responses and live notifications from its
+persistent index revision. Background scans discover new, changed and deleted
+source files; unchanged size and modification time avoid repeated parsing until
+the configured content-verification interval. SSE checks the saved revision once
+per second and sends heartbeat comments while unchanged. Source errors retain
+the last usable snapshot and report partial coverage. Slow storage can increase
+update latency. The index survives restarts; original source JSON remains
+authoritative. See [Python indexing and limits](python-server.md).
 
 ## Measured navigation checkpoint (2026-09-25)
 
@@ -277,7 +284,8 @@ measure source disk throughput, high-density rendering or full legacy-deployment
 parity. The first baseline run also paid browser initialization costs, which is
 why medians are reported. Provider indexing, record size, network latency and
 configured scan limits still determine when a real interval becomes complete.
-Real Java HTTP tests independently verify the provider and descriptor contracts.
+At that historical checkpoint, Java HTTP tests independently verified the provider
+and descriptor contracts. Current validation uses the Python backend tests.
 
 ## Filtering and panels
 

@@ -1,12 +1,13 @@
-# Windows installation
+# Windows installation — 2.9.7
 
 Download `openbexi-timeline-<version>-windows-x64-setup.exe` from the
 [latest release](https://github.com/arcazj/openbexi_timeline/releases/latest).
 Release notes, the source archive and SHA-256 checksums are attached there too.
 
 Run the installer on Windows 10 or 11 x64. It installs for your Windows account
-and includes the Java runtime and browser dependencies. You do not need Node.js,
-Maven or a separate Java installation. The installer is currently unsigned.
+and includes the Python runtime, public collectors and browser dependencies.
+You do not need a separate Python, Java or Node.js installation. The installer
+is currently unsigned.
 
 Open **OpenBEXI Timeline** from the Start menu. Its console starts a local server
 and opens your browser at `http://127.0.0.1:8781/demos.html`. Keep the console open
@@ -25,30 +26,34 @@ data location. Startup errors are recorded in `server-error.log` in that locatio
 
 ## Build and release
 
-The **Release Windows installer** workflow runs when a stable `vX.Y.Z` tag is
+The **Release Windows installer** workflow runs when a stable `X.Y.Z` tag is
 pushed. It can also package an existing tag using **Run workflow** on `master`.
 The application is built from that exact tag; the selected workflow revision
 provides the packaging scripts. Existing tags are never moved.
 
-Publication requires release notes, passing JavaScript and Java tests, a built
-installer, and an installed-app check of bundled Java, browser rendering, API
+Publication requires release notes, passing JavaScript and Python tests, a built
+installer, and an installed-app check of bundled Python, browser rendering, API
 access and uninstall. The release is staged as a draft, assets and checksums are
-verified, and then it is published as latest. Only after publication are older
-Git tags removed. Older GitHub release records and their downloads are retained;
-historical notes also remain in `docs/release-*.md`. If a newer tag appears, cleanup
-stops rather than removing it. Run `git fetch --prune --prune-tags origin` to
+verified, and then it is published as latest. The retained release set is
+2.9.6 and 2.9.7, including their source archives, downloads and notes. Cleanup
+retains `master` as the sole branch and preserves both release tags. Run
+`git fetch --prune --prune-tags origin` to
 synchronize an existing clone's tags after a release.
 
-For a local build on Windows, install JDK 21, Maven, Node.js 24 and Inno Setup 6,
-set `JAVA_HOME`, then run:
+For a local build on Windows, install Python 3.13, Node.js 24 and Inno Setup 6,
+then run from an activated Python environment:
 
 ```powershell
 npm ci
-mvn --batch-mode --no-transfer-progress verify
+python -m pip install -r requirements.lock -r timeline_data_collector/requirements-test.txt -e . -e timeline_data_collector
+python -m pip install build "setuptools>=77"
+python tools/test-collector.py
+python tools/build-collector.py
 npm run release:source
 npm run pages:build
 powershell -NoProfile -File tools/package-windows.ps1
 ```
 
-Outputs are placed in `dist`. The bundled Java runtime retains its legal notices
-under `runtime/legal`; dependency JARs retain their embedded licenses and notices.
+Outputs are placed in `dist`. The bundled Python runtime and installed packages
+retain their license and distribution metadata. Public wheels and source
+archives exclude private configurations, collected data and Java artifacts.
