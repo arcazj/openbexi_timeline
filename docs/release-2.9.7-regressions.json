@@ -1,8 +1,8 @@
 {
   "version": "2.9.7",
-  "status": "pending",
-  "verifiedAt": "2026-11-20T23:29:50.402808+00:00",
-  "testedRuntimeCommit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
+  "status": "passed",
+  "verifiedAt": "2026-11-21T00:28:25.552425+00:00",
+  "testedRuntimeCommit": "874235dcc0fde9ebb0795667e40191a5d38ad31c",
   "scope": "Python server, public collectors, browser application, retained-release upgrade, packaging and public distribution boundary. Deployment-specific evidence remains local.",
   "environment": {
     "local": "Windows x64",
@@ -27,17 +27,18 @@
       "skipped": 0
     },
     "pythonServerWindows": {
-      "total": 164,
-      "passed": 163,
-      "failed": 0,
-      "skipped": 1,
-      "skipReason": "Windows symbolic-link creation requires OS permission."
-    },
-    "publicCollector": {
-      "total": 272,
-      "passed": 272,
+      "total": 174,
+      "passed": 174,
       "failed": 0,
       "skipped": 0,
+      "environment": "Windows 2025 / Python 3.13 GitHub runner"
+    },
+    "publicCollector": {
+      "total": 274,
+      "passed": 274,
+      "failed": 0,
+      "skipped": 0,
+      "environment": "Windows x64 / Python 3.12",
       "realMqttBroker": true
     },
     "releasePublishing": {
@@ -48,14 +49,10 @@
     "browser": {
       "status": "passed",
       "total": 420,
-      "distinctPassed": 413,
+      "passed": 413,
       "failed": 0,
       "skipped": 7,
-      "initialPassed": 412,
-      "initialFailed": 1,
-      "focusedRerunPassed": 4,
-      "note": "The long-running test worker held the previous Java API label while documentation changed. All API explorer cases passed at desktop and narrow widths against the frozen candidate.",
-      "skipReason": "Drag work is measured once at desktop size; narrow resize has separate coverage."
+      "skipReason": "Desktop drag measurements are not repeated in the narrow project; resize has separate coverage."
     },
     "collectorReferenceParity": {
       "status": "passed",
@@ -68,18 +65,47 @@
       ]
     },
     "pythonServerLinux": {
-      "total": 164,
+      "total": 174,
       "passed": 161,
       "failed": 0,
-      "skipped": 3,
+      "skipped": 13,
       "skipReason": "Windows Proactor-specific cases ran and passed on Windows."
     },
     "browserCi": {
+      "status": "passed",
       "total": 420,
       "passed": 413,
       "failed": 0,
       "skipped": 7,
       "skipReason": "Desktop drag measurements are not repeated in the narrow project; resize has separate coverage."
+    },
+    "pythonServerWindowsLocal": {
+      "total": 174,
+      "passed": 173,
+      "failed": 0,
+      "skipped": 1,
+      "environment": "Windows x64 / Python 3.12",
+      "skipReason": "Local Windows symbolic-link creation requires OS permission."
+    },
+    "publicCollectorLinux": {
+      "total": 274,
+      "passed": 272,
+      "failed": 0,
+      "skipped": 2,
+      "environment": "Ubuntu 24.04 / Python 3.13",
+      "realMqttBroker": true,
+      "skipReason": "Two Windows file-sharing cases ran and passed on Windows."
+    },
+    "windowsConnections": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "python": [
+        "3.12",
+        "3.13.16"
+      ],
+      "testedInsideInstalledApplication": true
     }
   },
   "integration": {
@@ -114,7 +140,8 @@
       "generatedRecords": 83,
       "forcedRerunNewRecords": 0,
       "forcedRerunUpdatedRecords": 0,
-      "uninstallPreservesUserData": true
+      "uninstallPreservesUserData": true,
+      "connectionRecoveryTests": 13
     },
     "published296Upgrade": {
       "status": "passed",
@@ -126,7 +153,7 @@
     },
     "sourceArchives": {
       "status": "passed",
-      "publicFiles": 943,
+      "publicFiles": 944,
       "runtimeAndCollectorSmoke": "passed",
       "javaAndPrivateMaterialExcluded": true
     },
@@ -151,17 +178,13 @@
     "Remote collection completion depends on upstream availability; running a continuous collector does not prove every historical day is complete."
   ],
   "githubVerification": {
-    "status": "superseded by Windows accept recovery candidate",
-    "runId": 44834468114,
-    "url": "https://github.com/arcazj/openbexi_timeline/actions/runs/44834468114",
-    "commit": "ac49bfc9f8192fe60af77979f93533fc76cefda6",
+    "status": "passed",
+    "runId": 44841063026,
+    "url": "https://github.com/arcazj/openbexi_timeline/actions/runs/44841063026",
+    "commit": "874235dcc0fde9ebb0795667e40191a5d38ad31c",
     "jobs": [
       {
-        "name": "browser-compatibility",
-        "conclusion": "success"
-      },
-      {
-        "name": "python-api",
+        "name": "public-collector",
         "conclusion": "success"
       },
       {
@@ -169,11 +192,11 @@
         "conclusion": "success"
       },
       {
-        "name": "public-collector",
+        "name": "browser-compatibility",
         "conclusion": "success"
       },
       {
-        "name": "python-backend",
+        "name": "data-and-unit-tests",
         "conclusion": "success"
       },
       {
@@ -181,15 +204,21 @@
         "conclusion": "success"
       },
       {
-        "name": "data-and-unit-tests",
+        "name": "python-api",
+        "conclusion": "success"
+      },
+      {
+        "name": "python-windows",
+        "conclusion": "success"
+      },
+      {
+        "name": "python-backend",
         "conclusion": "success"
       }
     ]
   },
   "releaseMetadataOnlyChanges": [
     "docs/release-2.9.7-regressions.json",
-    "docs/design/2.9/regression-results.json",
-    "release/public-files.json"
-  ],
-  "pendingReason": "Windows accept-reset recovery and expanded installed-runtime checks require final candidate verification."
+    "docs/design/2.9/regression-results.json"
+  ]
 }
