@@ -76,22 +76,29 @@ class PeerResetTests(unittest.IsolatedAsyncioTestCase):
         loop = asyncio.get_running_loop()
         proactor = loop._proactor
         original_accept = proactor.accept
+        original_transports = {name: getattr(loop, name) for name in ('_make_socket_transport', '_make_ssl_transport')}
         previous = Mock()
         loop.set_exception_handler(previous)
         self.addCleanup(loop.set_exception_handler, None)
         first, second = handle_peer_resets(), handle_peer_resets()
         first.__enter__()
         protected_accept = proactor.accept
+        protected_transports = {name: getattr(loop, name) for name in original_transports}
         protected_handler = loop.get_exception_handler()
         second.__enter__()
         self.assertIs(proactor.accept, protected_accept)
         first.__exit__(None, None, None)
         self.assertIs(proactor.accept, protected_accept)
         self.assertIs(loop.get_exception_handler(), protected_handler)
+        for name, guarded in protected_transports.items():
+            self.assertIs(getattr(loop, name), guarded)
         second.__exit__(None, None, None)
         self.assertEqual(proactor.accept, original_accept)
         self.assertIs(loop.get_exception_handler(), previous)
         self.assertNotIn('accept', proactor.__dict__)
+        for name, original in original_transports.items():
+            self.assertEqual(getattr(loop, name), original)
+            self.assertNotIn(name, loop.__dict__)
         for _ in range(2):
             with handle_peer_resets():
                 self.assertNotEqual(proactor.accept, original_accept)
@@ -192,6 +199,89 @@ class AcceptResetTests(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(asyncio.CancelledError):
                     await asyncio.wait_for(task, 2)
                 accept.assert_awaited_once()
+
+    async def test_stopped_server_handoffs_close_plain_and_tls_sockets(self):
+        loop = asyncio.get_running_loop()
+        for name in ('_make_socket_transport', '_make_ssl_transport'):
+            with self.subTest(transport=name), patch.object(loop, name) as original:
+                with handle_peer_resets():
+                    guarded = getattr(loop, name)
+                    stopped, active = Mock(), Mock()
+                    stopped.is_serving.return_value = False
+                    active.is_serving.return_value = True
+                    connection, protocol = Mock(), Mock()
+                    with self.assertRaises(asyncio.CancelledError):
+                        guarded(connection, protocol, server=stopped)
+                    connection.close.assert_called_once()
+                    original.assert_not_called()
+                    for server in (None, active):
+                        live_connection = Mock()
+                        self.assertIs(guarded(live_connection, protocol, server=server), original.return_value)
+                        original.assert_called_with(live_connection, protocol, server=server)
+                        live_connection.close.assert_not_called()
+                    failure = RuntimeError('unrelated transport defect')
+                    original.side_effect = failure
+                    with self.assertRaises(RuntimeError) as caught:
+                        guarded(Mock(), protocol, server=active)
+                    self.assertIs(caught.exception, failure)
+                self.assertIs(getattr(loop, name), original)
+
+    async def test_server_close_after_completed_accept_closes_undelivered_socket(self):
+        loop = asyncio.get_running_loop()
+        proactor = loop._proactor
+        errors = Mock()
+        loop.set_exception_handler(errors)
+        self.addCleanup(loop.set_exception_handler, None)
+        accepted_sockets, stopped = [], asyncio.Event()
+        get_socket = proactor._get_accept_socket
+
+        def track_socket(family):
+            connection = get_socket(family)
+            accepted_sockets.append(connection)
+            return connection
+
+        with handle_peer_resets(), patch.object(proactor, '_get_accept_socket', side_effect=track_socket):
+            accept = proactor.accept
+            server = None
+
+            def stop_after_accept(task):
+                if not task.cancelled() and task.exception() is None:
+                    server.close()
+                    stopped.set()
+
+            def accept_then_stop(listener):
+                task = accept(listener)
+                # Register before the native accept callback so Server.close()
+                # deterministically races with a completed, uncancellable task.
+                task.add_done_callback(stop_after_accept)
+                return task
+
+            proactor.accept = accept_then_stop
+            client = None
+            try:
+                server = await loop.create_server(asyncio.Protocol, '127.0.0.1', 0)
+                listener_fd = server.sockets[0].fileno()
+                _, client = await asyncio.open_connection(*server.sockets[0].getsockname())
+                await asyncio.wait_for(stopped.wait(), 5)
+                await asyncio.sleep(0)
+                self.assertFalse(server.is_serving())
+                self.assertTrue(accepted_sockets)
+                self.assertTrue(all(connection.fileno() == -1 for connection in accepted_sockets))
+                self.assertNotIn(listener_fd, loop._accept_futures)
+                self.assertNotIn(-1, loop._accept_futures)
+            finally:
+                proactor.accept = accept
+                if client is not None:
+                    client.close()
+                    with suppress(OSError):
+                        await client.wait_closed()
+                if server is not None:
+                    server.close()
+                    await asyncio.wait_for(server.wait_closed(), 5)
+                # Also release sockets if the assertions expose a regression.
+                for connection in accepted_sockets:
+                    connection.close()
+        errors.assert_not_called()
 
     async def test_real_listeners_recover_after_failed_accept_and_subprocess_still_works(self):
         loop = asyncio.get_running_loop()

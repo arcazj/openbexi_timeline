@@ -33,28 +33,38 @@ class LaunchUpgrade(unittest.TestCase):
             bundle = load_bundle([ROOT / 'HBDS/yaml/DEMO_default.yml'], service, ROOT / 'HBDS')
             self.assertEqual('secure', bundle['connectors'][0]['type'])
             self.assertEqual('TEST_KEYSTORE_PASSWORD', bundle['connectors'][0]['tls']['password_env'])
-            self.assertEqual(Path(directory) / 'server.jks', Path(bundle['connectors'][0]['tls']['keystore']))
+            self.assertEqual((Path(directory) / 'server.jks').resolve(), Path(bundle['connectors'][0]['tls']['keystore']))
             value['connectors'][0]['tls'].update(certfile='server.pem', keyfile='server-key.pem')
             service.write_text(yaml.safe_dump(value))
             bundle = load_bundle([ROOT / 'HBDS/yaml/DEMO_default.yml'], service, ROOT / 'HBDS')
             self.assertEqual('secure', bundle['connectors'][0]['type'])
             self.assertEqual('python', bundle['connectors'][0]['owner'])
-            self.assertEqual(Path(directory) / 'server.pem', Path(bundle['connectors'][0]['tls']['certfile']))
+            self.assertEqual((Path(directory) / 'server.pem').resolve(), Path(bundle['connectors'][0]['tls']['certfile']))
 
     def test_launcher_resolves_workspace_and_private_data_from_callers_directory(self):
-        with tempfile.TemporaryDirectory() as directory:
-            workdir = Path(directory)
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory(prefix='launch-fixture-', dir=ROOT) as local_directory:
+            external = Path(directory).resolve()
+            local = Path(local_directory).resolve()
             environment = dict(os.environ, OPENBEXI_PYTHON=sys.executable)
             for key in ('JAVA_HOME', 'JDK_HOME', 'OPENBEXI_API_TOKEN', 'OPENBEXI_API_WRITE_TOKEN', 'OPENBEXI_API_READ_TOKEN', 'OPENBEXI_HBDS_CONFIG'):
                 environment.pop(key, None)
             command = [sys.executable, str(ROOT / 'tools/launch-timeline.py')]
             if os.name == 'nt':
                 command = [str(Path(os.environ['SystemRoot']) / 'System32/cmd.exe'), '/d', '/c', str(ROOT / 'openbexi_timeline.bat')]
-            result = subprocess.run([*command, '--workspace', os.path.relpath(ROOT / 'HBDS/workspace.json', workdir),
-                                     '--data-directory', 'private-data', '--check'], cwd=workdir, env=environment,
-                                    text=True, capture_output=True, timeout=60)
-            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-            self.assertIn('Configuration valid', result.stdout)
+            # Windows CI may place the checkout and system temp on different
+            # drives, where a relative path between them cannot be expressed.
+            # Exercise each relative input while keeping API storage outside
+            # the public app root, including the cross-drive absolute case.
+            cases = [
+                (local, os.path.relpath(ROOT / 'HBDS/workspace.json', local), str(external / 'api-relative-workspace')),
+                (external, str(ROOT / 'HBDS/workspace.json'), 'private-data'),
+            ]
+            for workdir, workspace, storage in cases:
+                with self.subTest(relative_workspace=workdir == local):
+                    result = subprocess.run([*command, '--workspace', workspace, '--data-directory', storage, '--check'],
+                                            cwd=workdir, env=environment, text=True, capture_output=True, timeout=60)
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    self.assertIn('Configuration valid', result.stdout)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 # AcceptEx setup is adapted from CPython 3.13.16 asyncio/windows_events.py.
 # Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.
 # PSF-2.0 terms are retained in docs/licenses/PSF-2.0.txt and wheel metadata.
-# Changes: own failed sockets, retry peer disconnects, and scope the guard per loop.
+# Changes: own failed sockets, retry peer disconnects, and guard stopped servers.
 import asyncio
 from contextlib import contextmanager
 import logging
@@ -63,9 +63,24 @@ async def _accept_with_retry(proactor, listener):
         await asyncio.sleep(0.05)
 
 
+def _guard_server_handoff(make_transport):
+    def guarded(connection, *args, **kwargs):
+        server = kwargs.get('server')
+        if server is not None and not server.is_serving():
+            # Server.close() can run after the accept task completes but before
+            # the native accept callback attaches its transport. Cancellation
+            # cannot cancel an already completed task; close its owned socket
+            # and let the native accept loop's cancellation handling stop it.
+            connection.close()
+            raise asyncio.CancelledError
+        return make_transport(connection, *args, **kwargs)
+
+    return guarded
+
+
 @contextmanager
 def handle_peer_resets():
-    # Scope both compatibility fixes to this running loop. Multiple application
+    # Scope compatibility fixes to this running loop. Multiple application
     # lifespans can overlap and need not exit in the order they were entered.
     if sys.platform != 'win32':
         yield
@@ -94,6 +109,7 @@ def _install_guard(loop):
     proactor = getattr(loop, '_proactor', None)
     accept = None
     old_accept = _MISSING
+    transport_guards = []
     if isinstance(proactor, IocpProactor):
         old_accept = proactor.__dict__.get('accept', _MISSING)
 
@@ -104,6 +120,11 @@ def _install_guard(loop):
             return loop.create_task(_accept_with_retry(proactor, listener))
 
         proactor.accept = accept
+        for name in ('_make_socket_transport', '_make_ssl_transport'):
+            original = loop.__dict__.get(name, _MISSING)
+            guarded = _guard_server_handoff(getattr(loop, name))
+            setattr(loop, name, guarded)
+            transport_guards.append((name, original, guarded))
 
     def handler(event_loop, context):
         error = context.get('exception')
@@ -138,6 +159,12 @@ def _install_guard(loop):
     def restore():
         if loop.get_exception_handler() is handler:
             loop.set_exception_handler(previous)
+        for name, original, guarded in transport_guards:
+            if getattr(loop, name) is guarded:
+                if original is _MISSING:
+                    delattr(loop, name)
+                else:
+                    setattr(loop, name, original)
         if accept is not None and proactor.accept is accept:
             if old_accept is _MISSING:
                 del proactor.accept

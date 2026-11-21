@@ -48,8 +48,9 @@ The Windows socket accept compatibility helper in
 Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.
 Its [PSF-2.0 license](licenses/PSF-2.0.txt) is included in the source distribution
 and server wheel. The adaptation closes pending sockets on failure or cancellation,
-retries transient peer disconnects, and scopes the compatibility guard to the
-application's running Proactor loop without changing subprocess support.
+retries transient peer disconnects, closes accepted sockets when their server has
+already stopped, and scopes the compatibility guard to the application's running
+Proactor loop without changing subprocess support.
 
 The existing repository includes example datasets, images, and icons. Their
 presence in a public repository does not establish commercial redistribution

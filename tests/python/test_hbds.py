@@ -36,7 +36,7 @@ def document():
 class HBDSTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.path = self.root / "HBDS/private/configurations/example.hbds.json"
         self.doc = document()
         atomic_json(self.path, self.doc)

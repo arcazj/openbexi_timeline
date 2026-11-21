@@ -29,7 +29,7 @@ REPO=Path(__file__).resolve().parents[2]
 class NamespaceFileTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
-        self.root=Path(self.temp.name);self.metadata=self.root/'HBDS'
+        self.root=Path(self.temp.name).resolve();self.metadata=self.root/'HBDS'
         (self.metadata/'yaml').mkdir(parents=True);(self.metadata/'models').mkdir()
         model=json.loads((REPO/'HBDS/templates/models/model_template.json').read_text(encoding='utf-8'))
         for name in ('default','alternate'):(self.metadata/'models'/f'{name}.json').write_text(json.dumps(model))
